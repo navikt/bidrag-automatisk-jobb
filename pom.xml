@@ -16,7 +16,7 @@
 		<java.version>21</java.version>
 		<kotlin.version>1.9.22</kotlin.version>
 		<bidrag-commons.version>20231220091947_b4b43f0</bidrag-commons.version>
-		<bidrag-transport.version>20231221145650_4172b07</bidrag-transport.version>
+		<bidrag-transport.version>20240111084215_a364fb8</bidrag-transport.version>
 		<logback-encoder.version>7.4</logback-encoder.version>
 		<springdoc-openapi-ui.version>2.3.0</springdoc-openapi-ui.version>
 		<springframework-cloud.version>4.1.0</springframework-cloud.version>
