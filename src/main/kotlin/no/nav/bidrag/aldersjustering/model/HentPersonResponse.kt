@@ -1,4 +1,4 @@
-package no.nav.bidrag.template.model
+package no.nav.bidrag.aldersjustering.model
 
 data class HentPersonResponse(
     val ident: String,

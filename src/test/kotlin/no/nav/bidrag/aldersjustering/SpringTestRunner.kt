@@ -1,4 +1,4 @@
-package no.nav.bidrag.template
+package no.nav.bidrag.aldersjustering
 
 import StubUtils
 import com.github.tomakehurst.wiremock.WireMockServer
@@ -16,8 +16,8 @@ import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit.jupiter.SpringExtension
 
 @ExtendWith(SpringExtension::class)
-@ContextConfiguration(classes = [BidragTemplateLocal::class])
-@SpringBootTest(classes = [BidragTemplateLocal::class, StubUtils::class], webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ContextConfiguration(classes = [BidragAldersjusteringLocal::class])
+@SpringBootTest(classes = [BidragAldersjusteringLocal::class, StubUtils::class], webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureWireMock(port = 0)
 @ActiveProfiles("test")
 @EnableMockOAuth2Server

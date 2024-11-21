@@ -16,6 +16,8 @@ spec:
           - "azp_name"
   secureLogs:
     enabled: true
+  kafka:
+    pool: {{ kafka.pool }}
   image: {{ image }}
   liveness:
     path: /actuator/health
@@ -34,11 +36,24 @@ spec:
     path: /actuator/prometheus
   resources:
     limits:
-      cpu: 500m
-      memory: 2048Mi
+      cpu: {{limits.cpu}}
+      memory: {{limits.memory}}
     requests:
-      cpu: 250m
-      memory: 1024Mi
+      cpu: {{requests.cpu}}
+      memory: {{requests.memory}}
+  replicas:
+    disableAutoScaling: true
+    max: {{replicas.max}}
+    min: {{replicas.min}}
+  gcp:
+    sqlInstances:
+      - name: {{ database.navn }}
+        type: POSTGRES_15
+        diskSize: {{ database.size }}
+        tier: {{ database.tier }}
+        databases:
+          - name: bidrag-aldersjustering
+            envVarPrefix: DB
   ingresses:
   {{#each ingresses as |url|}}
     - {{url}}

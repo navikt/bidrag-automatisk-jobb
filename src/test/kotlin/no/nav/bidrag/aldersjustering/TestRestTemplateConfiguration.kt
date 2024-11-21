@@ -1,4 +1,4 @@
-package no.nav.bidrag.template
+package no.nav.bidrag.aldersjustering
 
 import com.nimbusds.jose.JOSEObjectType
 import no.nav.bidrag.commons.web.test.HttpHeaderTestRestTemplate

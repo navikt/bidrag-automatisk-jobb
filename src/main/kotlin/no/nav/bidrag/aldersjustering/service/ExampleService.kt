@@ -1,8 +1,8 @@
-package no.nav.bidrag.template.service
+package no.nav.bidrag.aldersjustering.service
 
 import no.nav.bidrag.domene.ident.Personident
-import no.nav.bidrag.template.consumer.BidragPersonConsumer
-import no.nav.bidrag.template.model.HentPersonResponse
+import no.nav.bidrag.aldersjustering.consumer.BidragPersonConsumer
+import no.nav.bidrag.aldersjustering.model.HentPersonResponse
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 

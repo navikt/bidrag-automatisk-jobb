@@ -1,7 +1,23 @@
-name: bidrag-template-spring
+name: bidrag-aldersjustering
 ingresses:
-  - https://bidrag-template-spring.intern.nav.no
+  - https://bidrag-aldersjustering.intern.nav.no
+limits:
+  cpu: 1000m
+  memory: 2048Mi
+requests:
+  cpu: 500m
+  memory: 1012Mi
+replicas:
+  max: 2
+  min: 2
+database:
+  navn: bidrag-samhandler-prod
+  tier: db-custom-1-3840
+  size: 25
+kafka:
+  pool: nav-prod
 env:
   BIDRAG_PERSON_URL: https://bidrag-person.prod-fss-pub.nais.io/bidrag-person
   BIDRAG_PERSON_SCOPE: prod-fss.bidrag.bidrag-person-feature
+  BIDRAG_PERSON_HOST: bidrag-person.prod-fss-pub.nais.io
   JAVA_OPTS: -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -XX:MaxRAMPercentage=80.0

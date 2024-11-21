@@ -1,0 +1,23 @@
+name: bidrag-aldersjustering-q2
+ingresses:
+  - https://bidrag-aldersjustering-q2.intern.dev.nav.no
+limits:
+  cpu: 1000m
+  memory: 1012Mi
+requests:
+  cpu: 500m
+  memory: 512Mi
+replicas:
+  max: 1
+  min: 1
+database:
+  navn: bidrag-samhandler-q1
+  tier: db-f1-micro
+  size: 10
+kafka:
+  pool: nav-dev
+env:
+  BIDRAG_PERSON_URL: https://bidrag-person-q2.dev-fss-pub.nais.io/bidrag-person
+  BIDRAG_PERSON_SCOPE: dev-fss.bidrag.bidrag-person-q2
+  BIDRAG_PERSON_HOST: bidrag-person-q2.dev-fss-pub.nais.io
+  JAVA_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -XX:MaxRAMPercentage=80.0
