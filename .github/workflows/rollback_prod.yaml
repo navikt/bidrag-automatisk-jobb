@@ -1,0 +1,16 @@
+name: Rollback prod to previous version
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_tag:
+        description: 'Deploy tag. As default the previous tag will be deployed'
+        required: false
+
+jobs:
+  build_and_deploy:
+    name: "Rollback and deploy previous version to prod"
+    permissions:
+      contents: "write"
+      id-token: "write"
+    uses: navikt/bidrag-workflow/.github/workflows/rollback_prod.yaml@main
+    secrets: inherit
