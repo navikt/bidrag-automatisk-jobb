@@ -1,9 +1,9 @@
 package no.nav.bidrag.aldersjustering.controller
 
 import io.kotest.matchers.shouldBe
-import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.aldersjustering.SpringTestRunner
 import no.nav.bidrag.aldersjustering.model.HentPersonResponse
+import no.nav.bidrag.domene.ident.Personident
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
