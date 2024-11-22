@@ -6,6 +6,15 @@ AZURE_APP_CLIENT_SECRET: asdasdsad214123sadas
 NAIS_APP_NAME: bidrag-aldersjustering
 
 no.nav.security.jwt:
+  client:
+    registration:
+      skatt:
+        token-endpoint-url: http://localhost:${mock-oauth2-server.port:1234}/aad/token
+        grant-type: urn:ietf:params:oauth:grant-type:jwt-bearer
+        authentication:
+          client-id: 123
+          client-secret: 123
+          client-auth-method: client_secret_basic
   issuer.aad:
     discovery_url: http://localhost:${mock-oauth2-server.port}/aad/.well-known/openid-configuration
     accepted_audience: aud-localhost
