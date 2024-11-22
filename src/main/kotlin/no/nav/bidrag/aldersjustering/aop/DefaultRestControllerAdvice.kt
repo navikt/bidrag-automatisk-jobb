@@ -1,4 +1,4 @@
-package no.nav.bidrag.template.aop
+package no.nav.bidrag.aldersjustering.aop
 
 import no.nav.security.token.support.spring.validation.interceptor.JwtTokenUnauthorizedException
 import org.slf4j.LoggerFactory
