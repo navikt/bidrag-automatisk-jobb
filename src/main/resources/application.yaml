@@ -23,3 +23,25 @@ no.nav.security.jwt:
   issuer.aad:
     discovery_url: https://login.microsoftonline.com/${AZURE_APP_TENANT_ID}/v2.0/.well-known/openid-configuration
     accepted_audience: ${AZURE_APP_CLIENT_ID}, api://${AZURE_APP_CLIENT_ID}
+
+spring:
+  datasource:
+    url: ${DB_JDBC_URL}
+    hikari:
+      idle-timeout: 10001
+      max-lifetime: 30001
+      connectionTimeout: 1000
+      maximum-pool-size: 10
+      minimum-idle: 1
+      data-source-properties:
+        ssl: true
+        sslmode: ${DB_SSLMODE}
+        sslcert: ${DB_SSLCERT}
+        sslkey: ${DB_SSLKEY_PK8}
+        sslrootcert: ${DB_SSLROOTCERT}
+  flyway:
+    enabled: true
+    locations: classpath:/db/migration
+  jpa:
+    database: postgresql
+    open-in-view: false

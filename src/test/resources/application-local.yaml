@@ -5,3 +5,18 @@ AZURE_APP_CLIENT_ID: <app_client_id>
 AZURE_APP_CLIENT_SECRET: unset
 server.port: 8999
 NAIS_APP_NAME: bidrag-aldersjustering
+
+spring:
+  flyway:
+    enabled: true
+    locations: classpath:/db/migration
+  datasource:
+    url: jdbc:postgresql://localhost:5432/default_database?user=cloudsqliamuser&password=admin&reWriteBatchedInserts=true
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      data-source-properties:
+        ssl: false
+        sslmode: disable
+        sslcert: ""
+        sslkey: ""
+        sslrootcert: ""
