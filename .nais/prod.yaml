@@ -11,7 +11,7 @@ replicas:
   max: 2
   min: 2
 database:
-  navn: bidrag-samhandler-prod
+  navn: bidrag-aldersjustering-prod
   tier: db-custom-1-3840
   size: 25
 kafka:
