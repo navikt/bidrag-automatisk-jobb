@@ -22,7 +22,7 @@
 		<token-support.version>5.0.5</token-support.version>
 		<kotest.version>5.9.1</kotest.version>
 		<mockk.version>1.13.12</mockk.version>
-		<ktlint.version>1.2.1</ktlint.version>
+		<ktlint.version>1.4.1</ktlint.version>
 	</properties>
 
 	<repositories>
