@@ -18,3 +18,21 @@ no.nav.security.jwt:
   issuer.aad:
     discovery_url: http://localhost:${mock-oauth2-server.port}/aad/.well-known/openid-configuration
     accepted_audience: aud-localhost
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+    locations: classpath:/db/migration
+  datasource:
+    url: jdbc:postgresql://localhost:5432/default_database?user=cloudsqliamuser&password=samhandleradmin
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      data-source-properties:
+        ssl: false
+        sslmode: disable
+        sslcert: ""
+        sslkey: ""
+        sslrootcert: ""
