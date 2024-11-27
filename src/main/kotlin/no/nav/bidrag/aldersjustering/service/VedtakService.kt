@@ -1,7 +1,6 @@
 package no.nav.bidrag.aldersjustering.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import java.time.LocalDate
 import no.nav.bidrag.aldersjustering.SECURE_LOGGER
 import no.nav.bidrag.aldersjustering.consumer.BidragPersonConsumer
 import no.nav.bidrag.aldersjustering.persistence.entity.Barn
@@ -15,6 +14,7 @@ import no.nav.bidrag.transport.behandling.vedtak.VedtakHendelse
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDate
 
 @Service
 class VedtakService(
@@ -36,10 +36,11 @@ class VedtakService(
         stønadsendringer?.forEach { (kravhaver, stønadsendringer) ->
             val kravhaverNyesteIdent = identUtils.hentNyesteIdent(kravhaver)
 
-            val lagretBarn = barnRepository.findByKravhaverAndSaksnummer(
-                kravhaverNyesteIdent.verdi,
-                stønadsendringer.first().sak.verdi
-            )
+            val lagretBarn =
+                barnRepository.findByKravhaverAndSaksnummer(
+                    kravhaverNyesteIdent.verdi,
+                    stønadsendringer.first().sak.verdi,
+                )
             if (lagretBarn != null) {
                 oppdaterBarn(lagretBarn, stønadsendringer)
             } else {
@@ -48,7 +49,10 @@ class VedtakService(
         }
     }
 
-    private fun oppdaterBarn(lagretBarn: Barn, stønadsendringer: List<Stønadsendring>) {
+    private fun oppdaterBarn(
+        lagretBarn: Barn,
+        stønadsendringer: List<Stønadsendring>,
+    ) {
         LOGGER.info("Oppdaterer barn ${lagretBarn.id}.")
         val skyldner = finnSkylder(stønadsendringer)
 
@@ -83,43 +87,56 @@ class VedtakService(
             ?.filter { it.innkreving == Innkrevingstype.MED_INNKREVING }
             ?.groupBy { it.kravhaver }
 
-    private fun opprettBarnFraStønadsendring(kravhaver: Personident, stønadsendring: List<Stønadsendring>) {
+    private fun opprettBarnFraStønadsendring(
+        kravhaver: Personident,
+        stønadsendring: List<Stønadsendring>,
+    ) {
         val saksnummer = stønadsendring.first().sak.verdi
-        val barn = Barn(
-            saksnummer = saksnummer,
-            kravhaver = kravhaver.verdi,
-            fødselsdato = bidragPersonConsumer.hentFødselsdatoForPerson(kravhaver),
-            skyldner = finnSkylder(stønadsendring),
-            forskuddFra = finnPeriodeFra(stønadsendring, Stønadstype.FORSKUDD),
-            forskuddTil = finnPeriodeTil(stønadsendring, Stønadstype.FORSKUDD),
-            bidragFra = finnPeriodeFra(stønadsendring, Stønadstype.BIDRAG),
-            bidragTil = finnPeriodeTil(stønadsendring, Stønadstype.BIDRAG),
-        )
+        val barn =
+            Barn(
+                saksnummer = saksnummer,
+                kravhaver = kravhaver.verdi,
+                fødselsdato = bidragPersonConsumer.hentFødselsdatoForPerson(kravhaver),
+                skyldner = finnSkylder(stønadsendring),
+                forskuddFra = finnPeriodeFra(stønadsendring, Stønadstype.FORSKUDD),
+                forskuddTil = finnPeriodeTil(stønadsendring, Stønadstype.FORSKUDD),
+                bidragFra = finnPeriodeFra(stønadsendring, Stønadstype.BIDRAG),
+                bidragTil = finnPeriodeTil(stønadsendring, Stønadstype.BIDRAG),
+            )
         barnRepository.save(barn)
     }
 
-    private fun finnPeriodeFra(stønadsendring: List<Stønadsendring>, stønadstype: Stønadstype): LocalDate? {
-        return stønadsendring.find { it.type == stønadstype }
+    private fun finnPeriodeFra(
+        stønadsendring: List<Stønadsendring>,
+        stønadstype: Stønadstype,
+    ): LocalDate? =
+        stønadsendring
+            .find { it.type == stønadstype }
             ?.periodeListe
             ?.map { it.periode.toDatoperiode() }
             ?.minByOrNull { it.fom }
             ?.fom
-    }
 
-    private fun finnPeriodeTil(stønadsendring: List<Stønadsendring>, stønadstype: Stønadstype): LocalDate? {
-        return stønadsendring.find { it.type == stønadstype }
+    private fun finnPeriodeTil(
+        stønadsendring: List<Stønadsendring>,
+        stønadstype: Stønadstype,
+    ): LocalDate? =
+        stønadsendring
+            .find { it.type == stønadstype }
             ?.periodeListe
             ?.map { it.periode.toDatoperiode() }
             ?.takeIf { it.all { periode -> periode.til != null } }
             ?.sortedByDescending { it.til }
             ?.firstOrNull()
             ?.til
-    }
 
-    private fun finnSkylder(stønadsendring: List<Stønadsendring>): String? {
-        return stønadsendring.find { it.type == Stønadstype.BIDRAG }?.skyldner?.let { identUtils.hentNyesteIdent(it) }?.verdi
-    }
-
+    private fun finnSkylder(stønadsendring: List<Stønadsendring>): String? =
+        stønadsendring
+            .find {
+                it.type == Stønadstype.BIDRAG
+            }?.skyldner
+            ?.let { identUtils.hentNyesteIdent(it) }
+            ?.verdi
 
     private fun mapVedtakHendelse(hendelse: String): VedtakHendelse =
         try {

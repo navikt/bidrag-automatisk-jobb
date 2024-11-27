@@ -24,6 +24,5 @@ class RestConfiguration {
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
     @Bean
-    fun clientRequestObservationConvention(): ClientRequestObservationConvention =
-        DefaultClientRequestObservationConvention()
+    fun clientRequestObservationConvention(): ClientRequestObservationConvention = DefaultClientRequestObservationConvention()
 }

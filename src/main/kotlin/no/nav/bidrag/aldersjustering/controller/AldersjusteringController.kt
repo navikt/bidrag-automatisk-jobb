@@ -29,7 +29,6 @@ class AldersjusteringController(
             ),
         ],
     )
-    fun hentBarnSomSkalAldersjusteres(år: Int): ResponseEntity<Any> {
-        return ResponseEntity.ok(aldersjusteringService.hentAlleBarnSomSkalAldersjusteresForÅr(år))
-    }
+    fun hentBarnSomSkalAldersjusteres(år: Int): ResponseEntity<Any> =
+        ResponseEntity.ok(aldersjusteringService.hentAlleBarnSomSkalAldersjusteresForÅr(år))
 }

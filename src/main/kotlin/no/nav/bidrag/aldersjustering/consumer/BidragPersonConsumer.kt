@@ -5,6 +5,7 @@ import no.nav.bidrag.commons.cache.BrukerCacheable
 import no.nav.bidrag.commons.web.client.AbstractRestClient
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.transport.person.NavnFødselDødDto
+import no.nav.bidrag.transport.person.PersonRequest
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -12,7 +13,6 @@ import org.springframework.web.client.RestTemplate
 import org.springframework.web.util.UriComponentsBuilder
 import java.net.URI
 import java.time.LocalDate
-import no.nav.bidrag.transport.person.PersonRequest
 
 @Service
 class BidragPersonConsumer(
@@ -28,7 +28,6 @@ class BidragPersonConsumer(
 
     @BrukerCacheable(PERSON_CACHE)
     fun hentFødselsdatoForPerson(personident: Personident): LocalDate {
-
         val response = postForNonNullEntity<NavnFødselDødDto>(hentFødselsnummerUri, PersonRequest(personident))
         return response.fødselsdato ?: opprettFødselsdatoFraFødselsår(response.fødselsår)
     }

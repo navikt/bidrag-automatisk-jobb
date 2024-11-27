@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController
 @Protected
 @RestController
 class VedtakController(
-    private val vedtakService: VedtakService
+    private val vedtakService: VedtakService,
 ) {
     @PostMapping("/vedtak")
     @Operation(
