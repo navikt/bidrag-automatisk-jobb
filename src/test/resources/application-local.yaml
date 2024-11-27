@@ -1,10 +1,13 @@
 PERSON_SCOPE: dev-fss.bidrag.bidrag-person-q1
-BIDRAG_PERSON_URL: https://bidrag-person-q1.dev.adeo.no
+PERSON_URL: https://bidrag-person-q1.dev-fss-pub.nais.io/bidrag-person
 AZURE_APP_TENANT_ID: 966ac572-f5b7-4bbe-aa88-c76419c0f851
 AZURE_APP_CLIENT_ID: <app_client_id>
 AZURE_APP_CLIENT_SECRET: unset
 server.port: 8999
 NAIS_APP_NAME: bidrag-aldersjustering
+KAFKA_PERSON_HENDELSE_TOPIC: bidrag.personhendelse.v1-test
+KAFKA_VEDTAK_TOPIC: bidrag.vedtak-test
+KAFKA_BROKERS: localhost:9092
 
 spring:
   flyway:
@@ -20,3 +23,9 @@ spring:
         sslcert: ""
         sslkey: ""
         sslrootcert: ""
+  kafka:
+    properties:
+      security.protocol: PLAINTEXT
+    consumer:
+      enableAutoCommit: false
+      auto-offset-reset: earliest

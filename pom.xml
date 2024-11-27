@@ -19,7 +19,7 @@
         <logback-encoder.version>8.0</logback-encoder.version>
         <springdoc-openapi-ui.version>2.5.0</springdoc-openapi-ui.version>
         <springframework-cloud.version>4.1.4</springframework-cloud.version>
-        <token-support.version>5.0.5</token-support.version>
+        <token-support.version>3.2.0</token-support.version>
         <kotest.version>5.9.1</kotest.version>
         <mockk.version>1.13.12</mockk.version>
         <ktlint.version>1.2.1</ktlint.version>
@@ -48,10 +48,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-rest</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -90,6 +86,14 @@
             <artifactId>spring-boot-devtools</artifactId>
             <scope>runtime</scope>
             <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka-test</artifactId>
         </dependency>
 
         <!--swagger-->
@@ -140,20 +144,6 @@
             <groupId>no.nav.bidrag</groupId>
             <artifactId>bidrag-commons-felles</artifactId>
             <version>${bidrag-felles.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-starter-tomcat</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.tomcat.embed</groupId>
-                    <artifactId>tomcat-embed-core</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.tomcat.embed</groupId>
-                    <artifactId>tomcat-embed-el</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -1,16 +1,21 @@
-BIDRAG_PERSON_URL: http://localhost:${wiremock.server.port}/person
+PERSON_URL: http://localhost:${wiremock.server.port}/person
 AZURE_OPENID_CONFIG_ISSUER: http://localhost:${mock-oauth2-server.port}/aad
 AZURE_APP_TENANT_ID: 12321321-123213-3213123
 AZURE_APP_CLIENT_ID: asdasd-sadas-ddas-qwe
 AZURE_APP_CLIENT_SECRET: asdasdsad214123sadas
 NAIS_APP_NAME: bidrag-aldersjustering
+KAFKA_PERSON_HENDELSE_TOPIC: bidrag.personhendelse.v1-test
+KAFKA_VEDTAK_TOPIC: bidrag.vedtak-test
+KAFKA_BROKERS: localhost:9092
 
 no.nav.security.jwt:
   client:
     registration:
-      skatt:
+      person:
+        resource-url: ${PERSON_URL}
         token-endpoint-url: http://localhost:${mock-oauth2-server.port:1234}/aad/token
         grant-type: urn:ietf:params:oauth:grant-type:jwt-bearer
+        scope: api://123/.default
         authentication:
           client-id: 123
           client-secret: 123
@@ -36,3 +41,9 @@ spring:
         sslcert: ""
         sslkey: ""
         sslrootcert: ""
+  kafka:
+    properties:
+      security.protocol: PLAINTEXT
+    consumer:
+      enableAutoCommit: false
+      auto-offset-reset: earliest
