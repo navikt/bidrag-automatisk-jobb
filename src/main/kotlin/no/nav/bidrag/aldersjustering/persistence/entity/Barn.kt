@@ -22,13 +22,13 @@ data class Barn(
     @Column(name = "fodselsdato")
     var fødselsdato: LocalDate = LocalDate.now(),
     @Column(name = "skyldner")
-    var skyldner: String = "",
+    var skyldner: String? = null,
     @Column(name = "forskudd_fra")
-    var forskuddFra: LocalDate = LocalDate.now(),
+    var forskuddFra: LocalDate? = null,
     @Column(name = "forskudd_til")
     var forskuddTil: LocalDate? = null,
     @Column(name = "bidrag_fra")
-    var bidragFra: LocalDate = LocalDate.now(),
+    var bidragFra: LocalDate? = null,
     @Column(name = "bidrag_til")
     var bidragTil: LocalDate? = null,
     @Version

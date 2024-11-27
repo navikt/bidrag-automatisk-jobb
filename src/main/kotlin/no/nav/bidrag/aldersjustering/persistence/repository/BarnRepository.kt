@@ -16,4 +16,6 @@ interface BarnRepository : JpaRepository<Barn, Int> {
         @Param("år") år: Int,
         @Param("kjøredato") kjøredato: LocalDate = LocalDate.now(),
     ): List<Barn>
+
+    fun findByKravhaverAndSaksnummer(kravhaver: String, saksnummer: String): Barn?
 }
