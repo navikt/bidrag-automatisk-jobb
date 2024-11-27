@@ -16,8 +16,8 @@ Dette starter applikasjonen med profil `local` og henter miljøvariabler for Q1 
 Her mangler det noen miljøvariabler som ikke bør committes til Git (Miljøvariabler for passord/secret osv).<br/>
 Når du starter applikasjon må derfor følgende miljøvariabl(er) settes:
 ```bash
--DAZURE_APP_CLIENT_SECRET=<secret>
--DAZURE_APP_CLIENT_ID=<id>
+AZURE_APP_CLIENT_SECRET=<secret>
+AZURE_APP_CLIENT_ID=<id>
 ```
 Disse kan hentes ved å kjøre kan hentes ved å kjøre 
 ```bash
