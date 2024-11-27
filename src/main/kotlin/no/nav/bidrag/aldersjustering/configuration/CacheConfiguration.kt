@@ -1,4 +1,4 @@
-package no.nav.bidrag.aldersjustering.config
+package no.nav.bidrag.aldersjustering.configuration
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import no.nav.bidrag.commons.cache.EnableUserCache
@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Profile
 @EnableCaching
 @Profile(value = ["!test"]) // Ignore cache on tests
 @EnableUserCache
-class CacheConfig {
+class CacheConfiguration {
     companion object {
         const val PERSON_CACHE = "PERSON_CACHE"
     }
