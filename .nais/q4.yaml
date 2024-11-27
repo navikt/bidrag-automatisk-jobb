@@ -17,7 +17,9 @@ database:
 kafka:
   pool: nav-dev
 env:
-  BIDRAG_PERSON_URL: https://bidrag-person-q4.dev-fss-pub.nais.io/bidrag-person
-  BIDRAG_PERSON_SCOPE: dev-fss.bidrag.bidrag-person-q4
-  BIDRAG_PERSON_HOST: bidrag-person-q4.dev-fss-pub.nais.io
+  PERSON_URL: https://bidrag-person-q4.dev-fss-pub.nais.io/bidrag-person
+  PERSON_SCOPE: dev-fss.bidrag.bidrag-person-q4
+  PERSON_HOST: bidrag-person-q4.dev-fss-pub.nais.io
+  KAFKA_VEDTAK_TOPIC: bidrag.vedtak-q4
+  KAFKA_PERSON_HENDELSE_TOPIC: bidrag.personhendelse.v1
   JAVA_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -XX:MaxRAMPercentage=80.0
