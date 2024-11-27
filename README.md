@@ -1,14 +1,12 @@
 # Bidrag-aldersjustering
-Template repo for å opprette ny Spring applikasjon for Bidrag
+Applikasjon for å aldersjustere barn i bidragssaker.
 
-[![continuous integration](https://github.com/navikt/bidrag-aldersjustering/actions/workflows/pr.yaml/badge.svg)](https://github.com/navikt/bidrag-aldersjustering/actions/workflows/ci.yaml)
-[![release bidrag-aldersjustering](https://github.com/navikt/bidrag-aldersjustering/actions/workflows/release.yaml/badge.svg)](https://github.com/navikt/bidrag-aldersjustering/actions/workflows/release.yaml)
+[![continuous integration](https://github.com/navikt/bidrag-aldersjustering/actions/workflows/deploy_q1.yaml/badge.svg)](https://github.com/navikt/bidrag-aldersjustering/actions/workflows/deploy_q1.yaml)
+[![release bidrag-aldersjustering](https://github.com/navikt/bidrag-aldersjustering/actions/workflows/deploy_prod.yaml/badge.svg)](https://github.com/navikt/bidrag-aldersjustering/actions/workflows/deploy_prod.yaml)
 
 ## Beskrivelse
-
-Erstatt alt som har postfix `-template-spring` med din applikasjonsnavn
-
-Legg til Github secret `NAIS_DEPLOY_APIKEY` hvor secret hentes fra [Api key](https://deploy.nais.io/apikeys)
+Bidrag-aldersjustering lagrer alle barn som er part i en bidragssak, og aldersjusterer disse. 
+Aldersjustering skjer for alle barn året de fyller 6, 11 og 15 år basert på sjablong-verdier.
 
 ## Kjøre applikasjonen lokalt
 
@@ -23,7 +21,7 @@ Når du starter applikasjon må derfor følgende miljøvariabl(er) settes:
 ```
 Disse kan hentes ved å kjøre kan hentes ved å kjøre 
 ```bash
-kubectl exec --tty deployment/bidrag-dialog-feature -- printenv | grep -e AZURE_APP_CLIENT_ID -e AZURE_APP_CLIENT_SECRET
+kubectl exec --tty deployment/bidrag-aldersjustering-q1 -- printenv | grep -e AZURE_APP_CLIENT_ID -e AZURE_APP_CLIENT_SECRET
 ```
 
 ### Live reload
