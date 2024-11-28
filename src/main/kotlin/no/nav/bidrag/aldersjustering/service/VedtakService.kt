@@ -64,14 +64,14 @@ class VedtakService(
         // Forskudd og bidrag kan oppdateres om det finnes en ny periode for stønadstypen. Her tillates nye verdier å være null.
         if (stønadsendringer.any { it.type == Stønadstype.BIDRAG }) {
             lagretBarn.apply {
-                bidragFra = finnPeriodeFra(stønadsendringer, Stønadstype.BIDRAG)
-                bidragTil = finnPeriodeTil(stønadsendringer, Stønadstype.BIDRAG)
+                bidragFra = finnPeriodeFra(stønadsendringer, Stønadstype.BIDRAG, bidragFra)
+                bidragTil = finnPeriodeTil(stønadsendringer, Stønadstype.BIDRAG, bidragTil)
             }
         }
         if (stønadsendringer.any { it.type == Stønadstype.FORSKUDD }) {
             lagretBarn.apply {
-                forskuddFra = finnPeriodeFra(stønadsendringer, Stønadstype.FORSKUDD)
-                forskuddTil = finnPeriodeTil(stønadsendringer, Stønadstype.FORSKUDD)
+                forskuddFra = finnPeriodeFra(stønadsendringer, Stønadstype.FORSKUDD, forskuddFra)
+                forskuddTil = finnPeriodeTil(stønadsendringer, Stønadstype.FORSKUDD, forskuddTil)
             }
         }
 
@@ -109,26 +109,51 @@ class VedtakService(
     private fun finnPeriodeFra(
         stønadsendring: List<Stønadsendring>,
         stønadstype: Stønadstype,
-    ): LocalDate? =
-        stønadsendring
-            .find { it.type == stønadstype }
-            ?.periodeListe
-            ?.map { it.periode.toDatoperiode() }
-            ?.minByOrNull { it.fom }
-            ?.fom
+        eksisterendePeriodeFra: LocalDate? = null,
+    ): LocalDate? {
+        val nyPeriodeFra =
+            stønadsendring
+                .find { it.type == stønadstype }
+                ?.periodeListe
+                ?.map { it.periode.toDatoperiode() }
+                ?.minByOrNull { it.fom }
+                ?.fom
+
+        return if (eksisterendePeriodeFra != null && nyPeriodeFra != null) {
+            LocalDate.ofEpochDay(minOf(eksisterendePeriodeFra.toEpochDay(), nyPeriodeFra.toEpochDay()))
+        } else {
+            nyPeriodeFra ?: eksisterendePeriodeFra
+        }
+    }
 
     private fun finnPeriodeTil(
         stønadsendring: List<Stønadsendring>,
         stønadstype: Stønadstype,
-    ): LocalDate? =
-        stønadsendring
-            .find { it.type == stønadstype }
-            ?.periodeListe
-            ?.map { it.periode.toDatoperiode() }
-            ?.takeIf { it.all { periode -> periode.til != null } }
-            ?.sortedByDescending { it.til }
-            ?.firstOrNull()
-            ?.til
+        eksisterendePeriodeTil: LocalDate? = null,
+    ): LocalDate? {
+        val nyPeriodeTil =
+            stønadsendring
+                .find { it.type == stønadstype }
+                ?.periodeListe
+                ?.map { it.periode.toDatoperiode() }
+                ?.takeIf { it.all { periode -> periode.til != null } }
+                ?.sortedByDescending { it.til }
+                ?.firstOrNull()
+                ?.til
+
+        // Om det er avsluttende periode så skal den avsluttende periodens fra dato settes som tilDato da dette er starten på opphøret.
+        val avsluttendePeriode = stønadsendring.flatMap { it.periodeListe }.find { it.beløp == null }?.periode
+        if (avsluttendePeriode != null) {
+            return avsluttendePeriode.toDatoperiode().fom
+        }
+
+        // Velg den som er lengst frem i tid av ny eller eksisterende periode, behold null om det finnes
+        return if (eksisterendePeriodeTil != null && nyPeriodeTil != null) {
+            LocalDate.ofEpochDay(maxOf(eksisterendePeriodeTil.toEpochDay(), nyPeriodeTil.toEpochDay()))
+        } else {
+            null
+        }
+    }
 
     private fun finnSkylder(stønadsendring: List<Stønadsendring>): String? =
         stønadsendring

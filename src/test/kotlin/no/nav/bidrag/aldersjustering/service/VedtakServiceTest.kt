@@ -300,8 +300,8 @@ class VedtakServiceTest {
                 skyldner = "123",
                 forskuddFra = LocalDate.now().minusMonths(2),
                 forskuddTil = LocalDate.now().minusMonths(1),
-                bidragFra = LocalDate.now().minusMonths(2),
-                bidragTil = LocalDate.now().minusMonths(1),
+                bidragFra = LocalDate.now().minusMonths(8),
+                bidragTil = LocalDate.now().minusMonths(5),
             )
 
         val vedtakHendelse =
@@ -324,14 +324,7 @@ class VedtakServiceTest {
                 ?.first()
                 ?.kravhaver
                 ?.verdi
-        barnSlot.captured.bidragFra shouldBe
-            vedtakHendelse.stønadsendringListe
-                ?.first()
-                ?.periodeListe
-                ?.first()
-                ?.periode
-                ?.toDatoperiode()
-                ?.fom
+        barnSlot.captured.bidragFra shouldBe eksisterendeBarn.bidragFra
         barnSlot.captured.bidragTil shouldBe
             vedtakHendelse.stønadsendringListe
                 ?.first()
@@ -342,6 +335,76 @@ class VedtakServiceTest {
                 ?.til
         barnSlot.captured.forskuddFra shouldBe eksisterendeBarn.forskuddFra
         barnSlot.captured.forskuddTil shouldBe eksisterendeBarn.forskuddTil
+    }
+
+    @Test
+    fun skalOpphøreLøpendeBidragPåBarnNårBeløpErNull() {
+        val kravhaver = Personident(PersonidentGenerator.genererFødselsnummer())
+        val eksisterendeBidragFra = LocalDate.now().minusMonths(5)
+        val eksisterendeForskuddFra = LocalDate.now().minusMonths(2)
+        val eksisterendeForskuddTil = LocalDate.now().minusMonths(1)
+        val eksisterendeBarn =
+            Barn(
+                saksnummer = "123",
+                kravhaver = kravhaver.verdi,
+                fødselsdato = LocalDate.now().minusYears(10),
+                skyldner = "123",
+                forskuddFra = eksisterendeForskuddFra,
+                forskuddTil = eksisterendeForskuddTil,
+                bidragFra = eksisterendeBidragFra,
+                bidragTil = null,
+            )
+
+        val nyttBidragFra = LocalDate.now().minusMonths(4).withDayOfMonth(1)
+        val vedtakHendelse =
+            opprettVedtakHendelse(
+                Stønadstype.BIDRAG,
+                Innkrevingstype.MED_INNKREVING,
+                kravhaver = kravhaver,
+                stønadsendringListe =
+                    listOf(
+                        Stønadsendring(
+                            type = Stønadstype.BIDRAG,
+                            sak = Saksnummer("123"),
+                            skyldner = Personident(PersonidentGenerator.genererFødselsnummer()),
+                            kravhaver = kravhaver,
+                            mottaker = Personident(PersonidentGenerator.genererFødselsnummer()),
+                            innkreving = Innkrevingstype.MED_INNKREVING,
+                            beslutning = Beslutningstype.STADFESTELSE,
+                            periodeListe =
+                                listOf(
+                                    Periode(
+                                        periode = ÅrMånedsperiode(nyttBidragFra, null),
+                                        beløp = null,
+                                        valutakode = null,
+                                        resultatkode = "OK",
+                                        delytelseId = null,
+                                    ),
+                                ),
+                            førsteIndeksreguleringsår = null,
+                            omgjørVedtakId = null,
+                            eksternReferanse = null,
+                        ),
+                    ),
+            )
+
+        mocks(vedtakHendelse, eksisterendeBarn)
+
+        vedtakService.behandleVedtak("dummy")
+
+        verify(exactly = 1) { barnRepository.save(any()) }
+        barnSlot.captured shouldNotBe null
+        barnSlot.captured.saksnummer shouldBe vedtakHendelse.saksnummer
+        barnSlot.captured.skyldner shouldBe
+            vedtakHendelse.stønadsendringListe
+                ?.first()
+                ?.skyldner
+                ?.verdi
+        barnSlot.captured.kravhaver shouldBe kravhaver.verdi
+        barnSlot.captured.bidragFra shouldBe eksisterendeBidragFra
+        barnSlot.captured.bidragTil shouldBe nyttBidragFra
+        barnSlot.captured.forskuddFra shouldBe eksisterendeForskuddFra
+        barnSlot.captured.forskuddTil shouldBe eksisterendeForskuddTil
     }
 
     private fun mocks(
