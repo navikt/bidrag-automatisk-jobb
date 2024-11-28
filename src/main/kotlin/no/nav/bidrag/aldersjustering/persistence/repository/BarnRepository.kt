@@ -21,4 +21,8 @@ interface BarnRepository : JpaRepository<Barn, Int> {
         kravhaver: String,
         saksnummer: String,
     ): Barn?
+
+    fun findAllByKravhaver(kravhaver: String): List<Barn>
+
+    fun findAllBySkyldner(skyldner: String): List<Barn>
 }
