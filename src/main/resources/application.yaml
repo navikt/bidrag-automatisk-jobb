@@ -67,3 +67,9 @@ spring:
       auto-offset-reset: earliest
       max-poll-records: 10
       group-id: bidrag-aktoerregister
+  batch:
+    job:
+      enabled: false
+logging:
+  level:
+    org.apache.kafka: WARN

@@ -10,6 +10,8 @@ import no.nav.bidrag.aldersjustering.persistence.entity.Barn
 import no.nav.bidrag.aldersjustering.persistence.repository.BarnRepository
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageImpl
 import java.time.LocalDate
 
 @ExtendWith(MockKExtension::class)
@@ -23,10 +25,12 @@ class AldersjusteringServiceTest {
     @Test
     fun skalHenteAlleBarnSomSkalAldersjusteresFor2024() {
         every { barnRepository.finnBarnSomSkalAldersjusteresForÅr(2024) } returns
-            listOf(
-                Barn(fødselsdato = LocalDate.of(2018, 1, 1)),
-                Barn(fødselsdato = LocalDate.of(2013, 12, 31)),
-                Barn(fødselsdato = LocalDate.of(2009, 6, 15)),
+            PageImpl(
+                listOf(
+                    Barn(fødselsdato = LocalDate.of(2018, 1, 1)),
+                    Barn(fødselsdato = LocalDate.of(2013, 12, 31)),
+                    Barn(fødselsdato = LocalDate.of(2009, 6, 15)),
+                ),
             )
         val barnSomSkalAldersjusteres = aldersjusteringService.hentAlleBarnSomSkalAldersjusteresForÅr(2024)
 
@@ -41,7 +45,7 @@ class AldersjusteringServiceTest {
 
     @Test
     fun skalReturnereTomListeOmIngenBarnSkalAldersjusteres() {
-        every { barnRepository.finnBarnSomSkalAldersjusteresForÅr(2024) } returns emptyList()
+        every { barnRepository.finnBarnSomSkalAldersjusteresForÅr(2024) } returns Page.empty()
 
         val barnSomSkalAldersjusteres = aldersjusteringService.hentAlleBarnSomSkalAldersjusteresForÅr(2024)
         barnSomSkalAldersjusteres shouldHaveSize 0
