@@ -6,6 +6,10 @@ management:
 
 springdoc:
   packages-to-scan: no.nav.bidrag.aldersjustering.controller
+  swagger-ui:
+    path: /
+    display-request-duration: true
+    try-it-out-enabled: true
 spring.main.banner-mode: off
 ---
 spring.config.activate.on-profile: nais,lokal-nais
@@ -14,8 +18,10 @@ no.nav.security.jwt:
   client:
     registration:
       bidrag-person:
+        resource-url: ${PERSON_URL}
         token-endpoint-url: https://login.microsoftonline.com/${AZURE_APP_TENANT_ID}/oauth2/v2.0/token
         grant-type: urn:ietf:params:oauth:grant-type:jwt-bearer
+        scope: api://${PERSON_SCOPE}/.default
         authentication:
           client-id: ${AZURE_APP_CLIENT_ID}
           client-secret: ${AZURE_APP_CLIENT_SECRET}
@@ -23,3 +29,47 @@ no.nav.security.jwt:
   issuer.aad:
     discovery_url: https://login.microsoftonline.com/${AZURE_APP_TENANT_ID}/v2.0/.well-known/openid-configuration
     accepted_audience: ${AZURE_APP_CLIENT_ID}, api://${AZURE_APP_CLIENT_ID}
+
+spring:
+  datasource:
+    url: ${DB_JDBC_URL}
+    hikari:
+      idle-timeout: 10001
+      max-lifetime: 30001
+      connectionTimeout: 1000
+      maximum-pool-size: 10
+      minimum-idle: 1
+      data-source-properties:
+        ssl: true
+        sslmode: ${DB_SSLMODE}
+        sslcert: ${DB_SSLCERT}
+        sslkey: ${DB_SSLKEY_PK8}
+        sslrootcert: ${DB_SSLROOTCERT}
+  flyway:
+    enabled: true
+    locations: classpath:/db/migration
+  jpa:
+    database: postgresql
+    open-in-view: false
+  kafka:
+    bootstrap-servers: ${KAFKA_BROKERS}
+    properties:
+      security.protocol: SSL
+      ssl:
+        keystore:
+          type: PKCS12
+          location: ${KAFKA_KEYSTORE_PATH}
+          password: ${KAFKA_CREDSTORE_PASSWORD}
+        truststore:
+          location: ${KAFKA_TRUSTSTORE_PATH}
+          password: ${KAFKA_CREDSTORE_PASSWORD}
+    consumer:
+      auto-offset-reset: earliest
+      max-poll-records: 10
+      group-id: bidrag-aktoerregister
+  batch:
+    job:
+      enabled: false
+logging:
+  level:
+    org.apache.kafka: WARN

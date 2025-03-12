@@ -1,14 +1,12 @@
 # Bidrag-aldersjustering
-Template repo for å opprette ny Spring applikasjon for Bidrag
+Applikasjon for å aldersjustere barn i bidragssaker.
 
-[![continuous integration](https://github.com/navikt/bidrag-aldersjustering/actions/workflows/pr.yaml/badge.svg)](https://github.com/navikt/bidrag-aldersjustering/actions/workflows/ci.yaml)
-[![release bidrag-aldersjustering](https://github.com/navikt/bidrag-aldersjustering/actions/workflows/release.yaml/badge.svg)](https://github.com/navikt/bidrag-aldersjustering/actions/workflows/release.yaml)
+[![continuous integration](https://github.com/navikt/bidrag-aldersjustering/actions/workflows/deploy_q1.yaml/badge.svg)](https://github.com/navikt/bidrag-aldersjustering/actions/workflows/deploy_q1.yaml)
+[![release bidrag-aldersjustering](https://github.com/navikt/bidrag-aldersjustering/actions/workflows/deploy_prod.yaml/badge.svg)](https://github.com/navikt/bidrag-aldersjustering/actions/workflows/deploy_prod.yaml)
 
 ## Beskrivelse
-
-Erstatt alt som har postfix `-template-spring` med din applikasjonsnavn
-
-Legg til Github secret `NAIS_DEPLOY_APIKEY` hvor secret hentes fra [Api key](https://deploy.nais.io/apikeys)
+Bidrag-aldersjustering lagrer alle barn som er part i en bidragssak, og aldersjusterer disse. 
+Aldersjustering skjer for alle barn året de fyller 6, 11 og 15 år basert på sjablong-verdier.
 
 ## Kjøre applikasjonen lokalt
 
@@ -18,17 +16,10 @@ Dette starter applikasjonen med profil `local` og henter miljøvariabler for Q1 
 Her mangler det noen miljøvariabler som ikke bør committes til Git (Miljøvariabler for passord/secret osv).<br/>
 Når du starter applikasjon må derfor følgende miljøvariabl(er) settes:
 ```bash
--DAZURE_APP_CLIENT_SECRET=<secret>
--DAZURE_APP_CLIENT_ID=<id>
+AZURE_APP_CLIENT_SECRET=<secret>
+AZURE_APP_CLIENT_ID=<id>
 ```
 Disse kan hentes ved å kjøre kan hentes ved å kjøre 
 ```bash
-kubectl exec --tty deployment/bidrag-dialog-feature -- printenv | grep -e AZURE_APP_CLIENT_ID -e AZURE_APP_CLIENT_SECRET
+kubectl exec --tty deployment/bidrag-aldersjustering-q1 -- printenv | grep -e AZURE_APP_CLIENT_ID -e AZURE_APP_CLIENT_SECRET
 ```
-
-### Live reload
-Med `spring-boot-devtools` har Spring støtte for live-reload av applikasjon. Dette betyr i praksis at Spring vil automatisk restarte applikasjonen når en fil endres. Du vil derfor slippe å restarte applikasjonen hver gang du gjør endringer. Dette er forklart i [dokumentasjonen](https://docs.spring.io/spring-boot/docs/1.5.16.RELEASE/reference/html/using-boot-devtools.html#using-boot-devtools-restart).
-For at dette skal fungere må det gjøres noe endringer i Intellij instillingene slik at Intellij automatisk re-bygger filene som er endret:
-
-* Gå til `Preference -> Compiler -> check "Build project automatically"`
-* Gå til `Preference -> Advanced settings -> check "Allow auto-make to start even if developed application is currently running"`
