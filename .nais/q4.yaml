@@ -11,7 +11,7 @@ replicas:
   max: 1
   min: 1
 database:
-  navn: bidrag-automatisk-jobb-q1
+  navn: bidrag-automatisk-jobb-q4
   tier: db-f1-micro
   size: 10
 kafka:
