@@ -1,6 +1,6 @@
-name: bidrag-aldersjustering-q1
+name: bidrag-automatisk-jobb-q1
 ingresses:
-  - https://bidrag-aldersjustering-q1.intern.dev.nav.no
+  - https://bidrag-automatisk-jobb-q1.intern.dev.nav.no
 limits:
   cpu: 1000m
   memory: 1012Mi
@@ -11,7 +11,7 @@ replicas:
   max: 1
   min: 1
 database:
-  navn: bidrag-aldersjustering-q1
+  navn: bidrag-automatisk-jobb-q1
   tier: db-f1-micro
   size: 10
 kafka:

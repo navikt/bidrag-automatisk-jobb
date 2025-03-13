@@ -52,7 +52,7 @@ spec:
         diskSize: {{ database.size }}
         tier: {{ database.tier }}
         databases:
-          - name: bidrag-aldersjustering
+          - name: bidrag-automatisk-jobb
             envVarPrefix: DB
   ingresses:
   {{#each ingresses as |url|}}

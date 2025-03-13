@@ -9,9 +9,9 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>no.nav</groupId>
-    <artifactId>bidrag-aldersjustering</artifactId>
+    <artifactId>bidrag-automatisk-jobb</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>bidrag-aldersjustering</name>
+    <name>bidrag-automatisk-jobb</name>
     <properties>
         <java.version>21</java.version>
         <kotlin.version>2.0.21</kotlin.version>

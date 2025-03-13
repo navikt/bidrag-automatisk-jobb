@@ -4,7 +4,7 @@ AZURE_APP_TENANT_ID: 966ac572-f5b7-4bbe-aa88-c76419c0f851
 AZURE_APP_CLIENT_ID: <app_client_id>
 AZURE_APP_CLIENT_SECRET: unset
 server.port: 8999
-NAIS_APP_NAME: bidrag-aldersjustering
+NAIS_APP_NAME: bidrag-automatisk-jobb
 KAFKA_PERSON_HENDELSE_TOPIC: bidrag.personhendelse.v1-test
 KAFKA_VEDTAK_TOPIC: bidrag.vedtak-test
 KAFKA_BROKERS: localhost:9092
