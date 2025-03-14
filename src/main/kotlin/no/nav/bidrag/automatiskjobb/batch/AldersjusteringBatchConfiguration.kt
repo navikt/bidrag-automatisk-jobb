@@ -10,7 +10,6 @@ class AldersjusteringBatchConfiguration {
     @Bean
     fun beanRemover(): BeanDefinitionRegistryPostProcessor =
         BeanDefinitionRegistryPostProcessor { registry: BeanDefinitionRegistry ->
-            registry.removeBeanDefinition("jobRegistryBeanPostProcessor")
             registry.removeBeanDefinition("annotationActionEndpointMapping")
         }
 }
