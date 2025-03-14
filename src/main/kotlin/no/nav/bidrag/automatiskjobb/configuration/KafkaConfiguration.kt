@@ -1,16 +1,11 @@
 package no.nav.bidrag.automatiskjobb.configuration
 
 import no.nav.bidrag.automatiskjobb.SECURE_LOGGER
-import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.ConsumerRecord
-import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory
-import org.springframework.kafka.core.ConsumerFactory
-import org.springframework.kafka.core.DefaultKafkaConsumerFactory
 import org.springframework.kafka.listener.DefaultErrorHandler
 import org.springframework.kafka.listener.RetryListener
 import org.springframework.kafka.support.ExponentialBackOffWithMaxRetries
@@ -20,31 +15,6 @@ import org.springframework.util.backoff.ExponentialBackOff
 class KafkaConfiguration {
     companion object {
         private val LOGGER = LoggerFactory.getLogger(KafkaConfiguration::class.java)
-    }
-
-    @Bean
-    fun consumerFactoryPersonHendelse(
-        @Value("\${KAFKA_GROUP_ID:bidrag-automatisk-jobb}") groupId: String,
-        @Value("\${KAFKA_BROKERS:http://localhost:9092}") brokers: String,
-    ): ConsumerFactory<String, String> {
-        val props =
-            mapOf(
-                ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG to brokers,
-                ConsumerConfig.GROUP_ID_CONFIG to groupId,
-                ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to StringDeserializer::class.java,
-                ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG to StringDeserializer::class.java,
-                ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to "latest",
-            )
-        return DefaultKafkaConsumerFactory(props)
-    }
-
-    @Bean
-    fun kafkaListenerContainerFactoryPersonHendelse(
-        consumerFactoryPersonHendelse: ConsumerFactory<String, String>,
-    ): ConcurrentKafkaListenerContainerFactory<String, String> {
-        val factory = ConcurrentKafkaListenerContainerFactory<String, String>()
-        factory.consumerFactory = consumerFactoryPersonHendelse
-        return factory
     }
 
     @Bean

@@ -18,7 +18,6 @@ class BidragPersonHendelseListener(
     @KafkaListener(
         topics = ["\${KAFKA_PERSON_HENDELSE_TOPIC}"],
         groupId = "\${KAFKA_GROUP_ID:bidrag-automatisk-jobb}",
-        containerFactory = "kafkaListenerContainerFactoryPersonHendelse",
     )
     fun behandlePersonHendelse(
         hendelse: String,
