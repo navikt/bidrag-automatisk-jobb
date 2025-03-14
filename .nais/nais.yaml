@@ -21,13 +21,13 @@ spec:
   image: {{ image }}
   liveness:
     path: /actuator/health
-    initialDelay: 20
+    initialDelay: 60
     timeout: 1
     periodSeconds: 5
     failureThreshold: 10
   readiness:
     path: /actuator/health
-    initialDelay: 20
+    initialDelay: 60
     timeout: 1
     periodSeconds: 5
     failureThreshold: 10
@@ -48,7 +48,7 @@ spec:
   gcp:
     sqlInstances:
       - name: {{ database.navn }}
-        type: POSTGRES_15
+        type: POSTGRES_17
         diskSize: {{ database.size }}
         tier: {{ database.tier }}
         databases:
