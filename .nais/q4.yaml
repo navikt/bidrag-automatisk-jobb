@@ -3,7 +3,7 @@ ingresses:
   - https://bidrag-automatisk-jobb-q4.intern.dev.nav.no
 limits:
   cpu: 1000m
-  memory: 1012Mi
+  memory: 4000Mi
 requests:
   cpu: 1500m
   memory: 3000Mi
