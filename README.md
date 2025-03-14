@@ -2,7 +2,7 @@
 Applikasjon for å aldersjustere barn i bidragssaker.
 
 [![continuous integration](https://github.com/navikt/bidrag-automatisk-jobb/actions/workflows/deploy_q1.yaml/badge.svg)](https://github.com/navikt/bidrag-automatisk-jobb/actions/workflows/deploy_q1.yaml)
-[![release bidrag-automatisk-jobb](https://github.com/navikt/bidrag-aldersjustering/actions/workflows/deploy_prod.yaml/badge.svg)](https://github.com/navikt/bidrag-automatisk-jobb/actions/workflows/deploy_prod.yaml)
+[![release bidrag-automatisk-jobb](https://github.com/navikt/bidrag-automatisk-jobb/actions/workflows/deploy_prod.yaml/badge.svg)](https://github.com/navikt/bidrag-automatisk-jobb/actions/workflows/deploy_prod.yaml)
 
 ## Beskrivelse
 Bidrag-automatisk-jobb lagrer alle barn som er part i en bidragssak, og aldersjusterer disse. 

@@ -13,10 +13,10 @@ val SECURE_LOGGER: Logger = LoggerFactory.getLogger("secureLogger")
 
 @SpringBootApplication(exclude = [SecurityAutoConfiguration::class, ManagementWebSecurityAutoConfiguration::class])
 @EnableJwtTokenValidation(ignore = ["org.springframework", "org.springdoc"])
-class BidragAldersjustering
+class BidragAutomatiskJobb
 
 fun main(args: Array<String>) {
-    SpringApplication(BidragAldersjustering::class.java)
+    SpringApplication(BidragAutomatiskJobb::class.java)
         .apply {
             setAdditionalProfiles(if (args.isEmpty()) PROFILE_NAIS else args[0])
         }.run(*args)

@@ -5,7 +5,7 @@ management:
         include: "prometheus,health"
 
 springdoc:
-  packages-to-scan: no.nav.bidrag.aldersjustering.controller
+  packages-to-scan: no.nav.bidrag.automatiskjobb.controller
   swagger-ui:
     path: /
     display-request-duration: true
@@ -66,7 +66,7 @@ spring:
     consumer:
       auto-offset-reset: earliest
       max-poll-records: 10
-      group-id: bidrag-aktoerregister
+      group-id: bidrag-automatisk-jobb
   batch:
     job:
       enabled: false

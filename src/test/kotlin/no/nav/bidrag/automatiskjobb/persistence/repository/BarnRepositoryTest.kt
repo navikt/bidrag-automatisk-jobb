@@ -2,7 +2,7 @@ package no.nav.bidrag.automatiskjobb.persistence.repository
 
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldHaveSize
-import no.nav.bidrag.automatiskjobb.BidragAldersjustering
+import no.nav.bidrag.automatiskjobb.BidragAutomatiskJobb
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
 import org.junit.jupiter.api.Test
@@ -22,7 +22,7 @@ import java.time.LocalDate
 @ActiveProfiles("test")
 @EnableMockOAuth2Server
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@SpringBootTest(classes = [BidragAldersjustering::class])
+@SpringBootTest(classes = [BidragAutomatiskJobb::class])
 class BarnRepositoryTest {
     companion object {
         private var postgreSqlDb =
