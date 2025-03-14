@@ -5,13 +5,13 @@ limits:
   cpu: 1000m
   memory: 1012Mi
 requests:
-  cpu: 500m
+  cpu: 100m
   memory: 512Mi
 replicas:
   max: 1
   min: 1
 database:
-  navn: bidrag-automatisk-jobb-q4
+  navn: bidrag-automatisk-jobb-q4-v2
   tier: db-f1-micro
   size: 10
 kafka:
