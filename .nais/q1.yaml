@@ -3,10 +3,9 @@ ingresses:
   - https://bidrag-automatisk-jobb-q1.intern.dev.nav.no
 limits:
   cpu: 1000m
-  memory: 1012Mi
 requests:
-  cpu: 100m
-  memory: 512Mi
+  cpu: 500m
+  memory: 2000Mi
 replicas:
   max: 1
   min: 1
