@@ -2,11 +2,10 @@ name: bidrag-automatisk-jobb-q2
 ingresses:
   - https://bidrag-automatisk-jobb-q2.intern.dev.nav.no
 limits:
-  cpu: 1000m
-  memory: 4000Mi
+  memory: 2000Mi
 requests:
-  cpu: 1500m
-  memory: 3000Mi
+  cpu: 100m
+  memory: 512Mi
 replicas:
   max: 1
   min: 1
