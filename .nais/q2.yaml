@@ -5,8 +5,8 @@ limits:
   cpu: 1000m
   memory: 1012Mi
 requests:
-  cpu: 500m
-  memory: 2000Mi
+  cpu: 1500m
+  memory: 3000Mi
 replicas:
   max: 1
   min: 1
