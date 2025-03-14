@@ -25,8 +25,8 @@ class KafkaConfiguration {
     @Bean
     fun consumerFactoryPersonHendelse(
         @Value("\${KAFKA_GROUP_ID:bidrag-automatisk-jobb}") groupId: String,
+        @Value("\${KAFKA_BROKERS:http://localhost:9092}") brokers: String,
     ): ConsumerFactory<String, String> {
-        val brokers = System.getenv("KAFKA_BROKERS") ?: "http://localhost:9092"
         val props =
             mapOf(
                 ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG to brokers,
