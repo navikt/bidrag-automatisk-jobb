@@ -13,12 +13,35 @@ database:
   navn: bidrag-automatisk-jobb-q2
   tier: db-f1-micro
   size: 10
+  auditlog: "off"
 kafka:
   pool: nav-dev
 env:
   PERSON_URL: https://bidrag-person-q2.dev-fss-pub.nais.io/bidrag-person
   PERSON_SCOPE: dev-fss.bidrag.bidrag-person-q2
-  PERSON_HOST: bidrag-person-q2.dev-fss-pub.nais.io
+  BIDRAG_STONAD_URL: http://bidrag-stonad-q2
+  BIDRAG_STONAD_SCOPE: dev-gcp.bidrag.bidrag-stonad-q2
+  BIDRAG_VEDTAK_URL: http://bidrag-vedtak-q2
+  BIDRAG_VEDTAK_SCOPE: dev-gcp.bidrag.bidrag-vedtak-q2
+  BIDRAG_SAK_URL: https://bidrag-sak-q2.dev-fss-pub.nais.io/bidrag-sak
+  BIDRAG_SAK_SCOPE: dev-fss.bidrag.bidrag-sak-q2
+  OPPGAVE_URL: https://oppgave.dev-fss-pub.nais.io
+  OPPGAVE_SCOPE: dev-fss.oppgavehandtering.oppgave
+  KODEVERK_URL: http://bidrag-kodeverk
+  BIDRAG_SJABLON_URL: https://bidrag-sjablon.dev-fss-pub.nais.io/bidrag-sjablon
   KAFKA_VEDTAK_TOPIC: bidrag.vedtak-q2
   KAFKA_PERSON_HENDELSE_TOPIC: bidrag.personhendelse.v1
   JAVA_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -XX:MaxRAMPercentage=80.0
+outbound-access-apps:
+  - bidrag-stonad-q2
+  - bidrag-vedtak-q2
+  - bidrag-kodeverk
+outbound-access-hosts:
+  - bidrag-person-q2.dev-fss-pub.nais.io
+  - bidrag-sak-q2.dev-fss-pub.nais.io
+  - bidrag-sjablon.dev-fss-pub.nais.io
+  - oppgave.dev-fss-pub.nais.io
+  - bidrag-unleash-api.nav.cloud.nais.io
+unleash:
+  env: development
+  secret_name: bidrag-automatisk-jobb-unleash-api-token

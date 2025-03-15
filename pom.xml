@@ -129,7 +129,11 @@
             <version>${shedlock.version}</version>
         </dependency>
 
-
+        <dependency>
+            <groupId>io.getunleash</groupId>
+            <artifactId>unleash-client-java</artifactId>
+            <version>10.1.0</version>
+        </dependency>
         <!--Sikkerhet-->
         <dependency>
             <groupId>no.nav.security</groupId>

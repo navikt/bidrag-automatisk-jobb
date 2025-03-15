@@ -14,6 +14,23 @@ spec:
         extra:
           - "NAVident"
           - "azp_name"
+  accessPolicy:
+      inbound:
+        rules:
+        {{#each azure_access_inbound}}
+            - application: {{this.application}}
+              namespace: {{this.namespace}}
+              cluster: {{this.cluster}}
+        {{/each}}
+      outbound:
+        external:
+        {{#each outbound-access-hosts}}
+            - host: {{this}}
+        {{/each}}
+        rules:
+        {{#each outbound-access-apps}}
+            - application: {{this}}
+        {{/each}}
   secureLogs:
     enabled: true
   kafka:
@@ -44,6 +61,8 @@ spec:
     disableAutoScaling: true
     max: {{replicas.max}}
     min: {{replicas.min}}
+  envFrom:
+    - secret: {{unleash.secret_name}}
   gcp:
     sqlInstances:
       - name: {{ database.navn }}
@@ -53,6 +72,13 @@ spec:
         databases:
           - name: bidrag-automatisk-jobb
             envVarPrefix: DB
+        flags:
+          - name: "cloudsql.enable_pgaudit"
+            value: "{{ database.auditlog }}"
+          - name: "pgaudit.log"
+            value: "write"
+          - name: "pgaudit.log_parameter"
+            value: "on"
   ingresses:
   {{#each ingresses as |url|}}
     - {{url}}
