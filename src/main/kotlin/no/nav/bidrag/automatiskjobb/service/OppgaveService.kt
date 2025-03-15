@@ -10,7 +10,6 @@ import no.nav.bidrag.automatiskjobb.consumer.dto.OppgaveType
 import no.nav.bidrag.automatiskjobb.consumer.dto.OpprettOppgaveRequest
 import no.nav.bidrag.automatiskjobb.consumer.dto.lagBeskrivelseHeader
 import no.nav.bidrag.commons.util.secureLogger
-import no.nav.bidrag.domene.enums.vedtak.Engangsbeløptype
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.domene.sak.Saksnummer
@@ -21,7 +20,7 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
 private val log = KotlinLogging.logger {}
-val revurderForskuddBeskrivelse = "Løper forskuddet med riktig sats? Vurder om forskuddet må revurderes."
+val revurderForskuddBeskrivelse = "Forskuddet skal reduseres basert på inntekt fra siste vedtak."
 val enhet_farskap = "4860"
 val skyldnerNav = Personident("NAV")
 
@@ -30,73 +29,26 @@ class OppgaveService(
     private val oppgaveConsumer: OppgaveConsumer,
     private val bidragStønadConsumer: BidragStønadConsumer,
     private val bidragSakConsumer: BidragSakConsumer,
+    private val revurderForskuddService: RevurderForskuddService,
     private val unleash: Unleash,
 ) {
     fun opprettRevurderForskuddOppgave(vedtakHendelse: VedtakHendelse) {
-        opprettRevurderForskuddOppgaveBidrag(vedtakHendelse)
-        opprettRevurderForskuddOppgaveSærbidrag(vedtakHendelse)
-    }
-
-    fun opprettRevurderForskuddOppgaveSærbidrag(vedtakHendelse: VedtakHendelse) {
-        val bidragSærbidragListe = vedtakHendelse.engangsbeløpListe!!.filter { it.type == Engangsbeløptype.SÆRBIDRAG }
-        if (bidragSærbidragListe.isEmpty()) return
-
-        bidragSærbidragListe
-            .forEach { stønad ->
-                hentLøpendeForskuddForSak(stønad.sak.verdi, stønad.kravhaver.verdi)?.let {
-                    val sistePeriode = it.periodeListe.maxBy { it.periode.fom }
-                    if (sistePeriode.periode.til == null) {
-                        log.info {
-                            "Sak ${stønad.sak.verdi} har løpende forskudd. Opprett revurder forskudd oppgave"
-                        }
-                        secureLogger.info {
-                            "Sak ${stønad.sak.verdi} har løpende forskudd for mottaker ${stønad.mottaker.verdi}. Opprett revurder forskudd oppgave"
-                        }
-                        vedtakHendelse.opprettRevurderForskuddOppgave(stønad.sak.verdi, stønad.mottaker.verdi)
-                        return // Opprett kun en oppgave per sak
-                    } else {
-                        secureLogger.info {
-                            "Sak ${stønad.sak.verdi} har ingen løpende forskudd for mottaker ${stønad.mottaker.verdi} og kravhaver ${stønad.kravhaver.verdi}. Oppretter ikke revurder forskudd oppgave"
-                        }
+        try {
+            revurderForskuddService
+                .erForskuddRedusert(vedtakHendelse)
+                .forEach { stønad ->
+                    log.info {
+                        "Sak ${stønad.saksnummer} har løpende forskudd. Opprett revurder forskudd oppgave"
                     }
-                } ?: kotlin.run {
-                    log.info { "Fant ikke løpende forskudd for sak ${stønad.sak.verdi}. Oppretter ikke revurder forskudd oppgave" }
                     secureLogger.info {
-                        "Fant ikke løpende forskudd for sak ${stønad.sak.verdi} og søknadsbarn ${stønad.kravhaver.verdi}. Oppretter ikke revurder forskudd oppgave"
+                        "Sak ${stønad.saksnummer} har løpende forskudd for mottaker ${stønad.bidragsmottaker}. Opprett revurder forskudd oppgave"
                     }
+//                vedtakHendelse.opprettRevurderForskuddOppgave(stønad.saksnummer, stønad.bidragsmottaker)
+                    return // Opprett kun en oppgave per sak
                 }
-            }
-    }
-
-    fun opprettRevurderForskuddOppgaveBidrag(vedtakHendelse: VedtakHendelse) {
-        val bidragStønadsendringer = vedtakHendelse.stønadsendringListe!!.filter { it.type == Stønadstype.BIDRAG }
-        if (bidragStønadsendringer.isEmpty()) return
-
-        bidragStønadsendringer
-            .forEach { stønad ->
-                hentLøpendeForskuddForSak(stønad.sak.verdi, stønad.kravhaver.verdi)?.let {
-                    val sistePeriode = it.periodeListe.maxBy { it.periode.fom }
-                    if (sistePeriode.periode.til == null) {
-                        log.info {
-                            "Sak ${stønad.sak.verdi} har løpende forskudd. Opprett revurder forskudd oppgave"
-                        }
-                        secureLogger.info {
-                            "Sak ${stønad.sak.verdi} har løpende forskudd for mottaker ${stønad.mottaker.verdi}. Opprett revurder forskudd oppgave"
-                        }
-                        vedtakHendelse.opprettRevurderForskuddOppgave(stønad.sak.verdi, stønad.mottaker.verdi)
-                        return // Opprett kun en oppgave per sak
-                    } else {
-                        secureLogger.info {
-                            "Sak ${stønad.sak.verdi} har ingen løpende forskudd for mottaker ${stønad.mottaker.verdi} og kravhaver ${stønad.kravhaver.verdi}. Oppretter ikke revurder forskudd oppgave"
-                        }
-                    }
-                } ?: kotlin.run {
-                    log.info { "Fant ikke løpende forskudd for sak ${stønad.sak.verdi}. Oppretter ikke revurder forskudd oppgave" }
-                    secureLogger.info {
-                        "Fant ikke løpende forskudd for sak ${stønad.sak.verdi} og søknadsbarn ${stønad.kravhaver.verdi}. Oppretter ikke revurder forskudd oppgave"
-                    }
-                }
-            }
+        } catch (e: Exception) {
+            log.error(e) { "Det skjedde en feil ved sjekk for om det skal opprettes revurder forskudd oppgave" }
+        }
     }
 
     fun VedtakHendelse.opprettRevurderForskuddOppgave(

@@ -2,13 +2,16 @@ package no.nav.bidrag.automatiskjobb.service
 
 import com.fasterxml.jackson.databind.node.POJONode
 import io.github.oshai.kotlinlogging.KotlinLogging
-import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragStønadConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer
+import no.nav.bidrag.automatiskjobb.utils.hentBarnIHusstandPerioder
+import no.nav.bidrag.automatiskjobb.utils.hentInntekter
+import no.nav.bidrag.automatiskjobb.utils.hentSivilstandPerioder
 import no.nav.bidrag.beregn.forskudd.BeregnForskuddApi
 import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.domene.enums.beregning.Resultatkode
 import no.nav.bidrag.domene.enums.grunnlag.Grunnlagstype
+import no.nav.bidrag.domene.enums.vedtak.Engangsbeløptype
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.domene.sak.Saksnummer
@@ -16,21 +19,19 @@ import no.nav.bidrag.domene.tid.ÅrMånedsperiode
 import no.nav.bidrag.transport.behandling.beregning.felles.BeregnGrunnlag
 import no.nav.bidrag.transport.behandling.beregning.forskudd.ResultatBeregning
 import no.nav.bidrag.transport.behandling.felles.grunnlag.GrunnlagDto
-import no.nav.bidrag.transport.behandling.felles.grunnlag.Grunnlagsreferanse
 import no.nav.bidrag.transport.behandling.felles.grunnlag.InntektsrapporteringPeriode
 import no.nav.bidrag.transport.behandling.felles.grunnlag.bidragsmottaker
 import no.nav.bidrag.transport.behandling.felles.grunnlag.filtrerBasertPåEgenReferanse
-import no.nav.bidrag.transport.behandling.felles.grunnlag.finnGrunnlagSomErReferertFraGrunnlagsreferanseListe
 import no.nav.bidrag.transport.behandling.felles.grunnlag.hentAllePersoner
 import no.nav.bidrag.transport.behandling.felles.grunnlag.hentPersonMedIdent
 import no.nav.bidrag.transport.behandling.felles.grunnlag.innholdTilObjekt
 import no.nav.bidrag.transport.behandling.felles.grunnlag.søknadsbarn
 import no.nav.bidrag.transport.behandling.stonad.request.HentStønadHistoriskRequest
 import no.nav.bidrag.transport.behandling.stonad.response.StønadDto
+import no.nav.bidrag.transport.behandling.stonad.response.StønadPeriodeDto
 import no.nav.bidrag.transport.behandling.vedtak.VedtakHendelse
 import no.nav.bidrag.transport.behandling.vedtak.response.StønadsendringDto
 import no.nav.bidrag.transport.behandling.vedtak.response.VedtakDto
-import no.nav.bidrag.transport.behandling.vedtak.response.VedtakPeriodeDto
 import no.nav.bidrag.transport.felles.ifTrue
 import org.springframework.context.annotation.Import
 import org.springframework.stereotype.Service
@@ -49,29 +50,66 @@ private val LOGGER = KotlinLogging.logger {}
 @Import(BeregnForskuddApi::class)
 class RevurderForskuddService(
     private val bidragStønadConsumer: BidragStønadConsumer,
-    private val bidragSakConsumer: BidragSakConsumer,
     private val bidragVedtakConsumer: BidragVedtakConsumer,
     private val beregning: BeregnForskuddApi,
 ) {
-    fun erForskuddRedusert(vedtakHendelse: VedtakHendelse): List<ForskuddRedusertResultat> {
-        val vedtakBidrag = bidragVedtakConsumer.hentVedtak(vedtakHendelse.id) ?: return listOf()
-        return vedtakBidrag.stønadsendringListe
+    fun erForskuddRedusert(vedtakHendelse: VedtakHendelse): List<ForskuddRedusertResultat> =
+        erForskuddRedusertEtterFattetBidrag(vedtakHendelse) + erForskuddRedusertEtterSærbidrag(vedtakHendelse)
+
+    private fun erForskuddRedusertEtterSærbidrag(vedtakHendelse: VedtakHendelse): List<ForskuddRedusertResultat> {
+        val vedtak = bidragVedtakConsumer.hentVedtak(vedtakHendelse.id) ?: return listOf()
+        if (vedtak.grunnlagListe.isEmpty()) return emptyList()
+        return vedtak.engangsbeløpListe
+            .filter { it.type == Engangsbeløptype.SÆRBIDRAG }
+            .mapNotNull {
+                val gjelderBarn = it.kravhaver
+                val sistePeriode = hentLøpendeForskudd(it.sak.verdi, gjelderBarn.verdi) ?: return@mapNotNull null
+
+                val vedtakForskudd = bidragVedtakConsumer.hentVedtak(sistePeriode.vedtaksid)!!
+                if (vedtakForskudd.grunnlagListe.isEmpty()) return@mapNotNull null
+                val beregnetForskudd = beregnForskudd(vedtak, vedtakForskudd, gjelderBarn)
+
+                val beløpLøpende = sistePeriode.beløp!!
+                val erForskuddRedusert = beløpLøpende > beregnetForskudd.belop
+                erForskuddRedusert.ifTrue { _ ->
+                    LOGGER.info {
+                        "Forskudd er redusert i sak ${it.sak.verdi}. Løpende forskudd er $beløpLøpende og ny beregnet forskudd skal være ${beregnetForskudd.belop}"
+                    }
+                    secureLogger.info {
+                        """Forskudd er redusert i sak ${it.sak.verdi} for bidragsmottaker ${it.mottaker.verdi} og barn ${gjelderBarn.verdi}
+                            Løpende forskudd er $beløpLøpende og ny beregnet forskudd skal være ${beregnetForskudd.belop}"""
+                    }
+                    ForskuddRedusertResultat(
+                        saksnummer = it.sak.verdi,
+                        bidragsmottaker = it.mottaker.verdi,
+                        gjelderBarn = gjelderBarn.verdi,
+                    )
+                }
+            }
+    }
+
+    private fun hentLøpendeForskudd(
+        saksnummer: String,
+        gjelderBarn: String,
+    ): StønadPeriodeDto? {
+        val forskuddStønad = hentLøpendeForskuddForSak(saksnummer, gjelderBarn) ?: return null
+        return forskuddStønad.periodeListe.hentSisteLøpendePeriode()
+    }
+
+    private fun erForskuddRedusertEtterFattetBidrag(vedtakHendelse: VedtakHendelse): List<ForskuddRedusertResultat> {
+        val vedtak = bidragVedtakConsumer.hentVedtak(vedtakHendelse.id) ?: return listOf()
+        if (vedtak.grunnlagListe.isEmpty()) return emptyList()
+        return vedtak.stønadsendringListe
             .filter { it.type == Stønadstype.BIDRAG }
             .mapNotNull {
                 val gjelderBarn = it.kravhaver
-                val forskuddStønad = hentLøpendeForskuddForSak(it.sak.verdi, gjelderBarn.verdi) ?: return@mapNotNull null
-                val sistePeriode =
-                    forskuddStønad.periodeListe
-                        .maxByOrNull { it.periode.fom }
-                        ?.takeIf { it.periode.til == null || it.periode.til!!.isAfter(YearMonth.now()) }
-                        ?: return@mapNotNull null
+                val sistePeriode = hentLøpendeForskudd(it.sak.verdi, gjelderBarn.verdi) ?: return@mapNotNull null
 
                 val vedtakForskudd = bidragVedtakConsumer.hentVedtak(sistePeriode.vedtaksid)!!
-                val beregnetForskudd = beregnForskudd(vedtakBidrag, vedtakForskudd, gjelderBarn)
+                if (vedtakForskudd.grunnlagListe.isEmpty()) return@mapNotNull null
+                val beregnetForskudd = beregnForskudd(vedtak, vedtakForskudd, gjelderBarn)
 
-                val forskuddStønadBarn = vedtakForskudd.stønadsendringListe.find { st -> st.kravhaver == gjelderBarn }!!
-                val løpendeForskudd = forskuddStønadBarn.periodeListe.maxBy { it.periode.fom }
-                val beløpLøpende = løpendeForskudd.beløp!!
+                val beløpLøpende = sistePeriode.beløp!!
                 val erForskuddRedusert = beløpLøpende > beregnetForskudd.belop
                 erForskuddRedusert.ifTrue { _ ->
                     LOGGER.info {
@@ -114,13 +152,22 @@ class RevurderForskuddService(
         return sistePeriode.resultat
     }
 
+    private fun byggGrunnlagFattetVedtak(
+        vedtakBidrag: VedtakDto,
+        gjelderBarn: Personident,
+    ): List<GrunnlagDto> =
+        vedtakBidrag.stønadsendringListe.find { it.kravhaver == gjelderBarn && it.type == Stønadstype.BIDRAG }?.let {
+            hentGrunnlagFraBidrag(vedtakBidrag, it)
+        } ?: vedtakBidrag.engangsbeløpListe.find { it.kravhaver == gjelderBarn && it.type == Engangsbeløptype.SÆRBIDRAG }?.let {
+            hentGrunnlagFraSærbidrag(vedtakBidrag, gjelderBarn)
+        } ?: emptyList()
+
     private fun byggGrunnlagForBeregning(
         vedtakBidrag: VedtakDto,
         vedtakLøpendeForskudd: VedtakDto,
         gjelderBarn: Personident,
     ): List<GrunnlagDto> {
-        val bidragStønadBarn = vedtakBidrag.stønadsendringListe.find { it.kravhaver == gjelderBarn }!!
-        val grunnlagBidrag = hentGrunnlagFraBidrag(vedtakBidrag, bidragStønadBarn)
+        val grunnlagBidrag = byggGrunnlagFattetVedtak(vedtakBidrag, gjelderBarn)
 
         val forskuddStønadBarn = vedtakLøpendeForskudd.stønadsendringListe.find { it.kravhaver == gjelderBarn }!!
         val grunnlagForskudd = hentGrunnlagFraForskudd(vedtakLøpendeForskudd, forskuddStønadBarn)
@@ -151,6 +198,23 @@ class RevurderForskuddService(
         return (grunnlagBidragJustert + grunnlagForskudd + listOf(søknad) + personobjekter).toList()
     }
 
+    private fun hentGrunnlagFraSærbidrag(
+        vedtak: VedtakDto,
+        gjelderBarn: Personident,
+    ): List<GrunnlagDto> {
+        val engangsbeløpSærbidrag =
+            vedtak.engangsbeløpListe.find { it.type == Engangsbeløptype.SÆRBIDRAG && it.kravhaver == gjelderBarn } ?: return emptyList()
+        val bidragsmottaker = vedtak.grunnlagListe.bidragsmottaker!!
+        val søknadsbarn = vedtak.grunnlagListe.hentPersonMedIdent(gjelderBarn.verdi)!!
+        val inntekter =
+            vedtak.grunnlagListe.hentInntekter(
+                engangsbeløpSærbidrag.grunnlagReferanseListe,
+                bidragsmottaker.referanse,
+                søknadsbarn.referanse,
+            )
+        return inntekter
+    }
+
     private fun hentGrunnlagFraBidrag(
         vedtak: VedtakDto,
         stønadsendring: StønadsendringDto,
@@ -158,7 +222,7 @@ class RevurderForskuddService(
         val periode = stønadsendring.periodeListe.filter { it.resultatkode != Resultatkode.OPPHØR.name }.maxBy { it.periode.fom }
         val bidragsmottaker = vedtak.grunnlagListe.bidragsmottaker!!
         val søknadsbarn = vedtak.grunnlagListe.hentPersonMedIdent(stønadsendring.kravhaver.verdi)!!
-        val inntekter = vedtak.grunnlagListe.hentInntekter(periode, bidragsmottaker.referanse, søknadsbarn.referanse)
+        val inntekter = vedtak.grunnlagListe.hentInntekter(periode.grunnlagReferanseListe, bidragsmottaker.referanse, søknadsbarn.referanse)
         return inntekter
     }
 
@@ -166,61 +230,12 @@ class RevurderForskuddService(
         vedtak: VedtakDto,
         stønadsendring: StønadsendringDto,
     ): List<GrunnlagDto> {
+        if (vedtak.grunnlagListe.isEmpty()) return emptyList()
         val periode = stønadsendring.periodeListe.maxBy { it.periode.fom }
         val bidragsmottaker = vedtak.grunnlagListe.bidragsmottaker!!
         val sivilstandPerioder = vedtak.grunnlagListe.hentSivilstandPerioder(periode, bidragsmottaker.referanse)
         val barnIHusstandPerioder = vedtak.grunnlagListe.hentBarnIHusstandPerioder(periode)
         return sivilstandPerioder + barnIHusstandPerioder
-    }
-
-    private fun List<GrunnlagDto>.hentSivilstandPerioder(
-        periodeDto: VedtakPeriodeDto,
-        gjelderPersonReferanse: Grunnlagsreferanse,
-    ): List<GrunnlagDto> {
-        val sivilstandPerioder =
-            finnGrunnlagSomErReferertFraGrunnlagsreferanseListe(Grunnlagstype.SIVILSTAND_PERIODE, periodeDto.grunnlagReferanseListe)
-                .filter { it.gjelderReferanse == gjelderPersonReferanse }
-        return sivilstandPerioder as List<GrunnlagDto>
-    }
-
-    private fun List<GrunnlagDto>.hentBarnIHusstandPerioder(periodeDto: VedtakPeriodeDto): List<GrunnlagDto> {
-        val delberegningBarnIHusstand =
-            finnGrunnlagSomErReferertFraGrunnlagsreferanseListe(
-                Grunnlagstype.DELBEREGNING_BARN_I_HUSSTAND,
-                periodeDto.grunnlagReferanseListe,
-            )
-
-        val barnIHusstandPerioder =
-            delberegningBarnIHusstand.flatMap {
-                finnGrunnlagSomErReferertFraGrunnlagsreferanseListe(Grunnlagstype.BOSTATUS_PERIODE, it.grunnlagsreferanseListe)
-            }
-        return barnIHusstandPerioder as List<GrunnlagDto>
-    }
-
-    private fun List<GrunnlagDto>.hentInntekter(
-        periodeDto: VedtakPeriodeDto,
-        gjelderPersonReferanse: Grunnlagsreferanse,
-        gjelderBarnReferanse: Grunnlagsreferanse,
-    ): List<GrunnlagDto> {
-        val delberegningBidragsEvne =
-            finnGrunnlagSomErReferertFraGrunnlagsreferanseListe(
-                Grunnlagstype.DELBEREGNING_BIDRAGSPLIKTIGES_ANDEL,
-                periodeDto.grunnlagReferanseListe,
-            ).firstOrNull() ?: return emptyList()
-
-        val delberegningSumInntekt =
-            finnGrunnlagSomErReferertFraGrunnlagsreferanseListe(
-                Grunnlagstype.DELBEREGNING_SUM_INNTEKT,
-                delberegningBidragsEvne.grunnlagsreferanseListe,
-            ).filter { it.gjelderReferanse == gjelderPersonReferanse }
-
-        val inntekter =
-            delberegningSumInntekt.flatMap {
-                finnGrunnlagSomErReferertFraGrunnlagsreferanseListe(Grunnlagstype.INNTEKT_RAPPORTERING_PERIODE, it.grunnlagsreferanseListe)
-                    .filter { it.gjelderBarnReferanse == null || it.gjelderBarnReferanse == gjelderBarnReferanse }
-                    .filter { it.gjelderReferanse == gjelderPersonReferanse }
-            }
-        return inntekter as List<GrunnlagDto>
     }
 
     private fun hentLøpendeForskuddForSak(
@@ -237,22 +252,7 @@ class RevurderForskuddService(
             ),
         )
 
-//    fun byggGrunnlagForBeregning(): BeregnGrunnlag {
-//        val personobjekter = tilPersonobjekter(søknadsbarnRolle)
-//        val søknadsbarn = søknadsbarnRolle.tilGrunnlagPerson()
-//        val bostatusBarn = tilGrunnlagBostatus(personobjekter)
-//        val inntekter = tilGrunnlagInntekt(personobjekter, søknadsbarn, false)
-//        val grunnlagsliste = (personobjekter + bostatusBarn + inntekter + byggGrunnlagSøknad()).toMutableSet()
-//
-//        return BeregnGrunnlag(
-//            periode =
-//                ÅrMånedsperiode(
-//                    YearMonth.now(),
-//                    YearMonth.now().plusMonths(1),
-//                ),
-//            stønadstype = Stønadstype.FORSKUDD,
-//            søknadsbarnReferanse = søknadsbarn.referanse,
-//            grunnlagListe = grunnlagsliste.toSet().toList(),
-//        )
-//    }
+    private fun List<StønadPeriodeDto>.hentSisteLøpendePeriode() =
+        maxByOrNull { it.periode.fom }
+            ?.takeIf { it.periode.til == null || it.periode.til!!.isAfter(YearMonth.now()) }
 }

@@ -1,5 +1,6 @@
 package no.nav.bidrag.automatiskjobb.consumer
 
+import no.nav.bidrag.automatiskjobb.configuration.CacheConfiguration.Companion.VEDTAK_CACHE
 import no.nav.bidrag.commons.web.client.AbstractRestClient
 import no.nav.bidrag.transport.behandling.vedtak.request.HentVedtakForStønadRequest
 import no.nav.bidrag.transport.behandling.vedtak.request.OpprettVedtakRequestDto
@@ -8,6 +9,7 @@ import no.nav.bidrag.transport.behandling.vedtak.response.OpprettVedtakResponseD
 import no.nav.bidrag.transport.behandling.vedtak.response.VedtakDto
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.retry.annotation.Backoff
 import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Component
@@ -29,6 +31,7 @@ class BidragVedtakConsumer(
             request,
         )
 
+    @Cacheable(VEDTAK_CACHE)
     fun hentVedtak(vedtakId: Int): VedtakDto? =
         getForEntity(
             bidragVedtakUri.pathSegment(vedtakId.toString()).build().toUri(),

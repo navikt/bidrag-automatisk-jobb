@@ -2,7 +2,6 @@ package no.nav.bidrag.automatiskjobb.kafka
 
 import no.nav.bidrag.automatiskjobb.SECURE_LOGGER
 import no.nav.bidrag.automatiskjobb.service.OppgaveService
-import no.nav.bidrag.automatiskjobb.service.RevurderForskuddService
 import no.nav.bidrag.automatiskjobb.service.VedtakService
 import no.nav.bidrag.transport.behandling.vedtak.VedtakHendelse
 import no.nav.bidrag.transport.felles.commonObjectmapper
@@ -16,14 +15,13 @@ import org.springframework.stereotype.Component
 class BidragVedtakListener(
     private val vedtakService: VedtakService,
     private val oppgaveService: OppgaveService,
-    private val revurderForskuddService: RevurderForskuddService,
 ) {
     companion object {
         private val LOGGER = LoggerFactory.getLogger(BidragVedtakListener::class.java)
     }
 
     @KafkaListener(
-        groupId = "\${KAFKA_GROUP_ID:bidrag-automatisk-jobb}",
+        groupId = "\${KAFKA_GROUP_ID:bidrag-automatisk-jobb3}",
         topics = ["\${KAFKA_VEDTAK_TOPIC}"],
     )
     fun lesHendelse(
@@ -37,7 +35,7 @@ class BidragVedtakListener(
         SECURE_LOGGER.info("Behandler vedtakhendelse: $hendelse")
         try {
             val vedtakHendelse = mapVedtakHendelse(hendelse)
-            val forskuddRedusertForBarn = revurderForskuddService.erForskuddRedusert(vedtakHendelse)
+            oppgaveService.opprettRevurderForskuddOppgave(vedtakHendelse)
             vedtakService.behandleVedtak(hendelse)
         } catch (e: Exception) {
             LOGGER.error("Det skjedde en feil ved prosessering av vedtak hendelse", e)
@@ -48,6 +46,6 @@ class BidragVedtakListener(
         try {
             commonObjectmapper.readValue(hendelse, VedtakHendelse::class.java)
         } finally {
-            SECURE_LOGGER.debug("Leser hendelse: {}", hendelse)
+//            SECURE_LOGGER.debug("Leser hendelse: {}", hendelse)
         }
 }
