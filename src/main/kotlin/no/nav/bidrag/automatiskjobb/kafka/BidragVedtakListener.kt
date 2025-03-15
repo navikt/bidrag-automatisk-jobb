@@ -21,7 +21,7 @@ class BidragVedtakListener(
     }
 
     @KafkaListener(
-        groupId = "\${KAFKA_GROUP_ID:bidrag-automatisk-jobb3}",
+        groupId = "\${KAFKA_GROUP_ID:bidrag-automatisk-jobb}",
         topics = ["\${KAFKA_VEDTAK_TOPIC}"],
     )
     fun lesHendelse(
