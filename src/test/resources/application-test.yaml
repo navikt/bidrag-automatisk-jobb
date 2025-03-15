@@ -7,7 +7,12 @@ NAIS_APP_NAME: bidrag-automatisk-jobb
 KAFKA_PERSON_HENDELSE_TOPIC: bidrag.personhendelse.v1-test
 KAFKA_VEDTAK_TOPIC: bidrag.vedtak-test
 KAFKA_BROKERS: localhost:9092
-
+UNLEASH_SERVER_API_ENV: development
+UNLEASH_SERVER_API_PROJECTS: default
+UNLEASH_SERVER_API_TOKEN: some_token
+UNLEASH_SERVER_API_TYPE: CLIENT
+UNLEASH_FETCH_SYNC: false
+UNLEASH_SERVER_API_URL: http://localhost:${mock-oauth2-server.port}/unleash
 no.nav.security.jwt:
   client:
     registration:
