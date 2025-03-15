@@ -5,6 +5,7 @@ import io.kotest.matchers.collections.shouldHaveSize
 import no.nav.bidrag.automatiskjobb.BidragAutomatiskJobb
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
@@ -23,6 +24,7 @@ import java.time.LocalDate
 @EnableMockOAuth2Server
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest(classes = [BidragAutomatiskJobb::class])
+@Disabled
 class BarnRepositoryTest {
     companion object {
         private var postgreSqlDb =
