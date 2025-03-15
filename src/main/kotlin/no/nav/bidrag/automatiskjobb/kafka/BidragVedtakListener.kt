@@ -1,7 +1,11 @@
 package no.nav.bidrag.automatiskjobb.kafka
 
 import no.nav.bidrag.automatiskjobb.SECURE_LOGGER
+import no.nav.bidrag.automatiskjobb.service.OppgaveService
+import no.nav.bidrag.automatiskjobb.service.RevurderForskuddService
 import no.nav.bidrag.automatiskjobb.service.VedtakService
+import no.nav.bidrag.transport.behandling.vedtak.VedtakHendelse
+import no.nav.bidrag.transport.felles.commonObjectmapper
 import org.slf4j.LoggerFactory
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.kafka.support.KafkaHeaders
@@ -11,6 +15,8 @@ import org.springframework.stereotype.Component
 @Component
 class BidragVedtakListener(
     private val vedtakService: VedtakService,
+    private val oppgaveService: OppgaveService,
+    private val revurderForskuddService: RevurderForskuddService,
 ) {
     companion object {
         private val LOGGER = LoggerFactory.getLogger(BidragVedtakListener::class.java)
@@ -29,6 +35,19 @@ class BidragVedtakListener(
     ) {
         LOGGER.info("Behandler vedtakhendelse med offset: $offset i consumergroup: $groupId for topic: $topic")
         SECURE_LOGGER.info("Behandler vedtakhendelse: $hendelse")
-        vedtakService.behandleVedtak(hendelse)
+        try {
+            val vedtakHendelse = mapVedtakHendelse(hendelse)
+            val forskuddRedusertForBarn = revurderForskuddService.erForskuddRedusert(vedtakHendelse)
+            vedtakService.behandleVedtak(hendelse)
+        } catch (e: Exception) {
+            LOGGER.error("Det skjedde en feil ved prosessering av vedtak hendelse", e)
+        }
     }
+
+    private fun mapVedtakHendelse(hendelse: String): VedtakHendelse =
+        try {
+            commonObjectmapper.readValue(hendelse, VedtakHendelse::class.java)
+        } finally {
+            SECURE_LOGGER.debug("Leser hendelse: {}", hendelse)
+        }
 }

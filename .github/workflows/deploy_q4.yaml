@@ -22,3 +22,16 @@ jobs:
     secrets: inherit
     with:
       nais_variabler_filnavn: q4.yaml
+
+  deploy_unleash:
+    runs-on: ubuntu-latest
+    name: Deploy unleash
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy unleash to dev-gcp
+        uses: nais/deploy/actions/deploy@v2
+        env:
+          CLUSTER: dev-gcp
+          RESOURCE: .nais/unleash.yaml
+          VARS: .nais/q4.yaml

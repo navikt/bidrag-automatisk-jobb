@@ -24,6 +24,7 @@
         <mockk.version>1.13.12</mockk.version>
         <ktlint.version>1.2.1</ktlint.version>
         <shedlock.version>5.13.0</shedlock.version>
+        <bidrag-beregn-felles.version>2025.03.14.140112</bidrag-beregn-felles.version>
     </properties>
 
     <repositories>
@@ -94,6 +95,22 @@
             <artifactId>spring-kafka-test</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>no.nav.bidrag</groupId>
+            <artifactId>bidrag-beregn-forskudd</artifactId>
+            <version>${bidrag-beregn-felles.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.errorprone</groupId>
+                    <artifactId>error_prone_annotations</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.github.oshai</groupId>
+                    <artifactId>kotlin-logging-jvm</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
         <!--swagger-->
         <dependency>
             <groupId>org.springdoc</groupId>
@@ -129,7 +146,11 @@
             <version>${shedlock.version}</version>
         </dependency>
 
-
+        <dependency>
+            <groupId>io.getunleash</groupId>
+            <artifactId>unleash-client-java</artifactId>
+            <version>10.1.0</version>
+        </dependency>
         <!--Sikkerhet-->
         <dependency>
             <groupId>no.nav.security</groupId>
