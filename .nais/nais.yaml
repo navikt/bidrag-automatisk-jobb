@@ -14,6 +14,16 @@ spec:
         extra:
           - "NAVident"
           - "azp_name"
+  accessPolicy:
+      outbound:
+        external:
+        {{#each outbound-access-hosts}}
+            - host: {{this}}
+        {{/each}}
+        rules:
+        {{#each outbound-access-apps}}
+            - application: {{this}}
+        {{/each}}
   secureLogs:
     enabled: true
   kafka:
@@ -21,13 +31,13 @@ spec:
   image: {{ image }}
   liveness:
     path: /actuator/health
-    initialDelay: 20
+    initialDelay: 60
     timeout: 1
     periodSeconds: 5
     failureThreshold: 10
   readiness:
     path: /actuator/health
-    initialDelay: 20
+    initialDelay: 60
     timeout: 1
     periodSeconds: 5
     failureThreshold: 10
@@ -36,7 +46,6 @@ spec:
     path: /actuator/prometheus
   resources:
     limits:
-      cpu: {{limits.cpu}}
       memory: {{limits.memory}}
     requests:
       cpu: {{requests.cpu}}
@@ -45,15 +54,24 @@ spec:
     disableAutoScaling: true
     max: {{replicas.max}}
     min: {{replicas.min}}
+  envFrom:
+    - secret: {{unleash.secret_name}}
   gcp:
     sqlInstances:
       - name: {{ database.navn }}
-        type: POSTGRES_15
+        type: POSTGRES_17
         diskSize: {{ database.size }}
         tier: {{ database.tier }}
         databases:
-          - name: bidrag-aldersjustering
+          - name: bidrag-automatisk-jobb
             envVarPrefix: DB
+        flags:
+          - name: "cloudsql.enable_pgaudit"
+            value: "{{ database.auditlog }}"
+          - name: "pgaudit.log"
+            value: "write"
+          - name: "pgaudit.log_parameter"
+            value: "on"
   ingresses:
   {{#each ingresses as |url|}}
     - {{url}}

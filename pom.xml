@@ -5,21 +5,21 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.3.5</version>
+        <version>3.4.3</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>no.nav</groupId>
-    <artifactId>bidrag-aldersjustering</artifactId>
+    <artifactId>bidrag-automatisk-jobb</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>bidrag-aldersjustering</name>
+    <name>bidrag-automatisk-jobb</name>
     <properties>
         <java.version>21</java.version>
         <kotlin.version>2.0.21</kotlin.version>
-        <bidrag-felles.version>2024.11.18.135503</bidrag-felles.version>
+        <bidrag-felles.version>2025.03.14.124512</bidrag-felles.version>
         <logback-encoder.version>8.0</logback-encoder.version>
         <springdoc-openapi-ui.version>2.5.0</springdoc-openapi-ui.version>
         <springframework-cloud.version>4.1.4</springframework-cloud.version>
-        <token-support.version>3.2.0</token-support.version>
+        <token-support.version>5.0.19</token-support.version>
         <kotest.version>5.9.1</kotest.version>
         <mockk.version>1.13.12</mockk.version>
         <ktlint.version>1.2.1</ktlint.version>
@@ -129,7 +129,11 @@
             <version>${shedlock.version}</version>
         </dependency>
 
-
+        <dependency>
+            <groupId>io.getunleash</groupId>
+            <artifactId>unleash-client-java</artifactId>
+            <version>10.1.0</version>
+        </dependency>
         <!--Sikkerhet-->
         <dependency>
             <groupId>no.nav.security</groupId>
