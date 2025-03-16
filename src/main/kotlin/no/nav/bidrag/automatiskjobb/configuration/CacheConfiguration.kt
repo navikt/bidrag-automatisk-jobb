@@ -18,6 +18,7 @@ class CacheConfiguration {
     companion object {
         const val PERSON_CACHE = "PERSON_CACHE"
         const val VEDTAK_CACHE = "VEDTAK_CACHE"
+        const val SAK_CACHE = "SAK_CACHE"
     }
 
     @Bean
@@ -29,6 +30,10 @@ class CacheConfiguration {
         )
         caffeineCacheManager.registerCustomCache(
             VEDTAK_CACHE,
+            Caffeine.newBuilder().expireAfter(InvaliderCacheFørStartenAvArbeidsdag()).build(),
+        )
+        caffeineCacheManager.registerCustomCache(
+            SAK_CACHE,
             Caffeine.newBuilder().expireAfter(InvaliderCacheFørStartenAvArbeidsdag()).build(),
         )
         return caffeineCacheManager

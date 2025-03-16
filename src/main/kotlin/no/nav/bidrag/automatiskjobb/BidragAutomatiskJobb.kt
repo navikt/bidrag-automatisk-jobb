@@ -1,5 +1,6 @@
 package no.nav.bidrag.automatiskjobb
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.security.token.support.spring.api.EnableJwtTokenValidation
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -10,6 +11,7 @@ import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfi
 
 const val PROFILE_NAIS = "nais"
 val SECURE_LOGGER: Logger = LoggerFactory.getLogger("secureLogger")
+val combinedLogger = KotlinLogging.logger("combinedLogger")
 
 @SpringBootApplication(exclude = [SecurityAutoConfiguration::class, ManagementWebSecurityAutoConfiguration::class])
 @EnableJwtTokenValidation(ignore = ["org.springframework", "org.springdoc"])

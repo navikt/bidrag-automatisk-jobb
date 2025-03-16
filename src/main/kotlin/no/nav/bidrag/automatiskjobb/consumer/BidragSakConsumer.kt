@@ -1,10 +1,12 @@
 package no.nav.bidrag.automatiskjobb.consumer
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import no.nav.bidrag.automatiskjobb.configuration.CacheConfiguration.Companion.SAK_CACHE
 import no.nav.bidrag.commons.web.client.AbstractRestClient
 import no.nav.bidrag.transport.sak.BidragssakDto
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.retry.annotation.Backoff
 import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
@@ -28,6 +30,7 @@ class BidragSakConsumer(
             .toUri()
 
     @Retryable(maxAttempts = 3, backoff = Backoff(delay = 500, maxDelay = 1500, multiplier = 2.0))
+    @Cacheable(SAK_CACHE)
     fun hentSak(saksnr: String): BidragssakDto {
         try {
             return getForNonNullEntity(createUri("/sak/$saksnr"))
