@@ -41,7 +41,6 @@ import no.nav.bidrag.domene.tid.ÅrMånedsperiode
 import no.nav.bidrag.transport.behandling.beregning.felles.BeregnGrunnlag
 import no.nav.bidrag.transport.behandling.felles.grunnlag.DelberegningSumInntekt
 import no.nav.bidrag.transport.behandling.felles.grunnlag.InntektsrapporteringPeriode
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
