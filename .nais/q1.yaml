@@ -29,6 +29,8 @@ env:
   OPPGAVE_SCOPE: dev-fss.oppgavehandtering.oppgave-q1
   KODEVERK_URL: http://bidrag-kodeverk
   BIDRAG_SJABLON_URL: https://bidrag-sjablon.dev-fss-pub.nais.io/bidrag-sjablon
+  BIDRAG_ORGANISASJON_SCOPE: dev-fss.bidrag.bidrag-organisasjon-feature
+  BIDRAG_ORGANISASJON_URL: https://bidrag-organisasjon-feature.dev-fss-pub.nais.io/bidrag-organisasjon
   KAFKA_VEDTAK_TOPIC: bidrag.vedtak-q1
   KAFKA_PERSON_HENDELSE_TOPIC: bidrag.personhendelse.v1
   JAVA_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -XX:MaxRAMPercentage=80.0

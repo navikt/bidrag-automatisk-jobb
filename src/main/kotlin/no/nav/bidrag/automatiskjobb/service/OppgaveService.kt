@@ -10,15 +10,18 @@ import no.nav.bidrag.automatiskjobb.consumer.dto.OppgaveType
 import no.nav.bidrag.automatiskjobb.consumer.dto.OpprettOppgaveRequest
 import no.nav.bidrag.automatiskjobb.consumer.dto.lagBeskrivelseHeader
 import no.nav.bidrag.commons.util.secureLogger
+import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.transport.behandling.vedtak.VedtakHendelse
 import no.nav.bidrag.transport.behandling.vedtak.saksnummer
 import org.springframework.stereotype.Service
 
 private val log = KotlinLogging.logger {}
-val revurderForskuddBeskrivelse = "Forskuddet skal reduseres basert på inntekt fra siste vedtak."
+val revurderForskuddBeskrivelse = "Revurder forskudd basert på inntekt fra siste vedtak."
 val enhet_farskap = "4860"
 val skyldnerNav = Personident("NAV")
+
+fun VedtakHendelse.erForskudd() = stønadsendringListe?.any { it.type == Stønadstype.FORSKUDD } == true
 
 @Service
 class OppgaveService(
@@ -29,6 +32,7 @@ class OppgaveService(
 ) {
     fun opprettRevurderForskuddOppgave(vedtakHendelse: VedtakHendelse) {
         try {
+            if (vedtakHendelse.erForskudd()) return
             revurderForskuddService
                 .erForskuddRedusert(vedtakHendelse)
                 .forEach { resultat ->

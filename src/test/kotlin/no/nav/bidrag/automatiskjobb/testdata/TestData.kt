@@ -50,6 +50,7 @@ import java.time.YearMonth
 val SOKNAD_ID = 12412421414L
 val saksnummer = "21321312321"
 val personIdentSøknadsbarn1 = "213213213213"
+val personIdentSøknadsbarn2 = "213213333213213"
 val personIdentBidragsmottaker = "123213333"
 val personIdentBidragspliktig = "55555"
 val SAKSBEHANDLER_IDENT = "Z999999"
@@ -377,7 +378,7 @@ fun opprettStønadPeriodeDto(
 
 fun opprettVedtakhendelse(
     vedtakId: Int,
-    stonadType: Stønadstype = Stønadstype.BIDRAG18AAR,
+    stonadType: Stønadstype = Stønadstype.BIDRAG,
 ): VedtakHendelse =
     VedtakHendelse(
         type = Vedtakstype.FASTSETTELSE,

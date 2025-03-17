@@ -12,6 +12,7 @@ import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.domene.enums.beregning.Resultatkode.Companion.erDirekteAvslag
 import no.nav.bidrag.domene.enums.vedtak.Engangsbeløptype
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
+import no.nav.bidrag.domene.enums.vedtak.Vedtakskilde
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.domene.sak.Saksnummer
 import no.nav.bidrag.domene.tid.ÅrMånedsperiode
@@ -22,6 +23,7 @@ import no.nav.bidrag.transport.behandling.stonad.request.HentStønadHistoriskReq
 import no.nav.bidrag.transport.behandling.stonad.response.StønadDto
 import no.nav.bidrag.transport.behandling.stonad.response.StønadPeriodeDto
 import no.nav.bidrag.transport.behandling.vedtak.VedtakHendelse
+import no.nav.bidrag.transport.behandling.vedtak.request.HentVedtakForStønadRequest
 import no.nav.bidrag.transport.behandling.vedtak.response.VedtakDto
 import no.nav.bidrag.transport.behandling.vedtak.saksnummer
 import no.nav.bidrag.transport.felles.ifTrue
@@ -46,6 +48,7 @@ class RevurderForskuddService(
     private val beregning: BeregnForskuddApi,
 ) {
     fun erForskuddRedusert(vedtakHendelse: VedtakHendelse): List<ForskuddRedusertResultat> {
+        if (vedtakHendelse.kilde == Vedtakskilde.AUTOMATISK) return emptyList()
         LOGGER.info { "Sjekker om forskuddet er redusert etter fattet vedtak ${vedtakHendelse.id} i sak ${vedtakHendelse.saksnummer}" }
         return erForskuddRedusertEtterFattetBidrag(vedtakHendelse) + erForskuddRedusertEtterSærbidrag(vedtakHendelse)
     }
@@ -138,6 +141,37 @@ class RevurderForskuddService(
 
     private fun hentVedtak(vedtakId: Int): VedtakDto? {
         val vedtak = bidragVedtakConsumer.hentVedtak(vedtakId) ?: return null
+        if (vedtak.grunnlagListe.isEmpty()) {
+            LOGGER.info { "Vedtak $vedtakId fattet av system ${vedtak.kildeapplikasjon} har mangler grunnlag. Gjør ingen vurdering" }
+            return null
+        }
+        return vedtak
+    }
+
+    private fun hentSisteManuelleForskuddVedtak(
+        vedtakId: Int,
+        saksnummer: String,
+        bidragsmottaker: String,
+        gjelderBarn: String,
+    ): VedtakDto? {
+        val vedtak =
+            bidragVedtakConsumer.hentVedtak(vedtakId)?.let {
+                if (it.kilde == Vedtakskilde.AUTOMATISK) {
+                    val forskuddVedtakISak =
+                        bidragVedtakConsumer.hentVedtakForStønad(
+                            HentVedtakForStønadRequest(
+                                Saksnummer(saksnummer),
+                                Stønadstype.FORSKUDD,
+                                Personident(bidragsmottaker),
+                                Personident(gjelderBarn),
+                            ),
+                        )
+                    it
+                } else {
+                    it
+                }
+            } ?: return null
+
         if (vedtak.grunnlagListe.isEmpty()) {
             LOGGER.info { "Vedtak $vedtakId fattet av system ${vedtak.kildeapplikasjon} har mangler grunnlag. Gjør ingen vurdering" }
             return null
