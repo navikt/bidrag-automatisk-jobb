@@ -8,6 +8,7 @@ import no.nav.bidrag.automatiskjobb.mapper.GrunnlagMapper
 import no.nav.bidrag.automatiskjobb.utils.erDirekteAvslag
 import no.nav.bidrag.automatiskjobb.utils.tilResultatkode
 import no.nav.bidrag.beregn.forskudd.BeregnForskuddApi
+import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.domene.enums.beregning.Resultatkode.Companion.erDirekteAvslag
 import no.nav.bidrag.domene.enums.vedtak.Engangsbeløptype
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
@@ -80,6 +81,14 @@ class RevurderForskuddService(
                         bidragsmottaker = it.mottaker.verdi,
                         gjelderBarn = gjelderBarn.verdi,
                     )
+                } ?: run {
+                    secureLogger.info {
+                        """Forskudd er IKKE redusert i sak ${it.sak.verdi} for bidragsmottaker ${it.mottaker.verdi} og barn ${gjelderBarn.verdi}. 
+                            Løpende forskudd er $beløpLøpende og forskudd ble beregnet til ${beregnetForskudd.belop} basert på siste vurdert inntekt.
+                            Siste løpende inntekt for BM i fattet vedtak er ${sisteInntektFattetVedtak?.totalinntekt} og siste inntekt for BM i forskudd vedtaket er ${sisteInntektForskudd?.totalinntekt}
+                        """.trimMargin()
+                    }
+                    null
                 }
             }
     }
@@ -115,6 +124,14 @@ class RevurderForskuddService(
                         bidragsmottaker = it.mottaker.verdi,
                         gjelderBarn = gjelderBarn.verdi,
                     )
+                } ?: run {
+                    secureLogger.info {
+                        """Forskudd er IKKE redusert i sak ${it.sak.verdi} for bidragsmottaker ${it.mottaker.verdi} og barn ${gjelderBarn.verdi}. 
+                            Løpende forskudd er $beløpLøpende og forskudd ble beregnet til ${beregnetForskudd.belop} basert på siste vurdert inntekt.
+                            Siste løpende inntekt for BM i fattet vedtak er ${sisteInntektFattetVedtak?.totalinntekt} og siste inntekt for BM i forskudd vedtaket er ${sisteInntektForskudd?.totalinntekt}
+                        """.trimMargin()
+                    }
+                    null
                 }
             }
     }

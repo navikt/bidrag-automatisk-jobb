@@ -11,6 +11,7 @@ import no.nav.bidrag.domene.enums.person.Sivilstandskode
 import no.nav.bidrag.domene.enums.rolle.SøktAvType
 import no.nav.bidrag.domene.enums.vedtak.BehandlingsrefKilde
 import no.nav.bidrag.domene.enums.vedtak.Beslutningstype
+import no.nav.bidrag.domene.enums.vedtak.Engangsbeløptype
 import no.nav.bidrag.domene.enums.vedtak.Innkrevingstype
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.enums.vedtak.Vedtakskilde
@@ -29,6 +30,7 @@ import no.nav.bidrag.transport.behandling.felles.grunnlag.Person
 import no.nav.bidrag.transport.behandling.felles.grunnlag.SivilstandPeriode
 import no.nav.bidrag.transport.behandling.felles.grunnlag.SluttberegningBarnebidrag
 import no.nav.bidrag.transport.behandling.felles.grunnlag.SluttberegningForskudd
+import no.nav.bidrag.transport.behandling.felles.grunnlag.SluttberegningSærbidrag
 import no.nav.bidrag.transport.behandling.felles.grunnlag.SøknadGrunnlag
 import no.nav.bidrag.transport.behandling.stonad.response.StønadDto
 import no.nav.bidrag.transport.behandling.stonad.response.StønadPeriodeDto
@@ -36,6 +38,7 @@ import no.nav.bidrag.transport.behandling.vedtak.Behandlingsreferanse
 import no.nav.bidrag.transport.behandling.vedtak.Sporingsdata
 import no.nav.bidrag.transport.behandling.vedtak.Stønadsendring
 import no.nav.bidrag.transport.behandling.vedtak.VedtakHendelse
+import no.nav.bidrag.transport.behandling.vedtak.response.EngangsbeløpDto
 import no.nav.bidrag.transport.behandling.vedtak.response.StønadsendringDto
 import no.nav.bidrag.transport.behandling.vedtak.response.VedtakDto
 import no.nav.bidrag.transport.behandling.vedtak.response.VedtakPeriodeDto
@@ -128,7 +131,7 @@ fun opprettSivilstandPeriode() =
             POJONode(
                 SivilstandPeriode(
                     periode = ÅrMånedsperiode(YearMonth.parse("2024-01"), null),
-                    sivilstand = Sivilstandskode.ENSLIG,
+                    sivilstand = Sivilstandskode.BOR_ALENE_MED_BARN,
                     manueltRegistrert = false,
                 ),
             ),
@@ -206,6 +209,22 @@ fun opprettGrunnlagSluttberegningForskudd() =
             ),
     )
 
+fun opprettGrunnlagSluttberegningSærbidrag() =
+    GrunnlagDto(
+        referanse = "sluttberegning_særbidrag",
+        type = Grunnlagstype.SLUTTBEREGNING_SÆRBIDRAG,
+        grunnlagsreferanseListe = listOf(opprettGrunnlagDelberegningAndel().referanse),
+        innhold =
+            POJONode(
+                SluttberegningSærbidrag(
+                    periode = ÅrMånedsperiode(YearMonth.parse("2024-01"), null),
+                    beregnetBeløp = BigDecimal("100"),
+                    resultatBeløp = BigDecimal("100"),
+                    resultatKode = Resultatkode.SÆRBIDRAG_INNVILGET,
+                ),
+            ),
+    )
+
 fun opprettGrunnlagSluttberegningBidrag() =
     GrunnlagDto(
         referanse = "sluttberegning_barnebidrag",
@@ -245,6 +264,25 @@ fun opprettVedtakDto() =
         behandlingsreferanseListe = emptyList(),
         grunnlagListe = emptyList(),
         stønadsendringListe = emptyList(),
+    )
+
+fun opprettEngangsbeløpSærbidrag() =
+    EngangsbeløpDto(
+        type = Engangsbeløptype.SÆRBIDRAG,
+        kravhaver = Personident(personIdentSøknadsbarn1),
+        mottaker = Personident(personIdentBidragsmottaker),
+        skyldner = Personident(personIdentBidragspliktig),
+        sak = Saksnummer(saksnummer),
+        innkreving = Innkrevingstype.MED_INNKREVING,
+        beslutning = Beslutningstype.ENDRING,
+        omgjørVedtakId = null,
+        eksternReferanse = null,
+        resultatkode = Resultatkode.SÆRBIDRAG_INNVILGET.name,
+        beløp = BigDecimal(1000),
+        valutakode = "",
+        referanse = "",
+        delytelseId = "",
+        grunnlagReferanseListe = listOf(opprettGrunnlagSluttberegningSærbidrag().referanse),
     )
 
 fun opprettStønadsendringBidrag() =
