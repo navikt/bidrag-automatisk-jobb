@@ -11,9 +11,9 @@ import no.nav.bidrag.automatiskjobb.consumer.dto.OpprettOppgaveRequest
 import no.nav.bidrag.automatiskjobb.consumer.dto.lagBeskrivelseHeader
 import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
+import no.nav.bidrag.domene.enums.vedtak.Vedtakskilde
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.transport.behandling.vedtak.VedtakHendelse
-import no.nav.bidrag.transport.behandling.vedtak.saksnummer
 import org.springframework.stereotype.Service
 
 private val log = KotlinLogging.logger {}
@@ -33,6 +33,7 @@ class OppgaveService(
     fun opprettRevurderForskuddOppgave(vedtakHendelse: VedtakHendelse) {
         try {
             if (vedtakHendelse.erForskudd()) return
+            if (vedtakHendelse.kilde == Vedtakskilde.AUTOMATISK) return
             revurderForskuddService
                 .erForskuddRedusert(vedtakHendelse)
                 .forEach { resultat ->

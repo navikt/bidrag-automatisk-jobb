@@ -38,9 +38,12 @@ import no.nav.bidrag.transport.behandling.vedtak.Behandlingsreferanse
 import no.nav.bidrag.transport.behandling.vedtak.Sporingsdata
 import no.nav.bidrag.transport.behandling.vedtak.Stønadsendring
 import no.nav.bidrag.transport.behandling.vedtak.VedtakHendelse
+import no.nav.bidrag.transport.behandling.vedtak.response.BehandlingsreferanseDto
 import no.nav.bidrag.transport.behandling.vedtak.response.EngangsbeløpDto
+import no.nav.bidrag.transport.behandling.vedtak.response.HentVedtakForStønadResponse
 import no.nav.bidrag.transport.behandling.vedtak.response.StønadsendringDto
 import no.nav.bidrag.transport.behandling.vedtak.response.VedtakDto
+import no.nav.bidrag.transport.behandling.vedtak.response.VedtakForStønad
 import no.nav.bidrag.transport.behandling.vedtak.response.VedtakPeriodeDto
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -418,3 +421,61 @@ fun opprettVedtakhendelse(
                 ),
             ),
     )
+
+fun opprettVedtakForStønadRespons(
+    kravhaver: String,
+    stønadstype: Stønadstype,
+) = HentVedtakForStønadResponse(
+    listOf(
+        opprettVedtakForStønad(kravhaver, stønadstype),
+    ),
+)
+
+fun opprettVedtakForStønad(
+    kravhaver: String,
+    stønadstype: Stønadstype,
+) = VedtakForStønad(
+    vedtaksid = 1,
+    type = Vedtakstype.FASTSETTELSE,
+    kilde = Vedtakskilde.MANUELT,
+    vedtakstidspunkt = LocalDateTime.parse("2024-01-01T00:00:00"),
+    behandlingsreferanser =
+        listOf(
+            BehandlingsreferanseDto(
+                kilde = BehandlingsrefKilde.BISYS_SØKNAD,
+                referanse =
+                    if (kravhaver == personIdentSøknadsbarn1) {
+                        SOKNAD_ID.toString()
+                    } else if (kravhaver == personIdentSøknadsbarn2) {
+                        124124231414L.toString()
+                    } else {
+                        12412435521414L.toString()
+                    },
+            ),
+        ),
+    stønadsendring =
+        StønadsendringDto(
+            type = stønadstype,
+            sak = Saksnummer(saksnummer),
+            skyldner = Personident(personIdentBidragspliktig),
+            kravhaver = Personident(kravhaver),
+            mottaker = Personident(personIdentBidragsmottaker),
+            førsteIndeksreguleringsår = 0,
+            innkreving = Innkrevingstype.MED_INNKREVING,
+            beslutning = Beslutningstype.ENDRING,
+            omgjørVedtakId = null,
+            eksternReferanse = "123456",
+            grunnlagReferanseListe = emptyList(),
+            periodeListe =
+                listOf(
+                    VedtakPeriodeDto(
+                        periode = ÅrMånedsperiode(LocalDate.parse("2024-07-01"), null),
+                        beløp = BigDecimal(5160),
+                        valutakode = "NOK",
+                        resultatkode = "KBB",
+                        delytelseId = null,
+                        grunnlagReferanseListe = emptyList(),
+                    ),
+                ),
+        ),
+)

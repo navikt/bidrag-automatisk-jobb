@@ -8,11 +8,12 @@ import no.nav.bidrag.automatiskjobb.mapper.GrunnlagMapper
 import no.nav.bidrag.automatiskjobb.utils.erDirekteAvslag
 import no.nav.bidrag.automatiskjobb.utils.tilResultatkode
 import no.nav.bidrag.beregn.forskudd.BeregnForskuddApi
+import no.nav.bidrag.beregn.vedtak.Vedtaksfiltrering
 import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.domene.enums.beregning.Resultatkode.Companion.erDirekteAvslag
 import no.nav.bidrag.domene.enums.vedtak.Engangsbeløptype
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
-import no.nav.bidrag.domene.enums.vedtak.Vedtakskilde
+import no.nav.bidrag.domene.enums.vedtak.Vedtakstype
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.domene.sak.Saksnummer
 import no.nav.bidrag.domene.tid.ÅrMånedsperiode
@@ -40,15 +41,18 @@ data class ForskuddRedusertResultat(
 
 private val LOGGER = KotlinLogging.logger {}
 
+private fun VedtakDto.erIndeksreguleringEllerAldersjustering() =
+    listOf(Vedtakstype.ALDERSJUSTERING, Vedtakstype.INDEKSREGULERING).contains(type)
+
 @Service
-@Import(BeregnForskuddApi::class)
+@Import(BeregnForskuddApi::class, Vedtaksfiltrering::class)
 class RevurderForskuddService(
     private val bidragStønadConsumer: BidragStønadConsumer,
     private val bidragVedtakConsumer: BidragVedtakConsumer,
     private val beregning: BeregnForskuddApi,
+    private val vedtaksFilter: Vedtaksfiltrering,
 ) {
     fun erForskuddRedusert(vedtakHendelse: VedtakHendelse): List<ForskuddRedusertResultat> {
-        if (vedtakHendelse.kilde == Vedtakskilde.AUTOMATISK) return emptyList()
         LOGGER.info { "Sjekker om forskuddet er redusert etter fattet vedtak ${vedtakHendelse.id} i sak ${vedtakHendelse.saksnummer}" }
         return erForskuddRedusertEtterFattetBidrag(vedtakHendelse) + erForskuddRedusertEtterSærbidrag(vedtakHendelse)
     }
@@ -65,7 +69,7 @@ class RevurderForskuddService(
                 }
                 val sistePeriode = hentLøpendeForskudd(it.sak.verdi, gjelderBarn.verdi) ?: return@mapNotNull null
 
-                val vedtakForskudd = hentVedtak(sistePeriode.vedtaksid) ?: return@mapNotNull null
+                val vedtakForskudd = hentSisteManuelleForskuddVedtak(sistePeriode.vedtaksid, it.sak, gjelderBarn) ?: return@mapNotNull null
                 val beregnetForskudd = beregnForskudd(vedtak, vedtakForskudd, gjelderBarn)
 
                 val beløpLøpende = sistePeriode.beløp!!
@@ -108,7 +112,7 @@ class RevurderForskuddService(
                 val gjelderBarn = it.kravhaver
                 val sistePeriode = hentLøpendeForskudd(it.sak.verdi, gjelderBarn.verdi) ?: return@mapNotNull null
 
-                val vedtakForskudd = hentVedtak(sistePeriode.vedtaksid) ?: return@mapNotNull null
+                val vedtakForskudd = hentSisteManuelleForskuddVedtak(sistePeriode.vedtaksid, it.sak, gjelderBarn) ?: return@mapNotNull null
                 val beregnetForskudd = beregnForskudd(vedtak, vedtakForskudd, gjelderBarn)
 
                 val beløpLøpende = sistePeriode.beløp!!
@@ -150,23 +154,28 @@ class RevurderForskuddService(
 
     private fun hentSisteManuelleForskuddVedtak(
         vedtakId: Int,
-        saksnummer: String,
-        bidragsmottaker: String,
-        gjelderBarn: String,
+        saksnummer: Saksnummer,
+        gjelderBarn: Personident,
     ): VedtakDto? {
         val vedtak =
             bidragVedtakConsumer.hentVedtak(vedtakId)?.let {
-                if (it.kilde == Vedtakskilde.AUTOMATISK) {
+                if (it.erIndeksreguleringEllerAldersjustering()) {
                     val forskuddVedtakISak =
                         bidragVedtakConsumer.hentVedtakForStønad(
                             HentVedtakForStønadRequest(
-                                Saksnummer(saksnummer),
+                                saksnummer,
                                 Stønadstype.FORSKUDD,
-                                Personident(bidragsmottaker),
-                                Personident(gjelderBarn),
+                                skyldnerNav,
+                                gjelderBarn,
                             ),
                         )
-                    it
+                    val sisteManuelleVedtak =
+                        vedtaksFilter.finneSisteManuelleVedtak(
+                            forskuddVedtakISak.vedtakListe,
+                            gjelderBarn,
+                            stønadstype = Stønadstype.FORSKUDD,
+                        ) ?: return null
+                    bidragVedtakConsumer.hentVedtak(sisteManuelleVedtak.vedtaksid.toInt())
                 } else {
                     it
                 }
