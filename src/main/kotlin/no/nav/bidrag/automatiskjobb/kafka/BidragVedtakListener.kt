@@ -21,7 +21,7 @@ class BidragVedtakListener(
     }
 
 //    @KafkaListener(
-//        groupId = "\${KAFKA_GROUP_ID_START:bidrag-automatisk-jobb-start}",
+//        groupId = "\${VEDTAK_KAFKA_GROUP_ID_START:bidrag-automatisk-jobb-start}",
 //        topics = ["\${KAFKA_VEDTAK_TOPIC}"],
 //        properties = ["auto.offset.reset=earliest"],
 //    )
@@ -42,7 +42,7 @@ class BidragVedtakListener(
 //    }
 
     @KafkaListener(
-        groupId = "\${KAFKA_GROUP_ID_SISTE:bidrag-automatisk-jobb-siste}",
+        groupId = "\${VEDTAK_KAFKA_GROUP_ID_SISTE:bidrag-automatisk-jobb-siste}",
         topics = ["\${KAFKA_VEDTAK_TOPIC}"],
         properties = ["auto.offset.reset=latest"],
     )
