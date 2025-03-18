@@ -6,6 +6,7 @@ import no.nav.bidrag.automatiskjobb.consumer.BidragStønadConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer
 import no.nav.bidrag.automatiskjobb.mapper.GrunnlagMapper
 import no.nav.bidrag.automatiskjobb.mapper.erBidrag
+import no.nav.bidrag.automatiskjobb.utils.enesteResultatkode
 import no.nav.bidrag.automatiskjobb.utils.erDirekteAvslag
 import no.nav.bidrag.automatiskjobb.utils.tilResultatkode
 import no.nav.bidrag.beregn.forskudd.BeregnForskuddApi
@@ -45,6 +46,11 @@ private val LOGGER = KotlinLogging.logger {}
 private fun VedtakDto.erIndeksreguleringEllerAldersjustering() =
     listOf(Vedtakstype.ALDERSJUSTERING, Vedtakstype.INDEKSREGULERING).contains(type)
 
+data class SisteManuelleVedtak(
+    val vedtaksId: Int,
+    val vedtak: VedtakDto,
+)
+
 @Service
 @Import(BeregnForskuddApi::class, Vedtaksfiltrering::class)
 class RevurderForskuddService(
@@ -54,7 +60,9 @@ class RevurderForskuddService(
     private val vedtaksFilter: Vedtaksfiltrering,
 ) {
     fun erForskuddRedusert(vedtakHendelse: VedtakHendelse): List<ForskuddRedusertResultat> {
-        LOGGER.info { "Sjekker om forskuddet er redusert etter fattet vedtak ${vedtakHendelse.id} i sak ${vedtakHendelse.saksnummer}" }
+        combinedLogger.info {
+            "Sjekker om forskuddet er redusert etter fattet vedtak ${vedtakHendelse.id} i sak ${vedtakHendelse.saksnummer}"
+        }
         return erForskuddRedusertEtterFattetBidrag(vedtakHendelse) + erForskuddRedusertEtterSærbidrag(vedtakHendelse)
     }
 
@@ -65,22 +73,24 @@ class RevurderForskuddService(
             .mapNotNull {
                 val gjelderBarn = it.kravhaver
                 if (it.resultatkode.tilResultatkode()?.erDirekteAvslag() == true) {
-                    LOGGER.info { "Særbidrag vedtaket er direkte avslag med resultat ${it.resultatkode} og har derfor ingen inntekter." }
+                    LOGGER.info {
+                        "Særbidrag vedtaket ${vedtakHendelse.id} er direkte avslag med resultat ${it.resultatkode} og har derfor ingen inntekter."
+                    }
                     return@mapNotNull null
                 }
                 val sistePeriode = hentLøpendeForskudd(it.sak.verdi, gjelderBarn.verdi) ?: return@mapNotNull null
 
                 val vedtakForskudd = hentSisteManuelleForskuddVedtak(sistePeriode.vedtaksid, it.sak, gjelderBarn) ?: return@mapNotNull null
-                val beregnetForskudd = beregnForskudd(vedtak, vedtakForskudd, gjelderBarn)
+                val beregnetForskudd = beregnForskudd(vedtak, vedtakForskudd.vedtak, gjelderBarn)
 
                 val beløpLøpende = sistePeriode.beløp!!
                 val erForskuddRedusert = beløpLøpende > beregnetForskudd.belop
-                val sisteInntektForskudd = GrunnlagMapper.hentSisteDelberegningInntektFraForskudd(vedtakForskudd, it.kravhaver)
+                val sisteInntektForskudd = GrunnlagMapper.hentSisteDelberegningInntektFraForskudd(vedtakForskudd.vedtak, it.kravhaver)
                 val sisteInntektFattetVedtak = GrunnlagMapper.hentSisteDelberegningInntektFattetVedtak(vedtak, it.kravhaver)
                 erForskuddRedusert.ifTrue { _ ->
-                    combinedLogger.info {
+                    secureLogger.info {
                         """Forskudd er redusert i sak ${it.sak.verdi} for bidragsmottaker ${it.mottaker.verdi} og barn ${gjelderBarn.verdi}. 
-                            Løpende forskudd er $beløpLøpende og forskudd ble beregnet til ${beregnetForskudd.belop} basert på siste vurdert inntekt.
+                            Løpende forskudd er $beløpLøpende og forskudd ble beregnet til ${beregnetForskudd.belop} basert på siste vurdert inntekt fra særbidrag vedtak ${vedtakHendelse.id} og grunnlag fra forskudd vedtak ${vedtakForskudd.vedtaksId}
                             Siste løpende inntekt for BM i fattet vedtak er ${sisteInntektFattetVedtak?.totalinntekt} og siste inntekt for BM i forskudd vedtaket er ${sisteInntektForskudd?.totalinntekt}
                         """.trimMargin()
                     }
@@ -92,7 +102,7 @@ class RevurderForskuddService(
                 } ?: run {
                     secureLogger.info {
                         """Forskudd er IKKE redusert i sak ${it.sak.verdi} for bidragsmottaker ${it.mottaker.verdi} og barn ${gjelderBarn.verdi}. 
-                            Løpende forskudd er $beløpLøpende og forskudd ble beregnet til ${beregnetForskudd.belop} basert på siste vurdert inntekt.
+                            Løpende forskudd er $beløpLøpende og forskudd ble beregnet til ${beregnetForskudd.belop} basert på siste vurdert inntekt fra særbidrag vedtak ${vedtakHendelse.id} og grunnlag fra forskudd vedtak ${vedtakForskudd.vedtaksId}.
                             Siste løpende inntekt for BM i fattet vedtak er ${sisteInntektFattetVedtak?.totalinntekt} og siste inntekt for BM i forskudd vedtaket er ${sisteInntektForskudd?.totalinntekt}
                         """.trimMargin()
                     }
@@ -107,23 +117,25 @@ class RevurderForskuddService(
             .filter { it.erBidrag }
             .mapNotNull {
                 if (it.erDirekteAvslag()) {
-                    LOGGER.info { "Bidrag vedtaket er direkte avslag og har derfor ingen inntekter." }
+                    combinedLogger.info {
+                        "Bidrag vedtaket ${vedtakHendelse.id} med type ${it.type} for kravhaver ${it.kravhaver} er direkte avslag med resultat ${it.enesteResultatkode()} og har derfor ingen inntekter."
+                    }
                     return@mapNotNull null
                 }
                 val gjelderBarn = it.kravhaver
                 val sistePeriode = hentLøpendeForskudd(it.sak.verdi, gjelderBarn.verdi) ?: return@mapNotNull null
 
                 val vedtakForskudd = hentSisteManuelleForskuddVedtak(sistePeriode.vedtaksid, it.sak, gjelderBarn) ?: return@mapNotNull null
-                val beregnetForskudd = beregnForskudd(vedtak, vedtakForskudd, gjelderBarn)
+                val beregnetForskudd = beregnForskudd(vedtak, vedtakForskudd.vedtak, gjelderBarn)
 
                 val beløpLøpende = sistePeriode.beløp!!
                 val erForskuddRedusert = beløpLøpende > beregnetForskudd.belop
-                val sisteInntektForskudd = GrunnlagMapper.hentSisteDelberegningInntektFraForskudd(vedtakForskudd, it.kravhaver)
+                val sisteInntektForskudd = GrunnlagMapper.hentSisteDelberegningInntektFraForskudd(vedtakForskudd.vedtak, it.kravhaver)
                 val sisteInntektFattetVedtak = GrunnlagMapper.hentSisteDelberegningInntektFattetVedtak(vedtak, it.kravhaver)
                 erForskuddRedusert.ifTrue { _ ->
-                    combinedLogger.info {
+                    secureLogger.info {
                         """Forskudd er redusert i sak ${it.sak.verdi} for bidragsmottaker ${it.mottaker.verdi} og barn ${gjelderBarn.verdi}. 
-                            Løpende forskudd er $beløpLøpende og forskudd ble beregnet til ${beregnetForskudd.belop} basert på siste vurdert inntekt.
+                            Løpende forskudd er $beløpLøpende og forskudd ble beregnet til ${beregnetForskudd.belop} basert på siste vurdert inntekt fra bidrag vedtak ${vedtakHendelse.id} og grunnlag fra forskudd vedtak ${vedtakForskudd.vedtaksId}.
                             Siste løpende inntekt for BM i fattet vedtak er ${sisteInntektFattetVedtak?.totalinntekt} og siste inntekt for BM i forskudd vedtaket er ${sisteInntektForskudd?.totalinntekt}
                         """.trimMargin()
                     }
@@ -135,7 +147,7 @@ class RevurderForskuddService(
                 } ?: run {
                     secureLogger.info {
                         """Forskudd er IKKE redusert i sak ${it.sak.verdi} for bidragsmottaker ${it.mottaker.verdi} og barn ${gjelderBarn.verdi}. 
-                            Løpende forskudd er $beløpLøpende og forskudd ble beregnet til ${beregnetForskudd.belop} basert på siste vurdert inntekt.
+                            Løpende forskudd er $beløpLøpende og forskudd ble beregnet til ${beregnetForskudd.belop} basert på siste vurdert inntekt fra bidrag vedtak ${vedtakHendelse.id} og grunnlag fra forskudd vedtak ${vedtakForskudd.vedtaksId}.
                             Siste løpende inntekt for BM i fattet vedtak er ${sisteInntektFattetVedtak?.totalinntekt} og siste inntekt for BM i forskudd vedtaket er ${sisteInntektForskudd?.totalinntekt}
                         """.trimMargin()
                     }
@@ -147,7 +159,9 @@ class RevurderForskuddService(
     private fun hentVedtak(vedtakId: Int): VedtakDto? {
         val vedtak = bidragVedtakConsumer.hentVedtak(vedtakId) ?: return null
         if (vedtak.grunnlagListe.isEmpty()) {
-            LOGGER.info { "Vedtak $vedtakId fattet av system ${vedtak.kildeapplikasjon} har mangler grunnlag. Gjør ingen vurdering" }
+            combinedLogger.info {
+                "Vedtak $vedtakId fattet av system ${vedtak.kildeapplikasjon} har mangler grunnlag. Gjør ingen vurdering"
+            }
             return null
         }
         return vedtak
@@ -157,7 +171,7 @@ class RevurderForskuddService(
         vedtakId: Int,
         saksnummer: Saksnummer,
         gjelderBarn: Personident,
-    ): VedtakDto? {
+    ): SisteManuelleVedtak? {
         val vedtak =
             bidragVedtakConsumer.hentVedtak(vedtakId)?.let {
                 if (it.erIndeksreguleringEllerAldersjustering()) {
@@ -176,14 +190,18 @@ class RevurderForskuddService(
                             gjelderBarn,
                             stønadstype = Stønadstype.FORSKUDD,
                         ) ?: return null
-                    bidragVedtakConsumer.hentVedtak(sisteManuelleVedtak.vedtaksid.toInt())
+                    bidragVedtakConsumer.hentVedtak(sisteManuelleVedtak.vedtaksid.toInt())?.let {
+                        SisteManuelleVedtak(sisteManuelleVedtak.vedtaksid.toInt(), it)
+                    }
                 } else {
-                    it
+                    SisteManuelleVedtak(vedtakId, it)
                 }
             } ?: return null
 
-        if (vedtak.grunnlagListe.isEmpty()) {
-            LOGGER.info { "Vedtak $vedtakId fattet av system ${vedtak.kildeapplikasjon} har mangler grunnlag. Gjør ingen vurdering" }
+        if (vedtak.vedtak.grunnlagListe.isEmpty()) {
+            combinedLogger.info {
+                "Vedtak $vedtakId fattet av system ${vedtak.vedtak.kildeapplikasjon} mangler grunnlag. Gjør ingen vurdering"
+            }
             return null
         }
         return vedtak
