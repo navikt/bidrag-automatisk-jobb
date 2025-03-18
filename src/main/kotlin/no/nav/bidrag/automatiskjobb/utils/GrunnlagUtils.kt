@@ -11,12 +11,22 @@ import no.nav.bidrag.transport.behandling.felles.grunnlag.innholdTilObjekt
 import no.nav.bidrag.transport.behandling.vedtak.response.StønadsendringDto
 import no.nav.bidrag.transport.behandling.vedtak.response.VedtakPeriodeDto
 
+fun StønadsendringDto.enesteResultatkode() =
+    if (periodeListe.size > 1) {
+        null
+    } else {
+        periodeListe
+            .firstOrNull()
+            ?.resultatkode
+            ?.tilResultatkode()
+    }
+
 fun StønadsendringDto.erDirekteAvslag() =
     periodeListe.size == 1 &&
         periodeListe
-            .first()
-            .resultatkode
-            .tilResultatkode()
+            .firstOrNull()
+            ?.resultatkode
+            ?.tilResultatkode()
             ?.erAvslag() == true
 
 fun String.tilResultatkode() =
