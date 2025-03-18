@@ -3,7 +3,7 @@ PERSON_URL: https://bidrag-person-q1.dev-fss-pub.nais.io/bidrag-person
 AZURE_APP_TENANT_ID: 966ac572-f5b7-4bbe-aa88-c76419c0f851
 AZURE_APP_CLIENT_ID: <app_client_id>
 AZURE_APP_CLIENT_SECRET: unset
-server.port: 8999
+server.port: 8313
 NAIS_APP_NAME: bidrag-automatisk-jobb
 KAFKA_PERSON_HENDELSE_TOPIC: bidrag.personhendelse.v1-test
 KAFKA_VEDTAK_TOPIC: bidrag.vedtak-test
@@ -14,7 +14,7 @@ spring:
     enabled: true
     locations: classpath:/db/migration
   datasource:
-    url: jdbc:postgresql://localhost:5454/bidrag-automatisk-jobb?user=cloudsqliamuser&password=admin&reWriteBatchedInserts=true
+    url: jdbc:postgresql://localhost:5455/bidrag-automatisk-jobb?user=cloudsqliamuser&password=admin&reWriteBatchedInserts=true
     type: com.zaxxer.hikari.HikariDataSource
     hikari:
       data-source-properties:

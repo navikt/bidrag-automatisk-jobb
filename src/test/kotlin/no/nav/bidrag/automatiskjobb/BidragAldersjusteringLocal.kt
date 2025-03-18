@@ -16,6 +16,6 @@ class BidragAldersjusteringLocal
 
 fun main(args: Array<String>) {
     val app = SpringApplication(BidragAldersjusteringLocal::class.java)
-    app.setAdditionalProfiles("local", "nais", "lokal-nais-secrets")
+    app.setAdditionalProfiles("local", "nais", "lokal-nais-secrets", "lokal-nais")
     app.run(*args)
 }

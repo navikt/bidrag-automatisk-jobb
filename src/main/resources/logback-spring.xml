@@ -59,4 +59,8 @@
   <logger name="secureLogger" level="INFO" additivity="false" >
     <appender-ref ref="secureLog" />
   </logger>
+  <logger name="combinedLogger" level="INFO" additivity="false" >
+    <appender-ref ref="secureLog" />
+    <appender-ref ref="stdout_json"/>
+  </logger>
 </configuration>
