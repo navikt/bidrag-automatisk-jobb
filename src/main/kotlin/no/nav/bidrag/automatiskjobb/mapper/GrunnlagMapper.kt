@@ -5,7 +5,9 @@ import no.nav.bidrag.automatiskjobb.utils.hentBarnIHusstandPerioder
 import no.nav.bidrag.automatiskjobb.utils.hentDelberegningSumInntekt
 import no.nav.bidrag.automatiskjobb.utils.hentInntekter
 import no.nav.bidrag.automatiskjobb.utils.hentSivilstandPerioder
+import no.nav.bidrag.automatiskjobb.utils.tilResultatkode
 import no.nav.bidrag.domene.enums.beregning.Resultatkode
+import no.nav.bidrag.domene.enums.beregning.Resultatkode.Companion.erAvslag
 import no.nav.bidrag.domene.enums.grunnlag.Grunnlagstype
 import no.nav.bidrag.domene.enums.vedtak.Engangsbeløptype
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
@@ -125,14 +127,22 @@ object GrunnlagMapper {
     ): Boolean {
         val sluttberegning =
             vedtak.grunnlagListe.finnSluttberegningIReferanser(periode.grunnlagReferanseListe) ?: return false
-        if (sluttberegning.type != Grunnlagstype.SLUTTBEREGNING_BARNEBIDRAG) return false
-        val innhold = sluttberegning.innholdTilObjekt<SluttberegningBarnebidrag>()
-        return innhold.erResultatAvslag ||
-            vedtak.grunnlagListe
-                .finnGrunnlagSomErReferertFraGrunnlagsreferanseListe(
-                    Grunnlagstype.DELBEREGNING_BIDRAGSPLIKTIGES_ANDEL,
-                    sluttberegning.grunnlagsreferanseListe,
-                ).isEmpty()
+
+        return when (sluttberegning.type) {
+            Grunnlagstype.SLUTTBEREGNING_BARNEBIDRAG -> {
+                val innhold = sluttberegning.innholdTilObjekt<SluttberegningBarnebidrag>()
+                innhold.erResultatAvslag ||
+                    vedtak.grunnlagListe
+                        .finnGrunnlagSomErReferertFraGrunnlagsreferanseListe(
+                            Grunnlagstype.DELBEREGNING_BIDRAGSPLIKTIGES_ANDEL,
+                            sluttberegning.grunnlagsreferanseListe,
+                        ).isEmpty()
+            }
+            Grunnlagstype.SLUTTBEREGNING_FORSKUDD -> {
+                periode.resultatkode.tilResultatkode()?.erAvslag() == true
+            }
+            else -> false
+        }
     }
 
     private fun List<VedtakPeriodeDto>.hentSisteBeregnetPeriode(vedtak: VedtakDto) =

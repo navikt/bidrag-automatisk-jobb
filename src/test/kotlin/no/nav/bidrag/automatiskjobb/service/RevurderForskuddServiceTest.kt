@@ -75,6 +75,8 @@ class RevurderForskuddServiceTest {
 
     @BeforeEach
     fun initMocks() {
+        // commonObjectmapper.readValue(hentFil("/__files/vedtak_forskudd.json"))
+
         stubSjablonService()
         stubSjablonProvider()
         service = RevurderForskuddService(bidragStønadConsumer, bidragVedtakConsumer, BeregnForskuddApi(), Vedtaksfiltrering())
@@ -158,6 +160,46 @@ class RevurderForskuddServiceTest {
         resultat.first().gjelderBarn shouldBe personIdentSøknadsbarn1
         resultat.first().bidragsmottaker shouldBe personIdentBidragsmottaker
         resultat.first().saksnummer shouldBe saksnummer
+    }
+
+    @Test
+    fun `skal ignorere forskudd hvis siste periode i forskudd slutter før dagens dato`() {
+        every { bidragStønadConsumer.hentHistoriskeStønader(any()) } returns
+            opprettStønadDto(
+                stønadstype = Stønadstype.FORSKUDD,
+                periodeListe =
+                    listOf(
+                        opprettStønadPeriodeDto(
+                            ÅrMånedsperiode(LocalDate.now().minusMonths(4), LocalDate.now().minusMonths(2)),
+                            beløp = BigDecimal("5600"),
+                            vedtakId = vedtaksidForskudd,
+                        ),
+                    ),
+            )
+        every { bidragVedtakConsumer.hentVedtak(eq(vedtaksidBidrag)) } returns
+            opprettVedtakDto().copy(
+                grunnlagListe =
+                    listOf(
+                        persongrunnlagBA,
+                        persongrunnlagBM,
+                        persongrunnlagBP,
+                        opprettGrunnlagSøknad(),
+                        opprettGrunnlagSluttberegningBidrag(),
+                        opprettInntektsrapportering(),
+                        opprettGrunnlagDelberegningAndel(),
+                        opprettDelberegningSumInntekt(),
+                    ),
+                stønadsendringListe =
+                    listOf(
+                        opprettStønadsendringBidrag().copy(type = Stønadstype.BIDRAG18AAR),
+                    ),
+            )
+        val beregnCapture = mutableListOf<BeregnGrunnlag>()
+        mockkConstructor(BeregnForskuddApi::class)
+        every { BeregnForskuddApi().beregn(capture(beregnCapture)) } answers { callOriginal() }
+        val resultat = service.erForskuddRedusert(opprettVedtakhendelse(vedtaksidBidrag))
+        resultat.shouldHaveSize(0)
+        verify(exactly = 0) { bidragVedtakConsumer.hentVedtak(eq(vedtaksidForskudd)) }
     }
 
     @Test
@@ -416,6 +458,10 @@ class RevurderForskuddServiceTest {
         every { BeregnForskuddApi().beregn(capture(beregnCapture)) } answers { callOriginal() }
         val resultat = service.erForskuddRedusert(opprettVedtakhendelse(vedtaksidBidrag))
         resultat.shouldHaveSize(0)
+
+        verify(exactly = 2) { bidragVedtakConsumer.hentVedtak(eq(vedtaksidBidrag)) }
+        verify(exactly = 1) { bidragVedtakConsumer.hentVedtak(eq(vedtaksidForskudd)) }
+        verify(exactly = 1) { bidragStønadConsumer.hentHistoriskeStønader(any()) }
     }
 
     @Test
@@ -496,5 +542,78 @@ class RevurderForskuddServiceTest {
         resultat.first().gjelderBarn shouldBe personIdentSøknadsbarn1
         resultat.first().bidragsmottaker shouldBe personIdentBidragsmottaker
         resultat.first().saksnummer shouldBe saksnummer
+
+        verify(exactly = 2) { bidragVedtakConsumer.hentVedtak(eq(vedtaksidSærbidrag)) }
+        verify(exactly = 1) { bidragVedtakConsumer.hentVedtak(eq(vedtaksidForskudd)) }
+        verify(exactly = 1) { bidragStønadConsumer.hentHistoriskeStønader(any()) }
+    }
+
+    @Test
+    fun `skal ignorere fattet vedtak hvis grunnlagslisten er tom`() {
+        every { bidragVedtakConsumer.hentVedtak(eq(vedtaksidBidrag)) } returns
+            opprettVedtakDto().copy(
+                grunnlagListe = emptyList(),
+                stønadsendringListe =
+                    listOf(
+                        opprettStønadsendringBidrag().copy(type = Stønadstype.BIDRAG),
+                    ),
+            )
+        val beregnCapture = mutableListOf<BeregnGrunnlag>()
+        mockkConstructor(BeregnForskuddApi::class)
+        every { BeregnForskuddApi().beregn(capture(beregnCapture)) } answers { callOriginal() }
+        val resultat = service.erForskuddRedusert(opprettVedtakhendelse(vedtaksidBidrag))
+        resultat.shouldHaveSize(0)
+        verify(exactly = 0) { bidragVedtakConsumer.hentVedtak(eq(vedtaksidForskudd)) }
+        verify(exactly = 0) { bidragStønadConsumer.hentHistoriskeStønader(any()) }
+    }
+
+    @Test
+    fun `skal ignorere forksudd vedtak hvis grunnlagslisten er tom`() {
+        every { bidragStønadConsumer.hentHistoriskeStønader(any()) } returns
+            opprettStønadDto(
+                stønadstype = Stønadstype.FORSKUDD,
+                periodeListe =
+                    listOf(
+                        opprettStønadPeriodeDto(
+                            ÅrMånedsperiode(LocalDate.now().minusMonths(4), null),
+                            beløp = BigDecimal("5600"),
+                            vedtakId = vedtaksidForskudd,
+                        ),
+                    ),
+            )
+        every { bidragVedtakConsumer.hentVedtak(eq(vedtaksidForskudd)) } returns
+            opprettVedtakDto().copy(
+                grunnlagListe = emptyList(),
+                stønadsendringListe =
+                    listOf(
+                        opprettStønadsendringForskudd(),
+                    ),
+            )
+        every { bidragVedtakConsumer.hentVedtak(eq(vedtaksidSærbidrag)) } returns
+            opprettVedtakDto().copy(
+                grunnlagListe =
+                    listOf(
+                        persongrunnlagBA,
+                        persongrunnlagBM,
+                        persongrunnlagBP,
+                        opprettGrunnlagSøknad(),
+                        opprettGrunnlagSluttberegningBidrag(),
+                        opprettInntektsrapportering(),
+                        opprettGrunnlagDelberegningAndel(),
+                        opprettDelberegningSumInntekt(),
+                    ),
+                engangsbeløpListe =
+                    listOf(
+                        opprettEngangsbeløpSærbidrag(),
+                    ),
+            )
+        val beregnCapture = mutableListOf<BeregnGrunnlag>()
+        mockkConstructor(BeregnForskuddApi::class)
+        every { BeregnForskuddApi().beregn(capture(beregnCapture)) } answers { callOriginal() }
+        val resultat = service.erForskuddRedusert(opprettVedtakhendelse(vedtaksidSærbidrag))
+        resultat.shouldHaveSize(0)
+        verify(exactly = 2) { bidragVedtakConsumer.hentVedtak(eq(vedtaksidSærbidrag)) }
+        verify(exactly = 1) { bidragVedtakConsumer.hentVedtak(eq(vedtaksidForskudd)) }
+        verify(exactly = 1) { bidragStønadConsumer.hentHistoriskeStønader(any()) }
     }
 }
