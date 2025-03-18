@@ -51,7 +51,7 @@ class BidragVedtakListener(
         @Header(KafkaHeaders.RECEIVED_PARTITION) partition: Int,
         @Header(KafkaHeaders.GROUP_ID) groupId: String,
     ) {
-        LOGGER.info("Behandler vedtakhendelse med offset: $offset i consumergroup: $groupId for topic: $topic")
+        LOGGER.debug("Behandler vedtakhendelse med offset: $offset i consumergroup: $groupId for topic: $topic")
         SECURE_LOGGER.debug("Behandler vedtakhendelse: $hendelse")
         try {
             val vedtakHendelse = mapVedtakHendelse(hendelse)
@@ -65,6 +65,6 @@ class BidragVedtakListener(
         try {
             commonObjectmapper.readValue(hendelse, VedtakHendelse::class.java)
         } finally {
-//            SECURE_LOGGER.debug("Leser hendelse: {}", hendelse)
+            SECURE_LOGGER.debug("Leser hendelse: {}", hendelse)
         }
 }
