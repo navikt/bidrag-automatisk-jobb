@@ -57,7 +57,14 @@ fun List<GrunnlagDto>.hentBarnIHusstandPerioder(periodeDto: VedtakPeriodeDto): L
         delberegningBarnIHusstand.flatMap {
             finnGrunnlagSomErReferertFraGrunnlagsreferanseListe(Grunnlagstype.BOSTATUS_PERIODE, it.grunnlagsreferanseListe)
         }
-    return barnIHusstandPerioder as List<GrunnlagDto>
+    return (barnIHusstandPerioder as List<GrunnlagDto>).map {
+        it.copy(
+            // Før så ble barn satt som gjelderReferanse.
+            // Dette ble i ettertid endret til at BM = gjelderReferanse og barn = gjelderBarnReferanse
+            // Justerer på dette slik at beregningen får inn riktig data
+            gjelderBarnReferanse = if (it.gjelderBarnReferanse.isNullOrEmpty()) it.gjelderReferanse else it.gjelderBarnReferanse,
+        )
+    }
 }
 
 fun List<GrunnlagDto>.hentDelberegningSumInntekt(

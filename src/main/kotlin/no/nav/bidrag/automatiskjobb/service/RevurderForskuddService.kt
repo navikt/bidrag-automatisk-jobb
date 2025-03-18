@@ -204,6 +204,7 @@ class RevurderForskuddService(
             }
             return null
         }
+        secureLogger.info { "Fant siste manuelle forskudd vedtak ${vedtak.vedtaksId}" }
         return vedtak
     }
 
