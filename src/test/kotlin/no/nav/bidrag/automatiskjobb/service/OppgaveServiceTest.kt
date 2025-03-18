@@ -30,6 +30,7 @@ import no.nav.bidrag.domene.enums.sak.Sakskategori
 import no.nav.bidrag.domene.enums.vedtak.Beslutningstype
 import no.nav.bidrag.domene.enums.vedtak.Innkrevingstype
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
+import no.nav.bidrag.domene.enums.vedtak.Vedtakskilde
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.domene.organisasjon.Enhetsnummer
 import no.nav.bidrag.domene.sak.Saksnummer
@@ -428,6 +429,43 @@ class OppgaveServiceTest {
                     it.beskrivelse.shouldContain(revurderForskuddBeskrivelse)
                 },
             )
+        }
+    }
+
+    @Test
+    fun `skal ikke opprette revurder forskudd oppgave hvis vedtak er fattet av batchkjøring`() {
+        every { oppgaveConsumer.opprettOppgave(any()) } returns OppgaveDto(1)
+        every { oppgaveConsumer.hentOppgave(any()) } returns OppgaveSokResponse()
+        oppgaveService.opprettRevurderForskuddOppgave(
+            opprettVedtakhendelse(1).copy(
+                kilde = Vedtakskilde.AUTOMATISK,
+                enhetsnummer = Enhetsnummer("4806"),
+                stønadsendringListe =
+                    listOf(
+                        Stønadsendring(
+                            type = Stønadstype.BIDRAG,
+                            eksternReferanse = "",
+                            beslutning = Beslutningstype.ENDRING,
+                            førsteIndeksreguleringsår = 2024,
+                            innkreving = Innkrevingstype.MED_INNKREVING,
+                            kravhaver = Personident(personIdentSøknadsbarn1),
+                            mottaker = Personident(personIdentBidragsmottaker),
+                            omgjørVedtakId = 1,
+                            periodeListe = emptyList(),
+                            sak = Saksnummer(saksnummer),
+                            skyldner = Personident(personIdentBidragspliktig),
+                        ),
+                    ),
+            ),
+        )
+        verify(exactly = 0) {
+            bidragStønadConsumer.hentHistoriskeStønader(any())
+        }
+        verify(exactly = 0) {
+            oppgaveConsumer.hentOppgave(any())
+        }
+        verify(exactly = 0) {
+            oppgaveConsumer.opprettOppgave(any())
         }
     }
 

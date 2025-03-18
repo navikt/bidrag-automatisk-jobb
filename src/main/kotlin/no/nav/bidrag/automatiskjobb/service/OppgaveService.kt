@@ -23,6 +23,8 @@ val skyldnerNav = Personident("NAV")
 
 fun VedtakHendelse.erForskudd() = stønadsendringListe?.any { it.type == Stønadstype.FORSKUDD } == true
 
+val opprettRevurderForskuddOppgaveToggleName = "automatiskjobb.opprett-revurder-forskudd-oppgave"
+
 @Service
 class OppgaveService(
     private val oppgaveConsumer: OppgaveConsumer,
@@ -34,14 +36,20 @@ class OppgaveService(
         try {
             if (vedtakHendelse.erForskudd()) return
             if (vedtakHendelse.kilde == Vedtakskilde.AUTOMATISK) return
+            log.info {
+                "Sjekker om det skal opprettes revurder forskudd oppgave for vedtak ${vedtakHendelse.id} med fattet i system ${vedtakHendelse.kildeapplikasjon} av ${vedtakHendelse.opprettetAv}"
+            }
+            secureLogger.info { "Sjekker om det skal opprettes revurder forskudd oppgave for hendelse $vedtakHendelse" }
             revurderForskuddService
                 .erForskuddRedusert(vedtakHendelse)
                 .forEach { resultat ->
                     combinedLogger.info {
                         "Forskuddet skal reduseres i sak ${resultat.saksnummer} for mottaker ${resultat.bidragsmottaker} og kravhaver ${resultat.gjelderBarn}. Opprett revurder forskudd oppgave"
                     }
-                    if (unleash.isEnabled("automatiskjobb.opprett-revurder-forskudd-oppgave")) {
+                    if (unleash.isEnabled(opprettRevurderForskuddOppgaveToggleName)) {
                         vedtakHendelse.opprettRevurderForskuddOppgave(resultat.saksnummer, resultat.bidragsmottaker)
+                    } else {
+                        log.info { "Feature toggle $opprettRevurderForskuddOppgaveToggleName er skrudd av. Oppretter ikke oppgave" }
                     }
                     return // Opprett kun en oppgave per sak
                 }

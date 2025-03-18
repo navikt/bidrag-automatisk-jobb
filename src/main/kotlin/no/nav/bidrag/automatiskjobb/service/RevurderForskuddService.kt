@@ -5,6 +5,7 @@ import no.nav.bidrag.automatiskjobb.combinedLogger
 import no.nav.bidrag.automatiskjobb.consumer.BidragStønadConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer
 import no.nav.bidrag.automatiskjobb.mapper.GrunnlagMapper
+import no.nav.bidrag.automatiskjobb.mapper.erBidrag
 import no.nav.bidrag.automatiskjobb.utils.erDirekteAvslag
 import no.nav.bidrag.automatiskjobb.utils.tilResultatkode
 import no.nav.bidrag.beregn.forskudd.BeregnForskuddApi
@@ -103,7 +104,7 @@ class RevurderForskuddService(
     private fun erForskuddRedusertEtterFattetBidrag(vedtakHendelse: VedtakHendelse): List<ForskuddRedusertResultat> {
         val vedtak = hentVedtak(vedtakHendelse.id) ?: return listOf()
         return vedtak.stønadsendringListe
-            .filter { it.type == Stønadstype.BIDRAG }
+            .filter { it.erBidrag }
             .mapNotNull {
                 if (it.erDirekteAvslag()) {
                     LOGGER.info { "Bidrag vedtaket er direkte avslag og har derfor ingen inntekter." }

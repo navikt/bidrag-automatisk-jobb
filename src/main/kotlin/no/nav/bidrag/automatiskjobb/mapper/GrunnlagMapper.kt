@@ -26,6 +26,8 @@ import no.nav.bidrag.transport.behandling.vedtak.response.StønadsendringDto
 import no.nav.bidrag.transport.behandling.vedtak.response.VedtakDto
 import no.nav.bidrag.transport.behandling.vedtak.response.VedtakPeriodeDto
 
+val StønadsendringDto.erBidrag get() = listOf(Stønadstype.BIDRAG, Stønadstype.BIDRAG18AAR).contains(type)
+
 object GrunnlagMapper {
     fun byggGrunnlagForBeregning(
         vedtakFattet: VedtakDto,
@@ -67,7 +69,7 @@ object GrunnlagMapper {
         vedtakBidrag: VedtakDto,
         gjelderBarn: Personident,
     ): List<GrunnlagDto> =
-        vedtakBidrag.stønadsendringListe.find { it.kravhaver == gjelderBarn && it.type == Stønadstype.BIDRAG }?.let {
+        vedtakBidrag.stønadsendringListe.find { it.kravhaver == gjelderBarn && it.erBidrag }?.let {
             hentGrunnlagFraBidrag(vedtakBidrag, it)
         } ?: vedtakBidrag.engangsbeløpListe.find { it.kravhaver == gjelderBarn && it.type == Engangsbeløptype.SÆRBIDRAG }?.let {
             hentGrunnlagFraSærbidrag(vedtakBidrag, gjelderBarn, it)
@@ -184,7 +186,7 @@ object GrunnlagMapper {
         vedtak: VedtakDto,
         gjelderBarn: Personident,
     ): DelberegningSumInntekt? =
-        vedtak.stønadsendringListe.find { it.kravhaver == gjelderBarn && it.type == Stønadstype.BIDRAG }?.let {
+        vedtak.stønadsendringListe.find { it.kravhaver == gjelderBarn && it.erBidrag }?.let {
             val periode = it.periodeListe.hentSisteBeregnetPeriode(vedtak)
             val bidragsmottaker = vedtak.grunnlagListe.bidragsmottaker!!
             vedtak.grunnlagListe.hentDelberegningSumInntekt(

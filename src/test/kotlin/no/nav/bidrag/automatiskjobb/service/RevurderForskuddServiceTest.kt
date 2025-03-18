@@ -161,6 +161,86 @@ class RevurderForskuddServiceTest {
     }
 
     @Test
+    fun `skal returnere at forskudd er redusert når beregnet forksudd er lavere enn løpende etter bidrag 18 år vedtak`() {
+        every { bidragStønadConsumer.hentHistoriskeStønader(any()) } returns
+            opprettStønadDto(
+                stønadstype = Stønadstype.FORSKUDD,
+                periodeListe =
+                    listOf(
+                        opprettStønadPeriodeDto(
+                            ÅrMånedsperiode(LocalDate.now().minusMonths(4), null),
+                            beløp = BigDecimal("5600"),
+                            vedtakId = vedtaksidForskudd,
+                        ),
+                    ),
+            )
+        every { bidragVedtakConsumer.hentVedtak(eq(vedtaksidForskudd)) } returns
+            opprettVedtakDto().copy(
+                grunnlagListe =
+                    listOf(
+                        persongrunnlagBA,
+                        persongrunnlagBM,
+                        opprettGrunnlagSluttberegningForskudd(),
+                        opprettInntektsrapportering().copy(
+                            innhold =
+                                POJONode(
+                                    InntektsrapporteringPeriode(
+                                        periode = ÅrMånedsperiode(YearMonth.parse("2024-01"), null),
+                                        beløp = BigDecimal(300000),
+                                        manueltRegistrert = true,
+                                        inntektsrapportering = Inntektsrapportering.LØNN_MANUELT_BEREGNET,
+                                        valgt = true,
+                                    ),
+                                ),
+                        ),
+                        opprettSivilstandPeriode(),
+                        opprettGrunnlagSøknad(),
+                        opprettBostatatusperiode(),
+                        opprettDelberegningBarnIHusstand(),
+                        opprettDelberegningSumInntekt().copy(
+                            innhold =
+                                POJONode(
+                                    DelberegningSumInntekt(
+                                        periode = ÅrMånedsperiode(YearMonth.parse("2024-01"), null),
+                                        totalinntekt = BigDecimal(300000),
+                                    ),
+                                ),
+                        ),
+                    ),
+                stønadsendringListe =
+                    listOf(
+                        opprettStønadsendringForskudd(),
+                    ),
+            )
+        every { bidragVedtakConsumer.hentVedtak(eq(vedtaksidBidrag)) } returns
+            opprettVedtakDto().copy(
+                grunnlagListe =
+                    listOf(
+                        persongrunnlagBA,
+                        persongrunnlagBM,
+                        persongrunnlagBP,
+                        opprettGrunnlagSøknad(),
+                        opprettGrunnlagSluttberegningBidrag(),
+                        opprettInntektsrapportering(),
+                        opprettGrunnlagDelberegningAndel(),
+                        opprettDelberegningSumInntekt(),
+                    ),
+                stønadsendringListe =
+                    listOf(
+                        opprettStønadsendringBidrag().copy(type = Stønadstype.BIDRAG18AAR),
+                    ),
+            )
+        val beregnCapture = mutableListOf<BeregnGrunnlag>()
+        mockkConstructor(BeregnForskuddApi::class)
+        every { BeregnForskuddApi().beregn(capture(beregnCapture)) } answers { callOriginal() }
+        val resultat = service.erForskuddRedusert(opprettVedtakhendelse(vedtaksidBidrag, stonadType = Stønadstype.BIDRAG18AAR))
+        resultat.shouldHaveSize(1)
+        resultat.first().gjelderBarn shouldBe personIdentSøknadsbarn1
+        resultat.first().bidragsmottaker shouldBe personIdentBidragsmottaker
+        resultat.first().saksnummer shouldBe saksnummer
+    }
+
+    @Test
     fun `skal hente siste manuelle vedtak hvis siste periode for forskudd er indeksregulering`() {
         every { bidragStønadConsumer.hentHistoriskeStønader(any()) } returns
             opprettStønadDto(
