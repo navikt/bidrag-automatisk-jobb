@@ -459,7 +459,7 @@ class RevurderForskuddServiceTest {
         val resultat = service.erForskuddRedusert(opprettVedtakhendelse(vedtaksidBidrag))
         resultat.shouldHaveSize(0)
 
-        verify(exactly = 2) { bidragVedtakConsumer.hentVedtak(eq(vedtaksidBidrag)) }
+        verify(exactly = 1) { bidragVedtakConsumer.hentVedtak(eq(vedtaksidBidrag)) }
         verify(exactly = 1) { bidragVedtakConsumer.hentVedtak(eq(vedtaksidForskudd)) }
         verify(exactly = 1) { bidragStønadConsumer.hentHistoriskeStønader(any()) }
     }
@@ -543,7 +543,7 @@ class RevurderForskuddServiceTest {
         resultat.first().bidragsmottaker shouldBe personIdentBidragsmottaker
         resultat.first().saksnummer shouldBe saksnummer
 
-        verify(exactly = 2) { bidragVedtakConsumer.hentVedtak(eq(vedtaksidSærbidrag)) }
+        verify(exactly = 1) { bidragVedtakConsumer.hentVedtak(eq(vedtaksidSærbidrag)) }
         verify(exactly = 1) { bidragVedtakConsumer.hentVedtak(eq(vedtaksidForskudd)) }
         verify(exactly = 1) { bidragStønadConsumer.hentHistoriskeStønader(any()) }
     }
@@ -612,7 +612,7 @@ class RevurderForskuddServiceTest {
         every { BeregnForskuddApi().beregn(capture(beregnCapture)) } answers { callOriginal() }
         val resultat = service.erForskuddRedusert(opprettVedtakhendelse(vedtaksidSærbidrag))
         resultat.shouldHaveSize(0)
-        verify(exactly = 2) { bidragVedtakConsumer.hentVedtak(eq(vedtaksidSærbidrag)) }
+        verify(exactly = 1) { bidragVedtakConsumer.hentVedtak(eq(vedtaksidSærbidrag)) }
         verify(exactly = 1) { bidragVedtakConsumer.hentVedtak(eq(vedtaksidForskudd)) }
         verify(exactly = 1) { bidragStønadConsumer.hentHistoriskeStønader(any()) }
     }

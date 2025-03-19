@@ -63,11 +63,14 @@ class RevurderForskuddService(
         combinedLogger.info {
             "Sjekker om forskuddet er redusert etter fattet vedtak ${vedtakHendelse.id} i sak ${vedtakHendelse.saksnummer}"
         }
-        return erForskuddRedusertEtterFattetBidrag(vedtakHendelse) + erForskuddRedusertEtterSærbidrag(vedtakHendelse)
+        val vedtak = hentVedtak(vedtakHendelse.id) ?: return listOf()
+        return erForskuddRedusertEtterFattetBidrag(vedtakHendelse, vedtak) + erForskuddRedusertEtterSærbidrag(vedtakHendelse, vedtak)
     }
 
-    private fun erForskuddRedusertEtterSærbidrag(vedtakHendelse: VedtakHendelse): List<ForskuddRedusertResultat> {
-        val vedtak = hentVedtak(vedtakHendelse.id) ?: return listOf()
+    private fun erForskuddRedusertEtterSærbidrag(
+        vedtakHendelse: VedtakHendelse,
+        vedtak: VedtakDto,
+    ): List<ForskuddRedusertResultat> {
         return vedtak.engangsbeløpListe
             .filter { it.type == Engangsbeløptype.SÆRBIDRAG }
             .mapNotNull {
@@ -111,8 +114,10 @@ class RevurderForskuddService(
             }
     }
 
-    private fun erForskuddRedusertEtterFattetBidrag(vedtakHendelse: VedtakHendelse): List<ForskuddRedusertResultat> {
-        val vedtak = hentVedtak(vedtakHendelse.id) ?: return listOf()
+    private fun erForskuddRedusertEtterFattetBidrag(
+        vedtakHendelse: VedtakHendelse,
+        vedtak: VedtakDto,
+    ): List<ForskuddRedusertResultat> {
         return vedtak.stønadsendringListe
             .filter { it.erBidrag }
             .mapNotNull {
