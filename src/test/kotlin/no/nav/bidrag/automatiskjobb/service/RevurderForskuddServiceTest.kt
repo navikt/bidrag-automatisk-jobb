@@ -18,6 +18,7 @@ import no.nav.bidrag.automatiskjobb.testdata.opprettEngangsbeløpSærbidrag
 import no.nav.bidrag.automatiskjobb.testdata.opprettGrunnlagDelberegningAndel
 import no.nav.bidrag.automatiskjobb.testdata.opprettGrunnlagSluttberegningBidrag
 import no.nav.bidrag.automatiskjobb.testdata.opprettGrunnlagSluttberegningForskudd
+import no.nav.bidrag.automatiskjobb.testdata.opprettGrunnlagSluttberegningSærbidrag
 import no.nav.bidrag.automatiskjobb.testdata.opprettGrunnlagSøknad
 import no.nav.bidrag.automatiskjobb.testdata.opprettInntektsrapportering
 import no.nav.bidrag.automatiskjobb.testdata.opprettSivilstandPeriode
@@ -84,18 +85,29 @@ class RevurderForskuddServiceTest {
 
     @Test
     fun `skal returnere at forskudd er redusert når beregnet forksudd er lavere enn løpende etter bidrag vedtak`() {
-        every { bidragStønadConsumer.hentHistoriskeStønader(any()) } returns
-            opprettStønadDto(
-                stønadstype = Stønadstype.FORSKUDD,
-                periodeListe =
+        every { bidragStønadConsumer.hentHistoriskeStønader(any()) } returns opprettLøpendeForskuddRespons()
+        every { bidragVedtakConsumer.hentVedtak(eq(vedtaksidForskudd)) } returns opprettForskuddVedtakRespons()
+        every { bidragVedtakConsumer.hentVedtak(eq(vedtaksidBidrag)) } returns
+            opprettVedtakDto().copy(
+                grunnlagListe = opprettGrunnlagslisteBidrag(),
+                stønadsendringListe =
                     listOf(
-                        opprettStønadPeriodeDto(
-                            ÅrMånedsperiode(LocalDate.now().minusMonths(4), null),
-                            beløp = BigDecimal("5600"),
-                            vedtakId = vedtaksidForskudd,
-                        ),
+                        opprettStønadsendringBidrag(),
                     ),
             )
+        val beregnCapture = mutableListOf<BeregnGrunnlag>()
+        mockkConstructor(BeregnForskuddApi::class)
+        every { BeregnForskuddApi().beregn(capture(beregnCapture)) } answers { callOriginal() }
+        val resultat = service.erForskuddRedusert(opprettVedtakhendelse(vedtaksidBidrag))
+        resultat.shouldHaveSize(1)
+        resultat.first().gjelderBarn shouldBe personIdentSøknadsbarn1
+        resultat.first().bidragsmottaker shouldBe personIdentBidragsmottaker
+        resultat.first().saksnummer shouldBe saksnummer
+    }
+
+    @Test
+    fun `skal beregne forskudd når bostatus barn referanse er gjelderReferanse`() {
+        every { bidragStønadConsumer.hentHistoriskeStønader(any()) } returns opprettLøpendeForskuddRespons()
         every { bidragVedtakConsumer.hentVedtak(eq(vedtaksidForskudd)) } returns
             opprettVedtakDto().copy(
                 grunnlagListe =
@@ -103,50 +115,25 @@ class RevurderForskuddServiceTest {
                         persongrunnlagBA,
                         persongrunnlagBM,
                         opprettGrunnlagSluttberegningForskudd(),
-                        opprettInntektsrapportering().copy(
-                            innhold =
-                                POJONode(
-                                    InntektsrapporteringPeriode(
-                                        periode = ÅrMånedsperiode(YearMonth.parse("2024-01"), null),
-                                        beløp = BigDecimal(300000),
-                                        manueltRegistrert = true,
-                                        inntektsrapportering = Inntektsrapportering.LØNN_MANUELT_BEREGNET,
-                                        valgt = true,
-                                    ),
-                                ),
-                        ),
+                        opprettInntektsrapportering(),
                         opprettSivilstandPeriode(),
                         opprettGrunnlagSøknad(),
-                        opprettBostatatusperiode(),
-                        opprettDelberegningBarnIHusstand(),
-                        opprettDelberegningSumInntekt().copy(
-                            innhold =
-                                POJONode(
-                                    DelberegningSumInntekt(
-                                        periode = ÅrMånedsperiode(YearMonth.parse("2024-01"), null),
-                                        totalinntekt = BigDecimal(300000),
-                                    ),
-                                ),
+                        opprettBostatatusperiode().copy(
+                            gjelderBarnReferanse = null,
+                            gjelderReferanse = persongrunnlagBA.referanse,
                         ),
+                        opprettDelberegningBarnIHusstand(),
+                        opprettDelberegningSumInntekt(),
                     ),
                 stønadsendringListe =
                     listOf(
                         opprettStønadsendringForskudd(),
                     ),
             )
+
         every { bidragVedtakConsumer.hentVedtak(eq(vedtaksidBidrag)) } returns
             opprettVedtakDto().copy(
-                grunnlagListe =
-                    listOf(
-                        persongrunnlagBA,
-                        persongrunnlagBM,
-                        persongrunnlagBP,
-                        opprettGrunnlagSøknad(),
-                        opprettGrunnlagSluttberegningBidrag(),
-                        opprettInntektsrapportering(),
-                        opprettGrunnlagDelberegningAndel(),
-                        opprettDelberegningSumInntekt(),
-                    ),
+                grunnlagListe = opprettGrunnlagslisteBidrag(),
                 stønadsendringListe =
                     listOf(
                         opprettStønadsendringBidrag(),
@@ -178,17 +165,7 @@ class RevurderForskuddServiceTest {
             )
         every { bidragVedtakConsumer.hentVedtak(eq(vedtaksidBidrag)) } returns
             opprettVedtakDto().copy(
-                grunnlagListe =
-                    listOf(
-                        persongrunnlagBA,
-                        persongrunnlagBM,
-                        persongrunnlagBP,
-                        opprettGrunnlagSøknad(),
-                        opprettGrunnlagSluttberegningBidrag(),
-                        opprettInntektsrapportering(),
-                        opprettGrunnlagDelberegningAndel(),
-                        opprettDelberegningSumInntekt(),
-                    ),
+                grunnlagListe = opprettGrunnlagslisteBidrag(),
                 stønadsendringListe =
                     listOf(
                         opprettStønadsendringBidrag().copy(type = Stønadstype.BIDRAG18AAR),
@@ -204,69 +181,12 @@ class RevurderForskuddServiceTest {
 
     @Test
     fun `skal returnere at forskudd er redusert når beregnet forksudd er lavere enn løpende etter bidrag 18 år vedtak`() {
-        every { bidragStønadConsumer.hentHistoriskeStønader(any()) } returns
-            opprettStønadDto(
-                stønadstype = Stønadstype.FORSKUDD,
-                periodeListe =
-                    listOf(
-                        opprettStønadPeriodeDto(
-                            ÅrMånedsperiode(LocalDate.now().minusMonths(4), null),
-                            beløp = BigDecimal("5600"),
-                            vedtakId = vedtaksidForskudd,
-                        ),
-                    ),
-            )
-        every { bidragVedtakConsumer.hentVedtak(eq(vedtaksidForskudd)) } returns
-            opprettVedtakDto().copy(
-                grunnlagListe =
-                    listOf(
-                        persongrunnlagBA,
-                        persongrunnlagBM,
-                        opprettGrunnlagSluttberegningForskudd(),
-                        opprettInntektsrapportering().copy(
-                            innhold =
-                                POJONode(
-                                    InntektsrapporteringPeriode(
-                                        periode = ÅrMånedsperiode(YearMonth.parse("2024-01"), null),
-                                        beløp = BigDecimal(300000),
-                                        manueltRegistrert = true,
-                                        inntektsrapportering = Inntektsrapportering.LØNN_MANUELT_BEREGNET,
-                                        valgt = true,
-                                    ),
-                                ),
-                        ),
-                        opprettSivilstandPeriode(),
-                        opprettGrunnlagSøknad(),
-                        opprettBostatatusperiode(),
-                        opprettDelberegningBarnIHusstand(),
-                        opprettDelberegningSumInntekt().copy(
-                            innhold =
-                                POJONode(
-                                    DelberegningSumInntekt(
-                                        periode = ÅrMånedsperiode(YearMonth.parse("2024-01"), null),
-                                        totalinntekt = BigDecimal(300000),
-                                    ),
-                                ),
-                        ),
-                    ),
-                stønadsendringListe =
-                    listOf(
-                        opprettStønadsendringForskudd(),
-                    ),
-            )
+        every { bidragStønadConsumer.hentHistoriskeStønader(any()) } returns opprettLøpendeForskuddRespons()
+        every { bidragVedtakConsumer.hentVedtak(eq(vedtaksidForskudd)) } returns opprettForskuddVedtakRespons()
+
         every { bidragVedtakConsumer.hentVedtak(eq(vedtaksidBidrag)) } returns
             opprettVedtakDto().copy(
-                grunnlagListe =
-                    listOf(
-                        persongrunnlagBA,
-                        persongrunnlagBM,
-                        persongrunnlagBP,
-                        opprettGrunnlagSøknad(),
-                        opprettGrunnlagSluttberegningBidrag(),
-                        opprettInntektsrapportering(),
-                        opprettGrunnlagDelberegningAndel(),
-                        opprettDelberegningSumInntekt(),
-                    ),
+                grunnlagListe = opprettGrunnlagslisteBidrag(),
                 stønadsendringListe =
                     listOf(
                         opprettStønadsendringBidrag().copy(type = Stønadstype.BIDRAG18AAR),
@@ -284,60 +204,13 @@ class RevurderForskuddServiceTest {
 
     @Test
     fun `skal hente siste manuelle vedtak hvis siste periode for forskudd er indeksregulering`() {
-        every { bidragStønadConsumer.hentHistoriskeStønader(any()) } returns
-            opprettStønadDto(
-                stønadstype = Stønadstype.FORSKUDD,
-                periodeListe =
-                    listOf(
-                        opprettStønadPeriodeDto(
-                            ÅrMånedsperiode(LocalDate.now().minusMonths(4), null),
-                            beløp = BigDecimal("5600"),
-                            vedtakId = vedtaksidForskudd,
-                        ),
-                    ),
-            )
+        every { bidragStønadConsumer.hentHistoriskeStønader(any()) } returns opprettLøpendeForskuddRespons()
         every { bidragVedtakConsumer.hentVedtak(eq(vedtaksidForskudd)) } returns
             opprettVedtakDto().copy(
                 type = Vedtakstype.INDEKSREGULERING,
             )
-        every { bidragVedtakConsumer.hentVedtak(eq(vedtaksidForskudd2)) } returns
-            opprettVedtakDto().copy(
-                grunnlagListe =
-                    listOf(
-                        persongrunnlagBA,
-                        persongrunnlagBM,
-                        opprettGrunnlagSluttberegningForskudd(),
-                        opprettInntektsrapportering().copy(
-                            innhold =
-                                POJONode(
-                                    InntektsrapporteringPeriode(
-                                        periode = ÅrMånedsperiode(YearMonth.parse("2024-01"), null),
-                                        beløp = BigDecimal(300000),
-                                        manueltRegistrert = true,
-                                        inntektsrapportering = Inntektsrapportering.LØNN_MANUELT_BEREGNET,
-                                        valgt = true,
-                                    ),
-                                ),
-                        ),
-                        opprettSivilstandPeriode(),
-                        opprettGrunnlagSøknad(),
-                        opprettBostatatusperiode(),
-                        opprettDelberegningBarnIHusstand(),
-                        opprettDelberegningSumInntekt().copy(
-                            innhold =
-                                POJONode(
-                                    DelberegningSumInntekt(
-                                        periode = ÅrMånedsperiode(YearMonth.parse("2024-01"), null),
-                                        totalinntekt = BigDecimal(300000),
-                                    ),
-                                ),
-                        ),
-                    ),
-                stønadsendringListe =
-                    listOf(
-                        opprettStønadsendringForskudd(),
-                    ),
-            )
+        every { bidragVedtakConsumer.hentVedtak(eq(vedtaksidForskudd2)) } returns opprettForskuddVedtakRespons()
+
         every { bidragVedtakConsumer.hentVedtakForStønad(any()) } returns
             HentVedtakForStønadResponse(
                 vedtakListe =
@@ -354,17 +227,7 @@ class RevurderForskuddServiceTest {
             )
         every { bidragVedtakConsumer.hentVedtak(eq(vedtaksidBidrag)) } returns
             opprettVedtakDto().copy(
-                grunnlagListe =
-                    listOf(
-                        persongrunnlagBA,
-                        persongrunnlagBM,
-                        persongrunnlagBP,
-                        opprettGrunnlagSøknad(),
-                        opprettGrunnlagSluttberegningBidrag(),
-                        opprettInntektsrapportering(),
-                        opprettGrunnlagDelberegningAndel(),
-                        opprettDelberegningSumInntekt(),
-                    ),
+                grunnlagListe = opprettGrunnlagslisteBidrag(),
                 stønadsendringListe =
                     listOf(
                         opprettStønadsendringBidrag(),
@@ -466,56 +329,9 @@ class RevurderForskuddServiceTest {
 
     @Test
     fun `skal returnere at forskudd er redusert når beregnet forksudd er lavere enn løpende etter særbidrag vedtak`() {
-        every { bidragStønadConsumer.hentHistoriskeStønader(any()) } returns
-            opprettStønadDto(
-                stønadstype = Stønadstype.FORSKUDD,
-                periodeListe =
-                    listOf(
-                        opprettStønadPeriodeDto(
-                            ÅrMånedsperiode(LocalDate.now().minusMonths(4), null),
-                            beløp = BigDecimal("5600"),
-                            vedtakId = 1,
-                        ),
-                    ),
-            )
-        every { bidragVedtakConsumer.hentVedtak(eq(vedtaksidForskudd)) } returns
-            opprettVedtakDto().copy(
-                grunnlagListe =
-                    listOf(
-                        persongrunnlagBA,
-                        persongrunnlagBM,
-                        opprettGrunnlagSluttberegningForskudd(),
-                        opprettInntektsrapportering().copy(
-                            innhold =
-                                POJONode(
-                                    InntektsrapporteringPeriode(
-                                        periode = ÅrMånedsperiode(YearMonth.parse("2024-01"), null),
-                                        beløp = BigDecimal(300000),
-                                        manueltRegistrert = true,
-                                        inntektsrapportering = Inntektsrapportering.LØNN_MANUELT_BEREGNET,
-                                        valgt = true,
-                                    ),
-                                ),
-                        ),
-                        opprettSivilstandPeriode(),
-                        opprettGrunnlagSøknad(),
-                        opprettBostatatusperiode(),
-                        opprettDelberegningBarnIHusstand(),
-                        opprettDelberegningSumInntekt().copy(
-                            innhold =
-                                POJONode(
-                                    DelberegningSumInntekt(
-                                        periode = ÅrMånedsperiode(YearMonth.parse("2024-01"), null),
-                                        totalinntekt = BigDecimal(300000),
-                                    ),
-                                ),
-                        ),
-                    ),
-                stønadsendringListe =
-                    listOf(
-                        opprettStønadsendringForskudd(),
-                    ),
-            )
+        every { bidragStønadConsumer.hentHistoriskeStønader(any()) } returns opprettLøpendeForskuddRespons()
+        every { bidragVedtakConsumer.hentVedtak(eq(vedtaksidForskudd)) } returns opprettForskuddVedtakRespons()
+
         every { bidragVedtakConsumer.hentVedtak(eq(vedtaksidSærbidrag)) } returns
             opprettVedtakDto().copy(
                 grunnlagListe =
@@ -524,7 +340,7 @@ class RevurderForskuddServiceTest {
                         persongrunnlagBM,
                         persongrunnlagBP,
                         opprettGrunnlagSøknad(),
-                        opprettGrunnlagSluttberegningBidrag(),
+                        opprettGrunnlagSluttberegningSærbidrag(),
                         opprettInntektsrapportering(),
                         opprettGrunnlagDelberegningAndel(),
                         opprettDelberegningSumInntekt(),
@@ -569,18 +385,7 @@ class RevurderForskuddServiceTest {
 
     @Test
     fun `skal ignorere forksudd vedtak hvis grunnlagslisten er tom`() {
-        every { bidragStønadConsumer.hentHistoriskeStønader(any()) } returns
-            opprettStønadDto(
-                stønadstype = Stønadstype.FORSKUDD,
-                periodeListe =
-                    listOf(
-                        opprettStønadPeriodeDto(
-                            ÅrMånedsperiode(LocalDate.now().minusMonths(4), null),
-                            beløp = BigDecimal("5600"),
-                            vedtakId = vedtaksidForskudd,
-                        ),
-                    ),
-            )
+        every { bidragStønadConsumer.hentHistoriskeStønader(any()) } returns opprettLøpendeForskuddRespons()
         every { bidragVedtakConsumer.hentVedtak(eq(vedtaksidForskudd)) } returns
             opprettVedtakDto().copy(
                 grunnlagListe = emptyList(),
@@ -597,7 +402,7 @@ class RevurderForskuddServiceTest {
                         persongrunnlagBM,
                         persongrunnlagBP,
                         opprettGrunnlagSøknad(),
-                        opprettGrunnlagSluttberegningBidrag(),
+                        opprettGrunnlagSluttberegningSærbidrag(),
                         opprettInntektsrapportering(),
                         opprettGrunnlagDelberegningAndel(),
                         opprettDelberegningSumInntekt(),
@@ -617,3 +422,67 @@ class RevurderForskuddServiceTest {
         verify(exactly = 1) { bidragStønadConsumer.hentHistoriskeStønader(any()) }
     }
 }
+
+private fun opprettForskuddVedtakRespons() =
+    opprettVedtakDto().copy(
+        grunnlagListe =
+            listOf(
+                persongrunnlagBA,
+                persongrunnlagBM,
+                opprettGrunnlagSluttberegningForskudd(),
+                opprettInntektsrapportering().copy(
+                    innhold =
+                        POJONode(
+                            InntektsrapporteringPeriode(
+                                periode = ÅrMånedsperiode(YearMonth.parse("2024-01"), null),
+                                beløp = BigDecimal(300000),
+                                manueltRegistrert = true,
+                                inntektsrapportering = Inntektsrapportering.LØNN_MANUELT_BEREGNET,
+                                valgt = true,
+                            ),
+                        ),
+                ),
+                opprettSivilstandPeriode(),
+                opprettGrunnlagSøknad(),
+                opprettBostatatusperiode(),
+                opprettDelberegningBarnIHusstand(),
+                opprettDelberegningSumInntekt().copy(
+                    innhold =
+                        POJONode(
+                            DelberegningSumInntekt(
+                                periode = ÅrMånedsperiode(YearMonth.parse("2024-01"), null),
+                                totalinntekt = BigDecimal(300000),
+                            ),
+                        ),
+                ),
+            ),
+        stønadsendringListe =
+            listOf(
+                opprettStønadsendringForskudd(),
+            ),
+    )
+
+private fun opprettGrunnlagslisteBidrag() =
+    listOf(
+        persongrunnlagBA,
+        persongrunnlagBM,
+        persongrunnlagBP,
+        opprettGrunnlagSøknad(),
+        opprettGrunnlagSluttberegningBidrag(),
+        opprettInntektsrapportering(),
+        opprettGrunnlagDelberegningAndel(),
+        opprettDelberegningSumInntekt(),
+    )
+
+private fun opprettLøpendeForskuddRespons() =
+    opprettStønadDto(
+        stønadstype = Stønadstype.FORSKUDD,
+        periodeListe =
+            listOf(
+                opprettStønadPeriodeDto(
+                    ÅrMånedsperiode(LocalDate.now().minusMonths(4), null),
+                    beløp = BigDecimal("5600"),
+                    vedtakId = vedtaksidForskudd,
+                ),
+            ),
+    )
