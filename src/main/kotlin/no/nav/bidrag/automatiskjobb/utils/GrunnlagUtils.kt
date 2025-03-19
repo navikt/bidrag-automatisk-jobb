@@ -6,6 +6,7 @@ import no.nav.bidrag.domene.enums.grunnlag.Grunnlagstype
 import no.nav.bidrag.transport.behandling.felles.grunnlag.DelberegningSumInntekt
 import no.nav.bidrag.transport.behandling.felles.grunnlag.GrunnlagDto
 import no.nav.bidrag.transport.behandling.felles.grunnlag.Grunnlagsreferanse
+import no.nav.bidrag.transport.behandling.felles.grunnlag.bidragsmottaker
 import no.nav.bidrag.transport.behandling.felles.grunnlag.finnGrunnlagSomErReferertFraGrunnlagsreferanseListe
 import no.nav.bidrag.transport.behandling.felles.grunnlag.innholdTilObjekt
 import no.nav.bidrag.transport.behandling.vedtak.response.StønadsendringDto
@@ -57,7 +58,22 @@ fun List<GrunnlagDto>.hentBarnIHusstandPerioder(periodeDto: VedtakPeriodeDto): L
         delberegningBarnIHusstand.flatMap {
             finnGrunnlagSomErReferertFraGrunnlagsreferanseListe(Grunnlagstype.BOSTATUS_PERIODE, it.grunnlagsreferanseListe)
         }
-    return barnIHusstandPerioder as List<GrunnlagDto>
+    val bidragsmottakerReferanse = this.bidragsmottaker?.referanse
+    return (barnIHusstandPerioder as List<GrunnlagDto>).map {
+        it.copy(
+            // Før så ble barn satt som gjelderReferanse.
+            // Dette ble i ettertid endret til at BM = gjelderReferanse og barn = gjelderBarnReferanse
+            // Justerer på dette slik at beregningen får inn riktig data
+            gjelderBarnReferanse =
+                if (it.gjelderBarnReferanse.isNullOrEmpty() &&
+                    it.gjelderReferanse != bidragsmottakerReferanse
+                ) {
+                    it.gjelderReferanse
+                } else {
+                    it.gjelderBarnReferanse
+                },
+        )
+    }
 }
 
 fun List<GrunnlagDto>.hentDelberegningSumInntekt(
