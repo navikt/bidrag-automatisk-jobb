@@ -165,7 +165,7 @@ class RevurderForskuddService(
         val vedtak = bidragVedtakConsumer.hentVedtak(vedtakId) ?: return null
         if (vedtak.grunnlagListe.isEmpty()) {
             combinedLogger.info {
-                "Vedtak $vedtakId fattet av system ${vedtak.kildeapplikasjon} har mangler grunnlag. Gjør ingen vurdering"
+                "Vedtak $vedtakId fattet av system ${vedtak.kildeapplikasjon} mangler grunnlag. Gjør ingen vurdering"
             }
             return null
         }
@@ -205,7 +205,7 @@ class RevurderForskuddService(
 
         if (vedtak.vedtak.grunnlagListe.isEmpty()) {
             combinedLogger.info {
-                "Vedtak $vedtakId fattet av system ${vedtak.vedtak.kildeapplikasjon} mangler grunnlag. Gjør ingen vurdering"
+                "Forskudd vedtak $vedtakId fattet av system ${vedtak.vedtak.kildeapplikasjon} mangler grunnlag. Gjør ingen vurdering"
             }
             return null
         }
