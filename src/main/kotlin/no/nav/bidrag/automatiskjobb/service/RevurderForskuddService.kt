@@ -39,6 +39,8 @@ data class ForskuddRedusertResultat(
     val saksnummer: String,
     val bidragsmottaker: String,
     val gjelderBarn: String,
+    val stønadstype: Stønadstype? = null,
+    val engangsbeløptype: Engangsbeløptype? = null,
 )
 
 private val LOGGER = KotlinLogging.logger {}
@@ -101,6 +103,7 @@ class RevurderForskuddService(
                         saksnummer = it.sak.verdi,
                         bidragsmottaker = it.mottaker.verdi,
                         gjelderBarn = gjelderBarn.verdi,
+                        engangsbeløptype = it.type,
                     )
                 } ?: run {
                     secureLogger.info {
@@ -148,6 +151,7 @@ class RevurderForskuddService(
                         saksnummer = it.sak.verdi,
                         bidragsmottaker = it.mottaker.verdi,
                         gjelderBarn = gjelderBarn.verdi,
+                        stønadstype = it.type,
                     )
                 } ?: run {
                     secureLogger.info {

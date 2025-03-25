@@ -25,20 +25,24 @@ import no.nav.bidrag.automatiskjobb.testdata.personIdentSøknadsbarn2
 import no.nav.bidrag.automatiskjobb.testdata.saksnummer
 import no.nav.bidrag.automatiskjobb.testdata.stubSaksbehandlernavnProvider
 import no.nav.bidrag.commons.util.VirkedagerProvider
+import no.nav.bidrag.domene.enums.beregning.Resultatkode
 import no.nav.bidrag.domene.enums.sak.Bidragssakstatus
 import no.nav.bidrag.domene.enums.sak.Sakskategori
 import no.nav.bidrag.domene.enums.vedtak.Beslutningstype
+import no.nav.bidrag.domene.enums.vedtak.Engangsbeløptype
 import no.nav.bidrag.domene.enums.vedtak.Innkrevingstype
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.enums.vedtak.Vedtakskilde
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.domene.organisasjon.Enhetsnummer
 import no.nav.bidrag.domene.sak.Saksnummer
+import no.nav.bidrag.transport.behandling.vedtak.Engangsbeløp
 import no.nav.bidrag.transport.behandling.vedtak.Stønadsendring
 import no.nav.bidrag.transport.sak.BidragssakDto
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import java.math.BigDecimal
 import java.time.LocalDate
 
 @ExtendWith(MockKExtension::class)
@@ -113,6 +117,71 @@ class OppgaveServiceTest {
                     it.tilordnetRessurs shouldBe SAKSBEHANDLER_IDENT
                     it.behandlingstype.shouldBe(behandlingstypeNasjonal)
                     it.beskrivelse.shouldContain(revurderForskuddBeskrivelse)
+                },
+            )
+        }
+    }
+
+    @Test
+    fun `skal opprette revurder forskudd oppgave særbidrag`() {
+        every { oppgaveConsumer.opprettOppgave(any()) } returns OppgaveDto(1)
+        every { oppgaveConsumer.hentOppgave(any()) } returns OppgaveSokResponse()
+        every { revurderForskuddService.erForskuddRedusert(any()) } returns
+            listOf(
+                ForskuddRedusertResultat(
+                    saksnummer = saksnummer,
+                    bidragsmottaker = personIdentBidragsmottaker,
+                    gjelderBarn = personIdentSøknadsbarn1,
+                    engangsbeløptype = Engangsbeløptype.SÆRBIDRAG,
+                ),
+            )
+        oppgaveService.opprettRevurderForskuddOppgave(
+            opprettVedtakhendelse(1).copy(
+                stønadsendringListe = emptyList(),
+                engangsbeløpListe =
+                    listOf(
+                        Engangsbeløp(
+                            type = Engangsbeløptype.SÆRBIDRAG,
+                            kravhaver = Personident(personIdentSøknadsbarn1),
+                            mottaker = Personident(personIdentBidragsmottaker),
+                            skyldner = Personident(personIdentBidragspliktig),
+                            sak = Saksnummer(saksnummer),
+                            innkreving = Innkrevingstype.MED_INNKREVING,
+                            beslutning = Beslutningstype.ENDRING,
+                            omgjørVedtakId = null,
+                            eksternReferanse = null,
+                            resultatkode = Resultatkode.SÆRBIDRAG_INNVILGET.name,
+                            beløp = BigDecimal(1000),
+                            valutakode = "",
+                            referanse = "",
+                            delytelseId = "",
+                        ),
+                    ),
+            ),
+        )
+
+        verify(exactly = 1) {
+            oppgaveConsumer.hentOppgave(
+                withArg {
+                    it.hentParametre() shouldContain "oppgavetype=GEN"
+                    it.hentParametre() shouldContain "saksreferanse=$saksnummer"
+                    it.hentParametre() shouldContain "tema=BID"
+                },
+            )
+        }
+        verify(exactly = 1) {
+            oppgaveConsumer.opprettOppgave(
+                withArg {
+                    it.saksreferanse shouldBe saksnummer
+                    it.tema shouldBe "BID"
+                    it.aktivDato shouldBe formatterDatoForOppgave(LocalDate.now())
+                    it.fristFerdigstillelse shouldBe formatterDatoForOppgave(VirkedagerProvider.nesteVirkedag())
+                    it.personident shouldBe personIdentBidragsmottaker
+                    it.oppgavetype shouldBe OppgaveType.GEN
+                    it.tildeltEnhetsnr shouldBe "4806"
+                    it.tilordnetRessurs shouldBe SAKSBEHANDLER_IDENT
+                    it.behandlingstype.shouldBe(behandlingstypeNasjonal)
+                    it.beskrivelse.shouldContain(revurderForskuddBeskrivelseSærbidrag)
                 },
             )
         }

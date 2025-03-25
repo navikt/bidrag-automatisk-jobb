@@ -10,6 +10,7 @@ import no.nav.bidrag.automatiskjobb.consumer.dto.OppgaveType
 import no.nav.bidrag.automatiskjobb.consumer.dto.OpprettOppgaveRequest
 import no.nav.bidrag.automatiskjobb.consumer.dto.lagBeskrivelseHeader
 import no.nav.bidrag.commons.util.secureLogger
+import no.nav.bidrag.domene.enums.vedtak.Engangsbeløptype
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.enums.vedtak.Vedtakskilde
 import no.nav.bidrag.domene.ident.Personident
@@ -17,13 +18,23 @@ import no.nav.bidrag.transport.behandling.vedtak.VedtakHendelse
 import org.springframework.stereotype.Service
 
 private val log = KotlinLogging.logger {}
-val revurderForskuddBeskrivelse = "Revurder forskudd basert på inntekt fra siste vedtak."
+val revurderForskuddBeskrivelse = "Revurder forskudd basert på inntekt fra nytt vedtak om barnebidrag."
+val revurderForskuddBeskrivelseSærbidrag = "Revurder forskudd basert på inntekt fra nytt vedtak om særbidrag."
 val enhet_farskap = "4860"
 val skyldnerNav = Personident("NAV")
 
 fun VedtakHendelse.erForskudd() = stønadsendringListe?.any { it.type == Stønadstype.FORSKUDD } == true
 
 val opprettRevurderForskuddOppgaveToggleName = "automatiskjobb.opprett-revurder-forskudd-oppgave"
+
+fun ForskuddRedusertResultat.tilOppgaveBeskrivelse() =
+    if (engangsbeløptype ==
+        Engangsbeløptype.SÆRBIDRAG
+    ) {
+        revurderForskuddBeskrivelseSærbidrag
+    } else {
+        revurderForskuddBeskrivelse
+    }
 
 @Service
 class OppgaveService(
@@ -47,7 +58,7 @@ class OppgaveService(
                         "Forskuddet skal reduseres i sak ${resultat.saksnummer} for mottaker ${resultat.bidragsmottaker} og kravhaver ${resultat.gjelderBarn}. Opprett revurder forskudd oppgave"
                     }
                     if (unleash.isEnabled(opprettRevurderForskuddOppgaveToggleName)) {
-                        vedtakHendelse.opprettRevurderForskuddOppgave(resultat.saksnummer, resultat.bidragsmottaker)
+                        vedtakHendelse.opprettRevurderForskuddOppgave(resultat)
                     } else {
                         log.info { "Feature toggle $opprettRevurderForskuddOppgaveToggleName er skrudd av. Oppretter ikke oppgave" }
                     }
@@ -58,28 +69,27 @@ class OppgaveService(
         }
     }
 
-    fun VedtakHendelse.opprettRevurderForskuddOppgave(
-        saksnummer: String,
-        mottaker: String,
-    ) {
-        if (finnesDetRevurderForskuddOppgaveISak(saksnummer, mottaker)) return
-        val enhet = finnEierfogd(saksnummer)
+    fun VedtakHendelse.opprettRevurderForskuddOppgave(forskuddRedusertResultat: ForskuddRedusertResultat) {
+        if (finnesDetRevurderForskuddOppgaveISak(forskuddRedusertResultat)) return
+        val enhet = finnEierfogd(forskuddRedusertResultat.saksnummer)
         val oppgaveResponse =
             oppgaveConsumer.opprettOppgave(
                 OpprettOppgaveRequest(
-                    beskrivelse = lagBeskrivelseHeader(opprettetAv, enhet) + revurderForskuddBeskrivelse,
+                    beskrivelse = lagBeskrivelseHeader(opprettetAv, enhet) + forskuddRedusertResultat.tilOppgaveBeskrivelse(),
                     oppgavetype = OppgaveType.GEN,
                     tema = if (enhet_farskap == enhet) "FAR" else "BID",
-                    saksreferanse = saksnummer,
-                    tilordnetRessurs = finnTilordnetRessurs(saksnummer),
+                    saksreferanse = forskuddRedusertResultat.saksnummer,
+                    tilordnetRessurs = finnTilordnetRessurs(forskuddRedusertResultat.saksnummer),
                     tildeltEnhetsnr = enhet,
-                    personident = mottaker,
+                    personident = forskuddRedusertResultat.bidragsmottaker,
                 ),
             )
 
-        log.info { "Opprettet revurder forskudd oppgave ${oppgaveResponse.id} for sak $saksnummer og enhet $enhet" }
+        log.info {
+            "Opprettet revurder forskudd oppgave ${oppgaveResponse.id} for sak ${forskuddRedusertResultat.saksnummer} og enhet $enhet"
+        }
         secureLogger.info {
-            "Opprettet revurder forskudd oppgave $oppgaveResponse for sak $saksnummer, enhet $enhet og bidragsmottaker $mottaker"
+            "Opprettet revurder forskudd oppgave $oppgaveResponse for sak ${forskuddRedusertResultat.saksnummer}, enhet $enhet og bidragsmottaker ${forskuddRedusertResultat.bidragsmottaker}"
         }
     }
 
@@ -97,20 +107,17 @@ class OppgaveService(
 
     fun String.erKlageinstans() = startsWith("42")
 
-    fun VedtakHendelse.finnesDetRevurderForskuddOppgaveISak(
-        saksnummer: String,
-        mottaker: String,
-    ): Boolean {
+    fun VedtakHendelse.finnesDetRevurderForskuddOppgaveISak(forskuddRedusertResultat: ForskuddRedusertResultat): Boolean {
         val oppgaver =
             oppgaveConsumer.hentOppgave(
                 OppgaveSokRequest()
                     .søkForGenerellOppgave()
-                    .leggTilSaksreferanse(saksnummer),
+                    .leggTilSaksreferanse(forskuddRedusertResultat.saksnummer),
             )
-        val revurderForskuddOppgave = oppgaver.oppgaver.find { it.beskrivelse!!.contains(revurderForskuddBeskrivelse) }
+        val revurderForskuddOppgave = oppgaver.oppgaver.find { it.beskrivelse!!.contains(forskuddRedusertResultat.tilOppgaveBeskrivelse()) }
         if (revurderForskuddOppgave != null) {
             combinedLogger.info {
-                "Fant revurder forskudd oppgave $revurderForskuddOppgave for sak $saksnummer og bidragsmottaker $mottaker. Oppretter ikke ny oppgave"
+                "Fant revurder forskudd oppgave $revurderForskuddOppgave for sak ${forskuddRedusertResultat.saksnummer} og bidragsmottaker ${forskuddRedusertResultat.bidragsmottaker}. Oppretter ikke ny oppgave"
             }
             return true
         }
