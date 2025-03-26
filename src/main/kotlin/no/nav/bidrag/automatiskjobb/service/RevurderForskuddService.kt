@@ -44,6 +44,11 @@ data class ForskuddRedusertResultat(
     val engangsbeløptype: Engangsbeløptype? = null,
 )
 
+data class SisteManuelleVedtak(
+    val vedtaksId: Int,
+    val vedtak: VedtakDto,
+)
+
 private val LOGGER = KotlinLogging.logger {}
 
 private fun VedtakDto.erIndeksreguleringEllerAldersjustering() =
