@@ -21,6 +21,7 @@ import no.nav.bidrag.domene.sak.Saksnummer
 import no.nav.bidrag.domene.tid.ÅrMånedsperiode
 import no.nav.bidrag.transport.behandling.beregning.felles.BeregnGrunnlag
 import no.nav.bidrag.transport.behandling.beregning.forskudd.ResultatBeregning
+import no.nav.bidrag.transport.behandling.felles.grunnlag.personIdent
 import no.nav.bidrag.transport.behandling.felles.grunnlag.søknadsbarn
 import no.nav.bidrag.transport.behandling.stonad.request.HentStønadHistoriskRequest
 import no.nav.bidrag.transport.behandling.stonad.response.StønadDto
@@ -47,11 +48,6 @@ private val LOGGER = KotlinLogging.logger {}
 
 private fun VedtakDto.erIndeksreguleringEllerAldersjustering() =
     listOf(Vedtakstype.ALDERSJUSTERING, Vedtakstype.INDEKSREGULERING).contains(type)
-
-data class SisteManuelleVedtak(
-    val vedtaksId: Int,
-    val vedtak: VedtakDto,
-)
 
 @Service
 @Import(BeregnForskuddApi::class, Vedtaksfiltrering::class)
@@ -232,7 +228,7 @@ class RevurderForskuddService(
                             YearMonth.now().plusMonths(1),
                         ),
                     stønadstype = Stønadstype.FORSKUDD,
-                    søknadsbarnReferanse = grunnlag.søknadsbarn.first().referanse,
+                    søknadsbarnReferanse = grunnlag.søknadsbarn.find { it.personIdent == gjelderBarn.verdi }!!.referanse,
                     grunnlagListe = grunnlag,
                 ),
             )
