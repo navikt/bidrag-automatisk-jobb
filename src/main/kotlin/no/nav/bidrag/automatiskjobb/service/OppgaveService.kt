@@ -13,15 +13,13 @@ import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.domene.enums.vedtak.Engangsbeløptype
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.enums.vedtak.Vedtakskilde
-import no.nav.bidrag.domene.ident.Personident
+import no.nav.bidrag.domene.felles.enhet_farskap
 import no.nav.bidrag.transport.behandling.vedtak.VedtakHendelse
 import org.springframework.stereotype.Service
 
 private val log = KotlinLogging.logger {}
 val revurderForskuddBeskrivelse = "Revurder forskudd basert på inntekt fra nytt vedtak om barnebidrag."
 val revurderForskuddBeskrivelseSærbidrag = "Revurder forskudd basert på inntekt fra nytt vedtak om særbidrag."
-val enhet_farskap = "4860"
-val skyldnerNav = Personident("NAV")
 
 fun VedtakHendelse.erForskudd() = stønadsendringListe?.any { it.type == Stønadstype.FORSKUDD } == true
 

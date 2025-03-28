@@ -1,6 +1,7 @@
 package no.nav.bidrag.automatiskjobb.service
 
 import com.fasterxml.jackson.databind.node.POJONode
+import com.fasterxml.jackson.module.kotlin.readValue
 import io.getunleash.FakeUnleash
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
@@ -38,11 +39,13 @@ import no.nav.bidrag.automatiskjobb.testdata.persongrunnlagBP
 import no.nav.bidrag.automatiskjobb.testdata.saksnummer
 import no.nav.bidrag.beregn.forskudd.BeregnForskuddApi
 import no.nav.bidrag.beregn.vedtak.Vedtaksfiltrering
+import no.nav.bidrag.commons.web.mock.hentFil
 import no.nav.bidrag.commons.web.mock.stubSjablonProvider
 import no.nav.bidrag.commons.web.mock.stubSjablonService
 import no.nav.bidrag.domene.enums.inntekt.Inntektsrapportering
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.enums.vedtak.Vedtakstype
+import no.nav.bidrag.domene.felles.personidentNav
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.domene.sak.Saksnummer
 import no.nav.bidrag.domene.tid.ÅrMånedsperiode
@@ -50,6 +53,7 @@ import no.nav.bidrag.transport.behandling.beregning.felles.BeregnGrunnlag
 import no.nav.bidrag.transport.behandling.felles.grunnlag.DelberegningSumInntekt
 import no.nav.bidrag.transport.behandling.felles.grunnlag.InntektsrapporteringPeriode
 import no.nav.bidrag.transport.behandling.vedtak.response.HentVedtakForStønadResponse
+import no.nav.bidrag.transport.felles.commonObjectmapper
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -86,7 +90,8 @@ class RevurderForskuddServiceTest {
     @Test
     fun `skal returnere at forskudd er redusert når beregnet forksudd er lavere enn løpende etter bidrag vedtak`() {
         every { bidragStønadConsumer.hentHistoriskeStønader(any()) } returns opprettLøpendeForskuddRespons()
-        every { bidragVedtakConsumer.hentVedtak(eq(vedtaksidForskudd)) } returns opprettForskuddVedtakRespons()
+        every { bidragVedtakConsumer.hentVedtak(eq(vedtaksidForskudd)) } returns
+            commonObjectmapper.readValue(hentFil("/__files/vedtak_forskudd.json"))
         every { bidragVedtakConsumer.hentVedtak(eq(vedtaksidBidrag)) } returns
             opprettVedtakDto().copy(
                 grunnlagListe = opprettGrunnlagslisteBidrag(),
@@ -247,7 +252,7 @@ class RevurderForskuddServiceTest {
                 withArg {
                     it.sak shouldBe Saksnummer(saksnummer)
                     it.type shouldBe Stønadstype.FORSKUDD
-                    it.skyldner shouldBe skyldnerNav
+                    it.skyldner shouldBe personidentNav
                     it.kravhaver shouldBe Personident(personIdentSøknadsbarn1)
                 },
             )

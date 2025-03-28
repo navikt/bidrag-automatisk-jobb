@@ -9,6 +9,7 @@ import no.nav.bidrag.automatiskjobb.mapper.erBidrag
 import no.nav.bidrag.automatiskjobb.utils.enesteResultatkode
 import no.nav.bidrag.automatiskjobb.utils.erDirekteAvslag
 import no.nav.bidrag.automatiskjobb.utils.tilResultatkode
+import no.nav.bidrag.beregn.barnebidrag.service.SisteManuelleVedtak
 import no.nav.bidrag.beregn.forskudd.BeregnForskuddApi
 import no.nav.bidrag.beregn.vedtak.Vedtaksfiltrering
 import no.nav.bidrag.commons.util.secureLogger
@@ -16,6 +17,7 @@ import no.nav.bidrag.domene.enums.beregning.Resultatkode.Companion.erDirekteAvsl
 import no.nav.bidrag.domene.enums.vedtak.Engangsbeløptype
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.enums.vedtak.Vedtakstype
+import no.nav.bidrag.domene.felles.personidentNav
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.domene.sak.Saksnummer
 import no.nav.bidrag.domene.tid.ÅrMånedsperiode
@@ -42,11 +44,6 @@ data class ForskuddRedusertResultat(
     val gjelderBarn: String,
     val stønadstype: Stønadstype? = null,
     val engangsbeløptype: Engangsbeløptype? = null,
-)
-
-data class SisteManuelleVedtak(
-    val vedtaksId: Int,
-    val vedtak: VedtakDto,
 )
 
 private val LOGGER = KotlinLogging.logger {}
@@ -190,15 +187,13 @@ class RevurderForskuddService(
                             HentVedtakForStønadRequest(
                                 saksnummer,
                                 Stønadstype.FORSKUDD,
-                                skyldnerNav,
+                                personidentNav,
                                 gjelderBarn,
                             ),
                         )
                     val sisteManuelleVedtak =
                         vedtaksFilter.finneSisteManuelleVedtak(
                             forskuddVedtakISak.vedtakListe,
-                            gjelderBarn,
-                            stønadstype = Stønadstype.FORSKUDD,
                         ) ?: return null
                     bidragVedtakConsumer.hentVedtak(sisteManuelleVedtak.vedtaksid.toInt())?.let {
                         SisteManuelleVedtak(sisteManuelleVedtak.vedtaksid.toInt(), it)
@@ -267,7 +262,7 @@ class RevurderForskuddService(
             HentStønadHistoriskRequest(
                 type = Stønadstype.FORSKUDD,
                 sak = Saksnummer(saksnummer),
-                skyldner = skyldnerNav,
+                skyldner = personidentNav,
                 kravhaver = Personident(søknadsbarnIdent),
                 gyldigTidspunkt = LocalDateTime.now(),
             ),

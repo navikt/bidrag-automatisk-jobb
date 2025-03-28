@@ -1,7 +1,6 @@
 package no.nav.bidrag.automatiskjobb.testdata
 
 import com.fasterxml.jackson.databind.node.POJONode
-import no.nav.bidrag.automatiskjobb.service.skyldnerNav
 import no.nav.bidrag.domene.enums.beregning.Resultatkode
 import no.nav.bidrag.domene.enums.grunnlag.Grunnlagstype
 import no.nav.bidrag.domene.enums.inntekt.Inntektsrapportering
@@ -16,6 +15,7 @@ import no.nav.bidrag.domene.enums.vedtak.Innkrevingstype
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.enums.vedtak.Vedtakskilde
 import no.nav.bidrag.domene.enums.vedtak.Vedtakstype
+import no.nav.bidrag.domene.felles.personidentNav
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.domene.organisasjon.Enhetsnummer
 import no.nav.bidrag.domene.sak.Saksnummer
@@ -267,6 +267,7 @@ fun opprettVedtakDto() =
         engangsbeløpListe = emptyList(),
         behandlingsreferanseListe = emptyList(),
         grunnlagListe = emptyList(),
+        unikReferanse = "",
         stønadsendringListe = emptyList(),
     )
 
@@ -302,6 +303,7 @@ fun opprettStønadsendringBidrag() =
         omgjørVedtakId = null,
         eksternReferanse = null,
         grunnlagReferanseListe = emptyList(),
+        sisteVedtaksid = null,
         periodeListe =
             listOf(
                 VedtakPeriodeDto(
@@ -320,7 +322,7 @@ fun opprettStønadsendringForskudd() =
         type = Stønadstype.FORSKUDD,
         kravhaver = Personident(personIdentSøknadsbarn1),
         mottaker = Personident(personIdentBidragsmottaker),
-        skyldner = skyldnerNav,
+        skyldner = personidentNav,
         sak = Saksnummer(saksnummer),
         førsteIndeksreguleringsår = null,
         innkreving = Innkrevingstype.MED_INNKREVING,
@@ -328,6 +330,7 @@ fun opprettStønadsendringForskudd() =
         omgjørVedtakId = null,
         eksternReferanse = null,
         grunnlagReferanseListe = emptyList(),
+        sisteVedtaksid = null,
         periodeListe =
             listOf(
                 VedtakPeriodeDto(
@@ -347,7 +350,7 @@ fun opprettStønadDto(
     opprettetTidspunkt: LocalDateTime = LocalDateTime.parse("2025-01-01T00:00:00"),
 ) = StønadDto(
     sak = Saksnummer(saksnummer),
-    skyldner = if (stønadstype == Stønadstype.BIDRAG) Personident(personIdentBidragspliktig) else skyldnerNav,
+    skyldner = if (stønadstype == Stønadstype.BIDRAG) Personident(personIdentBidragspliktig) else personidentNav,
     kravhaver = Personident(personIdentSøknadsbarn1),
     mottaker = Personident(personIdentBidragsmottaker),
     førsteIndeksreguleringsår = 2025,
@@ -466,6 +469,7 @@ fun opprettVedtakForStønad(
             omgjørVedtakId = null,
             eksternReferanse = "123456",
             grunnlagReferanseListe = emptyList(),
+            sisteVedtaksid = null,
             periodeListe =
                 listOf(
                     VedtakPeriodeDto(
