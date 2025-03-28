@@ -97,8 +97,13 @@ class AutomatiskJobbController(
     )
     fun aldersjusterBidrag(
         @RequestBody stønadsid: Stønadsid,
+        @RequestParam(required = false) år: Int?,
     ): OpprettVedtakRequestDto? =
-        vedtakMapper.tilOpprettVedtakRequest(aldersjusteringOrchestrator.utførAldersjustering(stønadsid), stønadsid, "dummy")
+        vedtakMapper.tilOpprettVedtakRequest(
+            aldersjusteringOrchestrator.utførAldersjustering(stønadsid, år ?: YearMonth.now().year),
+            stønadsid,
+            "dummy",
+        )
 
     @PostMapping("/aldersjusteringForskudd")
     @Operation(
