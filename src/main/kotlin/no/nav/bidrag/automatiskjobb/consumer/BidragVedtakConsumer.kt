@@ -1,6 +1,7 @@
 package no.nav.bidrag.automatiskjobb.consumer
 
 import no.nav.bidrag.automatiskjobb.configuration.CacheConfiguration.Companion.VEDTAK_CACHE
+import no.nav.bidrag.beregn.barnebidrag.service.external.BeregningVedtakConsumer
 import no.nav.bidrag.commons.web.client.AbstractRestClient
 import no.nav.bidrag.transport.behandling.vedtak.request.HentVedtakForStønadRequest
 import no.nav.bidrag.transport.behandling.vedtak.request.OpprettVedtakRequestDto
@@ -21,7 +22,8 @@ import java.net.URI
 class BidragVedtakConsumer(
     @Value("\${BIDRAG_VEDTAK_URL}") private val bidragVedtakUrl: URI,
     @Qualifier("azure") restTemplate: RestTemplate,
-) : AbstractRestClient(restTemplate, "bidrag-vedtak") {
+) : AbstractRestClient(restTemplate, "bidrag-vedtak"),
+    BeregningVedtakConsumer {
     private val bidragVedtakUri
         get() = UriComponentsBuilder.fromUri(bidragVedtakUrl).pathSegment("vedtak")
 
@@ -31,8 +33,14 @@ class BidragVedtakConsumer(
             request,
         )
 
+    fun fatteVedtaksforslag(request: OpprettVedtakRequestDto): OpprettVedtakResponseDto =
+        postForNonNullEntity(
+            bidragVedtakUri.pathSegment("forslag").build().toUri(),
+            request,
+        )
+
     @Cacheable(VEDTAK_CACHE)
-    fun hentVedtak(vedtakId: Int): VedtakDto? =
+    override fun hentVedtak(vedtakId: Int): VedtakDto? =
         getForEntity(
             bidragVedtakUri.pathSegment(vedtakId.toString()).build().toUri(),
         )
@@ -42,7 +50,7 @@ class BidragVedtakConsumer(
         maxAttempts = 3,
         backoff = Backoff(delay = 200, maxDelay = 1000, multiplier = 2.0),
     )
-    fun hentVedtakForStønad(request: HentVedtakForStønadRequest): HentVedtakForStønadResponse =
+    override fun hentVedtakForStønad(request: HentVedtakForStønadRequest): HentVedtakForStønadResponse =
         postForNonNullEntity(
             bidragVedtakUri.pathSegment("hent-vedtak").build().toUri(),
             request,

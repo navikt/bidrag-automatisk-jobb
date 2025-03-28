@@ -8,11 +8,16 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import no.nav.bidrag.automatiskjobb.batch.bidrag.AldersjusteringBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.forskudd.AldersjusteringForskuddBatch
+import no.nav.bidrag.automatiskjobb.mapper.VedtakMapper
 import no.nav.bidrag.automatiskjobb.service.AldersjusteringService
+import no.nav.bidrag.beregn.barnebidrag.service.AldersjusteringOrchestrator
+import no.nav.bidrag.domene.sak.Stønadsid
+import no.nav.bidrag.transport.behandling.vedtak.request.OpprettVedtakRequestDto
 import no.nav.security.token.support.core.api.Protected
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import java.time.LocalDate
@@ -24,6 +29,8 @@ class AutomatiskJobbController(
     private val aldersjusteringService: AldersjusteringService,
     private val aldersjusteringBidragBatch: AldersjusteringBidragBatch,
     private val aldersjusteringForskuddBatch: AldersjusteringForskuddBatch,
+    private val aldersjusteringOrchestrator: AldersjusteringOrchestrator,
+    private val vedtakMapper: VedtakMapper,
 ) {
     @GetMapping("/aldersjustering")
     @Operation(
@@ -81,6 +88,17 @@ class AutomatiskJobbController(
         aldersjusteringBidragBatch.startAldersjusteringBatch(forDato, kjøretidspunkt)
         return ResponseEntity.ok().build()
     }
+
+    @PostMapping("/aldersjuster/bidrag")
+    @Operation(
+        summary = "Start kjøring av aldersjustering batch for bidrag.",
+        description = "Operasjon for å starte kjøring av aldersjustering batch for bidrag for et gitt år.",
+        security = [SecurityRequirement(name = "bearer-key")],
+    )
+    fun aldersjusterBidrag(
+        @RequestBody stønadsid: Stønadsid,
+    ): OpprettVedtakRequestDto? =
+        vedtakMapper.tilOpprettVedtakRequest(aldersjusteringOrchestrator.utførAldersjustering(stønadsid), stønadsid, "dummy")
 
     @PostMapping("/aldersjusteringForskudd")
     @Operation(

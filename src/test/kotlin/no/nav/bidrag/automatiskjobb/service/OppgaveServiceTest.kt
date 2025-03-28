@@ -33,6 +33,7 @@ import no.nav.bidrag.domene.enums.vedtak.Engangsbeløptype
 import no.nav.bidrag.domene.enums.vedtak.Innkrevingstype
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.enums.vedtak.Vedtakskilde
+import no.nav.bidrag.domene.felles.personidentNav
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.domene.organisasjon.Enhetsnummer
 import no.nav.bidrag.domene.sak.Saksnummer
@@ -387,7 +388,7 @@ class OppgaveServiceTest {
                             omgjørVedtakId = 1,
                             periodeListe = emptyList(),
                             sak = Saksnummer(saksnummer),
-                            skyldner = skyldnerNav,
+                            skyldner = personidentNav,
                         ),
                     ),
             ),

@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.enums.SecuritySchemeType
 import io.swagger.v3.oas.annotations.info.Info
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.security.SecurityScheme
+import no.nav.bidrag.beregn.barnebidrag.service.AldersjusteringOrchestrator
 import no.nav.bidrag.commons.service.organisasjon.EnableSaksbehandlernavnProvider
 import no.nav.bidrag.commons.web.DefaultCorsFilter
 import no.nav.bidrag.commons.web.MdcFilter
@@ -32,7 +33,7 @@ import org.springframework.context.annotation.Scope
 @EnableJwtTokenValidation
 @EnableOAuth2Client(cacheEnabled = true)
 @EnableSaksbehandlernavnProvider
-@Import(DefaultCorsFilter::class, MdcFilter::class)
+@Import(DefaultCorsFilter::class, MdcFilter::class, AldersjusteringOrchestrator::class)
 class BidragAutomatiskJobbConfiguration {
     @Bean
     fun unleashConfig(
