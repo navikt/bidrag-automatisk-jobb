@@ -1,5 +1,6 @@
 package no.nav.bidrag.automatiskjobb.consumer
 
+import no.nav.bidrag.beregn.barnebidrag.service.external.BeregningStønadConsumer
 import no.nav.bidrag.commons.web.client.AbstractRestClient
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.transport.behandling.stonad.request.HentStønadHistoriskRequest
@@ -19,7 +20,8 @@ import java.net.URI
 class BidragStønadConsumer(
     @Value("\${BIDRAG_STONAD_URL}") private val bidragStønadUrl: URI,
     @Qualifier("azure") restTemplate: RestTemplate,
-) : AbstractRestClient(restTemplate, "bidrag-stønad") {
+) : AbstractRestClient(restTemplate, "bidrag-stønad"),
+    BeregningStønadConsumer {
     private val bidragsStønadUri
         get() = UriComponentsBuilder.fromUri(bidragStønadUrl)
 
@@ -39,7 +41,7 @@ class BidragStønadConsumer(
         maxAttempts = 3,
         backoff = Backoff(delay = 200, maxDelay = 1000, multiplier = 2.0),
     )
-    fun hentHistoriskeStønader(request: HentStønadHistoriskRequest): StønadDto? =
+    override fun hentHistoriskeStønader(request: HentStønadHistoriskRequest): StønadDto? =
         postForEntity(
             bidragsStønadUri.pathSegment("hent-stonad-historisk/").build().toUri(),
             request,

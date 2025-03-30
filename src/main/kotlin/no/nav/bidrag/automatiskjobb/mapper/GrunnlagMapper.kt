@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.node.POJONode
 import no.nav.bidrag.automatiskjobb.utils.hentBarnIHusstandPerioder
 import no.nav.bidrag.automatiskjobb.utils.hentDelberegningSumInntekt
 import no.nav.bidrag.automatiskjobb.utils.hentInntekter
+import no.nav.bidrag.automatiskjobb.utils.hentInntekterSomGjelderBarn
 import no.nav.bidrag.automatiskjobb.utils.hentSivilstandPerioder
 import no.nav.bidrag.automatiskjobb.utils.tilResultatkode
 import no.nav.bidrag.domene.enums.beregning.Resultatkode
@@ -14,6 +15,7 @@ import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.transport.behandling.felles.grunnlag.DelberegningSumInntekt
 import no.nav.bidrag.transport.behandling.felles.grunnlag.GrunnlagDto
+import no.nav.bidrag.transport.behandling.felles.grunnlag.Grunnlagsreferanse
 import no.nav.bidrag.transport.behandling.felles.grunnlag.InntektsrapporteringPeriode
 import no.nav.bidrag.transport.behandling.felles.grunnlag.SluttberegningBarnebidrag
 import no.nav.bidrag.transport.behandling.felles.grunnlag.bidragsmottaker
@@ -36,10 +38,18 @@ object GrunnlagMapper {
         vedtakLøpendeForskudd: VedtakDto,
         gjelderBarn: Personident,
     ): List<GrunnlagDto> {
-        val grunnlagFattetVedtak = byggGrunnlagFattetVedtak(vedtakFattet, gjelderBarn)
+        val fattetVedtakInneholderBarn =
+            vedtakFattet.stønadsendringListe.any { it.kravhaver == gjelderBarn } ||
+                vedtakFattet.engangsbeløpListe.any { it.kravhaver == gjelderBarn }
+        val grunnlagFattetVedtak = byggGrunnlagFattetVedtak(vedtakFattet, gjelderBarn, fattetVedtakInneholderBarn)
 
         val forskuddStønadBarn = vedtakLøpendeForskudd.stønadsendringListe.find { it.kravhaver == gjelderBarn }!!
-        val grunnlagForskudd = hentGrunnlagFraForskudd(vedtakLøpendeForskudd, forskuddStønadBarn)
+        val grunnlagForskudd =
+            hentGrunnlagFraForskudd(
+                vedtakLøpendeForskudd,
+                forskuddStønadBarn,
+                inkluderInntekterSomGjelderBarn = !fattetVedtakInneholderBarn,
+            )
 
         val personobjekter = vedtakLøpendeForskudd.grunnlagListe.hentAllePersoner() as List<GrunnlagDto>
 
@@ -70,12 +80,18 @@ object GrunnlagMapper {
     private fun byggGrunnlagFattetVedtak(
         vedtakBidrag: VedtakDto,
         gjelderBarn: Personident,
+        fattetVedtakInneholderBarn: Boolean,
     ): List<GrunnlagDto> =
-        vedtakBidrag.stønadsendringListe.find { it.kravhaver == gjelderBarn && it.erBidrag }?.let {
+        vedtakBidrag.stønadsendringListe.find { (!fattetVedtakInneholderBarn || it.kravhaver == gjelderBarn) && it.erBidrag }?.let {
             hentGrunnlagFraBidrag(vedtakBidrag, it)
-        } ?: vedtakBidrag.engangsbeløpListe.find { it.kravhaver == gjelderBarn && it.type == Engangsbeløptype.SÆRBIDRAG }?.let {
-            hentGrunnlagFraSærbidrag(vedtakBidrag, gjelderBarn, it)
-        } ?: emptyList()
+        }
+            ?: vedtakBidrag.engangsbeløpListe
+                .find {
+                    (!fattetVedtakInneholderBarn || it.kravhaver == gjelderBarn) &&
+                        it.type == Engangsbeløptype.SÆRBIDRAG
+                }?.let {
+                    hentGrunnlagFraSærbidrag(vedtakBidrag, gjelderBarn, it)
+                } ?: emptyList()
 
     private fun hentGrunnlagFraSærbidrag(
         vedtak: VedtakDto,
@@ -112,13 +128,25 @@ object GrunnlagMapper {
     private fun hentGrunnlagFraForskudd(
         vedtak: VedtakDto,
         stønadsendring: StønadsendringDto,
+        inkluderInntekterSomGjelderBarn: Boolean,
     ): List<GrunnlagDto> {
         if (vedtak.grunnlagListe.isEmpty()) return emptyList()
         val periode = stønadsendring.periodeListe.maxBy { it.periode.fom }
         val bidragsmottaker = vedtak.grunnlagListe.bidragsmottaker!!
+        val søknadsbarn = vedtak.grunnlagListe.hentPersonMedIdent(stønadsendring.kravhaver.verdi)!!
         val sivilstandPerioder = vedtak.grunnlagListe.hentSivilstandPerioder(periode, bidragsmottaker.referanse)
         val barnIHusstandPerioder = vedtak.grunnlagListe.hentBarnIHusstandPerioder(periode)
-        return sivilstandPerioder + barnIHusstandPerioder
+        val inntekterSomGjelderBarn =
+            if (inkluderInntekterSomGjelderBarn) {
+                vedtak.grunnlagListe.hentInntekterSomGjelderBarn(
+                    periode.grunnlagReferanseListe,
+                    bidragsmottaker.referanse,
+                    søknadsbarn.referanse,
+                )
+            } else {
+                emptyList()
+            }
+        return sivilstandPerioder + barnIHusstandPerioder + inntekterSomGjelderBarn
     }
 
     private fun erBidragResultatAvslagEllerManglerInntekterTilParter(
@@ -169,6 +197,23 @@ object GrunnlagMapper {
         } catch (e: Exception) {
             null
         }
+
+    fun hentSisteInntektFraBeregning(
+        sluttberegningReferanse: List<Grunnlagsreferanse>,
+        grunnalagsliste: List<GrunnlagDto>,
+    ) = try {
+        val sluttberegning = grunnalagsliste.finnSluttberegningIReferanser(sluttberegningReferanse)!!
+        val delberegning =
+            grunnalagsliste
+                .finnGrunnlagSomErReferertFraGrunnlagsreferanseListe(
+                    Grunnlagstype.DELBEREGNING_SUM_INNTEKT,
+                    sluttberegning.grunnlagsreferanseListe,
+                ).firstOrNull()
+                ?.innholdTilObjekt<DelberegningSumInntekt>()
+        delberegning
+    } catch (e: Exception) {
+        null
+    }
 
     fun hentSisteDelberegningInntektFattetVedtak(
         vedtak: VedtakDto,

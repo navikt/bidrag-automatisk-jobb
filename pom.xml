@@ -14,7 +14,7 @@
     <name>bidrag-automatisk-jobb</name>
     <properties>
         <java.version>21</java.version>
-        <kotlin.version>2.0.21</kotlin.version>
+        <kotlin.version>2.1.10</kotlin.version>
         <bidrag-felles.version>2025.03.16.122629</bidrag-felles.version>
         <logback-encoder.version>8.0</logback-encoder.version>
         <springdoc-openapi-ui.version>2.8.5</springdoc-openapi-ui.version>
@@ -24,7 +24,7 @@
         <mockk.version>1.13.12</mockk.version>
         <ktlint.version>1.5.0</ktlint.version>
         <shedlock.version>5.13.0</shedlock.version>
-        <bidrag-beregn-felles.version>2025.03.17.135801</bidrag-beregn-felles.version>
+        <bidrag-beregn-felles.version>2025.03.28.150524</bidrag-beregn-felles.version>
     </properties>
 
     <repositories>
@@ -98,6 +98,21 @@
         <dependency>
             <groupId>no.nav.bidrag</groupId>
             <artifactId>bidrag-beregn-forskudd</artifactId>
+            <version>${bidrag-beregn-felles.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.errorprone</groupId>
+                    <artifactId>error_prone_annotations</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.github.oshai</groupId>
+                    <artifactId>kotlin-logging-jvm</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>no.nav.bidrag</groupId>
+            <artifactId>bidrag-beregn-barnebidrag</artifactId>
             <version>${bidrag-beregn-felles.version}</version>
             <exclusions>
                 <exclusion>

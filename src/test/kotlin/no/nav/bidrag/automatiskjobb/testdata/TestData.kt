@@ -1,14 +1,16 @@
 package no.nav.bidrag.automatiskjobb.testdata
 
 import com.fasterxml.jackson.databind.node.POJONode
-import no.nav.bidrag.automatiskjobb.service.skyldnerNav
 import no.nav.bidrag.domene.enums.beregning.Resultatkode
 import no.nav.bidrag.domene.enums.grunnlag.Grunnlagstype
 import no.nav.bidrag.domene.enums.inntekt.Inntektsrapportering
 import no.nav.bidrag.domene.enums.person.AldersgruppeForskudd
 import no.nav.bidrag.domene.enums.person.Bostatuskode
 import no.nav.bidrag.domene.enums.person.Sivilstandskode
+import no.nav.bidrag.domene.enums.rolle.Rolletype
 import no.nav.bidrag.domene.enums.rolle.SøktAvType
+import no.nav.bidrag.domene.enums.sak.Bidragssakstatus
+import no.nav.bidrag.domene.enums.sak.Sakskategori
 import no.nav.bidrag.domene.enums.vedtak.BehandlingsrefKilde
 import no.nav.bidrag.domene.enums.vedtak.Beslutningstype
 import no.nav.bidrag.domene.enums.vedtak.Engangsbeløptype
@@ -16,6 +18,7 @@ import no.nav.bidrag.domene.enums.vedtak.Innkrevingstype
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.enums.vedtak.Vedtakskilde
 import no.nav.bidrag.domene.enums.vedtak.Vedtakstype
+import no.nav.bidrag.domene.felles.personidentNav
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.domene.organisasjon.Enhetsnummer
 import no.nav.bidrag.domene.sak.Saksnummer
@@ -32,6 +35,7 @@ import no.nav.bidrag.transport.behandling.felles.grunnlag.SluttberegningBarnebid
 import no.nav.bidrag.transport.behandling.felles.grunnlag.SluttberegningForskudd
 import no.nav.bidrag.transport.behandling.felles.grunnlag.SluttberegningSærbidrag
 import no.nav.bidrag.transport.behandling.felles.grunnlag.SøknadGrunnlag
+import no.nav.bidrag.transport.behandling.felles.grunnlag.personIdent
 import no.nav.bidrag.transport.behandling.stonad.response.StønadDto
 import no.nav.bidrag.transport.behandling.stonad.response.StønadPeriodeDto
 import no.nav.bidrag.transport.behandling.vedtak.Behandlingsreferanse
@@ -45,6 +49,8 @@ import no.nav.bidrag.transport.behandling.vedtak.response.StønadsendringDto
 import no.nav.bidrag.transport.behandling.vedtak.response.VedtakDto
 import no.nav.bidrag.transport.behandling.vedtak.response.VedtakForStønad
 import no.nav.bidrag.transport.behandling.vedtak.response.VedtakPeriodeDto
+import no.nav.bidrag.transport.sak.BidragssakDto
+import no.nav.bidrag.transport.sak.RolleDto
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -64,6 +70,12 @@ val persongrunnlagBM =
         referanse = personIdentBidragsmottaker,
         innhold = POJONode(Person(ident = Personident(personIdentBidragsmottaker))),
     )
+val persongrunnlagBA2 =
+    GrunnlagDto(
+        type = Grunnlagstype.PERSON_SØKNADSBARN,
+        referanse = personIdentSøknadsbarn2,
+        innhold = POJONode(Person(ident = Personident(personIdentSøknadsbarn2), fødselsdato = LocalDate.now().minusYears(15))),
+    )
 val persongrunnlagBA =
     GrunnlagDto(
         type = Grunnlagstype.PERSON_SØKNADSBARN,
@@ -77,23 +89,25 @@ val persongrunnlagBP =
         innhold = POJONode(Person(ident = Personident(personIdentBidragspliktig))),
     )
 
-fun opprettBostatatusperiode(referanse: String = "BOSTATUS_PERIODE") =
-    GrunnlagDto(
-        referanse = referanse,
-        type = Grunnlagstype.BOSTATUS_PERIODE,
-        grunnlagsreferanseListe = emptyList(),
-        gjelderReferanse = persongrunnlagBM.referanse,
-        gjelderBarnReferanse = persongrunnlagBA.referanse,
-        innhold =
-            POJONode(
-                BostatusPeriode(
-                    periode = ÅrMånedsperiode(YearMonth.parse("2024-01"), null),
-                    bostatus = Bostatuskode.MED_FORELDER,
-                    manueltRegistrert = false,
-                    relatertTilPart = persongrunnlagBA.referanse,
-                ),
+fun opprettBostatatusperiode(
+    gjelderBarn: GrunnlagDto = persongrunnlagBA,
+    referanse: String = "BOSTATUS_PERIODE",
+) = GrunnlagDto(
+    referanse = referanse,
+    type = Grunnlagstype.BOSTATUS_PERIODE,
+    grunnlagsreferanseListe = emptyList(),
+    gjelderReferanse = persongrunnlagBM.referanse,
+    gjelderBarnReferanse = gjelderBarn.referanse,
+    innhold =
+        POJONode(
+            BostatusPeriode(
+                periode = ÅrMånedsperiode(YearMonth.parse("2024-01"), null),
+                bostatus = Bostatuskode.MED_FORELDER,
+                manueltRegistrert = false,
+                relatertTilPart = gjelderBarn.referanse,
             ),
-    )
+        ),
+)
 
 fun opprettGrunnlagSøknad(referanse: String = "SØKNAD") =
     GrunnlagDto(
@@ -267,6 +281,7 @@ fun opprettVedtakDto() =
         engangsbeløpListe = emptyList(),
         behandlingsreferanseListe = emptyList(),
         grunnlagListe = emptyList(),
+        unikReferanse = "",
         stønadsendringListe = emptyList(),
     )
 
@@ -302,6 +317,7 @@ fun opprettStønadsendringBidrag() =
         omgjørVedtakId = null,
         eksternReferanse = null,
         grunnlagReferanseListe = emptyList(),
+        sisteVedtaksid = null,
         periodeListe =
             listOf(
                 VedtakPeriodeDto(
@@ -315,12 +331,12 @@ fun opprettStønadsendringBidrag() =
             ),
     )
 
-fun opprettStønadsendringForskudd() =
+fun opprettStønadsendringForskudd(søknadsbarn: GrunnlagDto = persongrunnlagBA) =
     StønadsendringDto(
         type = Stønadstype.FORSKUDD,
-        kravhaver = Personident(personIdentSøknadsbarn1),
+        kravhaver = Personident(søknadsbarn.personIdent!!),
         mottaker = Personident(personIdentBidragsmottaker),
-        skyldner = skyldnerNav,
+        skyldner = personidentNav,
         sak = Saksnummer(saksnummer),
         førsteIndeksreguleringsår = null,
         innkreving = Innkrevingstype.MED_INNKREVING,
@@ -328,6 +344,7 @@ fun opprettStønadsendringForskudd() =
         omgjørVedtakId = null,
         eksternReferanse = null,
         grunnlagReferanseListe = emptyList(),
+        sisteVedtaksid = null,
         periodeListe =
             listOf(
                 VedtakPeriodeDto(
@@ -347,7 +364,7 @@ fun opprettStønadDto(
     opprettetTidspunkt: LocalDateTime = LocalDateTime.parse("2025-01-01T00:00:00"),
 ) = StønadDto(
     sak = Saksnummer(saksnummer),
-    skyldner = if (stønadstype == Stønadstype.BIDRAG) Personident(personIdentBidragspliktig) else skyldnerNav,
+    skyldner = if (stønadstype == Stønadstype.BIDRAG) Personident(personIdentBidragspliktig) else personidentNav,
     kravhaver = Personident(personIdentSøknadsbarn1),
     mottaker = Personident(personIdentBidragsmottaker),
     førsteIndeksreguleringsår = 2025,
@@ -466,6 +483,7 @@ fun opprettVedtakForStønad(
             omgjørVedtakId = null,
             eksternReferanse = "123456",
             grunnlagReferanseListe = emptyList(),
+            sisteVedtaksid = null,
             periodeListe =
                 listOf(
                     VedtakPeriodeDto(
@@ -479,3 +497,29 @@ fun opprettVedtakForStønad(
                 ),
         ),
 )
+
+fun opprettSakRespons() =
+    BidragssakDto(
+        eierfogd = Enhetsnummer("4806"),
+        saksnummer = Saksnummer("123213"),
+        saksstatus = Bidragssakstatus.IN,
+        kategori = Sakskategori.N,
+        opprettetDato = LocalDate.now(),
+        levdeAdskilt = false,
+        ukjentPart = false,
+        roller =
+            listOf(
+                RolleDto(
+                    Personident(personIdentBidragsmottaker),
+                    type = Rolletype.BIDRAGSMOTTAKER,
+                ),
+                RolleDto(
+                    Personident(personIdentBidragspliktig),
+                    type = Rolletype.BIDRAGSPLIKTIG,
+                ),
+                RolleDto(
+                    Personident(personIdentSøknadsbarn1),
+                    type = Rolletype.BARN,
+                ),
+            ),
+    )
