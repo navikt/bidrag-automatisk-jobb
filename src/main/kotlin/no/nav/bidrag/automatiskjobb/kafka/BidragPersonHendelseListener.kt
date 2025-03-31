@@ -41,7 +41,7 @@ class BidragPersonHendelseListener(
                     secureLogger.info {
                         "Sjekker for person om barn mottar forskudd og fortsatt bor hos BM etter adresseendring i hendelse $personHendelse"
                     }
-                    revurderForskuddService.skalBMFortsattMottaForskuddForSøknadsbarn(personHendelse.aktørid)
+                    revurderForskuddService.skalBMFortsattMottaForskuddForSøknadsbarnEtterAdresseendring(personHendelse.aktørid)
                 } catch (e: Exception) {
                     LOGGER.error(e) { "Det skjedde en feil ved sjekk om BM fortsatt skal motta forskudd for barn" }
                 }
