@@ -6,8 +6,11 @@ import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.junit5.MockKExtension
+import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer
+import no.nav.bidrag.automatiskjobb.mapper.VedtakMapper
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
+import no.nav.bidrag.beregn.barnebidrag.service.AldersjusteringOrchestrator
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.data.domain.Page
@@ -18,6 +21,15 @@ import java.time.LocalDate
 class AldersjusteringServiceTest {
     @RelaxedMockK
     lateinit var barnRepository: BarnRepository
+
+    @RelaxedMockK
+    lateinit var vedtakConsumer: BidragVedtakConsumer
+
+    @RelaxedMockK
+    lateinit var aldersjusteringOrchestrator: AldersjusteringOrchestrator
+
+    @RelaxedMockK
+    lateinit var vedtakMapper: VedtakMapper
 
     @InjectMockKs
     lateinit var aldersjusteringService: AldersjusteringService

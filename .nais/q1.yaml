@@ -23,7 +23,7 @@ env:
   BIDRAG_STONAD_SCOPE: dev-gcp.bidrag.bidrag-stonad-q1
   BIDRAG_VEDTAK_URL: http://bidrag-vedtak-q1
   BIDRAG_VEDTAK_SCOPE: dev-gcp.bidrag.bidrag-vedtak-q1
-  BIDRAG_SAK_URL: https://bidrag-sak-q1.dev-fss-pub.nais.io/bidrag-sak
+  BIDRAG_SAK_URL: https://bidrag-sak-q1.dev-fss-pub.nais.io
   BIDRAG_SAK_SCOPE: dev-fss.bidrag.bidrag-sak-q1
   OPPGAVE_URL: https://oppgave-q1.dev-fss-pub.nais.io
   OPPGAVE_SCOPE: dev-fss.oppgavehandtering.oppgave-q1
@@ -35,6 +35,7 @@ env:
   KAFKA_PERSON_HENDELSE_TOPIC: bidrag.personhendelse.v1
   VEDTAK_KAFKA_GROUP_ID_SISTE: bidrag-automatisk-jobb-q1-siste
   VEDTAK_KAFKA_GROUP_ID_START: bidrag-automatisk-jobb-q1-start
+  PERSON_HENDELSE_KAFKA_GROUP_ID: bidrag-automatisk-jobb-q1
   JAVA_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -XX:MaxRAMPercentage=80.0
 outbound-access-apps:
   - bidrag-stonad-q1

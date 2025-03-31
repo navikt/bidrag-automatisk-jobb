@@ -1,6 +1,5 @@
 package no.nav.bidrag.automatiskjobb.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import no.nav.bidrag.automatiskjobb.SECURE_LOGGER
 import no.nav.bidrag.automatiskjobb.domene.Endringsmelding
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
@@ -10,12 +9,10 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 class PersonHendelseService(
     private val barnRepository: BarnRepository,
-    private val objectMapper: ObjectMapper,
 ) {
     @Transactional
-    fun behandlePersonHendelse(hendelse: String) {
-        val personHendelse = objectMapper.readValue(hendelse, Endringsmelding::class.java)
-        personHendelse.personidenter.forEach { personident ->
+    fun behandlePersonHendelse(hendelse: Endringsmelding) {
+        hendelse.personidenter.forEach { personident ->
 
             barnRepository.findAllByKravhaver(personident).forEach { barn ->
                 SECURE_LOGGER.info("Behandler personhendelse og oppdaterer kravhaver ${barn.kravhaver} til $personident.")

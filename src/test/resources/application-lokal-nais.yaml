@@ -15,7 +15,7 @@ BIDRAG_STONAD_URL: https://bidrag-stonad-q2.intern.dev.nav.no
 BIDRAG_STONAD_SCOPE: dev-gcp.bidrag.bidrag-stonad-q2
 BIDRAG_TILGANGSKONTROLL_URL: https://bidrag-tilgangskontroll.intern.dev.nav.no
 BIDRAG_TILGANGGSKONTROLL_SCOPE: dev-gcp.bidrag.bidrag-tilgangskontroll
-BIDRAG_SAK_URL: https://bidrag-sak-q2.dev.intern.nav.no/bidrag-sak
+BIDRAG_SAK_URL: https://bidrag-sak-q2.dev.intern.nav.no
 BIDRAG_SAK_SCOPE: dev-fss.bidrag.bidrag-sak-q2
 BIDRAG_VEDTAK_SCOPE: dev-gcp.bidrag.bidrag-vedtak-q2
 BIDRAG_VEDTAK_URL: http://localhost:8889
@@ -30,7 +30,7 @@ BIDRAG_STONAD_URL: https://bidrag-stonad-q2.intern.dev.nav.no
 BIDRAG_STONAD_SCOPE: dev-gcp.bidrag.bidrag-stonad-q2
 BIDRAG_TILGANGSKONTROLL_URL: https://bidrag-tilgangskontroll.intern.dev.nav.no
 BIDRAG_TILGANGGSKONTROLL_SCOPE: dev-gcp.bidrag.bidrag-tilgangskontroll
-BIDRAG_SAK_URL: https://bidrag-sak-q2.dev.intern.nav.no/bidrag-sak
+BIDRAG_SAK_URL: https://bidrag-sak-q2.dev.intern.nav.no
 BIDRAG_SAK_SCOPE: dev-fss.bidrag.bidrag-sak-q2
 BIDRAG_VEDTAK_SCOPE: dev-gcp.bidrag.bidrag-vedtak-q2
 BIDRAG_VEDTAK_URL: https://bidrag-vedtak-q2.intern.dev.nav.no
@@ -45,7 +45,7 @@ BIDRAG_STONAD_URL: https://bidrag-stonad-q1.intern.dev.nav.no
 BIDRAG_STONAD_SCOPE: dev-gcp.bidrag.bidrag-stonad-q1
 BIDRAG_TILGANGSKONTROLL_URL: https://bidrag-tilgangskontroll.intern.dev.nav.no
 BIDRAG_TILGANGGSKONTROLL_SCOPE: dev-gcp.bidrag.bidrag-tilgangskontroll
-BIDRAG_SAK_URL: https://bidrag-sak-q1.dev.intern.nav.no/bidrag-sak
+BIDRAG_SAK_URL: https://bidrag-sak-q1.dev.intern.nav.no
 BIDRAG_SAK_SCOPE: dev-fss.bidrag.bidrag-sak-q1
 BIDRAG_VEDTAK_SCOPE: dev-gcp.bidrag.bidrag-vedtak-q1
 BIDRAG_VEDTAK_URL: https://bidrag-vedtak-q1.intern.dev.nav.no
@@ -60,7 +60,7 @@ BIDRAG_STONAD_URL: https://bidrag-stonad-q4.intern.dev.nav.no
 BIDRAG_STONAD_SCOPE: dev-gcp.bidrag.bidrag-stonad-q4
 BIDRAG_TILGANGSKONTROLL_URL: https://bidrag-tilgangskontroll.intern.dev.nav.no
 BIDRAG_TILGANGGSKONTROLL_SCOPE: dev-gcp.bidrag.bidrag-tilgangskontroll
-BIDRAG_SAK_URL: https://bidrag-sak-q4.dev.intern.nav.no/bidrag-sak
+BIDRAG_SAK_URL: https://bidrag-sak-q4.dev.intern.nav.no
 BIDRAG_SAK_SCOPE: dev-fss.bidrag.bidrag-sak-q4
 BIDRAG_VEDTAK_SCOPE: dev-gcp.bidrag.bidrag-vedtak-q4
 BIDRAG_VEDTAK_URL: https://bidrag-vedtak-q4.intern.dev.nav.no

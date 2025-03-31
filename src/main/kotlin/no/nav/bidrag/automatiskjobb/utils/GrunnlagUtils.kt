@@ -94,6 +94,26 @@ fun List<GrunnlagDto>.hentDelberegningSumInntekt(
         ?.innholdTilObjekt<DelberegningSumInntekt>()
 }
 
+fun List<GrunnlagDto>.hentInntekterSomGjelderBarn(
+    grunnlagsreferanseListe: List<Grunnlagsreferanse>,
+    gjelderPersonReferanse: Grunnlagsreferanse,
+    gjelderBarnReferanse: Grunnlagsreferanse,
+): List<GrunnlagDto> {
+    val delberegningSumInntekt =
+        finnGrunnlagSomErReferertFraGrunnlagsreferanseListe(
+            Grunnlagstype.DELBEREGNING_SUM_INNTEKT,
+            grunnlagsreferanseListe,
+        ).filter { it.gjelderReferanse == gjelderPersonReferanse }
+
+    val inntekter =
+        delberegningSumInntekt.flatMap {
+            finnGrunnlagSomErReferertFraGrunnlagsreferanseListe(Grunnlagstype.INNTEKT_RAPPORTERING_PERIODE, it.grunnlagsreferanseListe)
+                .filter { it.gjelderBarnReferanse == gjelderBarnReferanse }
+                .filter { it.gjelderReferanse == gjelderPersonReferanse }
+        }
+    return inntekter as List<GrunnlagDto>
+}
+
 fun List<GrunnlagDto>.hentInntekter(
     grunnlagsreferanseListe: List<Grunnlagsreferanse>,
     gjelderPersonReferanse: Grunnlagsreferanse,

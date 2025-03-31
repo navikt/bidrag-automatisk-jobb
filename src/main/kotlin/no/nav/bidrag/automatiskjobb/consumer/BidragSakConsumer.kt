@@ -1,8 +1,11 @@
 package no.nav.bidrag.automatiskjobb.consumer
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import no.nav.bidrag.automatiskjobb.configuration.CacheConfiguration.Companion.SAKER_PERSON_CACHE
 import no.nav.bidrag.automatiskjobb.configuration.CacheConfiguration.Companion.SAK_CACHE
+import no.nav.bidrag.beregn.barnebidrag.service.external.BeregningSakConsumer
 import no.nav.bidrag.commons.web.client.AbstractRestClient
+import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.transport.sak.BidragssakDto
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
@@ -21,7 +24,8 @@ private val LOGGER = KotlinLogging.logger {}
 class BidragSakConsumer(
     @Value("\${BIDRAG_SAK_URL}") val url: URI,
     @Qualifier("azure") private val restTemplate: RestOperations,
-) : AbstractRestClient(restTemplate, "bidrag-sak") {
+) : AbstractRestClient(restTemplate, "bidrag-sak"),
+    BeregningSakConsumer {
     private fun createUri(path: String?) =
         UriComponentsBuilder
             .fromUri(url)
@@ -31,11 +35,22 @@ class BidragSakConsumer(
 
     @Retryable(maxAttempts = 3, backoff = Backoff(delay = 500, maxDelay = 1500, multiplier = 2.0))
     @Cacheable(SAK_CACHE)
-    fun hentSak(saksnr: String): BidragssakDto {
+    override fun hentSak(saksnr: String): BidragssakDto {
         try {
-            return getForNonNullEntity(createUri("/sak/$saksnr"))
+            return getForNonNullEntity(createUri("/bidrag-sak/sak/$saksnr"))
         } catch (e: HttpStatusCodeException) {
             LOGGER.warn(e) { "Det skjedde en feil ved henting av sak $saksnr" }
+            throw e
+        }
+    }
+
+    @Retryable(maxAttempts = 3, backoff = Backoff(delay = 500, maxDelay = 1500, multiplier = 2.0))
+    @Cacheable(SAKER_PERSON_CACHE)
+    fun hentSakerForPerson(personIdent: Personident): List<BidragssakDto> {
+        try {
+            return postForNonNullEntity(createUri("/person/sak"), personIdent)
+        } catch (e: HttpStatusCodeException) {
+            LOGGER.warn(e) { "Det skjedde en feil ved henting av saker for $personIdent" }
             throw e
         }
     }
