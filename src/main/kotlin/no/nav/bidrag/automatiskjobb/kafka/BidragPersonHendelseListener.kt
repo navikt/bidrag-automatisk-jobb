@@ -20,7 +20,7 @@ class BidragPersonHendelseListener(
 ) {
     @KafkaListener(
         topics = ["\${KAFKA_PERSON_HENDELSE_TOPIC}"],
-        groupId = "\${KAFKA_GROUP_ID:bidrag-automatisk-jobb}",
+        groupId = "\${PERSON_HENDELSE_KAFKA_GROUP_ID:bidrag-automatisk-jobb}",
         properties = ["auto.offset.reset=latest"],
     )
     fun behandlePersonHendelse(
