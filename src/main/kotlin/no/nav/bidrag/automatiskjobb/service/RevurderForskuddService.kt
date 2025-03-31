@@ -212,6 +212,8 @@ class RevurderForskuddService(
                    og fra forskudd vedtaket $sisteInntektForskudd
                 """.trimMargin()
                     .trimIndent()
+                    .replace("\t", "")
+                    .replace("  ", "")
             }
             ForskuddRedusertResultat(
                 saksnummer = stønadEngangsbeløpId.sak.verdi,
@@ -230,6 +232,9 @@ class RevurderForskuddService(
                    og fra forskudd vedtaket $sisteInntektForskudd
                 """.trimMargin()
                     .trimIndent()
+                    .trimIndent()
+                    .replace("\t", "")
+                    .replace("  ", "")
             }
             null
         }
