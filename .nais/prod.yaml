@@ -23,7 +23,7 @@ env:
   BIDRAG_STONAD_SCOPE: prod-gcp.bidrag.bidrag-stonad
   BIDRAG_VEDTAK_URL: http://bidrag-vedtak
   BIDRAG_VEDTAK_SCOPE: prod-gcp.bidrag.bidrag-vedtak
-  BIDRAG_SAK_URL: https://bidrag-sak.prod-fss-pub.nais.io/bidrag-sak
+  BIDRAG_SAK_URL: https://bidrag-sak.prod-fss-pub.nais.io
   BIDRAG_SAK_SCOPE: prod-fss.bidrag.bidrag-sak
   OPPGAVE_URL: https://oppgave.prod-fss-pub.nais.io
   OPPGAVE_SCOPE: prod-fss.oppgavehandtering.oppgave

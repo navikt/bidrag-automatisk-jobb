@@ -2,6 +2,7 @@ package no.nav.bidrag.automatiskjobb.service
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.automatiskjobb.combinedLogger
+import no.nav.bidrag.automatiskjobb.consumer.BidragPersonConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragStønadConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer
@@ -68,9 +69,59 @@ class RevurderForskuddService(
     private val bidragStønadConsumer: BidragStønadConsumer,
     private val bidragVedtakConsumer: BidragVedtakConsumer,
     private val bidragSakConsumer: BidragSakConsumer,
+    private val bidragPersonConsumer: BidragPersonConsumer,
     private val beregning: BeregnForskuddApi,
     private val vedtaksFilter: Vedtaksfiltrering,
 ) {
+    fun skalBMFortsattMottaForskuddForSøknadsbarn(aktørId: String) {
+        val person = bidragPersonConsumer.hentPerson(Personident(aktørId))
+        val personident = person.ident
+        val saker = bidragSakConsumer.hentSakerForPerson(personident)
+        saker.forEach { sak ->
+            val personRolle = sak.roller.find { it.fødselsnummer == personident } ?: return@forEach
+            if (personRolle.type != Rolletype.BARN) {
+                combinedLogger.info {
+                    "Person ${personident.verdi} har rolle ${personRolle.type} i sak ${sak.saksnummer}. Sjekker ikke om forskudd skal endres"
+                }
+                return@forEach
+            }
+            val bidragsmottaker =
+                sak.roller.find { it.type == Rolletype.BIDRAGSMOTTAKER } ?: run {
+                    secureLogger.info {
+                        "Sak ${sak.saksnummer} har ingen bidragsmottaker. Sjekker ikke om forskudd skal endres"
+                    }
+                    return@forEach
+                }
+
+            secureLogger.info {
+                "Sjekker om barnet ${personident.verdi} i sak ${sak.saksnummer} mottar forskudd og fortsatt bor hos BM etter adresseendring"
+            }
+            val løpendeForskudd =
+                hentLøpendeForskudd(sak.saksnummer.verdi, personident.verdi) ?: run {
+                    secureLogger.info {
+                        "Fant ingen løpende forskudd i sak ${sak.saksnummer} for barn ${personident.verdi}. Avslutter behandling for sak ${sak.saksnummer}"
+                    }
+                    return@forEach
+                }
+
+            val husstandsmedlemmerBM = bidragPersonConsumer.hentPersonHusstandsmedlemmer(bidragsmottaker.fødselsnummer!!)
+            val barnErHusstandsmedlem =
+                husstandsmedlemmerBM.husstandListe.any { hl ->
+                    hl.husstandsmedlemListe.any { it.personId == personident }
+                }
+            if (barnErHusstandsmedlem) {
+                secureLogger.info {
+                    "Barn ${personident.verdi} er husstandsmedlem til bidragsmottaker ${bidragsmottaker.fødselsnummer!!.verdi}. Sjekker ikke om forskudd skal endres"
+                }
+                return@forEach
+            }
+
+            secureLogger.info {
+                "Bidragsmottaker mottar forskudd for barn ${personident.verdi} i sak ${sak.saksnummer} med beløp ${løpendeForskudd.beløp} ${løpendeForskudd.valutakode}. Barnet bor ikke lenger hos BM og skal derfor ikke motta forskudd lenger"
+            }
+        }
+    }
+
     fun erForskuddRedusert(vedtakHendelse: VedtakHendelse): List<ForskuddRedusertResultat> {
         combinedLogger.info {
             "Sjekker om forskuddet er redusert etter fattet vedtak ${vedtakHendelse.id} i sak ${vedtakHendelse.saksnummer}"

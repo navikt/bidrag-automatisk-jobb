@@ -9,6 +9,7 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import io.mockk.mockkConstructor
 import io.mockk.verify
+import no.nav.bidrag.automatiskjobb.consumer.BidragPersonConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragStønadConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer
@@ -83,6 +84,10 @@ class RevurderForskuddServiceTest {
 
     @MockK
     lateinit var bidragSakConsumer: BidragSakConsumer
+
+    @MockK
+    lateinit var bidragPersonConsumer: BidragPersonConsumer
+
     val unleash = FakeUnleash()
 
     @BeforeEach
@@ -93,7 +98,14 @@ class RevurderForskuddServiceTest {
         stubSjablonService()
         stubSjablonProvider()
         service =
-            RevurderForskuddService(bidragStønadConsumer, bidragVedtakConsumer, bidragSakConsumer, BeregnForskuddApi(), Vedtaksfiltrering())
+            RevurderForskuddService(
+                bidragStønadConsumer,
+                bidragVedtakConsumer,
+                bidragSakConsumer,
+                bidragPersonConsumer,
+                BeregnForskuddApi(),
+                Vedtaksfiltrering(),
+            )
     }
 
     @Test

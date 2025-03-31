@@ -23,7 +23,7 @@ env:
   BIDRAG_STONAD_SCOPE: dev-gcp.bidrag.bidrag-stonad-q4
   BIDRAG_VEDTAK_URL: http://bidrag-vedtak-q4
   BIDRAG_VEDTAK_SCOPE: dev-gcp.bidrag.bidrag-vedtak-q4
-  BIDRAG_SAK_URL: https://bidrag-sak-q4.dev-fss-pub.nais.io/bidrag-sak
+  BIDRAG_SAK_URL: https://bidrag-sak-q4.dev-fss-pub.nais.io
   BIDRAG_SAK_SCOPE: dev-fss.bidrag.bidrag-sak-q4
   OPPGAVE_URL: https://oppgave.dev-fss-pub.nais.io
   OPPGAVE_SCOPE: dev-fss.oppgavehandtering.oppgave

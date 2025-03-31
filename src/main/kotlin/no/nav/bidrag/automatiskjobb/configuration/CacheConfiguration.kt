@@ -17,13 +17,28 @@ import org.springframework.context.annotation.Profile
 class CacheConfiguration {
     companion object {
         const val PERSON_CACHE = "PERSON_CACHE"
+        const val PERSON_FØDSELSDATO_CACHE = "PERSON_FODSELSDATO_CACHE"
+        const val PERSON_HUSTANDSMEDLEMMER_CACHE = "PERSON_HUSTANDSMEDLEMMER_CACHE"
         const val VEDTAK_CACHE = "VEDTAK_CACHE"
         const val SAK_CACHE = "SAK_CACHE"
+        const val SAKER_PERSON_CACHE = "SAKER_PERSON_CACHE"
     }
 
     @Bean
     fun cacheManager(): CacheManager {
         val caffeineCacheManager = CaffeineCacheManager()
+        caffeineCacheManager.registerCustomCache(
+            PERSON_FØDSELSDATO_CACHE,
+            Caffeine.newBuilder().expireAfter(InvaliderCacheFørStartenAvArbeidsdag()).build(),
+        )
+        caffeineCacheManager.registerCustomCache(
+            PERSON_HUSTANDSMEDLEMMER_CACHE,
+            Caffeine.newBuilder().expireAfter(InvaliderCacheFørStartenAvArbeidsdag()).build(),
+        )
+        caffeineCacheManager.registerCustomCache(
+            SAKER_PERSON_CACHE,
+            Caffeine.newBuilder().expireAfter(InvaliderCacheFørStartenAvArbeidsdag()).build(),
+        )
         caffeineCacheManager.registerCustomCache(
             PERSON_CACHE,
             Caffeine.newBuilder().expireAfter(InvaliderCacheFørStartenAvArbeidsdag()).build(),
