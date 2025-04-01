@@ -10,6 +10,7 @@ import no.nav.bidrag.transport.sak.BidragssakDto
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.annotation.Cacheable
+import org.springframework.http.HttpStatus
 import org.springframework.retry.annotation.Backoff
 import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
@@ -50,6 +51,10 @@ class BidragSakConsumer(
         try {
             return postForNonNullEntity(createUri("/person/sak"), personIdent)
         } catch (e: HttpStatusCodeException) {
+            if (e.statusCode == HttpStatus.NOT_FOUND) {
+                LOGGER.warn(e) { "Fant ingen saker for $personIdent" }
+                return emptyList()
+            }
             LOGGER.warn(e) { "Det skjedde en feil ved henting av saker for $personIdent" }
             throw e
         }
