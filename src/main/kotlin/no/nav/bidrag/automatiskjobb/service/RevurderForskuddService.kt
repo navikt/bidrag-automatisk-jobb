@@ -117,7 +117,7 @@ class RevurderForskuddService(
             }
 
             secureLogger.info {
-                "Bidragsmottaker mottar forskudd for barn ${personident.verdi} i sak ${sak.saksnummer} med beløp ${løpendeForskudd.beløp} ${løpendeForskudd.valutakode}. Barnet bor ikke lenger hos bidragsmottaker og skal derfor ikke motta forskudd lenger"
+                "Bidragsmottaker ${bidragsmottaker.fødselsnummer?.verdi} mottar forskudd for barn ${personident.verdi} i sak ${sak.saksnummer} med beløp ${løpendeForskudd.beløp} ${løpendeForskudd.valutakode}. Barnet bor ikke lenger hos bidragsmottaker og skal derfor ikke motta forskudd lenger"
             }
         }
     }
