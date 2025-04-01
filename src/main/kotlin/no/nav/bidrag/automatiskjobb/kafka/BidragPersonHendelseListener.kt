@@ -36,7 +36,7 @@ class BidragPersonHendelseListener(
             secureLogger.info { "Behandler person hendelse $personHendelse" }
             personHendelseService.behandlePersonHendelse(personHendelse)
 
-            if (personHendelse.adresseendring != null) {
+            if (personHendelse.endringer.any { it.adresseendring != null }) {
                 try {
                     secureLogger.info {
                         "Sjekker for person om barn mottar forskudd og fortsatt bor hos BM etter adresseendring i hendelse $personHendelse"

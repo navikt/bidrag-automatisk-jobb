@@ -5,10 +5,21 @@ import java.time.LocalDate
 data class Endringsmelding(
     val aktørid: String,
     val personidenter: Set<String>,
-    val adresseendring: AdresseEndring? = null,
-    val opplysningstype: Opplysningstype = Opplysningstype.UKJENT,
+    val endringer: List<Endring> = emptyList(),
 ) {
-    data class AdresseEndring(
+    data class Endring(
+        val adresseendring: Adresseendring? = null,
+        val sivilstandendring: Sivilstandendring? = null,
+        val opplysningstype: Opplysningstype = Opplysningstype.UKJENT,
+    )
+
+    data class Sivilstandendring(
+        val sivilstand: String? = null,
+        val bekreftelsesdato: LocalDate? = null,
+        val gyldigFraOgMedDato: LocalDate? = null,
+    )
+
+    data class Adresseendring(
         val type: Opplysningstype,
         val flyttedato: LocalDate? = null,
         val utflytting: Utflytting? = null,
