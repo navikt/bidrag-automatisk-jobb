@@ -34,7 +34,9 @@ class BidragPersonHendelseListener(
         try {
             val personHendelse = commonObjectmapper.readValue(hendelse, Endringsmelding::class.java)
             secureLogger.info { "Behandler person hendelse $personHendelse" }
-            personHendelseService.behandlePersonHendelse(personHendelse)
+            if (personHendelse.endringer.any { it.opplysningstype == Endringsmelding.Opplysningstype.FOLKEREGISTERIDENTIFIKATOR }) {
+                personHendelseService.behandlePersonHendelse(personHendelse)
+            }
 
             if (personHendelse.endringer.any { it.adresseendring != null }) {
                 try {
