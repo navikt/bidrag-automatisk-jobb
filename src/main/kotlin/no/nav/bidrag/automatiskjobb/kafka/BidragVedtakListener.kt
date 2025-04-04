@@ -20,24 +20,19 @@ class BidragVedtakListener(
         private val LOGGER = LoggerFactory.getLogger(BidragVedtakListener::class.java)
     }
 
-//    @KafkaListener(
-//        groupId = "\${VEDTAK_KAFKA_GROUP_ID_START:bidrag-automatisk-jobb-start}",
-//        topics = ["\${KAFKA_VEDTAK_TOPIC}"],
-//        properties = ["auto.offset.reset=earliest"],
-//    )
-//    fun lesHendelseFraStart(
-//        hendelse: String,
-//        @Header(KafkaHeaders.OFFSET) offset: Long,
-//        @Header(KafkaHeaders.RECEIVED_TOPIC) topic: String,
-//        @Header(KafkaHeaders.RECEIVED_PARTITION) partition: Int,
-//        @Header(KafkaHeaders.GROUP_ID) groupId: String,
-//    ) {
-//        try {
-//            vedtakService.behandleVedtak(hendelse)
-//        } catch (e: Exception) {
-//            LOGGER.error("Det skjedde en feil ved prosessering av vedtak hendelse", e)
-//        }
-//    }
+    @KafkaListener(
+        groupId = "\${VEDTAK_KAFKA_GROUP_ID_START:bidrag-automatisk-jobb-start}",
+        topics = ["\${KAFKA_VEDTAK_TOPIC}"],
+        properties = ["auto.offset.reset=earliest"],
+    )
+    fun lesHendelseFraStart(
+        hendelse: String,
+        @Header(KafkaHeaders.OFFSET) offset: Long,
+        @Header(KafkaHeaders.RECEIVED_TOPIC) topic: String,
+        @Header(KafkaHeaders.GROUP_ID) groupId: String,
+    ) {
+        behandleHendelse(offset, groupId, topic, hendelse, vedtakService::behandleVedtak)
+    }
 
     @KafkaListener(
         groupId = "\${VEDTAK_KAFKA_GROUP_ID_SISTE:bidrag-automatisk-jobb-siste}",
@@ -48,14 +43,23 @@ class BidragVedtakListener(
         hendelse: String,
         @Header(KafkaHeaders.OFFSET) offset: Long,
         @Header(KafkaHeaders.RECEIVED_TOPIC) topic: String,
-        @Header(KafkaHeaders.RECEIVED_PARTITION) partition: Int,
         @Header(KafkaHeaders.GROUP_ID) groupId: String,
+    ) {
+        behandleHendelse(offset, groupId, topic, hendelse, oppgaveService::opprettRevurderForskuddOppgave)
+    }
+
+    private fun behandleHendelse(
+        offset: Long,
+        groupId: String,
+        topic: String,
+        hendelse: String,
+        metode: (vedtakhendelse: VedtakHendelse) -> Unit,
     ) {
         LOGGER.debug("Behandler vedtakhendelse med offset: $offset i consumergroup: $groupId for topic: $topic")
         SECURE_LOGGER.debug("Behandler vedtakhendelse: $hendelse")
         try {
             val vedtakHendelse = mapVedtakHendelse(hendelse)
-            oppgaveService.opprettRevurderForskuddOppgave(vedtakHendelse)
+            metode(vedtakHendelse)
         } catch (e: Exception) {
             LOGGER.error("Det skjedde en feil ved prosessering av vedtak hendelse", e)
         }

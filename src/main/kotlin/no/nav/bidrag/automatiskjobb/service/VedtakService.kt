@@ -1,7 +1,5 @@
 package no.nav.bidrag.automatiskjobb.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import no.nav.bidrag.automatiskjobb.SECURE_LOGGER
 import no.nav.bidrag.automatiskjobb.consumer.BidragPersonConsumer
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
@@ -18,7 +16,6 @@ import java.time.LocalDate
 
 @Service
 class VedtakService(
-    private val objectMapper: ObjectMapper,
     private val barnRepository: BarnRepository,
     private val identUtils: IdentUtils,
     private val bidragPersonConsumer: BidragPersonConsumer,
@@ -28,9 +25,7 @@ class VedtakService(
     }
 
     @Transactional
-    fun behandleVedtak(hendelse: String) {
-        val vedtakHendelse = mapVedtakHendelse(hendelse)
-
+    fun behandleVedtak(vedtakHendelse: VedtakHendelse) {
         val stønadsendringer = hentStønadsendringerForBidragOgForskudd(vedtakHendelse)
 
         stønadsendringer?.forEach { (kravhaver, stønadsendringer) ->
@@ -44,7 +39,7 @@ class VedtakService(
             if (lagretBarn != null) {
                 oppdaterBarn(lagretBarn, stønadsendringer)
             } else {
-                opprettBarnFraStønadsendring(kravhaver, stønadsendringer)
+                opprettBarnFraStønadsendring(kravhaverNyesteIdent, stønadsendringer)
             }
         }
     }
@@ -53,7 +48,7 @@ class VedtakService(
         lagretBarn: Barn,
         stønadsendringer: List<Stønadsendring>,
     ) {
-        LOGGER.info("Oppdaterer barn ${lagretBarn.id}.")
+        LOGGER.info("Oppdaterer barn ${lagretBarn.id} for sak ${stønadsendringer.first().sak.verdi}")
         val skyldner = finnSkylder(stønadsendringer)
 
         // Skylder kan oppdateres om det finnes en ny skyldner som ikke er null
@@ -89,21 +84,22 @@ class VedtakService(
 
     private fun opprettBarnFraStønadsendring(
         kravhaver: Personident,
-        stønadsendring: List<Stønadsendring>,
+        stønadsendringer: List<Stønadsendring>,
     ) {
-        val saksnummer = stønadsendring.first().sak.verdi
+        val saksnummer = stønadsendringer.first().sak.verdi
         val barn =
             Barn(
                 saksnummer = saksnummer,
                 kravhaver = kravhaver.verdi,
                 fødselsdato = bidragPersonConsumer.hentFødselsdatoForPerson(kravhaver),
-                skyldner = finnSkylder(stønadsendring),
-                forskuddFra = finnPeriodeFra(stønadsendring, Stønadstype.FORSKUDD),
-                forskuddTil = finnPeriodeTil(stønadsendring, Stønadstype.FORSKUDD),
-                bidragFra = finnPeriodeFra(stønadsendring, Stønadstype.BIDRAG),
-                bidragTil = finnPeriodeTil(stønadsendring, Stønadstype.BIDRAG),
+                skyldner = finnSkylder(stønadsendringer),
+                forskuddFra = finnPeriodeFra(stønadsendringer, Stønadstype.FORSKUDD),
+                forskuddTil = finnPeriodeTil(stønadsendringer, Stønadstype.FORSKUDD),
+                bidragFra = finnPeriodeFra(stønadsendringer, Stønadstype.BIDRAG),
+                bidragTil = finnPeriodeTil(stønadsendringer, Stønadstype.BIDRAG),
             )
-        barnRepository.save(barn)
+        val barnId = barnRepository.save(barn)
+        LOGGER.info("Opprettet nytt barn $barnId for sak $saksnummer")
     }
 
     private fun finnPeriodeFra(
@@ -162,11 +158,4 @@ class VedtakService(
             }?.skyldner
             ?.let { identUtils.hentNyesteIdent(it) }
             ?.verdi
-
-    private fun mapVedtakHendelse(hendelse: String): VedtakHendelse =
-        try {
-            objectMapper.readValue(hendelse, VedtakHendelse::class.java)
-        } finally {
-            SECURE_LOGGER.debug("Leser hendelse: {}", hendelse)
-        }
 }
