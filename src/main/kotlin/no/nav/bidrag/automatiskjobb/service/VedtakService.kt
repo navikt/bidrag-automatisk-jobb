@@ -98,8 +98,8 @@ class VedtakService(
                 bidragFra = finnPeriodeFra(stønadsendringer, Stønadstype.BIDRAG),
                 bidragTil = finnPeriodeTil(stønadsendringer, Stønadstype.BIDRAG),
             )
-        val barnId = barnRepository.save(barn)
-        LOGGER.info("Opprettet nytt barn $barnId for sak $saksnummer")
+        val lagretBarn = barnRepository.save(barn)
+        LOGGER.info("Opprettet nytt barn ${lagretBarn.id} for sak $saksnummer")
     }
 
     private fun finnPeriodeFra(
