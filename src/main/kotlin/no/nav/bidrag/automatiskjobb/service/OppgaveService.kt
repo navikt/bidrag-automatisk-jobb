@@ -52,12 +52,14 @@ class OppgaveService(
                 secureLogger.info {
                     "Sjekker for person om barn mottar forskudd og fortsatt bor hos BM etter adresseendring i hendelse $hendelse"
                 }
-                val resultat = revurderForskuddService.skalBMFortsattMottaForskuddForSøknadsbarnEtterAdresseendring(hendelse.aktørid)
-                resultat.forEach {
+                revurderForskuddService.skalBMFortsattMottaForskuddForSøknadsbarnEtterAdresseendring(hendelse.aktørid).forEach {
                     if (unleash.isEnabled(opprettRevurderForskuddOppgaveToggleName)) {
                         it.opprettRevurderForskuddOppgaveEtterAdresseEndring()
                     } else {
                         log.info { "Feature toggle $opprettRevurderForskuddOppgaveToggleName er skrudd av. Oppretter ikke oppgave" }
+                        secureLogger.info {
+                            "Feature toggle $opprettRevurderForskuddOppgaveToggleName er skrudd av. Oppretter ikke oppgave for $it"
+                        }
                     }
                 }
             } catch (e: Exception) {
@@ -156,7 +158,7 @@ class OppgaveService(
             oppgaveConsumer.hentOppgave(
                 OppgaveSokRequest()
                     .søkForGenerellOppgave()
-                    .leggTilAktoerId(barnAktørId)
+                    .leggTilAktoerId(gjelderBarn)
                     .leggTilSaksreferanse(saksnummer),
             )
         val revurderForskuddOppgave = oppgaver.oppgaver.find { it.beskrivelse!!.contains(revurderForskuddBeskrivelseAdresseendring) }

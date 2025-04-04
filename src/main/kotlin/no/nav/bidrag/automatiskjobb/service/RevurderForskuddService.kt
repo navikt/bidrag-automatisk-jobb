@@ -47,7 +47,6 @@ data class AdresseEndretResultat(
     val enhet: String,
     val bidragsmottaker: String,
     val gjelderBarn: String,
-    val barnAktørId: String,
 )
 
 data class ForskuddRedusertResultat(
@@ -128,7 +127,6 @@ class RevurderForskuddService(
                 bidragsmottaker = bidragsmottaker.fødselsnummer!!.verdi,
                 gjelderBarn = barnIdent.verdi,
                 enhet = sak.eierfogd.verdi,
-                barnAktørId = aktørId,
             )
         }
     }
