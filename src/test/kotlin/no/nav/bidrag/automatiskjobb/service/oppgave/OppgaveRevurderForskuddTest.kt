@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.service
+package no.nav.bidrag.automatiskjobb.service.oppgave
 
 import io.getunleash.FakeUnleash
 import io.kotest.matchers.shouldBe
@@ -16,6 +16,11 @@ import no.nav.bidrag.automatiskjobb.consumer.dto.OppgaveType
 import no.nav.bidrag.automatiskjobb.consumer.dto.behandlingstypeNasjonal
 import no.nav.bidrag.automatiskjobb.consumer.dto.behandlingstypeUtland
 import no.nav.bidrag.automatiskjobb.consumer.dto.formatterDatoForOppgave
+import no.nav.bidrag.automatiskjobb.service.ForskuddRedusertResultat
+import no.nav.bidrag.automatiskjobb.service.OppgaveService
+import no.nav.bidrag.automatiskjobb.service.RevurderForskuddService
+import no.nav.bidrag.automatiskjobb.service.revurderForskuddBeskrivelse
+import no.nav.bidrag.automatiskjobb.service.revurderForskuddBeskrivelseSærbidrag
 import no.nav.bidrag.automatiskjobb.testdata.SAKSBEHANDLER_IDENT
 import no.nav.bidrag.automatiskjobb.testdata.opprettVedtakhendelse
 import no.nav.bidrag.automatiskjobb.testdata.personIdentBidragsmottaker
@@ -47,7 +52,7 @@ import java.math.BigDecimal
 import java.time.LocalDate
 
 @ExtendWith(MockKExtension::class)
-class OppgaveServiceTest {
+class OppgaveRevurderForskuddTest {
     lateinit var oppgaveService: OppgaveService
 
     @MockK
