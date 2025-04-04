@@ -2,10 +2,9 @@ package no.nav.bidrag.automatiskjobb.kafka
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.automatiskjobb.domene.Endringsmelding
-import no.nav.bidrag.automatiskjobb.domene.erAdresseendring
 import no.nav.bidrag.automatiskjobb.domene.erIdentendring
+import no.nav.bidrag.automatiskjobb.service.OppgaveService
 import no.nav.bidrag.automatiskjobb.service.PersonHendelseService
-import no.nav.bidrag.automatiskjobb.service.RevurderForskuddService
 import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.transport.felles.commonObjectmapper
 import org.springframework.kafka.annotation.KafkaListener
@@ -18,7 +17,7 @@ private val LOGGER = KotlinLogging.logger {}
 @Component
 class BidragPersonHendelseListener(
     private val personHendelseService: PersonHendelseService,
-    private val revurderForskuddService: RevurderForskuddService,
+    private val oppgaveService: OppgaveService,
 ) {
     @KafkaListener(
         topics = ["\${KAFKA_PERSON_HENDELSE_TOPIC}"],
@@ -40,19 +39,7 @@ class BidragPersonHendelseListener(
                 personHendelseService.behandlePersonHendelse(personHendelse)
             }
 
-            if (personHendelse.erAdresseendring) {
-                try {
-                    secureLogger.info {
-                        "Sjekker for person om barn mottar forskudd og fortsatt bor hos BM etter adresseendring i hendelse $personHendelse"
-                    }
-                    revurderForskuddService.skalBMFortsattMottaForskuddForSøknadsbarnEtterAdresseendring(personHendelse.aktørid)
-                } catch (e: Exception) {
-                    LOGGER.error(e) { "Det skjedde en feil ved sjekk om BM fortsatt skal motta forskudd for barn fra hendelse" }
-                    secureLogger.error(
-                        e,
-                    ) { "Det skjedde en feil ved sjekk om BM fortsatt skal motta forskudd for barn fra hendelse $personHendelse" }
-                }
-            }
+            oppgaveService.sjekkOgOpprettRevurderForskuddOppgaveEtterBarnFlyttetFraBM(personHendelse)
         } catch (e: Exception) {
             LOGGER.error(e) { "Det skjedde en feil ved behandling av personhendelse" }
         }

@@ -2,7 +2,6 @@ package no.nav.bidrag.automatiskjobb.consumer
 
 import no.nav.bidrag.automatiskjobb.configuration.CacheConfiguration.Companion.PERSON_CACHE
 import no.nav.bidrag.automatiskjobb.configuration.CacheConfiguration.Companion.PERSON_FØDSELSDATO_CACHE
-import no.nav.bidrag.automatiskjobb.configuration.CacheConfiguration.Companion.PERSON_HUSTANDSMEDLEMMER_CACHE
 import no.nav.bidrag.beregn.barnebidrag.service.external.BeregningPersonConsumer
 import no.nav.bidrag.commons.cache.BrukerCacheable
 import no.nav.bidrag.commons.web.client.AbstractRestClient
@@ -54,7 +53,6 @@ class BidragPersonConsumer(
     fun hentPerson(personident: Personident): PersonDto =
         postForNonNullEntity<PersonDto>(createUri("informasjon"), PersonRequest(personident))
 
-    @BrukerCacheable(PERSON_HUSTANDSMEDLEMMER_CACHE)
     fun hentPersonHusstandsmedlemmer(personident: Personident): HusstandsmedlemmerDto =
         postForNonNullEntity<HusstandsmedlemmerDto>(
             createUri("husstandsmedlemmer"),
