@@ -70,6 +70,7 @@ class VedtakMapper(
                                 OpprettPeriodeRequestDto(
                                     periode = it.periode,
                                     beløp = it.resultat.beløp,
+                                    valutakode = "NOK",
                                     resultatkode = Resultatkode.BEREGNET_BIDRAG.name,
                                     grunnlagReferanseListe = it.grunnlagsreferanseListe,
                                 )

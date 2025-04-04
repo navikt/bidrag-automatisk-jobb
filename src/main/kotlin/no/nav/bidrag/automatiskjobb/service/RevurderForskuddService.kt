@@ -1,6 +1,5 @@
 package no.nav.bidrag.automatiskjobb.service
 
-import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.automatiskjobb.combinedLogger
 import no.nav.bidrag.automatiskjobb.consumer.BidragPersonConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
@@ -10,6 +9,7 @@ import no.nav.bidrag.automatiskjobb.mapper.GrunnlagMapper
 import no.nav.bidrag.automatiskjobb.mapper.erBidrag
 import no.nav.bidrag.automatiskjobb.utils.enesteResultatkode
 import no.nav.bidrag.automatiskjobb.utils.erDirekteAvslag
+import no.nav.bidrag.automatiskjobb.utils.erHusstandsmedlem
 import no.nav.bidrag.automatiskjobb.utils.tilResultatkode
 import no.nav.bidrag.beregn.barnebidrag.service.SisteManuelleVedtak
 import no.nav.bidrag.beregn.forskudd.BeregnForskuddApi
@@ -42,6 +42,14 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.time.YearMonth
 
+data class AdresseEndretResultat(
+    val saksnummer: String,
+    val enhet: String,
+    val bidragsmottaker: String,
+    val gjelderBarn: String,
+    val barnAktørId: String,
+)
+
 data class ForskuddRedusertResultat(
     val saksnummer: String,
     val bidragsmottaker: String,
@@ -58,8 +66,6 @@ data class StønadEngangsbeløpId(
     val stønadstype: Stønadstype? = null,
 )
 
-private val LOGGER = KotlinLogging.logger {}
-
 private fun VedtakDto.erIndeksreguleringEllerAldersjustering() =
     listOf(Vedtakstype.ALDERSJUSTERING, Vedtakstype.INDEKSREGULERING).contains(type)
 
@@ -73,52 +79,57 @@ class RevurderForskuddService(
     private val beregning: BeregnForskuddApi,
     private val vedtaksFilter: Vedtaksfiltrering,
 ) {
-    fun skalBMFortsattMottaForskuddForSøknadsbarnEtterAdresseendring(aktørId: String) {
+    fun skalBMFortsattMottaForskuddForSøknadsbarnEtterAdresseendring(aktørId: String): List<AdresseEndretResultat> {
         val person = bidragPersonConsumer.hentPerson(Personident(aktørId))
-        val personident = person.ident
-        val saker = bidragSakConsumer.hentSakerForPerson(personident)
-        saker.forEach { sak ->
-            val personRolle = sak.roller.find { it.fødselsnummer == personident } ?: return@forEach
+        val barnIdent = person.ident
+        val saker = bidragSakConsumer.hentSakerForPerson(barnIdent)
+        return saker.mapNotNull { sak ->
+            val personRolle = sak.roller.find { it.fødselsnummer == barnIdent } ?: return@mapNotNull null
             if (personRolle.type != Rolletype.BARN) {
                 combinedLogger.info {
-                    "Person ${personident.verdi} har rolle ${personRolle.type} i sak ${sak.saksnummer}. Behandler bare når barnets adresse endres. Avslutter behandling"
+                    "Person ${barnIdent.verdi} har rolle ${personRolle.type} i sak ${sak.saksnummer}. Behandler bare når barnets adresse endres. Avslutter behandling"
                 }
-                return@forEach
+                return@mapNotNull null
             }
             val bidragsmottaker =
                 sak.roller.find { it.type == Rolletype.BIDRAGSMOTTAKER } ?: run {
                     secureLogger.info {
                         "Sak ${sak.saksnummer} har ingen bidragsmottaker. Avslutter behandling"
                     }
-                    return@forEach
+                    return@mapNotNull null
                 }
 
             secureLogger.info {
-                "Sjekker om barnet ${personident.verdi} i sak ${sak.saksnummer} mottar forskudd og fortsatt bor hos BM etter adresseendring"
+                "Sjekker om barnet ${barnIdent.verdi} i sak ${sak.saksnummer} mottar forskudd og fortsatt bor hos BM etter adresseendring"
             }
             val løpendeForskudd =
-                hentLøpendeForskudd(sak.saksnummer.verdi, personident.verdi) ?: run {
+                hentLøpendeForskudd(sak.saksnummer.verdi, barnIdent.verdi) ?: run {
                     secureLogger.info {
-                        "Fant ingen løpende forskudd i sak ${sak.saksnummer} for barn ${personident.verdi}. Avslutter behandling"
+                        "Fant ingen løpende forskudd i sak ${sak.saksnummer} for barn ${barnIdent.verdi}. Avslutter behandling"
                     }
-                    return@forEach
+                    return@mapNotNull null
                 }
 
             val husstandsmedlemmerBM = bidragPersonConsumer.hentPersonHusstandsmedlemmer(bidragsmottaker.fødselsnummer!!)
-            val barnErHusstandsmedlem =
-                husstandsmedlemmerBM.husstandListe.any { hl ->
-                    hl.husstandsmedlemListe.any { it.personId == personident }
-                }
-            if (barnErHusstandsmedlem) {
+            if (husstandsmedlemmerBM.erHusstandsmedlem(barnIdent)) {
                 secureLogger.info {
-                    "Barn ${personident.verdi} er husstandsmedlem til bidragsmottaker ${bidragsmottaker.fødselsnummer!!.verdi}. Ingen endringer kreves."
+                    "Barn ${barnIdent.verdi} er husstandsmedlem til bidragsmottaker ${bidragsmottaker.fødselsnummer!!.verdi}. Ingen endringer kreves."
                 }
-                return@forEach
+                return@mapNotNull null
             }
 
             secureLogger.info {
-                "Bidragsmottaker ${bidragsmottaker.fødselsnummer?.verdi} mottar forskudd for barn ${personident.verdi} i sak ${sak.saksnummer} med beløp ${løpendeForskudd.beløp} ${løpendeForskudd.valutakode}. Barnet bor ikke lenger hos bidragsmottaker og skal derfor ikke motta forskudd lenger"
+                "Bidragsmottaker ${bidragsmottaker.fødselsnummer?.verdi} mottar forskudd for barn ${barnIdent.verdi} " +
+                    "i sak ${sak.saksnummer} med beløp ${løpendeForskudd.beløp} ${løpendeForskudd.valutakode}. " +
+                    "Barnet bor ikke lenger hos bidragsmottaker og skal derfor ikke motta forskudd lenger"
             }
+            AdresseEndretResultat(
+                saksnummer = sak.saksnummer.verdi,
+                bidragsmottaker = bidragsmottaker.fødselsnummer!!.verdi,
+                gjelderBarn = barnIdent.verdi,
+                enhet = sak.eierfogd.verdi,
+                barnAktørId = aktørId,
+            )
         }
     }
 
