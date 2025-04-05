@@ -12,32 +12,20 @@ import no.nav.bidrag.automatiskjobb.consumer.dto.lagBeskrivelseHeader
 import no.nav.bidrag.automatiskjobb.consumer.dto.lagBeskrivelseHeaderAutomnatiskJobb
 import no.nav.bidrag.automatiskjobb.domene.Endringsmelding
 import no.nav.bidrag.automatiskjobb.domene.erAdresseendring
+import no.nav.bidrag.automatiskjobb.service.model.AdresseEndretResultat
+import no.nav.bidrag.automatiskjobb.service.model.ForskuddRedusertResultat
+import no.nav.bidrag.automatiskjobb.utils.erForskudd
+import no.nav.bidrag.automatiskjobb.utils.revurderForskuddBeskrivelseAdresseendring
+import no.nav.bidrag.automatiskjobb.utils.tilOppgaveBeskrivelse
 import no.nav.bidrag.commons.util.secureLogger
-import no.nav.bidrag.domene.enums.vedtak.Engangsbeløptype
-import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.enums.vedtak.Vedtakskilde
 import no.nav.bidrag.domene.felles.enhet_farskap
 import no.nav.bidrag.transport.behandling.vedtak.VedtakHendelse
 import org.springframework.stereotype.Service
 
 private val log = KotlinLogging.logger {}
-val revurderForskuddBeskrivelse = "Revurder forskudd basert på inntekt fra nytt vedtak om barnebidrag."
-val revurderForskuddBeskrivelseSærbidrag = "Revurder forskudd basert på inntekt fra nytt vedtak om særbidrag."
-val revurderForskuddBeskrivelseAdresseendring =
-    "Barnet er ikke lenger folkeregistrert på samme adresse som bidragsmottaker, og forskuddet må revurderes."
-
-fun VedtakHendelse.erForskudd() = stønadsendringListe?.any { it.type == Stønadstype.FORSKUDD } == true
 
 val opprettRevurderForskuddOppgaveToggleName = "automatiskjobb.opprett-revurder-forskudd-oppgave"
-
-fun ForskuddRedusertResultat.tilOppgaveBeskrivelse() =
-    if (engangsbeløptype ==
-        Engangsbeløptype.SÆRBIDRAG
-    ) {
-        revurderForskuddBeskrivelseSærbidrag
-    } else {
-        revurderForskuddBeskrivelse
-    }
 
 @Service
 class OppgaveService(
@@ -93,7 +81,7 @@ class OppgaveService(
         }
     }
 
-    fun AdresseEndretResultat.opprettRevurderForskuddOppgaveEtterAdresseEndring() {
+    private fun AdresseEndretResultat.opprettRevurderForskuddOppgaveEtterAdresseEndring() {
         if (finnesDetRevurderForskuddOppgaveISak()) return
         val oppgaveResponse =
             oppgaveConsumer.opprettOppgave(
@@ -115,7 +103,7 @@ class OppgaveService(
         }
     }
 
-    fun VedtakHendelse.opprettRevurderForskuddOppgave(forskuddRedusertResultat: ForskuddRedusertResultat) {
+    private fun VedtakHendelse.opprettRevurderForskuddOppgave(forskuddRedusertResultat: ForskuddRedusertResultat) {
         if (finnesDetRevurderForskuddOppgaveISak(forskuddRedusertResultat)) return
         val enhet = finnEierfogd(forskuddRedusertResultat.saksnummer)
         val oppgaveResponse =
@@ -139,21 +127,21 @@ class OppgaveService(
         }
     }
 
-    fun VedtakHendelse.finnTilordnetRessurs(saksnummer: String): String? {
+    private fun VedtakHendelse.finnTilordnetRessurs(saksnummer: String): String? {
         val vedtakEnhet = enhetsnummer!!.verdi
         val eierFogd = finnEierfogd(saksnummer)
         if (!vedtakEnhet.erKlageinstans() && eierFogd == vedtakEnhet) return opprettetAv
         return null
     }
 
-    fun finnEierfogd(saksnummer: String): String {
+    private fun finnEierfogd(saksnummer: String): String {
         val sak = bidragSakConsumer.hentSak(saksnummer)
         return sak.eierfogd.verdi
     }
 
-    fun String.erKlageinstans() = startsWith("42")
+    private fun String.erKlageinstans() = startsWith("42")
 
-    fun AdresseEndretResultat.finnesDetRevurderForskuddOppgaveISak(): Boolean {
+    private fun AdresseEndretResultat.finnesDetRevurderForskuddOppgaveISak(): Boolean {
         val oppgaver =
             oppgaveConsumer.hentOppgave(
                 OppgaveSokRequest()

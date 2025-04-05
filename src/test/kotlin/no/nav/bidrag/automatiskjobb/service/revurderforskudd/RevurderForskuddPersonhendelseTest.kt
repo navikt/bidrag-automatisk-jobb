@@ -173,6 +173,63 @@ class RevurderForskuddPersonhendelseTest {
     }
 
     @Test
+    fun `skal ikke returnere resultat hvis person ikke er barn i saken`() {
+        every { bidragSakConsumer.hentSakerForPerson(eq(testdataSøknadsbarn1.personIdent)) } returns
+            listOf(
+                opprettSakRespons()
+                    .copy(
+                        roller =
+                            listOf(
+                                RolleDto(
+                                    testdataBidragsmottaker.personIdent,
+                                    type = Rolletype.BIDRAGSMOTTAKER,
+                                ),
+                                RolleDto(
+                                    testdataBidragspliktig.personIdent,
+                                    type = Rolletype.BIDRAGSPLIKTIG,
+                                ),
+                                RolleDto(
+                                    testdataSøknadsbarn1.personIdent,
+                                    type = Rolletype.BARN,
+                                ),
+                                RolleDto(
+                                    testdataSøknadsbarn2.personIdent,
+                                    type = Rolletype.BARN,
+                                ),
+                            ),
+                    ),
+                opprettSakRespons()
+                    .copy(
+                        saksnummer = Saksnummer("sak2"),
+                        roller =
+                            listOf(
+                                RolleDto(
+                                    testdataSøknadsbarn1.personIdent,
+                                    type = Rolletype.BIDRAGSMOTTAKER,
+                                ),
+                                RolleDto(
+                                    Personident("bpSak2"),
+                                    type = Rolletype.BIDRAGSPLIKTIG,
+                                ),
+                                RolleDto(
+                                    testdataSøknadsbarn1.personIdent,
+                                    type = Rolletype.REELMOTTAKER,
+                                ),
+                            ),
+                    ),
+            )
+        every { bidragPersonConsumer.hentPersonHusstandsmedlemmer(eq(testdataBidragsmottaker.personIdent)) } returns
+            opprettHusstandsmedlemRespons(testdataSøknadsbarn2.personIdent)
+        every { bidragPersonConsumer.hentPersonHusstandsmedlemmer(eq(Personident("bmSak2"))) } returns
+            opprettHusstandsmedlemRespons()
+        every { bidragPersonConsumer.hentPerson(eq(testdataSøknadsbarn1.personIdent)) } returns testdataSøknadsbarn1.tilPersonDto()
+        every { bidragStønadConsumer.hentHistoriskeStønader(any()) } returns opprettLøpendeForskuddRespons()
+        val resultat = service.skalBMFortsattMottaForskuddForSøknadsbarnEtterAdresseendring(personIdentSøknadsbarn1)
+        resultat.shouldHaveSize(1)
+        resultat.first().saksnummer shouldBe saksnummer
+    }
+
+    @Test
     fun `skal ikke returnere resultat hvis barnet fortsatt bor hos BM`() {
         every { bidragPersonConsumer.hentPersonHusstandsmedlemmer(eq(testdataBidragsmottaker.personIdent)) } returns
             opprettHusstandsmedlemRespons(testdataSøknadsbarn1.personIdent, testdataSøknadsbarn2.personIdent)

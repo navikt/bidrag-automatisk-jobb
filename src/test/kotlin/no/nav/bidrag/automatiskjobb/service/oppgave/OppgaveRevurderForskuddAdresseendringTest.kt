@@ -8,7 +8,6 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import io.mockk.verify
 import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
-import no.nav.bidrag.automatiskjobb.consumer.BidragStønadConsumer
 import no.nav.bidrag.automatiskjobb.consumer.OppgaveConsumer
 import no.nav.bidrag.automatiskjobb.consumer.dto.OppgaveDto
 import no.nav.bidrag.automatiskjobb.consumer.dto.OppgaveSokResponse
@@ -16,15 +15,16 @@ import no.nav.bidrag.automatiskjobb.consumer.dto.OppgaveType
 import no.nav.bidrag.automatiskjobb.consumer.dto.behandlingstypeNasjonal
 import no.nav.bidrag.automatiskjobb.consumer.dto.formatterDatoForOppgave
 import no.nav.bidrag.automatiskjobb.domene.Endringsmelding
-import no.nav.bidrag.automatiskjobb.service.AdresseEndretResultat
 import no.nav.bidrag.automatiskjobb.service.OppgaveService
 import no.nav.bidrag.automatiskjobb.service.RevurderForskuddService
-import no.nav.bidrag.automatiskjobb.service.revurderForskuddBeskrivelseAdresseendring
+import no.nav.bidrag.automatiskjobb.service.model.AdresseEndretResultat
+import no.nav.bidrag.automatiskjobb.service.opprettRevurderForskuddOppgaveToggleName
 import no.nav.bidrag.automatiskjobb.testdata.saksnummer
 import no.nav.bidrag.automatiskjobb.testdata.stubSaksbehandlernavnProvider
 import no.nav.bidrag.automatiskjobb.testdata.testdataBidragsmottaker
 import no.nav.bidrag.automatiskjobb.testdata.testdataEnhet
 import no.nav.bidrag.automatiskjobb.testdata.testdataSøknadsbarn1
+import no.nav.bidrag.automatiskjobb.utils.revurderForskuddBeskrivelseAdresseendring
 import no.nav.bidrag.commons.util.VirkedagerProvider
 import no.nav.bidrag.domene.enums.sak.Bidragssakstatus
 import no.nav.bidrag.domene.enums.sak.Sakskategori
@@ -47,16 +47,13 @@ class OppgaveRevurderForskuddAdresseendringTest {
     lateinit var oppgaveConsumer: OppgaveConsumer
 
     @MockK
-    lateinit var bidragStønadConsumer: BidragStønadConsumer
-
-    @MockK
     lateinit var revurderForskuddService: RevurderForskuddService
 
     val unleash = FakeUnleash()
 
     @BeforeEach
     fun setUp() {
-        unleash.enableAll()
+        unleash.enable(opprettRevurderForskuddOppgaveToggleName)
         stubSaksbehandlernavnProvider()
         every { revurderForskuddService.skalBMFortsattMottaForskuddForSøknadsbarnEtterAdresseendring(any()) } returns
             listOf(
@@ -129,6 +126,34 @@ class OppgaveRevurderForskuddAdresseendringTest {
     }
 
     @Test
+    fun `skal ikke opprette revurder forskudd oppgave hvis feature toggle er av`() {
+        unleash.disable(opprettRevurderForskuddOppgaveToggleName)
+        every { oppgaveConsumer.opprettOppgave(any()) } returns OppgaveDto(1)
+        every { oppgaveConsumer.hentOppgave(any()) } returns OppgaveSokResponse()
+        oppgaveService.sjekkOgOpprettRevurderForskuddOppgaveEtterBarnFlyttetFraBM(
+            Endringsmelding(
+                aktørid = testdataSøknadsbarn1.personIdent.verdi,
+                personidenter = emptySet(),
+                endringer =
+                    listOf(
+                        Endringsmelding.Endring(
+                            adresseendring =
+                                Endringsmelding.Adresseendring(
+                                    type = Endringsmelding.Opplysningstype.OPPHOLDSADRESSE,
+                                ),
+                        ),
+                    ),
+            ),
+        )
+        verify(exactly = 0) {
+            oppgaveConsumer.hentOppgave(any())
+        }
+        verify(exactly = 0) {
+            oppgaveConsumer.opprettOppgave(any())
+        }
+    }
+
+    @Test
     fun `skal ikke opprette revurder forskudd oppgave hvis finnes fra før`() {
         every { oppgaveConsumer.opprettOppgave(any()) } returns OppgaveDto(1)
         every { oppgaveConsumer.hentOppgave(any()) } returns
@@ -159,6 +184,32 @@ class OppgaveRevurderForskuddAdresseendringTest {
             ),
         )
 
+        verify(exactly = 0) {
+            oppgaveConsumer.opprettOppgave(any())
+        }
+    }
+
+    @Test
+    fun `skal ikke opprette sjekke eller opprette revurder forskudd hvis hendelse ikke er adresseendring`() {
+        every { oppgaveConsumer.opprettOppgave(any()) } returns OppgaveDto(1)
+        every { oppgaveConsumer.hentOppgave(any()) } returns OppgaveSokResponse()
+        oppgaveService.sjekkOgOpprettRevurderForskuddOppgaveEtterBarnFlyttetFraBM(
+            Endringsmelding(
+                aktørid = testdataSøknadsbarn1.personIdent.verdi,
+                personidenter = emptySet(),
+                endringer =
+                    listOf(
+                        Endringsmelding.Endring(
+                            opplysningstype = Endringsmelding.Opplysningstype.FOLKEREGISTERIDENTIFIKATOR,
+                            identendring = Endringsmelding.Identendring(),
+                        ),
+                    ),
+            ),
+        )
+
+        verify(exactly = 0) {
+            revurderForskuddService.skalBMFortsattMottaForskuddForSøknadsbarnEtterAdresseendring(any())
+        }
         verify(exactly = 0) {
             oppgaveConsumer.opprettOppgave(any())
         }

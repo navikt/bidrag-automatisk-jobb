@@ -7,6 +7,9 @@ import no.nav.bidrag.automatiskjobb.consumer.BidragStønadConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer
 import no.nav.bidrag.automatiskjobb.mapper.GrunnlagMapper
 import no.nav.bidrag.automatiskjobb.mapper.erBidrag
+import no.nav.bidrag.automatiskjobb.service.model.AdresseEndretResultat
+import no.nav.bidrag.automatiskjobb.service.model.ForskuddRedusertResultat
+import no.nav.bidrag.automatiskjobb.service.model.StønadEngangsbeløpId
 import no.nav.bidrag.automatiskjobb.utils.enesteResultatkode
 import no.nav.bidrag.automatiskjobb.utils.erDirekteAvslag
 import no.nav.bidrag.automatiskjobb.utils.erHusstandsmedlem
@@ -42,29 +45,6 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.time.YearMonth
 
-data class AdresseEndretResultat(
-    val saksnummer: String,
-    val enhet: String,
-    val bidragsmottaker: String,
-    val gjelderBarn: String,
-)
-
-data class ForskuddRedusertResultat(
-    val saksnummer: String,
-    val bidragsmottaker: String,
-    val gjelderBarn: String,
-    val stønadstype: Stønadstype? = null,
-    val engangsbeløptype: Engangsbeløptype? = null,
-)
-
-data class StønadEngangsbeløpId(
-    val kravhaver: Personident,
-    val skyldner: Personident,
-    val sak: Saksnummer,
-    val engangsbeløptype: Engangsbeløptype? = null,
-    val stønadstype: Stønadstype? = null,
-)
-
 private fun VedtakDto.erIndeksreguleringEllerAldersjustering() =
     listOf(Vedtakstype.ALDERSJUSTERING, Vedtakstype.INDEKSREGULERING).contains(type)
 
@@ -84,6 +64,9 @@ class RevurderForskuddService(
         val saker = bidragSakConsumer.hentSakerForPerson(barnIdent)
         return saker.mapNotNull { sak ->
             val personRolle = sak.roller.find { it.fødselsnummer == barnIdent } ?: return@mapNotNull null
+            secureLogger.info {
+                "Sjekker om person ${barnIdent.verdi} er barn i saken ${sak.saksnummer}, mottar forskudd og fortsatt bor hos BM etter adresseendring"
+            }
             if (personRolle.type != Rolletype.BARN) {
                 combinedLogger.info {
                     "Person ${barnIdent.verdi} har rolle ${personRolle.type} i sak ${sak.saksnummer}. Behandler bare når barnets adresse endres. Avslutter behandling"
@@ -187,7 +170,7 @@ class RevurderForskuddService(
                 }
             }
 
-    fun erForskuddetRedusert(
+    private fun erForskuddetRedusert(
         vedtakFattet: SisteManuelleVedtak,
         stønadEngangsbeløpId: StønadEngangsbeløpId,
         mottaker: Personident,
