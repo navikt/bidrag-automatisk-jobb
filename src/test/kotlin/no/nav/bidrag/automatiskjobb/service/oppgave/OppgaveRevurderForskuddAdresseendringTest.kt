@@ -88,6 +88,7 @@ class OppgaveRevurderForskuddAdresseendringTest {
                 endringer =
                     listOf(
                         Endringsmelding.Endring(
+                            endringstype = Endringsmelding.Endringstype.OPPRETTET,
                             adresseendring =
                                 Endringsmelding.Adresseendring(
                                     type = Endringsmelding.Opplysningstype.OPPHOLDSADRESSE,
@@ -137,6 +138,7 @@ class OppgaveRevurderForskuddAdresseendringTest {
                 endringer =
                     listOf(
                         Endringsmelding.Endring(
+                            endringstype = Endringsmelding.Endringstype.OPPRETTET,
                             adresseendring =
                                 Endringsmelding.Adresseendring(
                                     type = Endringsmelding.Opplysningstype.OPPHOLDSADRESSE,
@@ -175,6 +177,7 @@ class OppgaveRevurderForskuddAdresseendringTest {
                 endringer =
                     listOf(
                         Endringsmelding.Endring(
+                            endringstype = Endringsmelding.Endringstype.OPPRETTET,
                             adresseendring =
                                 Endringsmelding.Adresseendring(
                                     type = Endringsmelding.Opplysningstype.OPPHOLDSADRESSE,
@@ -202,6 +205,35 @@ class OppgaveRevurderForskuddAdresseendringTest {
                         Endringsmelding.Endring(
                             opplysningstype = Endringsmelding.Opplysningstype.FOLKEREGISTERIDENTIFIKATOR,
                             identendring = Endringsmelding.Identendring(),
+                        ),
+                    ),
+            ),
+        )
+
+        verify(exactly = 0) {
+            revurderForskuddService.skalBMFortsattMottaForskuddForSøknadsbarnEtterAdresseendring(any())
+        }
+        verify(exactly = 0) {
+            oppgaveConsumer.opprettOppgave(any())
+        }
+    }
+
+    @Test
+    fun `skal ikke opprette sjekke eller opprette revurder forskudd hvis hendelse er adresseendring men ikke er endringstype opprettet`() {
+        every { oppgaveConsumer.opprettOppgave(any()) } returns OppgaveDto(1)
+        every { oppgaveConsumer.hentOppgave(any()) } returns OppgaveSokResponse()
+        oppgaveService.sjekkOgOpprettRevurderForskuddOppgaveEtterBarnFlyttetFraBM(
+            Endringsmelding(
+                aktørid = testdataSøknadsbarn1.personIdent.verdi,
+                personidenter = emptySet(),
+                endringer =
+                    listOf(
+                        Endringsmelding.Endring(
+                            endringstype = Endringsmelding.Endringstype.OPPHOERT,
+                            adresseendring =
+                                Endringsmelding.Adresseendring(
+                                    type = Endringsmelding.Opplysningstype.OPPHOLDSADRESSE,
+                                ),
                         ),
                     ),
             ),

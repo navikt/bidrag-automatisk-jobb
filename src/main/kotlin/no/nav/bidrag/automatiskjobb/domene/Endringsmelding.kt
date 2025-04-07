@@ -2,7 +2,11 @@ package no.nav.bidrag.automatiskjobb.domene
 
 import java.time.LocalDate
 
-val Endringsmelding.erAdresseendring get() = endringer.any { it.adresseendring != null }
+val Endringsmelding.erAdresseendring get() =
+    endringer.any {
+        it.adresseendring != null &&
+            it.endringstype == Endringsmelding.Endringstype.OPPRETTET
+    }
 val Endringsmelding.erIdentendring get() =
     endringer.any {
         it.opplysningstype == Endringsmelding.Opplysningstype.FOLKEREGISTERIDENTIFIKATOR
@@ -18,7 +22,15 @@ data class Endringsmelding(
         val sivilstandendring: Sivilstandendring? = null,
         val identendring: Identendring? = null,
         val opplysningstype: Opplysningstype = Opplysningstype.UKJENT,
+        val endringstype: Endringstype = Endringstype.OPPRETTET,
     )
+
+    enum class Endringstype {
+        OPPRETTET,
+        KORRIGERT,
+        ANNULLERT,
+        OPPHOERT,
+    }
 
     data class Identendring(
         val identifikasjonsnummer: String? = null,
@@ -55,6 +67,17 @@ data class Endringsmelding(
         KONTOENDRING,
         UKJENT,
     }
+
+    data class Utflytting(
+        val tilflyttingsland: String? = null,
+        val tilflyttingsstedIUtlandet: String? = null,
+        val utflyttingsdato: LocalDate? = null,
+    )
+
+    data class Innflytting(
+        val fraflyttingsland: String? = null,
+        val fraflyttingsstedIUtlandet: String? = null,
+    )
 }
 
 data class Utflytting(
