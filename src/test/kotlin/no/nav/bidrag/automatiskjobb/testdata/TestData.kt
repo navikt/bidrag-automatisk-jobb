@@ -49,6 +49,8 @@ import no.nav.bidrag.transport.behandling.vedtak.response.StønadsendringDto
 import no.nav.bidrag.transport.behandling.vedtak.response.VedtakDto
 import no.nav.bidrag.transport.behandling.vedtak.response.VedtakForStønad
 import no.nav.bidrag.transport.behandling.vedtak.response.VedtakPeriodeDto
+import no.nav.bidrag.transport.felles.toCompactString
+import no.nav.bidrag.transport.person.PersonDto
 import no.nav.bidrag.transport.sak.BidragssakDto
 import no.nav.bidrag.transport.sak.RolleDto
 import java.math.BigDecimal
@@ -56,13 +58,76 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
 
+data class TestDataPerson(
+    val personIdent: Personident,
+    val navn: String,
+    val fødselsdato: LocalDate,
+    val rolletype: Rolletype,
+) {
+    val identString get() = personIdent.verdi
+    val referanse get() = "${rolletype.name}_${personIdent.verdi}_${fødselsdato.toCompactString()}"
+
+    fun tilPersonDto() =
+        PersonDto(
+            personIdent,
+            navn,
+            fødselsdato = fødselsdato,
+        )
+
+    fun tilGrunnlag() =
+        GrunnlagDto(
+            type =
+                when (rolletype) {
+                    Rolletype.BIDRAGSMOTTAKER -> Grunnlagstype.PERSON_BIDRAGSMOTTAKER
+                    Rolletype.BIDRAGSPLIKTIG -> Grunnlagstype.PERSON_BIDRAGSPLIKTIG
+                    Rolletype.BARN -> Grunnlagstype.PERSON_SØKNADSBARN
+                    else -> Grunnlagstype.PERSON_HUSSTANDSMEDLEM
+                },
+            referanse = referanse,
+            innhold = POJONode(Person(ident = Personident(personIdentBidragspliktig), navn, fødselsdato)),
+        )
+}
+
 val SOKNAD_ID = 12412421414L
 val saksnummer = "21321312321"
+val testdataEnhet = "4806"
 val personIdentSøknadsbarn1 = "213213213213"
 val personIdentSøknadsbarn2 = "213213333213213"
 val personIdentBidragsmottaker = "123213333"
 val personIdentBidragspliktig = "55555"
 val SAKSBEHANDLER_IDENT = "Z999999"
+
+val testdataSøknadsbarn1 =
+    TestDataPerson(
+        personIdent = Personident("213213213213"),
+        navn = "Søknadsbarn 1",
+        fødselsdato = LocalDate.now().minusYears(6),
+        rolletype = Rolletype.BARN,
+    )
+
+val testdataSøknadsbarn2 =
+    TestDataPerson(
+        personIdent = Personident("213213333213213"),
+        navn = "Søknadsbarn 2",
+        fødselsdato = LocalDate.now().minusYears(11),
+        rolletype = Rolletype.BARN,
+    )
+
+val testdataBidragspliktig =
+    TestDataPerson(
+        personIdent = Personident("55555"),
+        navn = "Bidragspliktig",
+        fødselsdato = LocalDate.now().minusYears(45),
+        rolletype = Rolletype.BIDRAGSPLIKTIG,
+    )
+
+val testdataBidragsmottaker =
+    TestDataPerson(
+        personIdent = Personident("123213333"),
+        navn = "Bidragsmottaker",
+        fødselsdato = LocalDate.now().minusYears(45),
+        rolletype = Rolletype.BIDRAGSMOTTAKER,
+    )
 
 val persongrunnlagBM =
     GrunnlagDto(
@@ -96,7 +161,7 @@ fun opprettBostatatusperiode(
     referanse = referanse,
     type = Grunnlagstype.BOSTATUS_PERIODE,
     grunnlagsreferanseListe = emptyList(),
-    gjelderReferanse = persongrunnlagBM.referanse,
+    gjelderReferanse = testdataBidragsmottaker.referanse,
     gjelderBarnReferanse = gjelderBarn.referanse,
     innhold =
         POJONode(
@@ -129,7 +194,7 @@ fun opprettDelberegningBarnIHusstand(referanse: String = "DELBEREGNING_BARN_I_HU
         referanse = referanse,
         type = Grunnlagstype.DELBEREGNING_BARN_I_HUSSTAND,
         grunnlagsreferanseListe = listOf(opprettBostatatusperiode().referanse),
-        gjelderReferanse = persongrunnlagBM.referanse,
+        gjelderReferanse = testdataBidragsmottaker.referanse,
         innhold =
             POJONode(
                 DelberegningBarnIHusstand(
@@ -144,7 +209,7 @@ fun opprettSivilstandPeriode() =
         referanse = "SIVILSTAND_PERIODE",
         type = Grunnlagstype.SIVILSTAND_PERIODE,
         grunnlagsreferanseListe = emptyList(),
-        gjelderReferanse = persongrunnlagBM.referanse,
+        gjelderReferanse = testdataBidragsmottaker.referanse,
         innhold =
             POJONode(
                 SivilstandPeriode(
@@ -160,7 +225,7 @@ fun opprettInntektsrapportering() =
         referanse = "INNTEKT_RAPPORTERING_PERIODE",
         type = Grunnlagstype.INNTEKT_RAPPORTERING_PERIODE,
         grunnlagsreferanseListe = emptyList(),
-        gjelderReferanse = persongrunnlagBM.referanse,
+        gjelderReferanse = testdataBidragsmottaker.referanse,
         innhold =
             POJONode(
                 InntektsrapporteringPeriode(
@@ -178,7 +243,7 @@ fun opprettDelberegningSumInntekt() =
         referanse = "DELBEREGNING_SUM_INNTEKT",
         type = Grunnlagstype.DELBEREGNING_SUM_INNTEKT,
         grunnlagsreferanseListe = listOf(opprettInntektsrapportering().referanse),
-        gjelderReferanse = persongrunnlagBM.referanse,
+        gjelderReferanse = testdataBidragsmottaker.referanse,
         innhold =
             POJONode(
                 DelberegningSumInntekt(
@@ -500,8 +565,8 @@ fun opprettVedtakForStønad(
 
 fun opprettSakRespons() =
     BidragssakDto(
-        eierfogd = Enhetsnummer("4806"),
-        saksnummer = Saksnummer("123213"),
+        eierfogd = Enhetsnummer(testdataEnhet),
+        saksnummer = Saksnummer(saksnummer),
         saksstatus = Bidragssakstatus.IN,
         kategori = Sakskategori.N,
         opprettetDato = LocalDate.now(),

@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.service
+package no.nav.bidrag.automatiskjobb.service.oppgave
 
 import io.getunleash.FakeUnleash
 import io.kotest.matchers.shouldBe
@@ -8,7 +8,6 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import io.mockk.verify
 import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
-import no.nav.bidrag.automatiskjobb.consumer.BidragStønadConsumer
 import no.nav.bidrag.automatiskjobb.consumer.OppgaveConsumer
 import no.nav.bidrag.automatiskjobb.consumer.dto.OppgaveDto
 import no.nav.bidrag.automatiskjobb.consumer.dto.OppgaveSokResponse
@@ -16,6 +15,9 @@ import no.nav.bidrag.automatiskjobb.consumer.dto.OppgaveType
 import no.nav.bidrag.automatiskjobb.consumer.dto.behandlingstypeNasjonal
 import no.nav.bidrag.automatiskjobb.consumer.dto.behandlingstypeUtland
 import no.nav.bidrag.automatiskjobb.consumer.dto.formatterDatoForOppgave
+import no.nav.bidrag.automatiskjobb.service.OppgaveService
+import no.nav.bidrag.automatiskjobb.service.RevurderForskuddService
+import no.nav.bidrag.automatiskjobb.service.model.ForskuddRedusertResultat
 import no.nav.bidrag.automatiskjobb.testdata.SAKSBEHANDLER_IDENT
 import no.nav.bidrag.automatiskjobb.testdata.opprettVedtakhendelse
 import no.nav.bidrag.automatiskjobb.testdata.personIdentBidragsmottaker
@@ -24,6 +26,8 @@ import no.nav.bidrag.automatiskjobb.testdata.personIdentSøknadsbarn1
 import no.nav.bidrag.automatiskjobb.testdata.personIdentSøknadsbarn2
 import no.nav.bidrag.automatiskjobb.testdata.saksnummer
 import no.nav.bidrag.automatiskjobb.testdata.stubSaksbehandlernavnProvider
+import no.nav.bidrag.automatiskjobb.utils.revurderForskuddBeskrivelse
+import no.nav.bidrag.automatiskjobb.utils.revurderForskuddBeskrivelseSærbidrag
 import no.nav.bidrag.commons.util.VirkedagerProvider
 import no.nav.bidrag.domene.enums.beregning.Resultatkode
 import no.nav.bidrag.domene.enums.sak.Bidragssakstatus
@@ -47,7 +51,7 @@ import java.math.BigDecimal
 import java.time.LocalDate
 
 @ExtendWith(MockKExtension::class)
-class OppgaveServiceTest {
+class OppgaveRevurderForskuddTest {
     lateinit var oppgaveService: OppgaveService
 
     @MockK
@@ -55,9 +59,6 @@ class OppgaveServiceTest {
 
     @MockK
     lateinit var oppgaveConsumer: OppgaveConsumer
-
-    @MockK
-    lateinit var bidragStønadConsumer: BidragStønadConsumer
 
     @MockK
     lateinit var revurderForskuddService: RevurderForskuddService
@@ -398,9 +399,6 @@ class OppgaveServiceTest {
             oppgaveConsumer.opprettOppgave(any())
         }
         verify(exactly = 0) {
-            bidragStønadConsumer.hentHistoriskeStønader(any())
-        }
-        verify(exactly = 0) {
             oppgaveConsumer.hentOppgave(any())
         }
     }
@@ -529,9 +527,6 @@ class OppgaveServiceTest {
             ),
         )
         verify(exactly = 0) {
-            bidragStønadConsumer.hentHistoriskeStønader(any())
-        }
-        verify(exactly = 0) {
             oppgaveConsumer.hentOppgave(any())
         }
         verify(exactly = 0) {
@@ -564,9 +559,6 @@ class OppgaveServiceTest {
                     ),
             ),
         )
-        verify(exactly = 0) {
-            bidragStønadConsumer.hentHistoriskeStønader(any())
-        }
         verify(exactly = 0) {
             oppgaveConsumer.hentOppgave(any())
         }

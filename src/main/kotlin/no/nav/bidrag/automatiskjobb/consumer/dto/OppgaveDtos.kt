@@ -134,6 +134,11 @@ enum class OppgaveType(
     VURD_HENV("Vurder henvendelse"),
 }
 
+internal fun lagBeskrivelseHeaderAutomnatiskJobb(): String {
+    val dateFormatted = LocalDateTime.now().format(NORSK_TIDSSTEMPEL_FORMAT)
+    return "--- $dateFormatted Automatisk jobb ---\r\n"
+}
+
 internal fun lagBeskrivelseHeader(
     saksbehandlerIdent: String,
     enhet: String,

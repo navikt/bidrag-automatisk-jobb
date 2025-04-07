@@ -9,30 +9,23 @@ import no.nav.bidrag.automatiskjobb.consumer.dto.OppgaveSokRequest
 import no.nav.bidrag.automatiskjobb.consumer.dto.OppgaveType
 import no.nav.bidrag.automatiskjobb.consumer.dto.OpprettOppgaveRequest
 import no.nav.bidrag.automatiskjobb.consumer.dto.lagBeskrivelseHeader
+import no.nav.bidrag.automatiskjobb.consumer.dto.lagBeskrivelseHeaderAutomnatiskJobb
+import no.nav.bidrag.automatiskjobb.domene.Endringsmelding
+import no.nav.bidrag.automatiskjobb.domene.erAdresseendring
+import no.nav.bidrag.automatiskjobb.service.model.AdresseEndretResultat
+import no.nav.bidrag.automatiskjobb.service.model.ForskuddRedusertResultat
+import no.nav.bidrag.automatiskjobb.utils.erForskudd
+import no.nav.bidrag.automatiskjobb.utils.revurderForskuddBeskrivelseAdresseendring
+import no.nav.bidrag.automatiskjobb.utils.tilOppgaveBeskrivelse
 import no.nav.bidrag.commons.util.secureLogger
-import no.nav.bidrag.domene.enums.vedtak.Engangsbeløptype
-import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.enums.vedtak.Vedtakskilde
 import no.nav.bidrag.domene.felles.enhet_farskap
 import no.nav.bidrag.transport.behandling.vedtak.VedtakHendelse
 import org.springframework.stereotype.Service
 
 private val log = KotlinLogging.logger {}
-val revurderForskuddBeskrivelse = "Revurder forskudd basert på inntekt fra nytt vedtak om barnebidrag."
-val revurderForskuddBeskrivelseSærbidrag = "Revurder forskudd basert på inntekt fra nytt vedtak om særbidrag."
-
-fun VedtakHendelse.erForskudd() = stønadsendringListe?.any { it.type == Stønadstype.FORSKUDD } == true
 
 val opprettRevurderForskuddOppgaveToggleName = "automatiskjobb.opprett-revurder-forskudd-oppgave"
-
-fun ForskuddRedusertResultat.tilOppgaveBeskrivelse() =
-    if (engangsbeløptype ==
-        Engangsbeløptype.SÆRBIDRAG
-    ) {
-        revurderForskuddBeskrivelseSærbidrag
-    } else {
-        revurderForskuddBeskrivelse
-    }
 
 @Service
 class OppgaveService(
@@ -41,6 +34,31 @@ class OppgaveService(
     private val revurderForskuddService: RevurderForskuddService,
     private val unleash: Unleash,
 ) {
+    fun sjekkOgOpprettRevurderForskuddOppgaveEtterBarnFlyttetFraBM(hendelse: Endringsmelding) {
+        if (hendelse.erAdresseendring) {
+            try {
+                secureLogger.info {
+                    "Sjekker for person om barn mottar forskudd og fortsatt bor hos BM etter adresseendring i hendelse $hendelse"
+                }
+                revurderForskuddService.skalBMFortsattMottaForskuddForSøknadsbarnEtterAdresseendring(hendelse.aktørid).forEach {
+                    if (unleash.isEnabled(opprettRevurderForskuddOppgaveToggleName)) {
+                        it.opprettRevurderForskuddOppgaveEtterAdresseEndring()
+                    } else {
+                        log.info { "Feature toggle $opprettRevurderForskuddOppgaveToggleName er skrudd av. Oppretter ikke oppgave" }
+                        secureLogger.info {
+                            "Feature toggle $opprettRevurderForskuddOppgaveToggleName er skrudd av. Oppretter ikke oppgave for $it"
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                log.error(e) { "Det skjedde en feil ved sjekk om BM fortsatt skal motta forskudd for barn fra hendelse" }
+                secureLogger.error(
+                    e,
+                ) { "Det skjedde en feil ved sjekk om BM fortsatt skal motta forskudd for barn fra hendelse $hendelse" }
+            }
+        }
+    }
+
     fun opprettRevurderForskuddOppgave(vedtakHendelse: VedtakHendelse) {
         try {
             if (vedtakHendelse.erForskudd()) return
@@ -55,11 +73,7 @@ class OppgaveService(
                     combinedLogger.info {
                         "Forskuddet skal reduseres i sak ${resultat.saksnummer} for mottaker ${resultat.bidragsmottaker} og kravhaver ${resultat.gjelderBarn}. Opprett revurder forskudd oppgave"
                     }
-                    if (unleash.isEnabled(opprettRevurderForskuddOppgaveToggleName)) {
-                        vedtakHendelse.opprettRevurderForskuddOppgave(resultat)
-                    } else {
-                        log.info { "Feature toggle $opprettRevurderForskuddOppgaveToggleName er skrudd av. Oppretter ikke oppgave" }
-                    }
+                    vedtakHendelse.opprettRevurderForskuddOppgave(resultat)
                     return // Opprett kun en oppgave per sak
                 }
         } catch (e: Exception) {
@@ -67,7 +81,29 @@ class OppgaveService(
         }
     }
 
-    fun VedtakHendelse.opprettRevurderForskuddOppgave(forskuddRedusertResultat: ForskuddRedusertResultat) {
+    private fun AdresseEndretResultat.opprettRevurderForskuddOppgaveEtterAdresseEndring() {
+        if (finnesDetRevurderForskuddOppgaveISak()) return
+        val oppgaveResponse =
+            oppgaveConsumer.opprettOppgave(
+                OpprettOppgaveRequest(
+                    beskrivelse = lagBeskrivelseHeaderAutomnatiskJobb() + revurderForskuddBeskrivelseAdresseendring,
+                    oppgavetype = OppgaveType.GEN,
+                    tema = if (enhet_farskap == enhet) "FAR" else "BID",
+                    saksreferanse = saksnummer,
+                    tildeltEnhetsnr = enhet,
+                    personident = gjelderBarn,
+                ),
+            )
+
+        log.info {
+            "Opprettet revurder forskudd etter adresseendring oppgave ${oppgaveResponse.id} for sak $saksnummer og enhet $enhet"
+        }
+        secureLogger.info {
+            "Opprettet revurder forskudd etter adresseendring oppgave $oppgaveResponse for sak $saksnummer, enhet $enhet og barn $gjelderBarn"
+        }
+    }
+
+    private fun VedtakHendelse.opprettRevurderForskuddOppgave(forskuddRedusertResultat: ForskuddRedusertResultat) {
         if (finnesDetRevurderForskuddOppgaveISak(forskuddRedusertResultat)) return
         val enhet = finnEierfogd(forskuddRedusertResultat.saksnummer)
         val oppgaveResponse =
@@ -91,19 +127,37 @@ class OppgaveService(
         }
     }
 
-    fun VedtakHendelse.finnTilordnetRessurs(saksnummer: String): String? {
+    private fun VedtakHendelse.finnTilordnetRessurs(saksnummer: String): String? {
         val vedtakEnhet = enhetsnummer!!.verdi
         val eierFogd = finnEierfogd(saksnummer)
         if (!vedtakEnhet.erKlageinstans() && eierFogd == vedtakEnhet) return opprettetAv
         return null
     }
 
-    fun finnEierfogd(saksnummer: String): String {
+    private fun finnEierfogd(saksnummer: String): String {
         val sak = bidragSakConsumer.hentSak(saksnummer)
         return sak.eierfogd.verdi
     }
 
-    fun String.erKlageinstans() = startsWith("42")
+    private fun String.erKlageinstans() = startsWith("42")
+
+    private fun AdresseEndretResultat.finnesDetRevurderForskuddOppgaveISak(): Boolean {
+        val oppgaver =
+            oppgaveConsumer.hentOppgave(
+                OppgaveSokRequest()
+                    .søkForGenerellOppgave()
+                    .leggTilAktoerId(gjelderBarn)
+                    .leggTilSaksreferanse(saksnummer),
+            )
+        val revurderForskuddOppgave = oppgaver.oppgaver.find { it.beskrivelse!!.contains(revurderForskuddBeskrivelseAdresseendring) }
+        if (revurderForskuddOppgave != null) {
+            combinedLogger.info {
+                "Fant revurder forskudd etter adresseendring oppgave $revurderForskuddOppgave for sak $saksnummer og barn $gjelderBarn. Oppretter ikke ny oppgave"
+            }
+            return true
+        }
+        return false
+    }
 
     fun VedtakHendelse.finnesDetRevurderForskuddOppgaveISak(forskuddRedusertResultat: ForskuddRedusertResultat): Boolean {
         val oppgaver =

@@ -52,7 +52,8 @@ class BidragSakConsumer(
             return postForNonNullEntity(createUri("/person/sak"), personIdent)
         } catch (e: HttpStatusCodeException) {
             if (e.statusCode == HttpStatus.NOT_FOUND) {
-                LOGGER.warn(e) { "Fant ingen saker for $personIdent" }
+                LOGGER.warn(e) { "Fant ingen saker for ${personIdent.verdi}" }
+                secureLogger.warn("Fant ingen saker for ${personIdent.verdi}")
                 return emptyList()
             }
             LOGGER.warn(e) { "Det skjedde en feil ved henting av saker for $personIdent" }

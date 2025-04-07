@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.service
+package no.nav.bidrag.automatiskjobb.service.revurderforskudd
 
 import com.fasterxml.jackson.databind.node.POJONode
 import io.getunleash.FakeUnleash
@@ -13,6 +13,7 @@ import no.nav.bidrag.automatiskjobb.consumer.BidragPersonConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragStønadConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer
+import no.nav.bidrag.automatiskjobb.service.RevurderForskuddService
 import no.nav.bidrag.automatiskjobb.testdata.opprettBostatatusperiode
 import no.nav.bidrag.automatiskjobb.testdata.opprettDelberegningBarnIHusstand
 import no.nav.bidrag.automatiskjobb.testdata.opprettDelberegningSumInntekt
@@ -38,9 +39,9 @@ import no.nav.bidrag.automatiskjobb.testdata.personIdentSøknadsbarn1
 import no.nav.bidrag.automatiskjobb.testdata.personIdentSøknadsbarn2
 import no.nav.bidrag.automatiskjobb.testdata.persongrunnlagBA
 import no.nav.bidrag.automatiskjobb.testdata.persongrunnlagBA2
-import no.nav.bidrag.automatiskjobb.testdata.persongrunnlagBM
 import no.nav.bidrag.automatiskjobb.testdata.persongrunnlagBP
 import no.nav.bidrag.automatiskjobb.testdata.saksnummer
+import no.nav.bidrag.automatiskjobb.testdata.testdataBidragsmottaker
 import no.nav.bidrag.beregn.forskudd.BeregnForskuddApi
 import no.nav.bidrag.beregn.vedtak.Vedtaksfiltrering
 import no.nav.bidrag.commons.web.mock.stubSjablonProvider
@@ -138,7 +139,7 @@ class RevurderForskuddServiceTest {
                 grunnlagListe =
                     listOf(
                         persongrunnlagBA,
-                        persongrunnlagBM,
+                        testdataBidragsmottaker.tilGrunnlag(),
                         opprettGrunnlagSluttberegningForskudd(),
                         opprettInntektsrapportering(),
                         opprettSivilstandPeriode(),
@@ -300,7 +301,7 @@ class RevurderForskuddServiceTest {
                 grunnlagListe =
                     listOf(
                         persongrunnlagBA,
-                        persongrunnlagBM,
+                        testdataBidragsmottaker.tilGrunnlag(),
                         opprettGrunnlagSluttberegningForskudd(),
                         opprettInntektsrapportering(),
                         opprettSivilstandPeriode(),
@@ -319,7 +320,7 @@ class RevurderForskuddServiceTest {
                 grunnlagListe =
                     listOf(
                         persongrunnlagBA,
-                        persongrunnlagBM,
+                        testdataBidragsmottaker.tilGrunnlag(),
                         persongrunnlagBP,
                         opprettGrunnlagSøknad(),
                         opprettGrunnlagSluttberegningBidrag(),
@@ -364,7 +365,7 @@ class RevurderForskuddServiceTest {
                 grunnlagListe =
                     listOf(
                         persongrunnlagBA,
-                        persongrunnlagBM,
+                        testdataBidragsmottaker.tilGrunnlag(),
                         persongrunnlagBP,
                         opprettGrunnlagSøknad(),
                         opprettGrunnlagSluttberegningSærbidrag(),
@@ -426,7 +427,7 @@ class RevurderForskuddServiceTest {
                 grunnlagListe =
                     listOf(
                         persongrunnlagBA,
-                        persongrunnlagBM,
+                        testdataBidragsmottaker.tilGrunnlag(),
                         persongrunnlagBP,
                         opprettGrunnlagSøknad(),
                         opprettGrunnlagSluttberegningSærbidrag(),
@@ -978,7 +979,7 @@ private fun opprettForskuddVedtakRespons(
     grunnlagListe =
         listOf(
             søknadsbarn,
-            persongrunnlagBM,
+            testdataBidragsmottaker.tilGrunnlag(),
             opprettGrunnlagSluttberegningForskudd(),
             opprettSivilstandPeriode(),
             opprettGrunnlagSøknad(),
@@ -999,7 +1000,7 @@ private fun opprettGrunnlagslisteBidrag(
         ),
 ) = listOf(
     persongrunnlagBA,
-    persongrunnlagBM,
+    testdataBidragsmottaker.tilGrunnlag(),
     persongrunnlagBP,
     opprettGrunnlagSøknad(),
     opprettGrunnlagSluttberegningBidrag(),
