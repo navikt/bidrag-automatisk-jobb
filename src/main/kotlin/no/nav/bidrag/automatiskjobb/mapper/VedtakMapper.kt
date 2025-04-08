@@ -93,5 +93,5 @@ private fun byggOpprettVedtakRequestObjekt(): OpprettVedtakRequestDto =
         fastsattILand = null,
         innkrevingUtsattTilDato = null,
         // Settes automatisk av bidrag-vedtak basert på token
-        opprettetAv = null,
+        opprettetAv = "bidrag-automatisk-jobb",
     )

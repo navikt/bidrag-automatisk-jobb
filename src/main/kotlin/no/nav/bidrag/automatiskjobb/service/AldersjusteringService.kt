@@ -1,18 +1,22 @@
 package no.nav.bidrag.automatiskjobb.service
 
 import no.nav.bidrag.automatiskjobb.combinedLogger
+import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer
 import no.nav.bidrag.automatiskjobb.mapper.VedtakMapper
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
+import no.nav.bidrag.automatiskjobb.utils.ugyldigForespørsel
 import no.nav.bidrag.beregn.barnebidrag.service.AldersjusteresManueltException
 import no.nav.bidrag.beregn.barnebidrag.service.AldersjusteringOrchestrator
 import no.nav.bidrag.beregn.barnebidrag.service.SkalIkkeAldersjusteresException
 import no.nav.bidrag.commons.util.secureLogger
+import no.nav.bidrag.domene.enums.rolle.Rolletype
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.domene.sak.Saksnummer
 import no.nav.bidrag.domene.sak.Stønadsid
+import no.nav.bidrag.transport.behandling.vedtak.request.OpprettVedtakRequestDto
 import org.springframework.stereotype.Service
 
 @Service
@@ -20,6 +24,7 @@ class AldersjusteringService(
     private val barnRepository: BarnRepository,
     private val aldersjusteringOrchestrator: AldersjusteringOrchestrator,
     private val vedtakConsumer: BidragVedtakConsumer,
+    private val sakConsumer: BidragSakConsumer,
     private val vedtakMapper: VedtakMapper,
 ) {
     fun kjørAldersjustering(
@@ -35,6 +40,28 @@ class AldersjusteringService(
         }
     }
 
+    fun kjørAldersjusteringForSak(
+        saksnummer: Saksnummer,
+        år: Int,
+    ): List<Pair<Int, OpprettVedtakRequestDto>> {
+        val sak = sakConsumer.hentSak(saksnummer.verdi)
+        val barnISaken = sak.roller.filter { it.type == Rolletype.BARN }
+        val bp = sak.roller.find { it.type == Rolletype.BIDRAGSPLIKTIG } ?: ugyldigForespørsel("Fant ikke BP for sak $saksnummer")
+        return barnISaken.mapNotNull {
+            utførAldersjusteringForBarn(
+                Stønadstype.BIDRAG,
+                Barn(
+                    kravhaver = it.fødselsnummer!!.verdi,
+                    skyldner = bp.fødselsnummer!!.verdi,
+                    saksnummer = saksnummer.verdi,
+                ),
+                år,
+                "Aldersjustering for sak $saksnummer" +
+                    System.currentTimeMillis(),
+            )
+        }
+    }
+
     private fun List<Barn>.utførAldersjusteringBidrag(
         år: Int,
         batchId: String,
@@ -45,7 +72,7 @@ class AldersjusteringService(
         barn: Barn,
         år: Int,
         batchId: String,
-    ) {
+    ): Pair<Int, OpprettVedtakRequestDto>? {
         val stønadsid =
             Stønadsid(
                 stønadstype,
@@ -56,10 +83,11 @@ class AldersjusteringService(
         try {
             val resultatBeregning = aldersjusteringOrchestrator.utførAldersjustering(stønadsid, år)
             val vedtaksforslagRequest = vedtakMapper.tilOpprettVedtakRequest(resultatBeregning, stønadsid, batchId)
-            val respons = vedtakConsumer.fatteVedtaksforslag(vedtaksforslagRequest)
+            val vedtaksid = vedtakConsumer.fatteVedtaksforslag(vedtaksforslagRequest)
             // TODO: Lagre vedtaksid
             // TODO: Status BEHANDLET
             // TODO: behandlingType = FATTET_FORSLAG
+            return Pair(vedtaksid, vedtaksforslagRequest)
         } catch (e: SkalIkkeAldersjusteresException) {
             // TODO: Håndter feil
             // TODO: Status BEHANDLET
@@ -74,6 +102,7 @@ class AldersjusteringService(
             // TODO: behandlingType = FEILET
             combinedLogger.error(e) { "Det skjedde en feil ved aldersjustering for stønad $stønadsid" }
         }
+        return null
     }
 
     fun hentAlleBarnSomSkalAldersjusteresForÅr(år: Int): Map<Int, List<Barn>> =
