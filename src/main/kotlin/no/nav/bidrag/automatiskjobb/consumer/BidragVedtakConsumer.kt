@@ -33,9 +33,51 @@ class BidragVedtakConsumer(
             request,
         )
 
-    fun fatteVedtaksforslag(request: OpprettVedtakRequestDto): Int =
+    fun hentVedtaksforslagBasertPåReferanase(referanse: String): VedtakDto? =
+        postForEntity(
+            bidragVedtakUri
+                .pathSegment("vedtak")
+                .pathSegment("unikreferanse")
+                .build()
+                .toUri(),
+            referanse,
+        )
+
+    fun slettVedtaksforslag(vedtakId: Int) =
+        deleteForEntity<Void>(
+            bidragVedtakUri
+                .pathSegment("vedtaksforslag")
+                .pathSegment(vedtakId.toString())
+                .build()
+                .toUri(),
+        )
+
+    fun fatteVedtaksforslag(vedtakId: Int): Int =
         postForNonNullEntity(
-            bidragVedtakUri.pathSegment("vedtaksforslag/").build().toUri(),
+            bidragVedtakUri
+                .pathSegment("vedtaksforslag")
+                .pathSegment(vedtakId.toString())
+                .build()
+                .toUri(),
+            null,
+        )
+
+    fun oppdaterVedtaksforslag(
+        vedtakId: Int,
+        request: OpprettVedtakRequestDto,
+    ): Int =
+        putForEntity(
+            bidragVedtakUri
+                .pathSegment("vedtaksforslag")
+                .pathSegment(vedtakId.toString())
+                .build()
+                .toUri(),
+            request,
+        )!!
+
+    fun opprettVedtaksforslag(request: OpprettVedtakRequestDto): Int =
+        postForNonNullEntity(
+            bidragVedtakUri.pathSegment("vedtaksforslag").build().toUri(),
             request,
         )
 

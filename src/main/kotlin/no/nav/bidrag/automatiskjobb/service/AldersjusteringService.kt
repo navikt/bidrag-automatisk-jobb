@@ -1,5 +1,6 @@
 package no.nav.bidrag.automatiskjobb.service
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.automatiskjobb.combinedLogger
 import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer
@@ -18,6 +19,20 @@ import no.nav.bidrag.domene.sak.Saksnummer
 import no.nav.bidrag.domene.sak.Stønadsid
 import no.nav.bidrag.transport.behandling.vedtak.request.OpprettVedtakRequestDto
 import org.springframework.stereotype.Service
+
+private val log = KotlinLogging.logger {}
+
+data class AldersjusteringResultatResponse(
+    val antall: Int,
+    val saker: List<Saksnummer>,
+    val resultatListe: List<AldersjusteringResultat>,
+)
+
+data class AldersjusteringResultat(
+    val vedtaksid: Int,
+    val stønadsid: Stønadsid,
+    val vedtak: OpprettVedtakRequestDto,
+)
 
 @Service
 class AldersjusteringService(
@@ -43,36 +58,46 @@ class AldersjusteringService(
     fun kjørAldersjusteringForSak(
         saksnummer: Saksnummer,
         år: Int,
-    ): List<Pair<Int, OpprettVedtakRequestDto>> {
+        simuler: Boolean,
+    ): AldersjusteringResultatResponse {
         val sak = sakConsumer.hentSak(saksnummer.verdi)
         val barnISaken = sak.roller.filter { it.type == Rolletype.BARN }
         val bp = sak.roller.find { it.type == Rolletype.BIDRAGSPLIKTIG } ?: ugyldigForespørsel("Fant ikke BP for sak $saksnummer")
-        return barnISaken.mapNotNull {
-            utførAldersjusteringForBarn(
-                Stønadstype.BIDRAG,
-                Barn(
-                    kravhaver = it.fødselsnummer!!.verdi,
-                    skyldner = bp.fødselsnummer!!.verdi,
-                    saksnummer = saksnummer.verdi,
-                ),
-                år,
-                "Aldersjustering for sak $saksnummer" +
-                    System.currentTimeMillis(),
-            )
-        }
+        val resultat =
+            barnISaken.mapNotNull {
+                utførAldersjusteringForBarn(
+                    Stønadstype.BIDRAG,
+                    Barn(
+                        kravhaver = it.fødselsnummer!!.verdi,
+                        skyldner = bp.fødselsnummer!!.verdi,
+                        saksnummer = saksnummer.verdi,
+                    ),
+                    år,
+                    "aldersjustering-sak-$saksnummer",
+                    simuler,
+                )
+            }
+
+        return AldersjusteringResultatResponse(
+            resultat.size,
+            resultat.map { it.stønadsid.sak },
+            resultat,
+        )
     }
 
     private fun List<Barn>.utførAldersjusteringBidrag(
         år: Int,
         batchId: String,
-    ) = forEach { utførAldersjusteringForBarn(Stønadstype.BIDRAG, it, år, batchId) }
+        simuler: Boolean = true,
+    ) = forEach { utførAldersjusteringForBarn(Stønadstype.BIDRAG, it, år, batchId, simuler) }
 
     fun utførAldersjusteringForBarn(
         stønadstype: Stønadstype,
         barn: Barn,
         år: Int,
         batchId: String,
-    ): Pair<Int, OpprettVedtakRequestDto>? {
+        simuler: Boolean = true,
+    ): AldersjusteringResultat? {
         val stønadsid =
             Stønadsid(
                 stønadstype,
@@ -83,11 +108,16 @@ class AldersjusteringService(
         try {
             val resultatBeregning = aldersjusteringOrchestrator.utførAldersjustering(stønadsid, år)
             val vedtaksforslagRequest = vedtakMapper.tilOpprettVedtakRequest(resultatBeregning, stønadsid, batchId)
-            val vedtaksid = vedtakConsumer.fatteVedtaksforslag(vedtaksforslagRequest)
+            slettEksisterendeVedtaksforslag(vedtaksforslagRequest.unikReferanse!!)
+            if (simuler) {
+                return AldersjusteringResultat(1, stønadsid, vedtaksforslagRequest)
+            }
+
+            val vedtaksid = vedtakConsumer.opprettVedtaksforslag(vedtaksforslagRequest)
             // TODO: Lagre vedtaksid
             // TODO: Status BEHANDLET
             // TODO: behandlingType = FATTET_FORSLAG
-            return Pair(vedtaksid, vedtaksforslagRequest)
+            return AldersjusteringResultat(vedtaksid, stønadsid, vedtaksforslagRequest)
         } catch (e: SkalIkkeAldersjusteresException) {
             // TODO: Håndter feil
             // TODO: Status BEHANDLET
@@ -103,6 +133,15 @@ class AldersjusteringService(
             combinedLogger.error(e) { "Det skjedde en feil ved aldersjustering for stønad $stønadsid" }
         }
         return null
+    }
+
+    private fun slettEksisterendeVedtaksforslag(referanse: String) {
+        vedtakConsumer.hentVedtaksforslagBasertPåReferanase(referanse)?.let {
+            log.info {
+                "Fant eksisterende vedtaksforslag med referanse $referanse og id ${it.vedtaksid}. Sletter eksisterende vedtaksforslag "
+            }
+            vedtakConsumer.slettVedtaksforslag(it.vedtaksid.toInt())
+        }
     }
 
     fun hentAlleBarnSomSkalAldersjusteresForÅr(år: Int): Map<Int, List<Barn>> =

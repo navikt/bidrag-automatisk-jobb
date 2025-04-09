@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import no.nav.bidrag.automatiskjobb.batch.bidrag.AldersjusteringBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.forskudd.AldersjusteringForskuddBatch
 import no.nav.bidrag.automatiskjobb.mapper.VedtakMapper
+import no.nav.bidrag.automatiskjobb.service.AldersjusteringResultatResponse
 import no.nav.bidrag.automatiskjobb.service.AldersjusteringService
 import no.nav.bidrag.beregn.barnebidrag.service.AldersjusteringOrchestrator
 import no.nav.bidrag.domene.sak.Saksnummer
@@ -100,7 +101,8 @@ class AutomatiskJobbController(
     fun aldersjusterBidragSak(
         @PathVariable saksnummer: Saksnummer,
         @RequestParam(required = false) år: Int?,
-    ): List<Pair<Int, OpprettVedtakRequestDto>> = aldersjusteringService.kjørAldersjusteringForSak(saksnummer, år ?: YearMonth.now().year)
+        @RequestParam(required = false) simuler: Boolean = true,
+    ): AldersjusteringResultatResponse = aldersjusteringService.kjørAldersjusteringForSak(saksnummer, år ?: YearMonth.now().year, simuler)
 
     @PostMapping("/aldersjuster/bidrag")
     @Operation(
