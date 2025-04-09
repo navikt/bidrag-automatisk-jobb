@@ -6,6 +6,7 @@ import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.junit5.MockKExtension
+import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer
 import no.nav.bidrag.automatiskjobb.mapper.VedtakMapper
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
@@ -24,6 +25,9 @@ class AldersjusteringServiceTest {
 
     @RelaxedMockK
     lateinit var vedtakConsumer: BidragVedtakConsumer
+
+    @RelaxedMockK
+    lateinit var sakConsumer: BidragSakConsumer
 
     @RelaxedMockK
     lateinit var aldersjusteringOrchestrator: AldersjusteringOrchestrator
