@@ -333,6 +333,7 @@ fun opprettGrunnlagSluttberegningBidrag() =
 
 fun opprettVedtakDto() =
     VedtakDto(
+        vedtaksid = 1,
         kilde = Vedtakskilde.MANUELT,
         fastsattILand = "",
         type = Vedtakstype.ENDRING,
@@ -441,6 +442,7 @@ fun opprettStønadDto(
     stønadsid = 1,
     type = stønadstype,
     periodeListe = periodeListe,
+    nesteIndeksreguleringsår = 2025,
 )
 
 fun opprettStønadPeriodeDto(

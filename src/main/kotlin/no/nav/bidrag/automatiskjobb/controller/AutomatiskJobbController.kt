@@ -10,12 +10,15 @@ import no.nav.bidrag.automatiskjobb.batch.bidrag.AldersjusteringBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.forskudd.AldersjusteringForskuddBatch
 import no.nav.bidrag.automatiskjobb.mapper.VedtakMapper
 import no.nav.bidrag.automatiskjobb.service.AldersjusteringService
+import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringResponse
 import no.nav.bidrag.beregn.barnebidrag.service.AldersjusteringOrchestrator
+import no.nav.bidrag.domene.sak.Saksnummer
 import no.nav.bidrag.domene.sak.Stønadsid
 import no.nav.bidrag.transport.behandling.vedtak.request.OpprettVedtakRequestDto
 import no.nav.security.token.support.core.api.Protected
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
@@ -88,6 +91,18 @@ class AutomatiskJobbController(
         aldersjusteringBidragBatch.startAldersjusteringBatch(forDato, kjøretidspunkt)
         return ResponseEntity.ok().build()
     }
+
+    @PostMapping("/aldersjuster/bidrag/{saksnummer}")
+    @Operation(
+        summary = "Start kjøring av aldersjustering batch for bidrag.",
+        description = "Operasjon for å starte kjøring av aldersjustering batch for bidrag for et gitt år.",
+        security = [SecurityRequirement(name = "bearer-key")],
+    )
+    fun aldersjusterBidragSak(
+        @PathVariable saksnummer: Saksnummer,
+        @RequestParam(required = false) år: Int?,
+        @RequestParam(required = false) simuler: Boolean = true,
+    ): AldersjusteringResponse = aldersjusteringService.kjørAldersjusteringForSak(saksnummer, år ?: YearMonth.now().year, simuler)
 
     @PostMapping("/aldersjuster/bidrag")
     @Operation(

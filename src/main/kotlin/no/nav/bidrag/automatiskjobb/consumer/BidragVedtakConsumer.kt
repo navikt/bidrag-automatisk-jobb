@@ -25,24 +25,70 @@ class BidragVedtakConsumer(
 ) : AbstractRestClient(restTemplate, "bidrag-vedtak"),
     BeregningVedtakConsumer {
     private val bidragVedtakUri
-        get() = UriComponentsBuilder.fromUri(bidragVedtakUrl).pathSegment("vedtak")
+        get() = UriComponentsBuilder.fromUri(bidragVedtakUrl)
 
     fun fatteVedtak(request: OpprettVedtakRequestDto): OpprettVedtakResponseDto =
         postForNonNullEntity(
-            bidragVedtakUri.build().toUri(),
+            bidragVedtakUri.pathSegment("vedtak").build().toUri(),
             request,
         )
 
-    fun fatteVedtaksforslag(request: OpprettVedtakRequestDto): OpprettVedtakResponseDto =
+    fun hentVedtaksforslagBasertPåReferanase(referanse: String): VedtakDto? =
+        postForEntity(
+            bidragVedtakUri
+                .pathSegment("vedtak")
+                .pathSegment("unikreferanse")
+                .build()
+                .toUri(),
+            referanse,
+        )
+
+    fun slettVedtaksforslag(vedtakId: Int) =
+        deleteForEntity<Void>(
+            bidragVedtakUri
+                .pathSegment("vedtaksforslag")
+                .pathSegment(vedtakId.toString())
+                .build()
+                .toUri(),
+        )
+
+    fun fatteVedtaksforslag(vedtakId: Int): Int =
         postForNonNullEntity(
-            bidragVedtakUri.pathSegment("forslag").build().toUri(),
+            bidragVedtakUri
+                .pathSegment("vedtaksforslag")
+                .pathSegment(vedtakId.toString())
+                .build()
+                .toUri(),
+            null,
+        )
+
+    fun oppdaterVedtaksforslag(
+        vedtakId: Int,
+        request: OpprettVedtakRequestDto,
+    ): Int =
+        putForEntity(
+            bidragVedtakUri
+                .pathSegment("vedtaksforslag")
+                .pathSegment(vedtakId.toString())
+                .build()
+                .toUri(),
+            request,
+        )!!
+
+    fun opprettVedtaksforslag(request: OpprettVedtakRequestDto): Int =
+        postForNonNullEntity(
+            bidragVedtakUri.pathSegment("vedtaksforslag").build().toUri(),
             request,
         )
 
     @Cacheable(VEDTAK_CACHE)
     override fun hentVedtak(vedtakId: Int): VedtakDto? =
         getForEntity(
-            bidragVedtakUri.pathSegment(vedtakId.toString()).build().toUri(),
+            bidragVedtakUri
+                .pathSegment("vedtak")
+                .pathSegment(vedtakId.toString())
+                .build()
+                .toUri(),
         )
 
     @Retryable(
@@ -52,7 +98,11 @@ class BidragVedtakConsumer(
     )
     override fun hentVedtakForStønad(request: HentVedtakForStønadRequest): HentVedtakForStønadResponse =
         postForNonNullEntity(
-            bidragVedtakUri.pathSegment("hent-vedtak").build().toUri(),
+            bidragVedtakUri
+                .pathSegment("vedtak")
+                .pathSegment("hent-vedtak")
+                .build()
+                .toUri(),
             request,
         )
 }
