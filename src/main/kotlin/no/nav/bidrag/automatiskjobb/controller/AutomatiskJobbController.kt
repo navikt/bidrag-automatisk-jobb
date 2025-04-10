@@ -52,7 +52,7 @@ class AutomatiskJobbController(
     fun hentBarnSomSkalAldersjusteres(år: Int): ResponseEntity<Any> =
         ResponseEntity.ok(aldersjusteringService.hentAlleBarnSomSkalAldersjusteresForÅr(år))
 
-    @PostMapping("/aldersjusteringBidrag")
+    @PostMapping("/aldersjuster/batch/bidrag")
     @Operation(
         summary = "Start kjøring av aldersjustering batch for bidrag.",
         description = "Operasjon for å starte kjøring av aldersjustering batch for bidrag for et gitt år.",
@@ -120,7 +120,7 @@ class AutomatiskJobbController(
             "dummy",
         )
 
-    @PostMapping("/aldersjusteringForskudd")
+    @PostMapping("/aldersjuster/batch/forskudd")
     @Operation(
         summary = "Start kjøring av aldersjustering batch for forskudd.",
         description = "Operasjon for å starte kjøring av aldersjustering batch for forskudd for et gitt år.",

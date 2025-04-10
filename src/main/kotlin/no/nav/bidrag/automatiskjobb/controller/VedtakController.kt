@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import no.nav.bidrag.automatiskjobb.service.VedtakService
+import no.nav.bidrag.transport.behandling.vedtak.VedtakHendelse
 import no.nav.security.token.support.core.api.Protected
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
@@ -29,7 +30,7 @@ class VedtakController(
             ),
         ],
     )
-    fun opprettVedtak(vedtakHendelse: String): ResponseEntity<Any> {
+    fun opprettVedtak(vedtakHendelse: VedtakHendelse): ResponseEntity<Any> {
         vedtakService.behandleVedtak(vedtakHendelse)
         return ResponseEntity.ok().build()
     }
