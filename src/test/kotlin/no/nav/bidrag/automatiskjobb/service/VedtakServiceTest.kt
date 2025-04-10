@@ -64,7 +64,7 @@ class VedtakServiceTest {
 
         mocks(vedtakHendelse)
 
-        vedtakService.behandleVedtak("dummy")
+        vedtakService.behandleVedtak(vedtakHendelse)
 
         verify(exactly = 1) { barnRepository.save(any()) }
         barnSlot.captured shouldNotBe null
@@ -157,7 +157,7 @@ class VedtakServiceTest {
 
         mocks(vedtakHendelse)
 
-        vedtakService.behandleVedtak("dummy")
+        vedtakService.behandleVedtak(vedtakHendelse)
 
         verify(exactly = 1) { barnRepository.save(any()) }
         barnSlot.captured shouldNotBe null
@@ -273,7 +273,7 @@ class VedtakServiceTest {
 
         mocks(vedtakHendelse)
 
-        vedtakService.behandleVedtak("dummy")
+        vedtakService.behandleVedtak(vedtakHendelse)
 
         verify(exactly = 2) { barnRepository.save(any()) }
     }
@@ -284,7 +284,7 @@ class VedtakServiceTest {
 
         mocks(vedtakHendelse)
 
-        vedtakService.behandleVedtak("dummy")
+        vedtakService.behandleVedtak(vedtakHendelse)
 
         verify(exactly = 0) { barnRepository.save(any()) }
     }
@@ -309,7 +309,7 @@ class VedtakServiceTest {
 
         mocks(vedtakHendelse, eksisterendeBarn)
 
-        vedtakService.behandleVedtak("dummy")
+        vedtakService.behandleVedtak(vedtakHendelse)
 
         verify(exactly = 1) { barnRepository.save(any()) }
         barnSlot.captured shouldNotBe null
@@ -390,7 +390,7 @@ class VedtakServiceTest {
 
         mocks(vedtakHendelse, eksisterendeBarn)
 
-        vedtakService.behandleVedtak("dummy")
+        vedtakService.behandleVedtak(vedtakHendelse)
 
         verify(exactly = 1) { barnRepository.save(any()) }
         barnSlot.captured shouldNotBe null

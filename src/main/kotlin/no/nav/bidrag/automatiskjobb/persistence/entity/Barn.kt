@@ -14,7 +14,7 @@ data class Barn(
     @Id
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Int = 0,
+    var id: Int? = null,
     @Column(name = "saksnummer")
     var saksnummer: String = "",
     @Column(name = "kravhaver")
