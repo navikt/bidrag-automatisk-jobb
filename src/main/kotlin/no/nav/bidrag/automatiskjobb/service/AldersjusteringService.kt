@@ -12,6 +12,7 @@ import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringIkkeAldersjuste
 import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringResponse
 import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringResultat
 import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringResultatResponse
+import no.nav.bidrag.automatiskjobb.service.model.OpprettVedtakConflictResponse
 import no.nav.bidrag.automatiskjobb.utils.ugyldigForespørsel
 import no.nav.bidrag.beregn.barnebidrag.service.AldersjusteresManueltException
 import no.nav.bidrag.beregn.barnebidrag.service.AldersjusteringOrchestrator
@@ -22,7 +23,10 @@ import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.domene.sak.Saksnummer
 import no.nav.bidrag.domene.sak.Stønadsid
+import no.nav.bidrag.transport.behandling.vedtak.request.OpprettVedtakRequestDto
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.web.client.HttpStatusCodeException
 
 private val log = KotlinLogging.logger {}
 
@@ -113,13 +117,12 @@ class AldersjusteringService(
         try {
             val resultatBeregning = aldersjusteringOrchestrator.utførAldersjustering(stønadsid, år)
             val vedtaksforslagRequest = vedtakMapper.tilOpprettVedtakRequest(resultatBeregning, stønadsid, batchId)
-            slettEksisterendeVedtaksforslag(vedtaksforslagRequest.unikReferanse!!)
             if (simuler) {
                 log.info { "Kjører aldersjustering i simuleringsmodus. Oppretter ikke vedtaksforslag" }
                 return AldersjusteringAldersjustertResultat(-1, stønadsid, vedtaksforslagRequest)
             }
 
-            val vedtaksid = vedtakConsumer.opprettVedtaksforslag(vedtaksforslagRequest)
+            val vedtaksid = opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
             // TODO: Lagre vedtaksid
             // TODO: Status BEHANDLET
             // TODO: behandlingType = FATTET_FORSLAG
@@ -142,6 +145,21 @@ class AldersjusteringService(
             return AldersjusteringIkkeAldersjustertResultat(stønadsid, "Teknisk feil: ${e.message}")
         }
     }
+
+    private fun opprettEllerOppdaterVedtaksforslag(request: OpprettVedtakRequestDto) =
+        try {
+            slettEksisterendeVedtaksforslag(request.unikReferanse!!)
+            vedtakConsumer.opprettVedtaksforslag(request)
+        } catch (e: HttpStatusCodeException) {
+            if (e.statusCode == HttpStatus.CONFLICT) {
+                log.info { "Vedtaksforslag med referanse ${request.unikReferanse} finnes allerede. Oppdaterer vedtaksforslaget" }
+                val resultat = e.getResponseBodyAs(OpprettVedtakConflictResponse::class.java)!!
+                vedtakConsumer.oppdaterVedtaksforslag(resultat.vedtaksid, request)
+            } else {
+                log.error(e) { "Feil ved oppretting av vedtaksforslag med referanse ${request.unikReferanse}" }
+                throw e
+            }
+        }
 
     private fun slettEksisterendeVedtaksforslag(referanse: String) {
         vedtakConsumer.hentVedtaksforslagBasertPåReferanase(referanse)?.let {

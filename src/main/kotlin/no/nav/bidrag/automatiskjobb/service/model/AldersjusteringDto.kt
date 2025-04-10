@@ -30,3 +30,7 @@ abstract class AldersjusteringResultat(
     @JsonIgnore
     val aldersjustert: Boolean,
 )
+
+data class OpprettVedtakConflictResponse(
+    val vedtaksid: Int,
+)
