@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import no.nav.bidrag.automatiskjobb.batch.bidrag.AldersjusteringBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.forskudd.AldersjusteringForskuddBatch
 import no.nav.bidrag.automatiskjobb.mapper.VedtakMapper
+import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import no.nav.bidrag.automatiskjobb.service.AldersjusteringService
 import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringResponse
 import no.nav.bidrag.beregn.barnebidrag.service.AldersjusteringOrchestrator
@@ -35,7 +36,7 @@ class AutomatiskJobbController(
     private val aldersjusteringOrchestrator: AldersjusteringOrchestrator,
     private val vedtakMapper: VedtakMapper,
 ) {
-    @GetMapping("/aldersjustering")
+    @GetMapping("/barn")
     @Operation(
         summary = "Hent barn som skal aldersjusteres",
         description = "Operasjon for å hente barn som skal aldersjusteres (som fyller 6, 11 eller 15 inneværende år) for et gitt år.",
@@ -51,6 +52,49 @@ class AutomatiskJobbController(
     )
     fun hentBarnSomSkalAldersjusteres(år: Int): ResponseEntity<Any> =
         ResponseEntity.ok(aldersjusteringService.hentAlleBarnSomSkalAldersjusteresForÅr(år))
+
+    @GetMapping("/aldersjustering")
+    @Operation(
+        summary = "Henter innslag fra aldersjusteringstabellen",
+        description = "Operasjon for å hente innslag i aldersjusteringstabellen.",
+        security = [SecurityRequirement(name = "bearer-key")],
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Hentet aldersjustering.",
+            ),
+            ApiResponse(
+                responseCode = "204",
+                description = "Fant ingen aldersjustering for id.",
+            ),
+        ],
+    )
+    fun hentAldersjustering(id: Int): ResponseEntity<Any> {
+        val aldersjustering = aldersjusteringService.hentAldersjustering(id)
+        if (aldersjustering == null) {
+            return ResponseEntity.noContent().build()
+        }
+        return ResponseEntity.ok(aldersjustering)
+    }
+
+    @PostMapping("/aldersjustering")
+    @Operation(
+        summary = "Legger til innslag i aldersjusteringstabellen",
+        description = "Operasjon for å legge til nye innslag i aldersjusteringstabellen.",
+        security = [SecurityRequirement(name = "bearer-key")],
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Opprettet aldersjustering.",
+            ),
+        ],
+    )
+    fun lagreAldersjustering(aldersjustering: Aldersjustering): ResponseEntity<Any> =
+        ResponseEntity.ok(aldersjusteringService.lagreAldersjustering(aldersjustering))
 
     @PostMapping("/aldersjuster/batch/bidrag")
     @Operation(
@@ -103,6 +147,23 @@ class AutomatiskJobbController(
         @RequestParam(required = false) år: Int?,
         @RequestParam(required = false) simuler: Boolean = true,
     ): AldersjusteringResponse = aldersjusteringService.kjørAldersjusteringForSak(saksnummer, år ?: YearMonth.now().year, simuler)
+
+    @GetMapping("/barn/antall")
+    @Operation(
+        summary = "Hent antall barn som skal aldersjusteres",
+        description = "Operasjon for å hente antall barn som skal aldersjusteres (som fyller 6, 11 eller 15 inneværende år) for et gitt år.",
+        security = [SecurityRequirement(name = "bearer-key")],
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Returnerer antall barn som fyller 6, 11 eller 15 for gitt år år.",
+            ),
+        ],
+    )
+    fun hentAntallBarnSomSkalAldersjusteres(år: Int): ResponseEntity<Any> =
+        ResponseEntity.ok(aldersjusteringService.hentAntallBarnSomSkalAldersjusteresForÅr(år))
 
     @PostMapping("/aldersjuster/bidrag")
     @Operation(

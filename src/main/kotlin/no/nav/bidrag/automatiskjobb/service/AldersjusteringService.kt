@@ -5,7 +5,9 @@ import no.nav.bidrag.automatiskjobb.combinedLogger
 import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer
 import no.nav.bidrag.automatiskjobb.mapper.VedtakMapper
+import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
+import no.nav.bidrag.automatiskjobb.persistence.repository.AldersjusteringRepository
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
 import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringAldersjustertResultat
 import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringIkkeAldersjustertResultat
@@ -33,6 +35,7 @@ private val log = KotlinLogging.logger {}
 @Service
 class AldersjusteringService(
     private val barnRepository: BarnRepository,
+    private val alderjusteringRepository: AldersjusteringRepository,
     private val aldersjusteringOrchestrator: AldersjusteringOrchestrator,
     private val vedtakConsumer: BidragVedtakConsumer,
     private val sakConsumer: BidragSakConsumer,
@@ -175,4 +178,14 @@ class AldersjusteringService(
             .finnBarnSomSkalAldersjusteresForÅr(år)
             .groupBy { år - it.fødselsdato.year }
             .mapValues { it.value.sortedBy { barn -> barn.fødselsdato } }
+
+    fun hentAntallBarnSomSkalAldersjusteresForÅr(år: Int): Int =
+        barnRepository
+            .finnBarnSomSkalAldersjusteresForÅr(år)
+            .groupBy { år - it.fødselsdato.year }
+            .size
+
+    fun hentAldersjustering(id: Int): Aldersjustering? = alderjusteringRepository.findById(id).orElseThrow { null }
+
+    fun lagreAldersjustering(aldersjustering: Aldersjustering): Int? = alderjusteringRepository.save(aldersjustering).id
 }
