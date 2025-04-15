@@ -11,10 +11,10 @@ import no.nav.bidrag.automatiskjobb.batch.forskudd.AldersjusteringForskuddBatch
 import no.nav.bidrag.automatiskjobb.mapper.VedtakMapper
 import no.nav.bidrag.automatiskjobb.service.AldersjusteringService
 import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringResponse
-import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringResultat
 import no.nav.bidrag.beregn.barnebidrag.service.AldersjusteringOrchestrator
 import no.nav.bidrag.domene.sak.Saksnummer
 import no.nav.security.token.support.core.api.Protected
+import org.springframework.data.domain.Pageable
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -113,12 +113,14 @@ class AutomatiskJobbController(
         @RequestParam(required = false) år: Int?,
         @RequestParam(required = false) simuler: Boolean = true,
         @RequestParam(required = false) batchId: String? = null,
-    ): List<AldersjusteringResultat> {
+        @RequestParam(required = false) pageSize: Int = 100,
+    ): AldersjusteringResponse {
         val kjøringForÅr = år ?: Year.now().value
         return aldersjusteringService.kjørAldersjustering(
             kjøringForÅr,
             batchId ?: "testkjøring_år_$kjøringForÅr",
             simuler,
+            if (pageSize == -1) Pageable.unpaged() else Pageable.ofSize(pageSize),
         )
     }
 

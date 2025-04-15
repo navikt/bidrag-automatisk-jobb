@@ -27,6 +27,7 @@ import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.domene.sak.Saksnummer
 import no.nav.bidrag.domene.sak.Stønadsid
 import no.nav.bidrag.transport.behandling.vedtak.request.OpprettVedtakRequestDto
+import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpStatusCodeException
@@ -45,8 +46,9 @@ class AldersjusteringService(
         år: Int,
         batchId: String,
         simuler: Boolean = true,
+        pagesize: Pageable = Pageable.ofSize(100),
     ): AldersjusteringResponse {
-        val barnSomSkalAldersjusteres = hentAlleBarnSomSkalAldersjusteresForÅr(år)
+        val barnSomSkalAldersjusteres = hentAlleBarnSomSkalAldersjusteresForÅr(år, pagesize = pagesize)
         // TODO: Sjekk om barn finnes i aldersjustering tabell. Ellers lagre
         // TODO: Sjekk Status aldersjustering tabell. Ignorer hvis status ikke er UBEHANDLET
         val resultat =
@@ -201,9 +203,12 @@ class AldersjusteringService(
         }
     }
 
-    fun hentAlleBarnSomSkalAldersjusteresForÅr(år: Int): Map<Int, List<Barn>> =
+    fun hentAlleBarnSomSkalAldersjusteresForÅr(
+        år: Int,
+        pagesize: Pageable = Pageable.ofSize(100),
+    ): Map<Int, List<Barn>> =
         barnRepository
-            .finnBarnSomSkalAldersjusteresForÅr(år)
+            .finnBarnSomSkalAldersjusteresForÅr(år, pageable = pagesize)
             .groupBy { år - it.fødselsdato.year }
             .mapValues { it.value.sortedBy { barn -> barn.fødselsdato } }
 }
