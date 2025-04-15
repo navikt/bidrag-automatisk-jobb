@@ -1,6 +1,9 @@
 package no.nav.bidrag.automatiskjobb.service
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import no.nav.bidrag.automatiskjobb.combinedLogger
 import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer
@@ -38,7 +41,7 @@ class AldersjusteringService(
     private val sakConsumer: BidragSakConsumer,
     private val vedtakMapper: VedtakMapper,
 ) {
-    fun kjørAldersjustering(
+    suspend fun kjørAldersjustering(
         år: Int,
         batchId: String,
         simuler: Boolean = true,
@@ -96,11 +99,18 @@ class AldersjusteringService(
         )
     }
 
-    private fun List<Barn>.utførAldersjusteringBidrag(
+    private suspend fun List<Barn>.utførAldersjusteringBidrag(
         år: Int,
         batchId: String,
         simuler: Boolean = true,
-    ) = map { utførAldersjusteringForBarn(Stønadstype.BIDRAG, it, år, batchId, simuler) }
+    ): List<AldersjusteringResultat> =
+        coroutineScope {
+            map { barn ->
+                async {
+                    utførAldersjusteringForBarn(Stønadstype.BIDRAG, barn, år, batchId, simuler)
+                }
+            }.awaitAll()
+        }
 
     fun utførAldersjusteringForBarn(
         stønadstype: Stønadstype,

@@ -109,7 +109,7 @@ class AutomatiskJobbController(
         description = "Operasjon for å starte kjøring av aldersjustering batch for bidrag for et gitt år.",
         security = [SecurityRequirement(name = "bearer-key")],
     )
-    fun aldersjusterBidrag(
+    suspend fun aldersjusterBidrag(
         @RequestParam(required = false) år: Int?,
         @RequestParam(required = false) simuler: Boolean = true,
         @RequestParam(required = false) batchId: String? = null,
