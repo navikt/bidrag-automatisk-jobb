@@ -45,15 +45,34 @@ class AldersjusteringService(
         år: Int,
         batchId: String,
         simuler: Boolean = true,
-    ): List<AldersjusteringResultat> {
+    ): AldersjusteringResponse {
         val barnSomSkalAldersjusteres = hentAlleBarnSomSkalAldersjusteresForÅr(år)
         // TODO: Sjekk om barn finnes i aldersjustering tabell. Ellers lagre
         // TODO: Sjekk Status aldersjustering tabell. Ignorer hvis status ikke er UBEHANDLET
-        return barnSomSkalAldersjusteres
-            .flatMap { (alder, barnListe) ->
-                secureLogger.info { "Aldersjustering av bidrag for aldersgruppe $alder. Simuler=$simuler" }
-                barnListe.utførAldersjusteringBidrag(år, batchId, simuler)
-            }
+        val resultat =
+            barnSomSkalAldersjusteres
+                .flatMap { (alder, barnListe) ->
+                    secureLogger.info { "Aldersjustering av bidrag for aldersgruppe $alder. Simuler=$simuler" }
+                    barnListe.utførAldersjusteringBidrag(år, batchId, simuler)
+                }
+        return AldersjusteringResponse(
+            aldersjustert =
+                resultat.filterIsInstance<AldersjusteringAldersjustertResultat>().let {
+                    AldersjusteringResultatResponse(
+                        antall = it.size,
+                        stønadsider = it.map { barn -> barn.stønadsid },
+                        detaljer = it,
+                    )
+                },
+            ikkeAldersjustert =
+                resultat.filterIsInstance<AldersjusteringIkkeAldersjustertResultat>().let {
+                    AldersjusteringResultatResponse(
+                        antall = it.size,
+                        stønadsider = it.map { barn -> barn.stønadsid },
+                        detaljer = it,
+                    )
+                },
+        )
     }
 
     fun kjørAldersjusteringForSak(
