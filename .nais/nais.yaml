@@ -5,6 +5,10 @@ metadata:
   namespace: bidrag
   labels:
     team: bidrag
+  annotations:
+      nginx.ingress.kubernetes.io/proxy-body-size: "512m"
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
 spec:
   observability:
     autoInstrumentation:
