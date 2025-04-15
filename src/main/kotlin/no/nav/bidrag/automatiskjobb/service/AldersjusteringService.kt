@@ -41,14 +41,16 @@ class AldersjusteringService(
     fun kjørAldersjustering(
         år: Int,
         batchId: String,
-    ) {
+        simuler: Boolean = true,
+    ): List<AldersjusteringResultat> {
         val barnSomSkalAldersjusteres = hentAlleBarnSomSkalAldersjusteresForÅr(år)
         // TODO: Sjekk om barn finnes i aldersjustering tabell. Ellers lagre
         // TODO: Sjekk Status aldersjustering tabell. Ignorer hvis status ikke er UBEHANDLET
-        barnSomSkalAldersjusteres.forEach { (alder, barnListe) ->
-            secureLogger.info { "Aldersjustering av bidrag for aldersgruppe $alder" }
-            barnListe.utførAldersjusteringBidrag(år, batchId)
-        }
+        return barnSomSkalAldersjusteres
+            .flatMap { (alder, barnListe) ->
+                secureLogger.info { "Aldersjustering av bidrag for aldersgruppe $alder. Simuler=$simuler" }
+                barnListe.utførAldersjusteringBidrag(år, batchId, simuler)
+            }
     }
 
     fun kjørAldersjusteringForSak(
@@ -60,7 +62,7 @@ class AldersjusteringService(
         val barnISaken = sak.roller.filter { it.type == Rolletype.BARN }
         val bp = sak.roller.find { it.type == Rolletype.BIDRAGSPLIKTIG } ?: ugyldigForespørsel("Fant ikke BP for sak $saksnummer")
         val resultat =
-            barnISaken.mapNotNull {
+            barnISaken.map {
                 utførAldersjusteringForBarn(
                     Stønadstype.BIDRAG,
                     Barn(
@@ -98,7 +100,7 @@ class AldersjusteringService(
         år: Int,
         batchId: String,
         simuler: Boolean = true,
-    ) = forEach { utførAldersjusteringForBarn(Stønadstype.BIDRAG, it, år, batchId, simuler) }
+    ) = map { utførAldersjusteringForBarn(Stønadstype.BIDRAG, it, år, batchId, simuler) }
 
     fun utførAldersjusteringForBarn(
         stønadstype: Stønadstype,
@@ -106,7 +108,7 @@ class AldersjusteringService(
         år: Int,
         batchId: String,
         simuler: Boolean = true,
-    ): AldersjusteringResultat? {
+    ): AldersjusteringResultat {
         val stønadsid =
             Stønadsid(
                 stønadstype,
@@ -115,7 +117,7 @@ class AldersjusteringService(
                 Saksnummer(barn.saksnummer),
             )
         try {
-            val resultatBeregning = aldersjusteringOrchestrator.utførAldersjustering(stønadsid, år)
+            val (vedtaksidBeregning, resultatBeregning) = aldersjusteringOrchestrator.utførAldersjustering(stønadsid, år)
             val vedtaksforslagRequest = vedtakMapper.tilOpprettVedtakRequest(resultatBeregning, stønadsid, batchId)
             if (simuler) {
                 log.info { "Kjører aldersjustering i simuleringsmodus. Oppretter ikke vedtaksforslag" }

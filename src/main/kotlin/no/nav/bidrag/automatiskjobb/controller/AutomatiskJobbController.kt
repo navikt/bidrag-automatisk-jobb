@@ -11,19 +11,18 @@ import no.nav.bidrag.automatiskjobb.batch.forskudd.AldersjusteringForskuddBatch
 import no.nav.bidrag.automatiskjobb.mapper.VedtakMapper
 import no.nav.bidrag.automatiskjobb.service.AldersjusteringService
 import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringResponse
+import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringResultat
 import no.nav.bidrag.beregn.barnebidrag.service.AldersjusteringOrchestrator
 import no.nav.bidrag.domene.sak.Saksnummer
-import no.nav.bidrag.domene.sak.Stønadsid
-import no.nav.bidrag.transport.behandling.vedtak.request.OpprettVedtakRequestDto
 import no.nav.security.token.support.core.api.Protected
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import java.time.LocalDate
+import java.time.Year
 import java.time.YearMonth
 
 @Protected
@@ -111,14 +110,17 @@ class AutomatiskJobbController(
         security = [SecurityRequirement(name = "bearer-key")],
     )
     fun aldersjusterBidrag(
-        @RequestBody stønadsid: Stønadsid,
         @RequestParam(required = false) år: Int?,
-    ): OpprettVedtakRequestDto? =
-        vedtakMapper.tilOpprettVedtakRequest(
-            aldersjusteringOrchestrator.utførAldersjustering(stønadsid, år ?: YearMonth.now().year),
-            stønadsid,
-            "dummy",
+        @RequestParam(required = false) simuler: Boolean = true,
+        @RequestParam(required = false) batchId: String? = null,
+    ): List<AldersjusteringResultat> {
+        val kjøringForÅr = år ?: Year.now().value
+        return aldersjusteringService.kjørAldersjustering(
+            kjøringForÅr,
+            batchId ?: "testkjøring_år_$kjøringForÅr",
+            simuler,
         )
+    }
 
     @PostMapping("/aldersjuster/batch/forskudd")
     @Operation(
