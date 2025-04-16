@@ -14,7 +14,8 @@ import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringResponse
 import no.nav.bidrag.beregn.barnebidrag.service.AldersjusteringOrchestrator
 import no.nav.bidrag.domene.sak.Saksnummer
 import no.nav.security.token.support.core.api.Protected
-import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -113,14 +114,42 @@ class AutomatiskJobbController(
         @RequestParam(required = false) år: Int?,
         @RequestParam(required = false) simuler: Boolean = true,
         @RequestParam(required = false) batchId: String? = null,
-        @RequestParam(required = false) pageSize: Int = 100,
     ): AldersjusteringResponse {
         val kjøringForÅr = år ?: Year.now().value
         return aldersjusteringService.kjørAldersjustering(
             kjøringForÅr,
             batchId ?: "testkjøring_år_$kjøringForÅr",
             simuler,
-            if (pageSize == -1) Pageable.unpaged() else Pageable.ofSize(pageSize),
+        )
+    }
+
+    @PostMapping("/debug/aldersjuster/bidrag")
+    @Operation(
+        summary = "Start kjøring av aldersjustering av bidrag uten persistering for debugging",
+        description = "Operasjon for å starte kjøring av aldersjustering batch for bidrag for et gitt år.",
+        security = [SecurityRequirement(name = "bearer-key")],
+    )
+    suspend fun aldersjusterBidragDebug(
+        @RequestParam(required = false) år: Int?,
+        @RequestParam(required = false) simuler: Boolean = true,
+        @RequestParam(required = false) batchId: String? = null,
+        @RequestParam fromPage: Int,
+        @RequestParam(defaultValue = "100") pageSize: Int,
+    ): AldersjusteringResponse {
+        val kjøringForÅr = år ?: Year.now().value
+        val nextPage = if (fromPage > 0) fromPage - 1 else 0
+        val pageable =
+            PageRequest.of(
+                nextPage,
+                pageSize,
+                Sort.Direction.valueOf("ASC".uppercase()),
+                "fødselsdato",
+            )
+        return aldersjusteringService.kjørAldersjusteringDebug(
+            kjøringForÅr,
+            batchId ?: "testkjøring_år_$kjøringForÅr",
+            simuler,
+            pageable,
         )
     }
 
