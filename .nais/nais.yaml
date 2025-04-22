@@ -5,11 +5,20 @@ metadata:
   namespace: bidrag
   labels:
     team: bidrag
+  annotations:
+      nginx.ingress.kubernetes.io/proxy-body-size: "512m"
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
 spec:
   observability:
     autoInstrumentation:
       enabled: true
       runtime: java
+    logging:
+      destinations:
+        - id: loki
+        - id: elastic
+        - id: secure_logs
   azure:
     application:
       enabled: true
