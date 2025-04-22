@@ -1,6 +1,11 @@
 package no.nav.bidrag.automatiskjobb.service
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.runBlocking
 import no.nav.bidrag.automatiskjobb.combinedLogger
 import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer
@@ -17,6 +22,8 @@ import no.nav.bidrag.automatiskjobb.utils.ugyldigForespørsel
 import no.nav.bidrag.beregn.barnebidrag.service.AldersjusteresManueltException
 import no.nav.bidrag.beregn.barnebidrag.service.AldersjusteringOrchestrator
 import no.nav.bidrag.beregn.barnebidrag.service.SkalIkkeAldersjusteresException
+import no.nav.bidrag.commons.util.RequestContextAsyncContext
+import no.nav.bidrag.commons.util.SecurityCoroutineContext
 import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.domene.enums.rolle.Rolletype
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
@@ -24,6 +31,7 @@ import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.domene.sak.Saksnummer
 import no.nav.bidrag.domene.sak.Stønadsid
 import no.nav.bidrag.transport.behandling.vedtak.request.OpprettVedtakRequestDto
+import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpStatusCodeException
@@ -38,17 +46,38 @@ class AldersjusteringService(
     private val sakConsumer: BidragSakConsumer,
     private val vedtakMapper: VedtakMapper,
 ) {
-    fun kjørAldersjustering(
+    suspend fun kjørAldersjustering(
         år: Int,
         batchId: String,
-    ) {
+        simuler: Boolean = true,
+    ): AldersjusteringResponse {
         val barnSomSkalAldersjusteres = hentAlleBarnSomSkalAldersjusteresForÅr(år)
         // TODO: Sjekk om barn finnes i aldersjustering tabell. Ellers lagre
         // TODO: Sjekk Status aldersjustering tabell. Ignorer hvis status ikke er UBEHANDLET
-        barnSomSkalAldersjusteres.forEach { (alder, barnListe) ->
-            secureLogger.info { "Aldersjustering av bidrag for aldersgruppe $alder" }
-            barnListe.utførAldersjusteringBidrag(år, batchId)
-        }
+        val resultat =
+            barnSomSkalAldersjusteres
+                .flatMap { (alder, barnListe) ->
+                    secureLogger.info { "Aldersjustering av bidrag for aldersgruppe $alder. Simuler=$simuler" }
+                    barnListe.utførAldersjusteringBidrag(år, batchId, simuler)
+                }
+        return AldersjusteringResponse(
+            aldersjustert =
+                resultat.filterIsInstance<AldersjusteringAldersjustertResultat>().let {
+                    AldersjusteringResultatResponse(
+                        antall = it.size,
+                        stønadsider = it.map { barn -> barn.stønadsid },
+                        detaljer = it,
+                    )
+                },
+            ikkeAldersjustert =
+                resultat.filterIsInstance<AldersjusteringIkkeAldersjustertResultat>().let {
+                    AldersjusteringResultatResponse(
+                        antall = it.size,
+                        stønadsider = it.map { barn -> barn.stønadsid },
+                        detaljer = it,
+                    )
+                },
+        )
     }
 
     fun kjørAldersjusteringForSak(
@@ -60,7 +89,7 @@ class AldersjusteringService(
         val barnISaken = sak.roller.filter { it.type == Rolletype.BARN }
         val bp = sak.roller.find { it.type == Rolletype.BIDRAGSPLIKTIG } ?: ugyldigForespørsel("Fant ikke BP for sak $saksnummer")
         val resultat =
-            barnISaken.mapNotNull {
+            barnISaken.map {
                 utførAldersjusteringForBarn(
                     Stønadstype.BIDRAG,
                     Barn(
@@ -98,7 +127,7 @@ class AldersjusteringService(
         år: Int,
         batchId: String,
         simuler: Boolean = true,
-    ) = forEach { utførAldersjusteringForBarn(Stønadstype.BIDRAG, it, år, batchId, simuler) }
+    ): List<AldersjusteringResultat> = map { barn -> utførAldersjusteringForBarn(Stønadstype.BIDRAG, barn, år, batchId, simuler) }
 
     fun utførAldersjusteringForBarn(
         stønadstype: Stønadstype,
@@ -106,7 +135,7 @@ class AldersjusteringService(
         år: Int,
         batchId: String,
         simuler: Boolean = true,
-    ): AldersjusteringResultat? {
+    ): AldersjusteringResultat {
         val stønadsid =
             Stønadsid(
                 stønadstype,
@@ -115,7 +144,7 @@ class AldersjusteringService(
                 Saksnummer(barn.saksnummer),
             )
         try {
-            val resultatBeregning = aldersjusteringOrchestrator.utførAldersjustering(stønadsid, år)
+            val (vedtaksidBeregning, resultatBeregning) = aldersjusteringOrchestrator.utførAldersjustering(stønadsid, år)
             val vedtaksforslagRequest = vedtakMapper.tilOpprettVedtakRequest(resultatBeregning, stønadsid, batchId)
             if (simuler) {
                 log.info { "Kjører aldersjustering i simuleringsmodus. Oppretter ikke vedtaksforslag" }
@@ -170,9 +199,70 @@ class AldersjusteringService(
         }
     }
 
-    fun hentAlleBarnSomSkalAldersjusteresForÅr(år: Int): Map<Int, List<Barn>> =
-        barnRepository
-            .finnBarnSomSkalAldersjusteresForÅr(år)
-            .groupBy { år - it.fødselsdato.year }
-            .mapValues { it.value.sortedBy { barn -> barn.fødselsdato } }
+    fun hentAlleBarnSomSkalAldersjusteresForÅr(
+        år: Int,
+        paging: Pageable = Pageable.unpaged(),
+    ): Map<Int, List<Barn>> {
+        val result =
+            barnRepository
+                .finnBarnSomSkalAldersjusteresForÅr(år, pageable = paging)
+                .groupBy { år - it.fødselsdato.year }
+                .mapValues { it.value.sortedBy { barn -> barn.fødselsdato } }
+
+        log.info { "Antall barn ${ result.getLengths()}" }
+        return result
+    }
+
+    private suspend fun List<Barn>.utførAldersjusteringBidragAsync(
+        år: Int,
+        batchId: String,
+        simuler: Boolean = true,
+    ): List<AldersjusteringResultat> {
+        val scope =
+            CoroutineScope(Dispatchers.IO + SecurityCoroutineContext() + RequestContextAsyncContext())
+        return runBlocking {
+            map { barn ->
+                scope.async {
+                    utførAldersjusteringForBarn(Stønadstype.BIDRAG, barn, år, batchId, simuler)
+                }
+            }.awaitAll()
+        }
+    }
+
+    suspend fun kjørAldersjusteringDebug(
+        år: Int,
+        batchId: String,
+        simuler: Boolean = true,
+        paging: Pageable = Pageable.ofSize(100),
+    ): AldersjusteringResponse {
+        val barnSomSkalAldersjusteres = hentAlleBarnSomSkalAldersjusteresForÅr(år, paging = paging)
+        // TODO: Sjekk om barn finnes i aldersjustering tabell. Ellers lagre
+        // TODO: Sjekk Status aldersjustering tabell. Ignorer hvis status ikke er UBEHANDLET
+        val resultat =
+            barnSomSkalAldersjusteres
+                .flatMap { (alder, barnListe) ->
+                    secureLogger.info { "Aldersjustering av bidrag for aldersgruppe $alder. Simuler=$simuler" }
+                    barnListe.utførAldersjusteringBidragAsync(år, batchId, simuler)
+                }
+        return AldersjusteringResponse(
+            aldersjustert =
+                resultat.filterIsInstance<AldersjusteringAldersjustertResultat>().let {
+                    AldersjusteringResultatResponse(
+                        antall = it.size,
+                        stønadsider = it.map { barn -> barn.stønadsid },
+                        detaljer = it,
+                    )
+                },
+            ikkeAldersjustert =
+                resultat.filterIsInstance<AldersjusteringIkkeAldersjustertResultat>().let {
+                    AldersjusteringResultatResponse(
+                        antall = it.size,
+                        stønadsider = it.map { barn -> barn.stønadsid },
+                        detaljer = it,
+                    )
+                },
+        )
+    }
 }
+
+fun Map<Int, List<Barn>>.getLengths(): Map<Int, Int> = this.mapValues { it.value.size }
