@@ -12,8 +12,6 @@ import org.springframework.stereotype.Component
 @Component
 @StepScope
 class AldersjusteringBidragOpprettAldersjusteringerBatchWriter(
-//    @Value("#{jobParameters['år']}") år: Long? = -1,
-//    @Value("#{jobParameters['runId']}") runId: String? = "",
     private val aldersjusteringService: AldersjusteringService,
 ) : ItemWriter<Barn> {
     private var år: Long? = -1
