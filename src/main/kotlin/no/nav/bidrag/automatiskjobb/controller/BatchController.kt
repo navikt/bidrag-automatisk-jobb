@@ -6,9 +6,10 @@ import io.swagger.v3.oas.annotations.Parameters
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
-import no.nav.bidrag.automatiskjobb.batch.bidrag.AldersjusteringBidragBatch
-import no.nav.bidrag.automatiskjobb.batch.bidrag.slettvedtaksforslag.AldersjusteringBidragSlettVedtaksforslagBatch
-import no.nav.bidrag.automatiskjobb.batch.forskudd.AldersjusteringForskuddBatch
+import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.AldersjusteringBidragBatch
+import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.opprettaldersjustering.AldersjusteringBidragOpprettAldersjusteringerBatch
+import no.nav.bidrag.automatiskjobb.batch.aldersjustering.forskudd.AldersjusteringForskuddBatch
+import no.nav.bidrag.automatiskjobb.batch.aldersjustering.slettvedtaksforslag.AldersjusteringBidragSlettVedtaksforslagBatch
 import no.nav.security.token.support.core.api.Protected
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
@@ -22,6 +23,7 @@ import java.time.YearMonth
 class BatchController(
     private val aldersjusteringBidragBatch: AldersjusteringBidragBatch,
     private val aldersjusteringBidragSlettVedtaksforslagBatch: AldersjusteringBidragSlettVedtaksforslagBatch,
+    private val aldersjusteringBidragOpprettAldersjusteringerBatch: AldersjusteringBidragOpprettAldersjusteringerBatch,
     private val aldersjusteringForskuddBatch: AldersjusteringForskuddBatch,
 ) {
     @PostMapping("/aldersjuster/batch/bidrag")
@@ -98,7 +100,7 @@ class BatchController(
         ],
     )
     fun startAldersjusteringBidragSlettVedtaksforslagBatch(): ResponseEntity<Any> {
-        aldersjusteringBidragSlettVedtaksforslagBatch.startAldersjusteringSlettVedtaksforslagBatch()
+        aldersjusteringBidragSlettVedtaksforslagBatch.startAldersjusteringBidragSlettVedtaksforslagBatch()
         return ResponseEntity.ok().build()
     }
 
@@ -139,6 +141,50 @@ class BatchController(
         @RequestParam(required = false) kjøretidspunkt: LocalDate?,
     ): ResponseEntity<Any> {
         aldersjusteringForskuddBatch.startAldersjusteringBatch(forDato, kjøretidspunkt)
+        return ResponseEntity.ok().build()
+    }
+
+    @PostMapping("/aldersjuster/batch/bidrag/opprett")
+    @Operation(
+        summary = "Start kjøring av batch for å opprette aldersjusteringer.",
+        description = "Operasjon for å starte kjøring av batch som oppretter aldersjusteringer for et gitt år.",
+        security = [SecurityRequirement(name = "bearer-key")],
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Batch for oppretting av aldersjusteringer ble startet.",
+            ),
+        ],
+    )
+    @Parameters(
+        value = [
+            Parameter(
+                name = "år",
+                example = "2025",
+                description =
+                    "År det skal aldersjusteres for.",
+                required = true,
+            ),
+            Parameter(
+                name = "kjøretidspunkt",
+                example = "2025-06-01",
+                description =
+                    "Kjøretidspunkt for aldersjustering. " +
+                        "Default er dagens dato. Kan settes for å justere cutoff dato for opphørte bidrag.",
+                required = false,
+            ),
+        ],
+    )
+    fun startAldersjusteringBidragOpprettBatch(
+        @RequestParam år: Long,
+        @RequestParam(required = false) kjøretidspunkt: LocalDate?,
+    ): ResponseEntity<Any> {
+        aldersjusteringBidragOpprettAldersjusteringerBatch.startAldersjusteringBidragOpprettAldersjusteringBatch(
+            kjøretidspunkt,
+            år,
+        )
         return ResponseEntity.ok().build()
     }
 }

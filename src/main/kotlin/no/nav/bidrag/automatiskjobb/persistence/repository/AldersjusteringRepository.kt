@@ -14,6 +14,7 @@ interface AldersjusteringRepository : JpaRepository<Aldersjustering, Int> {
         aldersgruppe: Int,
     ): Aldersjustering?
 
+    @Suppress("Brukes i batch")
     @Query(
         "SELECT a FROM aldersjustering a WHERE a.status = :status",
     )
@@ -21,4 +22,9 @@ interface AldersjusteringRepository : JpaRepository<Aldersjustering, Int> {
         @Param("status") status: Status,
         pageable: Pageable = Pageable.ofSize(100),
     ): Page<Aldersjustering>
+
+    fun existsAldersjusteringsByBarnIdAndAldersgruppe(
+        barnId: Int,
+        aldersgruppe: Int,
+    ): Boolean
 }

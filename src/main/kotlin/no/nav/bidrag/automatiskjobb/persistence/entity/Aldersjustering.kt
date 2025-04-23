@@ -7,38 +7,36 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
-import jakarta.persistence.Table
 import java.math.BigDecimal
 import java.sql.Timestamp
 
-@Entity
-@Table(name = "aldersjustering")
+@Entity(name = "aldersjustering")
 data class Aldersjustering(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Int? = null,
     @Column(name = "batch_id", nullable = false)
     val batchId: String,
-    @Column(name = "grunnlag_fra_vedtak", nullable = false)
-    val grunnlagFraVedtak: String,
+    @Column(name = "vedtaksid_beregning")
+    val vedtaksidBeregning: Int? = null,
     @Column(name = "barn_id", nullable = false)
     val barnId: Int,
     @Column(name = "aldersgruppe", nullable = false)
-    val aldersgruppe: String,
+    val aldersgruppe: Int,
     @Column(name = "lopende_belop")
     val lopendeBelop: BigDecimal? = null,
     @Column(name = "begrunnelse")
-    val begrunnelse: List<String>? = null,
+    var begrunnelse: List<String>? = null,
     @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
-    val status: Status,
+    var status: Status,
     @Column(name = "behandlingstype")
     @Enumerated(EnumType.STRING)
-    val behandlingstype: Behandlingstype? = null,
+    var behandlingstype: Behandlingstype? = null,
     @Column(name = "vedtak")
-    val vedtak: Int? = null,
+    var vedtak: Int? = null,
     @Column(name = "oppgave")
-    val oppgave: Int? = null,
+    var oppgave: Int? = null,
     @Column(name = "opprettet_tidspunkt", nullable = false, updatable = false)
     val opprettetTidspunkt: Timestamp = Timestamp(System.currentTimeMillis()),
 )
@@ -54,7 +52,8 @@ enum class Status {
 }
 
 enum class Behandlingstype {
+    FATTET_FORSLAG,
     INGEN,
-    AUTOMATISK,
+    FEILET,
     MANUELL,
 }

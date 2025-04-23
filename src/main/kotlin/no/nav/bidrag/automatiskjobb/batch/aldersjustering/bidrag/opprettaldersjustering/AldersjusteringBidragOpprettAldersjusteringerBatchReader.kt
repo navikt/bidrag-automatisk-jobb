@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.batch.forskudd
+package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.opprettaldersjustering
 
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
@@ -12,15 +12,15 @@ import java.util.Collections
 
 @Component
 @StepScope
-class AldersjusteringForskuddBatchReader(
+class AldersjusteringBidragOpprettAldersjusteringerBatchReader(
+    @Value("#{jobParameters['kjøredato']}") kjøredato: LocalDate? = LocalDate.now(),
+    @Value("#{jobParameters['år']}") år: Long? = -1,
     barnRepository: BarnRepository,
-    @Value("#{jobParameters['forDato']}") forDato: LocalDate,
-    @Value("#{jobParameters['kjøredato']}") kjøredato: LocalDate,
 ) : RepositoryItemReader<Barn>() {
     init {
         this.setRepository(barnRepository)
-        this.setMethodName("finnBarnSomSkalAldersjusteresForÅr") // TODO(Endre til foskuddslogikk)
-        this.setArguments(listOf(forDato.year, kjøredato))
+        this.setMethodName("finnBarnSomSkalAldersjusteresForÅr")
+        this.setArguments(listOf(år?.toInt(), kjøredato))
         this.setPageSize(100)
         this.setSort(Collections.singletonMap("id", Sort.Direction.ASC))
     }

@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS aldersjustering
 (
     id                   INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY (INCREMENT 1 START 1 MINVALUE 1),
     batch_id             TEXT NOT NULL,
-    vedtaksid_beregning  INTEGER NOT NULL,
+    vedtaksid_beregning  INTEGER,
     barn_id              INTEGER NOT NULL REFERENCES barn(id),
     aldersgruppe         NUMERIC NOT NULL CHECK (aldersgruppe IN (6, 11, 15)),
     lopende_belop        NUMERIC,

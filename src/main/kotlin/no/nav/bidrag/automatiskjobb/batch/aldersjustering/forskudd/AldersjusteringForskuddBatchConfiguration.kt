@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.batch.forskudd
+package no.nav.bidrag.automatiskjobb.batch.aldersjustering.forskudd
 
 import no.nav.bidrag.automatiskjobb.batch.BatchCompletionNotificationListener
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
