@@ -1,18 +1,12 @@
 package no.nav.bidrag.automatiskjobb.controller
 
 import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.v3.oas.annotations.Parameters
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
-import no.nav.bidrag.automatiskjobb.batch.bidrag.AldersjusteringBidragBatch
-import no.nav.bidrag.automatiskjobb.batch.forskudd.AldersjusteringForskuddBatch
-import no.nav.bidrag.automatiskjobb.mapper.VedtakMapper
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import no.nav.bidrag.automatiskjobb.service.AldersjusteringService
 import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringResponse
-import no.nav.bidrag.beregn.barnebidrag.service.AldersjusteringOrchestrator
 import no.nav.bidrag.domene.sak.Saksnummer
 import no.nav.security.token.support.core.api.Protected
 import org.springframework.data.domain.PageRequest
@@ -23,7 +17,6 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import java.time.LocalDate
 import java.time.Year
 import java.time.YearMonth
 
@@ -31,10 +24,6 @@ import java.time.YearMonth
 @RestController
 class AutomatiskJobbController(
     private val aldersjusteringService: AldersjusteringService,
-    private val aldersjusteringBidragBatch: AldersjusteringBidragBatch,
-    private val aldersjusteringForskuddBatch: AldersjusteringForskuddBatch,
-    private val aldersjusteringOrchestrator: AldersjusteringOrchestrator,
-    private val vedtakMapper: VedtakMapper,
 ) {
     @GetMapping("/barn")
     @Operation(
@@ -53,7 +42,7 @@ class AutomatiskJobbController(
     fun hentBarnSomSkalAldersjusteres(år: Int): ResponseEntity<Any> =
         ResponseEntity.ok(aldersjusteringService.hentAlleBarnSomSkalAldersjusteresForÅr(år))
 
-    @GetMapping("/aldersjustering")
+    @GetMapping("/aldersjuster")
     @Operation(
         summary = "Henter innslag fra aldersjusteringstabellen",
         description = "Operasjon for å hente innslag i aldersjusteringstabellen.",
@@ -79,7 +68,7 @@ class AutomatiskJobbController(
         return ResponseEntity.ok(aldersjustering)
     }
 
-    @PostMapping("/aldersjustering")
+    @PostMapping("/aldersjuster")
     @Operation(
         summary = "Legger til innslag i aldersjusteringstabellen",
         description = "Operasjon for å legge til nye innslag i aldersjusteringstabellen.",
@@ -95,46 +84,6 @@ class AutomatiskJobbController(
     )
     fun lagreAldersjustering(aldersjustering: Aldersjustering): ResponseEntity<Any> =
         ResponseEntity.ok(aldersjusteringService.lagreAldersjustering(aldersjustering))
-
-    @PostMapping("/aldersjuster/batch/bidrag")
-    @Operation(
-        summary = "Start kjøring av aldersjustering batch for bidrag.",
-        description = "Operasjon for å starte kjøring av aldersjustering batch for bidrag for et gitt år.",
-        security = [SecurityRequirement(name = "bearer-key")],
-    )
-    @ApiResponses(
-        value = [
-            ApiResponse(
-                responseCode = "200",
-                description = "Aldersjustering batch ble startet.",
-            ),
-        ],
-    )
-    @Parameters(
-        value = [
-            Parameter(
-                name = "forDato",
-                description = "År og måned for aldersjustering",
-                example = "2024-06",
-                required = true,
-            ),
-            Parameter(
-                name = "kjøretidspunkt",
-                example = "2024-06-01",
-                description =
-                    "Kjøretidspunkt for aldersjustering. " +
-                        "Default er dagens dato. Kan settes for å justere cutoff dato for opphørte bidrag.",
-                required = false,
-            ),
-        ],
-    )
-    fun startAldersjusteringBidragBatch(
-        @RequestParam forDato: YearMonth,
-        @RequestParam(required = false) kjøretidspunkt: LocalDate?,
-    ): ResponseEntity<Any> {
-        aldersjusteringBidragBatch.startAldersjusteringBatch(forDato, kjøretidspunkt)
-        return ResponseEntity.ok().build()
-    }
 
     @PostMapping("/aldersjuster/bidrag/{saksnummer}")
     @Operation(
@@ -167,8 +116,8 @@ class AutomatiskJobbController(
 
     @PostMapping("/aldersjuster/bidrag")
     @Operation(
-        summary = "Start kjøring av aldersjustering batch for bidrag.",
-        description = "Operasjon for å starte kjøring av aldersjustering batch for bidrag for et gitt år.",
+        summary = "Start kjøring av aldersjustering av en sak for bidrag.",
+        description = "Operasjon for å starte kjøring av aldersjustering for en sak for bidrag for et gitt år.",
         security = [SecurityRequirement(name = "bearer-key")],
     )
     suspend fun aldersjusterBidrag(
@@ -212,45 +161,5 @@ class AutomatiskJobbController(
             simuler,
             pageable,
         )
-    }
-
-    @PostMapping("/aldersjuster/batch/forskudd")
-    @Operation(
-        summary = "Start kjøring av aldersjustering batch for forskudd.",
-        description = "Operasjon for å starte kjøring av aldersjustering batch for forskudd for et gitt år.",
-        security = [SecurityRequirement(name = "bearer-key")],
-    )
-    @ApiResponses(
-        value = [
-            ApiResponse(
-                responseCode = "200",
-                description = "Aldersjustering batch ble startet.",
-            ),
-        ],
-    )
-    @Parameters(
-        value = [
-            Parameter(
-                name = "forDato",
-                description = "År og måned for aldersjustering",
-                example = "2024-06",
-                required = true,
-            ),
-            Parameter(
-                name = "kjøretidspunkt",
-                example = "2024-06-01",
-                description =
-                    "Kjøretidspunkt for aldersjustering. " +
-                        "Default er dagens dato. Kan settes for å justere cutoff dato for opphørte forskudd.",
-                required = false,
-            ),
-        ],
-    )
-    fun startAldersjusteringForskuddBatch(
-        @RequestParam forDato: YearMonth,
-        @RequestParam(required = false) kjøretidspunkt: LocalDate?,
-    ): ResponseEntity<Any> {
-        aldersjusteringForskuddBatch.startAldersjusteringBatch(forDato, kjøretidspunkt)
-        return ResponseEntity.ok().build()
     }
 }

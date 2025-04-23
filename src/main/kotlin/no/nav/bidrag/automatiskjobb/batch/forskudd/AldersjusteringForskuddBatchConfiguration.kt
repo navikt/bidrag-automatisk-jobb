@@ -1,6 +1,6 @@
 package no.nav.bidrag.automatiskjobb.batch.forskudd
 
-import no.nav.bidrag.automatiskjobb.batch.AldersjusteringJobCompletionNotificationListener
+import no.nav.bidrag.automatiskjobb.batch.BatchCompletionNotificationListener
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.Step
@@ -23,7 +23,7 @@ class AldersjusteringForskuddBatchConfiguration {
     fun aldersjusteringForskuddJob(
         jobRepository: JobRepository,
         aldersjusteringForskuddStep: Step,
-        listener: AldersjusteringJobCompletionNotificationListener,
+        listener: BatchCompletionNotificationListener,
     ): Job =
         JobBuilder("aldersjusteringForskuddJob", jobRepository)
             .listener(listener)

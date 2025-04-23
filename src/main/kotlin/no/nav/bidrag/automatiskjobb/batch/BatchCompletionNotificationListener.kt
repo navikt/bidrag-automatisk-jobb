@@ -7,18 +7,18 @@ import org.springframework.batch.core.JobExecutionListener
 import org.springframework.stereotype.Component
 
 @Component
-class AldersjusteringJobCompletionNotificationListener : JobExecutionListener {
+class BatchCompletionNotificationListener : JobExecutionListener {
     companion object {
-        private val LOGGER = LoggerFactory.getLogger(AldersjusteringJobCompletionNotificationListener::class.java)
+        private val LOGGER = LoggerFactory.getLogger(BatchCompletionNotificationListener::class.java)
     }
 
     override fun afterJob(jobExecution: JobExecution) {
         if (jobExecution.status.isUnsuccessful) {
-            LOGGER.error("Aldersjusteringsbatch: ${jobExecution.jobInstance.jobName} feilet!")
+            LOGGER.error("Batch: ${jobExecution.jobInstance.jobName} feilet!")
         } else if (jobExecution.status == BatchStatus.COMPLETED) {
-            LOGGER.info("Aldersjusteringsbatch: ${jobExecution.jobInstance.jobName} fullført!")
+            LOGGER.info("Batch: ${jobExecution.jobInstance.jobName} fullført!")
         } else {
-            LOGGER.warn("Aldersjusteringsbatch: ${jobExecution.jobInstance.jobName} avsluttet med status: ${jobExecution.status}")
+            LOGGER.warn("Batch: ${jobExecution.jobInstance.jobName} avsluttet med status: ${jobExecution.status}")
         }
     }
 }
