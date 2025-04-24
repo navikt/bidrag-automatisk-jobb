@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.opprettaldersjustering
+package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.opprett
 
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
@@ -12,7 +12,7 @@ import java.util.Collections
 
 @Component
 @StepScope
-class AldersjusteringBidragOpprettAldersjusteringerBatchReader(
+class OpprettAldersjusteringerBidragBatchReader(
     @Value("#{jobParameters['kjøredato']}") kjøredato: LocalDate? = LocalDate.now(),
     @Value("#{jobParameters['år']}") år: Long? = -1,
     barnRepository: BarnRepository,

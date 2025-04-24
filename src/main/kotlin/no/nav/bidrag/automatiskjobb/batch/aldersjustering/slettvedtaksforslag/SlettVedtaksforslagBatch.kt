@@ -7,11 +7,11 @@ import org.springframework.stereotype.Component
 import java.util.UUID
 
 @Component
-class AldersjusteringBidragSlettVedtaksforslagBatch(
+class SlettVedtaksforslagBatch(
     private val jobLauncher: JobLauncher,
     private val aldersjusteringBidragSlettVedtaksforslagJob: Job,
 ) {
-    fun startAldersjusteringBidragSlettVedtaksforslagBatch() {
+    fun startSlettVedtaksforslagBatch() {
         jobLauncher.run(
             aldersjusteringBidragSlettVedtaksforslagJob,
             JobParametersBuilder()

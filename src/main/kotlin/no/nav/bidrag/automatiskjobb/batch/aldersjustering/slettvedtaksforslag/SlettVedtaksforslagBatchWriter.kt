@@ -8,7 +8,7 @@ import org.springframework.batch.item.ItemWriter
 import org.springframework.stereotype.Component
 
 @Component
-class AldersjusteringBidragSlettVedtaksforslagBatchWriter(
+class SlettVedtaksforslagBatchWriter(
     private val aldersjusteringService: AldersjusteringService,
 ) : ItemWriter<Aldersjustering?> {
     override fun write(chunk: Chunk<out Aldersjustering>) {

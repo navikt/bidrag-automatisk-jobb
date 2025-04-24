@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.opprettaldersjustering
+package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.opprett
 
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.service.AldersjusteringService
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component
 
 @Component
 @StepScope
-class AldersjusteringBidragOpprettAldersjusteringerBatchWriter(
+class OpprettAldersjusteringerBidragBatchWriter(
     private val aldersjusteringService: AldersjusteringService,
 ) : ItemWriter<Barn> {
     private var år: Long? = -1

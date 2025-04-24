@@ -12,32 +12,32 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.transaction.PlatformTransactionManager
 
 @Configuration
-class AldersjusteringBidragSlettVedtaksforslagBatchConfiguration {
+class SlettVedtaksforslagBatchConfiguration {
     companion object {
         const val CHUNK_SIZE = 100
     }
 
     @Bean
-    fun aldersjusteringBidragSlettVedtaksforslagJob(
+    fun slettVedtaksforslagJob(
         jobRepository: JobRepository,
         aldersjusteringBidragSlettVedtaksforslagStep: Step,
         listener: BatchCompletionNotificationListener,
     ): Job =
-        JobBuilder("aldersjusteringBidragSlettVedtaksforslagJob", jobRepository)
+        JobBuilder("slettVedtaksforslagJob", jobRepository)
             .listener(listener)
             .start(aldersjusteringBidragSlettVedtaksforslagStep)
             .build()
 
     @Bean
-    fun aldersjusteringBidragSlettVedtaksforslagStep(
+    fun slettVedtaksforslagStep(
         jobRepository: JobRepository,
         transactionManager: PlatformTransactionManager,
-        aldersjusteringBidragSlettVedtaksforslagBatchReader: AldersjusteringBidragSlettVedtaksforslagBatchReader,
-        aldersjusteringBidragSlettVedtaksforslagBatchWriter: AldersjusteringBidragSlettVedtaksforslagBatchWriter,
+        slettVedtaksforslagBatchReader: SlettVedtaksforslagBatchReader,
+        slettVedtaksforslagBatchWriter: SlettVedtaksforslagBatchWriter,
     ): Step =
-        StepBuilder("aldersjusteringBidragSlettVedtaksforslagStep", jobRepository)
+        StepBuilder("slettVedtaksforslagStep", jobRepository)
             .chunk<Aldersjustering, Aldersjustering>(CHUNK_SIZE, transactionManager)
-            .reader(aldersjusteringBidragSlettVedtaksforslagBatchReader)
-            .writer(aldersjusteringBidragSlettVedtaksforslagBatchWriter)
+            .reader(slettVedtaksforslagBatchReader)
+            .writer(slettVedtaksforslagBatchWriter)
             .build()
 }

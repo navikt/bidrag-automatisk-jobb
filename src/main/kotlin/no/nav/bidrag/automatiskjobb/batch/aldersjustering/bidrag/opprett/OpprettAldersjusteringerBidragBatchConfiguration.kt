@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.opprettaldersjustering
+package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.opprett
 
 import no.nav.bidrag.automatiskjobb.batch.BatchCompletionNotificationListener
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
@@ -12,32 +12,32 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.transaction.PlatformTransactionManager
 
 @Configuration
-class AldersjusteringBidragOpprettAldersjusteringerBatchConfiguration {
+class OpprettAldersjusteringerBidragBatchConfiguration {
     companion object {
         const val CHUNK_SIZE = 100
     }
 
     @Bean
-    fun aldersjusteringBidragOpprettAldersjusteringerJob(
+    fun opprettAldersjusteringerBidragJob(
         jobRepository: JobRepository,
         aldersjusteringBidragOpprettAldersjusteringerStep: Step,
         listener: BatchCompletionNotificationListener,
     ): Job =
-        JobBuilder("aldersjusteringBidragOpprettAldersjusteringerJob", jobRepository)
+        JobBuilder("opprettAldersjusteringerBidragJob", jobRepository)
             .listener(listener)
             .start(aldersjusteringBidragOpprettAldersjusteringerStep)
             .build()
 
     @Bean
-    fun aldersjusteringBidragOpprettAldersjusteringerStep(
+    fun opprettAldersjusteringerBidragStep(
         jobRepository: JobRepository,
         transactionManager: PlatformTransactionManager,
-        aldersjusteringBidragOpprettAldersjusteringerBatchReader: AldersjusteringBidragOpprettAldersjusteringerBatchReader,
-        aldersjusteringBidragOpprettAldersjusteringerBatchWriter: AldersjusteringBidragOpprettAldersjusteringerBatchWriter,
+        aldersjusteringBidragOpprettAldersjusteringerBatchReader: OpprettAldersjusteringerBidragBatchReader,
+        opprettAldersjusteringerBidragBatchWriter: OpprettAldersjusteringerBidragBatchWriter,
     ): Step =
-        StepBuilder("aldersjusteringBidragOpprettAldersjusteringerStep", jobRepository)
+        StepBuilder("opprettAldersjusteringerBidragStep", jobRepository)
             .chunk<Barn, Barn>(CHUNK_SIZE, transactionManager)
             .reader(aldersjusteringBidragOpprettAldersjusteringerBatchReader)
-            .writer(aldersjusteringBidragOpprettAldersjusteringerBatchWriter)
+            .writer(opprettAldersjusteringerBidragBatchWriter)
             .build()
 }

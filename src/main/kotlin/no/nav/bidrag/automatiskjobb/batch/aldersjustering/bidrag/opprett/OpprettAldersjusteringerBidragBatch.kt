@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.opprettaldersjustering
+package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.opprett
 
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.JobParametersBuilder
@@ -8,11 +8,11 @@ import java.time.LocalDate
 import java.util.UUID
 
 @Component
-class AldersjusteringBidragOpprettAldersjusteringerBatch(
+class OpprettAldersjusteringerBidragBatch(
     private val jobLauncher: JobLauncher,
     private val aldersjusteringBidragOpprettAldersjusteringerJob: Job,
 ) {
-    fun startAldersjusteringBidragOpprettAldersjusteringBatch(
+    fun startOpprettAldersjusteringBidragBatch(
         kjøredato: LocalDate?,
         år: Long,
     ) {

@@ -11,7 +11,7 @@ import java.util.Collections
 
 @Component
 @StepScope
-class AldersjusteringBidragSlettVedtaksforslagBatchReader(
+class SlettVedtaksforslagBatchReader(
     aldersjusteringRepository: AldersjusteringRepository,
 ) : RepositoryItemReader<Aldersjustering>() {
     init {
