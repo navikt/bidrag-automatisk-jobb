@@ -7,17 +7,15 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import no.nav.bidrag.automatiskjobb.service.AldersjusteringService
 import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringResponse
+import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.sak.Saksnummer
 import no.nav.security.token.support.core.api.Protected
-import org.springframework.data.domain.PageRequest
-import org.springframework.data.domain.Sort
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import java.time.Year
 import java.time.YearMonth
 
 @Protected
@@ -95,12 +93,16 @@ class AutomatiskJobbController(
         @PathVariable saksnummer: Saksnummer,
         @RequestParam(required = false) år: Int?,
         @RequestParam(required = false) simuler: Boolean = true,
-    ): AldersjusteringResponse = aldersjusteringService.kjørAldersjusteringForSak(saksnummer, år ?: YearMonth.now().year, simuler)
+        @RequestParam(required = false) stønadstype: Stønadstype = Stønadstype.BIDRAG,
+    ): AldersjusteringResponse =
+        aldersjusteringService.kjørAldersjusteringForSak(saksnummer, år ?: YearMonth.now().year, simuler, stønadstype)
 
     @GetMapping("/barn/antall")
     @Operation(
         summary = "Hent antall barn som skal aldersjusteres",
-        description = "Operasjon for å hente antall barn som skal aldersjusteres (som fyller 6, 11 eller 15 inneværende år) for et gitt år.",
+        description =
+            "Operasjon for å hente antall barn som skal aldersjusteres " +
+                "(som fyller 6, 11 eller 15 inneværende år) for et gitt år.",
         security = [SecurityRequirement(name = "bearer-key")],
     )
     @ApiResponses(
@@ -113,53 +115,4 @@ class AutomatiskJobbController(
     )
     fun hentAntallBarnSomSkalAldersjusteres(år: Int): ResponseEntity<Any> =
         ResponseEntity.ok(aldersjusteringService.hentAntallBarnSomSkalAldersjusteresForÅr(år))
-
-    @PostMapping("/aldersjuster/bidrag")
-    @Operation(
-        summary = "Start kjøring av aldersjustering av en sak for bidrag.",
-        description = "Operasjon for å starte kjøring av aldersjustering for en sak for bidrag for et gitt år.",
-        security = [SecurityRequirement(name = "bearer-key")],
-    )
-    suspend fun aldersjusterBidrag(
-        @RequestParam(required = false) år: Int?,
-        @RequestParam(required = false) simuler: Boolean = true,
-        @RequestParam(required = false) batchId: String? = null,
-    ): AldersjusteringResponse {
-        val kjøringForÅr = år ?: Year.now().value
-        return aldersjusteringService.kjørAldersjustering(
-            kjøringForÅr,
-            batchId ?: "testkjøring_år_$kjøringForÅr",
-            simuler,
-        )
-    }
-
-    @PostMapping("/debug/aldersjuster/bidrag")
-    @Operation(
-        summary = "Start kjøring av aldersjustering av bidrag uten persistering for debugging",
-        description = "Operasjon for å starte kjøring av aldersjustering batch for bidrag for et gitt år.",
-        security = [SecurityRequirement(name = "bearer-key")],
-    )
-    suspend fun aldersjusterBidragDebug(
-        @RequestParam(required = false) år: Int?,
-        @RequestParam(required = false) simuler: Boolean = true,
-        @RequestParam(required = false) batchId: String? = null,
-        @RequestParam fromPage: Int,
-        @RequestParam(defaultValue = "100") pageSize: Int,
-    ): AldersjusteringResponse {
-        val kjøringForÅr = år ?: Year.now().value
-        val nextPage = if (fromPage > 0) fromPage - 1 else 0
-        val pageable =
-            PageRequest.of(
-                nextPage,
-                pageSize,
-                Sort.Direction.valueOf("ASC".uppercase()),
-                "fødselsdato",
-            )
-        return aldersjusteringService.kjørAldersjusteringDebug(
-            kjøringForÅr,
-            batchId ?: "testkjøring_år_$kjøringForÅr",
-            simuler,
-            pageable,
-        )
-    }
 }

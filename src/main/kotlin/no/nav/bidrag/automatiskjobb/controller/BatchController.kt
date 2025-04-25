@@ -6,10 +6,9 @@ import io.swagger.v3.oas.annotations.Parameters
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
-import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.AldersjusteringBidragBatch
-import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.opprettaldersjustering.AldersjusteringBidragOpprettAldersjusteringerBatch
+import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.opprett.OpprettAldersjusteringerBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.forskudd.AldersjusteringForskuddBatch
-import no.nav.bidrag.automatiskjobb.batch.aldersjustering.slettvedtaksforslag.AldersjusteringBidragSlettVedtaksforslagBatch
+import no.nav.bidrag.automatiskjobb.batch.aldersjustering.slettvedtaksforslag.SlettVedtaksforslagBatch
 import no.nav.security.token.support.core.api.Protected
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
@@ -21,9 +20,8 @@ import java.time.YearMonth
 @Protected
 @RestController
 class BatchController(
-    private val aldersjusteringBidragBatch: AldersjusteringBidragBatch,
-    private val aldersjusteringBidragSlettVedtaksforslagBatch: AldersjusteringBidragSlettVedtaksforslagBatch,
-    private val aldersjusteringBidragOpprettAldersjusteringerBatch: AldersjusteringBidragOpprettAldersjusteringerBatch,
+    private val slettVedtaksforslagBatch: SlettVedtaksforslagBatch,
+    private val opprettAldersjusteringerBidragBatch: OpprettAldersjusteringerBidragBatch,
     private val aldersjusteringForskuddBatch: AldersjusteringForskuddBatch,
 ) {
     @PostMapping("/aldersjuster/batch/bidrag")
@@ -79,7 +77,7 @@ class BatchController(
         @RequestParam år: Long,
         @RequestParam(required = false) simuler: Boolean = true,
     ): ResponseEntity<Any> {
-        aldersjusteringBidragBatch.startAldersjusteringBatch(forDato, kjøretidspunkt, år, simuler)
+//        aldersjusteringBidragBatch.startAldersjusteringBatch(forDato, kjøretidspunkt, år, simuler) TODO()
         return ResponseEntity.ok().build()
     }
 
@@ -99,8 +97,8 @@ class BatchController(
             ),
         ],
     )
-    fun startAldersjusteringBidragSlettVedtaksforslagBatch(): ResponseEntity<Any> {
-        aldersjusteringBidragSlettVedtaksforslagBatch.startAldersjusteringBidragSlettVedtaksforslagBatch()
+    fun startSlettVedtaksforslagBatch(): ResponseEntity<Any> {
+        slettVedtaksforslagBatch.startSlettVedtaksforslagBatch()
         return ResponseEntity.ok().build()
     }
 
@@ -140,8 +138,8 @@ class BatchController(
         @RequestParam forDato: YearMonth,
         @RequestParam(required = false) kjøretidspunkt: LocalDate?,
     ): ResponseEntity<Any> {
-        aldersjusteringForskuddBatch.startAldersjusteringBatch(forDato, kjøretidspunkt)
-        return ResponseEntity.ok().build()
+        // aldersjusteringForskuddBatch.startAldersjusteringBatch(forDato, kjøretidspunkt)
+        return ResponseEntity.noContent().build()
     }
 
     @PostMapping("/aldersjuster/batch/bidrag/opprett")
@@ -177,11 +175,11 @@ class BatchController(
             ),
         ],
     )
-    fun startAldersjusteringBidragOpprettBatch(
+    fun startOpprettAldersjusteringBidragBatch(
         @RequestParam år: Long,
         @RequestParam(required = false) kjøretidspunkt: LocalDate?,
     ): ResponseEntity<Any> {
-        aldersjusteringBidragOpprettAldersjusteringerBatch.startAldersjusteringBidragOpprettAldersjusteringBatch(
+        opprettAldersjusteringerBidragBatch.startOpprettAldersjusteringBidragBatch(
             kjøretidspunkt,
             år,
         )

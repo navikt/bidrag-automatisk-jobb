@@ -18,13 +18,13 @@ data class Aldersjustering(
     @Column(name = "batch_id", nullable = false)
     val batchId: String,
     @Column(name = "vedtaksid_beregning")
-    val vedtaksidBeregning: Int? = null,
+    var vedtaksidBeregning: Int? = null,
     @Column(name = "barn_id", nullable = false)
     val barnId: Int,
     @Column(name = "aldersgruppe", nullable = false)
     val aldersgruppe: Int,
     @Column(name = "lopende_belop")
-    val lopendeBelop: BigDecimal? = null,
+    var lopendeBelop: BigDecimal? = null,
     @Column(name = "begrunnelse")
     var begrunnelse: List<String>? = null,
     @Column(name = "status", nullable = false)

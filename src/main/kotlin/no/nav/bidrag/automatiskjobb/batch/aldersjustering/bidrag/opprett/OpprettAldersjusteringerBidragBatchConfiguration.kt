@@ -20,24 +20,24 @@ class OpprettAldersjusteringerBidragBatchConfiguration {
     @Bean
     fun opprettAldersjusteringerBidragJob(
         jobRepository: JobRepository,
-        aldersjusteringBidragOpprettAldersjusteringerStep: Step,
+        opprettAldersjusteringerBidragStep: Step,
         listener: BatchCompletionNotificationListener,
     ): Job =
         JobBuilder("opprettAldersjusteringerBidragJob", jobRepository)
             .listener(listener)
-            .start(aldersjusteringBidragOpprettAldersjusteringerStep)
+            .start(opprettAldersjusteringerBidragStep)
             .build()
 
     @Bean
     fun opprettAldersjusteringerBidragStep(
         jobRepository: JobRepository,
         transactionManager: PlatformTransactionManager,
-        aldersjusteringBidragOpprettAldersjusteringerBatchReader: OpprettAldersjusteringerBidragBatchReader,
+        opprettAldersjusteringerBidragBatchReader: OpprettAldersjusteringerBidragBatchReader,
         opprettAldersjusteringerBidragBatchWriter: OpprettAldersjusteringerBidragBatchWriter,
     ): Step =
         StepBuilder("opprettAldersjusteringerBidragStep", jobRepository)
             .chunk<Barn, Barn>(CHUNK_SIZE, transactionManager)
-            .reader(aldersjusteringBidragOpprettAldersjusteringerBatchReader)
+            .reader(opprettAldersjusteringerBidragBatchReader)
             .writer(opprettAldersjusteringerBidragBatchWriter)
             .build()
 }
