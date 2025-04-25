@@ -144,7 +144,7 @@ class AldersjusteringService(
                 Saksnummer(barn.saksnummer),
             )
         try {
-            val (vedtaksidBeregning, resultatBeregning) = aldersjusteringOrchestrator.utførAldersjustering(stønadsid, år)
+            val (vedtaksidBeregning, løpendeBeløp, resultatBeregning) = aldersjusteringOrchestrator.utførAldersjustering(stønadsid, år)
             val vedtaksforslagRequest = vedtakMapper.tilOpprettVedtakRequest(resultatBeregning, stønadsid, batchId)
             if (simuler) {
                 log.info { "Kjører aldersjustering i simuleringsmodus. Oppretter ikke vedtaksforslag" }
