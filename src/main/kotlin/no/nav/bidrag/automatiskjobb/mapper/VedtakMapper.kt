@@ -39,6 +39,7 @@ class VedtakMapper(
                         gjelderReferanse = it.gjelderReferanse,
                         gjelderBarnReferanse = it.gjelderBarnReferanse,
                         innhold = it.innhold,
+                        grunnlagsreferanseListe = it.grunnlagsreferanseListe,
                         type = it.type,
                     )
                 },
