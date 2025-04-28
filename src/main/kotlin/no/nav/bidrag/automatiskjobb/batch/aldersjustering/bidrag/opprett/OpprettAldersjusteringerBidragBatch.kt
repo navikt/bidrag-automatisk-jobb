@@ -1,26 +1,27 @@
-package no.nav.bidrag.automatiskjobb.batch.bidrag
+package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.opprett
 
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.JobParametersBuilder
 import org.springframework.batch.core.launch.JobLauncher
 import org.springframework.stereotype.Component
 import java.time.LocalDate
-import java.time.YearMonth
+import java.util.UUID
 
 @Component
-class AldersjusteringBidragBatch(
+class OpprettAldersjusteringerBidragBatch(
     private val jobLauncher: JobLauncher,
-    private val aldersjusteringBidragJob: Job,
+    private val opprettAldersjusteringerBidragJob: Job,
 ) {
-    fun startAldersjusteringBatch(
-        forDato: YearMonth,
+    fun startOpprettAldersjusteringBidragBatch(
         kjøredato: LocalDate?,
+        år: Long,
     ) {
         jobLauncher.run(
-            aldersjusteringBidragJob,
+            opprettAldersjusteringerBidragJob,
             JobParametersBuilder()
-                .addLocalDate("forDato", forDato.atDay(1))
                 .addLocalDate("kjøredato", kjøredato ?: LocalDate.now())
+                .addLong("år", år)
+                .addString("runId", UUID.randomUUID().toString())
                 .toJobParameters(),
         )
     }

@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.batch.forskudd
+package no.nav.bidrag.automatiskjobb.batch.aldersjustering.forskudd
 
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.JobParametersBuilder

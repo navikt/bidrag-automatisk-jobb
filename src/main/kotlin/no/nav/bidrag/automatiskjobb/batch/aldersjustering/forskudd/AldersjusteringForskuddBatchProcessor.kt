@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.batch.bidrag
+package no.nav.bidrag.automatiskjobb.batch.aldersjustering.forskudd
 
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import org.slf4j.LoggerFactory
@@ -6,9 +6,9 @@ import org.springframework.batch.item.ItemProcessor
 import org.springframework.stereotype.Component
 
 @Component
-class AldersjusteringBidragBatchProcessor : ItemProcessor<Barn, Barn> {
+class AldersjusteringForskuddBatchProcessor : ItemProcessor<Barn, Barn> {
     companion object {
-        private val LOGGER = LoggerFactory.getLogger(AldersjusteringBidragBatchProcessor::class.java)
+        private val LOGGER = LoggerFactory.getLogger(AldersjusteringForskuddBatchProcessor::class.java)
     }
 
     override fun process(barn: Barn): Barn {

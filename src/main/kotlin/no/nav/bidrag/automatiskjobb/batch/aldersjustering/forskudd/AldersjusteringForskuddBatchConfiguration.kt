@@ -1,6 +1,6 @@
-package no.nav.bidrag.automatiskjobb.batch.bidrag
+package no.nav.bidrag.automatiskjobb.batch.aldersjustering.forskudd
 
-import no.nav.bidrag.automatiskjobb.batch.AldersjusteringJobCompletionNotificationListener
+import no.nav.bidrag.automatiskjobb.batch.BatchCompletionNotificationListener
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.Step
@@ -14,34 +14,34 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.transaction.PlatformTransactionManager
 
 @Configuration
-class AldersjusteringBidragBatchConfiguration {
+class AldersjusteringForskuddBatchConfiguration {
     companion object {
         const val CHUNK_SIZE = 100
     }
 
     @Bean
-    fun aldersjusteringBidragJob(
+    fun aldersjusteringForskuddJob(
         jobRepository: JobRepository,
-        aldersjusteringBidragStep: Step,
-        listener: AldersjusteringJobCompletionNotificationListener,
+        aldersjusteringForskuddStep: Step,
+        listener: BatchCompletionNotificationListener,
     ): Job =
-        JobBuilder("aldersjusteringBidragJob", jobRepository)
+        JobBuilder("aldersjusteringForskuddJob", jobRepository)
             .listener(listener)
-            .start(aldersjusteringBidragStep)
+            .start(aldersjusteringForskuddStep)
             .build()
 
     @Bean
-    fun aldersjusteringBidragStep(
+    fun aldersjusteringForskuddStep(
         jobRepository: JobRepository,
         transactionManager: PlatformTransactionManager,
-        aldersjusteringBidragBatchReader: RepositoryItemReader<Barn>,
-        aldersjusteringBidragBatchProcessor: AldersjusteringBidragBatchProcessor,
+        aldersjusteringForskuddBatchReader: RepositoryItemReader<Barn>,
+        aldersjusteringForskuddBatchProcessor: AldersjusteringForskuddBatchProcessor,
         aldersjusteringBatchWriter: RepositoryItemWriter<Barn>,
     ): Step =
-        StepBuilder("aldersjusteringBidragStep", jobRepository)
+        StepBuilder("aldersjusteringForskuddStep", jobRepository)
             .chunk<Barn, Barn>(CHUNK_SIZE, transactionManager)
-            .reader(aldersjusteringBidragBatchReader)
-            .processor(aldersjusteringBidragBatchProcessor)
+            .reader(aldersjusteringForskuddBatchReader)
+            .processor(aldersjusteringForskuddBatchProcessor)
             .writer(aldersjusteringBatchWriter)
             .build()
 }

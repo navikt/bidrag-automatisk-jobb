@@ -1,6 +1,7 @@
 package no.nav.bidrag.automatiskjobb.aop
 
 import no.nav.security.token.support.spring.validation.interceptor.JwtTokenUnauthorizedException
+import org.postgresql.util.PSQLException
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -58,6 +59,16 @@ class DefaultRestControllerAdvice {
         return ResponseEntity
             .status(HttpStatus.UNAUTHORIZED)
             .header(HttpHeaders.WARNING, "Ugyldig eller manglende sikkerhetstoken")
+            .build<Any>()
+    }
+
+    @ResponseBody
+    @ExceptionHandler(PSQLException::class)
+    fun handlePSQLException(exception: PSQLException): ResponseEntity<*> {
+        LOGGER.warn("Brudd på constraint ved insert i database", exception)
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .header(HttpHeaders.WARNING, "Brudd på constraint ved insert i database: ${exception.message}")
             .build<Any>()
     }
 }

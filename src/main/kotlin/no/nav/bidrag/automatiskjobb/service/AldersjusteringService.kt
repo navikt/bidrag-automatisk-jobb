@@ -1,16 +1,15 @@
 package no.nav.bidrag.automatiskjobb.service
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.runBlocking
 import no.nav.bidrag.automatiskjobb.combinedLogger
 import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer
 import no.nav.bidrag.automatiskjobb.mapper.VedtakMapper
+import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
+import no.nav.bidrag.automatiskjobb.persistence.entity.Behandlingstype
+import no.nav.bidrag.automatiskjobb.persistence.entity.Status
+import no.nav.bidrag.automatiskjobb.persistence.repository.AldersjusteringRepository
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
 import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringAldersjustertResultat
 import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringIkkeAldersjustertResultat
@@ -18,13 +17,9 @@ import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringResponse
 import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringResultat
 import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringResultatResponse
 import no.nav.bidrag.automatiskjobb.service.model.OpprettVedtakConflictResponse
-import no.nav.bidrag.automatiskjobb.utils.ugyldigForespørsel
 import no.nav.bidrag.beregn.barnebidrag.service.AldersjusteresManueltException
 import no.nav.bidrag.beregn.barnebidrag.service.AldersjusteringOrchestrator
 import no.nav.bidrag.beregn.barnebidrag.service.SkalIkkeAldersjusteresException
-import no.nav.bidrag.commons.util.RequestContextAsyncContext
-import no.nav.bidrag.commons.util.SecurityCoroutineContext
-import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.domene.enums.rolle.Rolletype
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.ident.Personident
@@ -41,101 +36,91 @@ private val log = KotlinLogging.logger {}
 @Service
 class AldersjusteringService(
     private val barnRepository: BarnRepository,
+    private val alderjusteringRepository: AldersjusteringRepository,
     private val aldersjusteringOrchestrator: AldersjusteringOrchestrator,
     private val vedtakConsumer: BidragVedtakConsumer,
     private val sakConsumer: BidragSakConsumer,
     private val vedtakMapper: VedtakMapper,
 ) {
-    suspend fun kjørAldersjustering(
-        år: Int,
-        batchId: String,
-        simuler: Boolean = true,
-    ): AldersjusteringResponse {
-        val barnSomSkalAldersjusteres = hentAlleBarnSomSkalAldersjusteresForÅr(år)
-        // TODO: Sjekk om barn finnes i aldersjustering tabell. Ellers lagre
-        // TODO: Sjekk Status aldersjustering tabell. Ignorer hvis status ikke er UBEHANDLET
-        val resultat =
-            barnSomSkalAldersjusteres
-                .flatMap { (alder, barnListe) ->
-                    secureLogger.info { "Aldersjustering av bidrag for aldersgruppe $alder. Simuler=$simuler" }
-                    barnListe.utførAldersjusteringBidrag(år, batchId, simuler)
-                }
-        return AldersjusteringResponse(
-            aldersjustert =
-                resultat.filterIsInstance<AldersjusteringAldersjustertResultat>().let {
-                    AldersjusteringResultatResponse(
-                        antall = it.size,
-                        stønadsider = it.map { barn -> barn.stønadsid },
-                        detaljer = it,
-                    )
-                },
-            ikkeAldersjustert =
-                resultat.filterIsInstance<AldersjusteringIkkeAldersjustertResultat>().let {
-                    AldersjusteringResultatResponse(
-                        antall = it.size,
-                        stønadsider = it.map { barn -> barn.stønadsid },
-                        detaljer = it,
-                    )
-                },
-        )
-    }
-
     fun kjørAldersjusteringForSak(
         saksnummer: Saksnummer,
         år: Int,
         simuler: Boolean,
+        stønadstype: Stønadstype,
     ): AldersjusteringResponse {
         val sak = sakConsumer.hentSak(saksnummer.verdi)
         val barnISaken = sak.roller.filter { it.type == Rolletype.BARN }
-        val bp = sak.roller.find { it.type == Rolletype.BIDRAGSPLIKTIG } ?: ugyldigForespørsel("Fant ikke BP for sak $saksnummer")
-        val resultat =
-            barnISaken.map {
-                utførAldersjusteringForBarn(
-                    Stønadstype.BIDRAG,
-                    Barn(
-                        kravhaver = it.fødselsnummer!!.verdi,
-                        skyldner = bp.fødselsnummer!!.verdi,
-                        saksnummer = saksnummer.verdi,
-                    ),
-                    år,
-                    "aldersjustering-sak-$saksnummer",
-                    simuler,
-                )
-            }
+        val barnListe = barnISaken.flatMap { barnRepository.findAllByKravhaver(it.fødselsnummer!!.verdi) }
 
-        return AldersjusteringResponse(
-            aldersjustert =
-                resultat.filterIsInstance<AldersjusteringAldersjustertResultat>().let {
-                    AldersjusteringResultatResponse(
-                        antall = it.size,
-                        stønadsider = it.map { barn -> barn.stønadsid },
-                        detaljer = it,
-                    )
-                },
-            ikkeAldersjustert =
-                resultat.filterIsInstance<AldersjusteringIkkeAldersjustertResultat>().let {
-                    AldersjusteringResultatResponse(
-                        antall = it.size,
-                        stønadsider = it.map { barn -> barn.stønadsid },
-                        detaljer = it,
-                    )
-                },
+        return opprettOgUtførAldersjusteringForBarn(
+            barnListe,
+            år,
+            "aldersjustering-sak-$saksnummer",
+            stønadstype,
+            simuler,
         )
     }
 
-    private fun List<Barn>.utførAldersjusteringBidrag(
+    private fun opprettOgUtførAldersjusteringForBarn(
+        barnListe: List<Barn>,
         år: Int,
         batchId: String,
-        simuler: Boolean = true,
-    ): List<AldersjusteringResultat> = map { barn -> utførAldersjusteringForBarn(Stønadstype.BIDRAG, barn, år, batchId, simuler) }
-
-    fun utførAldersjusteringForBarn(
         stønadstype: Stønadstype,
+        simuler: Boolean,
+    ): AldersjusteringResponse {
+        barnListe.forEach {
+            opprettAldersjusteringForBarn(
+                it,
+                år,
+                batchId,
+            )
+        }
+
+        val aldersjusteringListe =
+            alderjusteringRepository
+                .finnForFlereStatuser(listOf(Status.SLETTET, Status.UBEHANDLET, Status.FEILET))
+                .toMutableList()
+
+        val resultat =
+            aldersjusteringListe.map {
+                utførAldersjustering(it, stønadstype, simuler)
+            }
+
+        return opprettAldersjusteringResponse(resultat)
+    }
+
+    fun opprettAldersjusteringForBarn(
         barn: Barn,
         år: Int,
         batchId: String,
-        simuler: Boolean = true,
+    ) {
+        val aldersgruppe = år - barn.fødselsdato.year
+
+        if (!alderjusteringRepository.existsAldersjusteringsByBarnIdAndAldersgruppe(barn.id!!, aldersgruppe)) {
+            val aldersjustering =
+                Aldersjustering(
+                    batchId = batchId,
+                    barnId = barn.id!!,
+                    aldersgruppe = aldersgruppe,
+                    status = Status.UBEHANDLET,
+                )
+            val id = alderjusteringRepository.save(aldersjustering).id
+            log.info { "Opprettet aldersjustering $id for barn ${barn.id}." }
+        } else {
+            log.info { "Aldersjustering for barn ${barn.id} er allerede opprettet." }
+        }
+    }
+
+    fun utførAldersjustering(
+        aldersjustering: Aldersjustering,
+        stønadstype: Stønadstype,
+        simuler: Boolean,
     ): AldersjusteringResultat {
+        val barn =
+            barnRepository
+                .findById(aldersjustering.barnId)
+                .orElseThrow { error("Fant ikke barn med id ${aldersjustering.barnId}") }
+
         val stønadsid =
             Stønadsid(
                 stønadstype,
@@ -143,36 +128,110 @@ class AldersjusteringService(
                 Personident(barn.skyldner!!),
                 Saksnummer(barn.saksnummer),
             )
+
         try {
-            val (vedtaksidBeregning, løpendeBeløp, resultatBeregning) = aldersjusteringOrchestrator.utførAldersjustering(stønadsid, år)
-            val vedtaksforslagRequest = vedtakMapper.tilOpprettVedtakRequest(resultatBeregning, stønadsid, batchId)
+            val (vedtaksidBeregning, løpendeBeløp, resultatBeregning) =
+                aldersjusteringOrchestrator.utførAldersjustering(
+                    stønadsid,
+                    barn.fødselsdato.year + aldersjustering.aldersgruppe,
+                )
+
+            val vedtaksforslagRequest =
+                vedtakMapper.tilOpprettVedtakRequest(resultatBeregning, stønadsid, aldersjustering.batchId)
+
             if (simuler) {
-                log.info { "Kjører aldersjustering i simuleringsmodus. Oppretter ikke vedtaksforslag" }
-                return AldersjusteringAldersjustertResultat(-1, stønadsid, vedtaksforslagRequest)
+                val aldersjusteringAldersjustertResultat =
+                    AldersjusteringAldersjustertResultat(-1, stønadsid, vedtaksforslagRequest)
+                log.info {
+                    "Kjører aldersjustering i simuleringsmodus. Oppretter ikke vedtaksforslag. Dette ble resultatet: $aldersjusteringAldersjustertResultat"
+                }
+                return aldersjusteringAldersjustertResultat
             }
 
             val vedtaksid = opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
-            // TODO: Lagre vedtaksid
-            // TODO: Status BEHANDLET
-            // TODO: behandlingType = FATTET_FORSLAG
+
+            aldersjustering.vedtaksidBeregning = vedtaksidBeregning
+            aldersjustering.lopendeBelop = løpendeBeløp
+            aldersjustering.vedtak = vedtaksid
+            aldersjustering.status = Status.BEHANDLET
+            aldersjustering.behandlingstype = Behandlingstype.FATTET_FORSLAG
+
+            alderjusteringRepository.save(aldersjustering)
+
             return AldersjusteringAldersjustertResultat(vedtaksid, stønadsid, vedtaksforslagRequest)
         } catch (e: SkalIkkeAldersjusteresException) {
-            // TODO: Håndter feil
-            // TODO: Status BEHANDLET
-            // TODO: behandlingType = INGEN
-            combinedLogger.warn(e) { "Stønad $stønadsid skal ikke aldersjusteres med begrunnelse ${e.begrunnelser.joinToString(", ")}" }
+            aldersjustering.vedtaksidBeregning = e.vedtaksid
+            aldersjustering.status = Status.BEHANDLET
+            aldersjustering.behandlingstype = Behandlingstype.INGEN
+
+            alderjusteringRepository.save(aldersjustering)
+
+            combinedLogger.warn(e) {
+                "Stønad $stønadsid skal ikke aldersjusteres med begrunnelse ${e.begrunnelser.joinToString(", ")}"
+            }
             return AldersjusteringIkkeAldersjustertResultat(stønadsid, e.begrunnelser.joinToString(", "))
         } catch (e: AldersjusteresManueltException) {
-            // TODO: Status BEHANDLET
-            // TODO: behandlingType = MANUELL
+            aldersjustering.vedtaksidBeregning = e.vedtaksid
+            aldersjustering.status = Status.BEHANDLET
+            aldersjustering.behandlingstype = Behandlingstype.MANUELL
+
+            alderjusteringRepository.save(aldersjustering)
+
             combinedLogger.warn(e) { "Stønad $stønadsid skal aldersjusteres manuelt med begrunnelse ${e.begrunnelse}" }
             return AldersjusteringIkkeAldersjustertResultat(stønadsid, e.begrunnelse.name)
         } catch (e: Exception) {
-            // TODO: Status BEHANDLET
-            // TODO: behandlingType = FEILET
+            aldersjustering.status = Status.FEILET
+            aldersjustering.behandlingstype = Behandlingstype.FEILET
+
+            alderjusteringRepository.save(aldersjustering)
+
             combinedLogger.error(e) { "Det skjedde en feil ved aldersjustering for stønad $stønadsid" }
             return AldersjusteringIkkeAldersjustertResultat(stønadsid, "Teknisk feil: ${e.message}")
         }
+    }
+
+    private fun opprettAldersjusteringResponse(resultat: List<AldersjusteringResultat>): AldersjusteringResponse =
+        AldersjusteringResponse(
+            aldersjustert =
+                resultat.filterIsInstance<AldersjusteringAldersjustertResultat>().let {
+                    AldersjusteringResultatResponse(
+                        antall = it.size,
+                        stønadsider = it.map { barn -> barn.stønadsid },
+                        detaljer = it,
+                    )
+                },
+            ikkeAldersjustert =
+                resultat.filterIsInstance<AldersjusteringIkkeAldersjustertResultat>().let {
+                    AldersjusteringResultatResponse(
+                        antall = it.size,
+                        stønadsider = it.map { barn -> barn.stønadsid },
+                        detaljer = it,
+                    )
+                },
+        )
+
+    fun slettVedtaksforslag(
+        stønadstype: Stønadstype,
+        aldersjustering: Aldersjustering,
+    ) {
+        val barn =
+            barnRepository
+                .findById(aldersjustering.barnId)
+                .orElseThrow { error("Fant ikke barn med id ${aldersjustering.barnId}") }
+
+        val stønadsid =
+            Stønadsid(
+                stønadstype,
+                Personident(barn.kravhaver),
+                Personident(barn.skyldner!!),
+                Saksnummer(barn.saksnummer),
+            )
+
+        log.info { "Aldersjustering for barn ${barn.id} med stønadsid: $aldersjustering. skal slettes. Sletter.." }
+        aldersjustering.vedtak = null
+        aldersjustering.status = Status.SLETTET
+        val unikReferanse = "aldersjustering_${aldersjustering.batchId}_${stønadsid.toReferanse()}"
+        slettEksisterendeVedtaksforslag(unikReferanse)
     }
 
     private fun opprettEllerOppdaterVedtaksforslag(request: OpprettVedtakRequestDto) =
@@ -209,60 +268,19 @@ class AldersjusteringService(
                 .groupBy { år - it.fødselsdato.year }
                 .mapValues { it.value.sortedBy { barn -> barn.fødselsdato } }
 
-        log.info { "Antall barn ${ result.getLengths()}" }
+        log.info { "Antall barn ${result.getLengths()}" }
         return result
     }
 
-    private suspend fun List<Barn>.utførAldersjusteringBidragAsync(
-        år: Int,
-        batchId: String,
-        simuler: Boolean = true,
-    ): List<AldersjusteringResultat> {
-        val scope =
-            CoroutineScope(Dispatchers.IO + SecurityCoroutineContext() + RequestContextAsyncContext())
-        return runBlocking {
-            map { barn ->
-                scope.async {
-                    utførAldersjusteringForBarn(Stønadstype.BIDRAG, barn, år, batchId, simuler)
-                }
-            }.awaitAll()
-        }
-    }
+    fun hentAntallBarnSomSkalAldersjusteresForÅr(år: Int): Int =
+        barnRepository
+            .finnBarnSomSkalAldersjusteresForÅr(år)
+            .groupBy { år - it.fødselsdato.year }
+            .size
 
-    suspend fun kjørAldersjusteringDebug(
-        år: Int,
-        batchId: String,
-        simuler: Boolean = true,
-        paging: Pageable = Pageable.ofSize(100),
-    ): AldersjusteringResponse {
-        val barnSomSkalAldersjusteres = hentAlleBarnSomSkalAldersjusteresForÅr(år, paging = paging)
-        // TODO: Sjekk om barn finnes i aldersjustering tabell. Ellers lagre
-        // TODO: Sjekk Status aldersjustering tabell. Ignorer hvis status ikke er UBEHANDLET
-        val resultat =
-            barnSomSkalAldersjusteres
-                .flatMap { (alder, barnListe) ->
-                    secureLogger.info { "Aldersjustering av bidrag for aldersgruppe $alder. Simuler=$simuler" }
-                    barnListe.utførAldersjusteringBidragAsync(år, batchId, simuler)
-                }
-        return AldersjusteringResponse(
-            aldersjustert =
-                resultat.filterIsInstance<AldersjusteringAldersjustertResultat>().let {
-                    AldersjusteringResultatResponse(
-                        antall = it.size,
-                        stønadsider = it.map { barn -> barn.stønadsid },
-                        detaljer = it,
-                    )
-                },
-            ikkeAldersjustert =
-                resultat.filterIsInstance<AldersjusteringIkkeAldersjustertResultat>().let {
-                    AldersjusteringResultatResponse(
-                        antall = it.size,
-                        stønadsider = it.map { barn -> barn.stønadsid },
-                        detaljer = it,
-                    )
-                },
-        )
-    }
+    fun hentAldersjustering(id: Int): Aldersjustering? = alderjusteringRepository.findById(id).orElseGet { null }
+
+    fun lagreAldersjustering(aldersjustering: Aldersjustering): Int? = alderjusteringRepository.save(aldersjustering).id
 }
 
 fun Map<Int, List<Barn>>.getLengths(): Map<Int, Int> = this.mapValues { it.value.size }
