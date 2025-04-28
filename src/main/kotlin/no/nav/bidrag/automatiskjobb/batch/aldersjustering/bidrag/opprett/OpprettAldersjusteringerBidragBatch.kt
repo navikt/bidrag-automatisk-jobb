@@ -10,14 +10,14 @@ import java.util.UUID
 @Component
 class OpprettAldersjusteringerBidragBatch(
     private val jobLauncher: JobLauncher,
-    private val aldersjusteringBidragOpprettAldersjusteringerJob: Job,
+    private val opprettAldersjusteringerBidragJob: Job,
 ) {
     fun startOpprettAldersjusteringBidragBatch(
         kjøredato: LocalDate?,
         år: Long,
     ) {
         jobLauncher.run(
-            aldersjusteringBidragOpprettAldersjusteringerJob,
+            opprettAldersjusteringerBidragJob,
             JobParametersBuilder()
                 .addLocalDate("kjøredato", kjøredato ?: LocalDate.now())
                 .addLong("år", år)
