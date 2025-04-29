@@ -46,7 +46,7 @@ class BidragPersonConsumer(
     @BrukerCacheable(PERSON_FØDSELSDATO_CACHE)
     override fun hentFødselsdatoForPerson(personident: Personident): LocalDate {
         val response = postForNonNullEntity<NavnFødselDødDto>(hentFødselsnummerUri, PersonRequest(personident))
-        return response.fødselsdato ?: opprettFødselsdatoFraFødselsår(response.fødselsår)
+        return response.fødselsdato ?: opprettFødselsdatoFraFødselsår(response.fødselsår!!)
     }
 
     @BrukerCacheable(PERSON_CACHE)
