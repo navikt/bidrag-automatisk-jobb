@@ -56,12 +56,13 @@ class BidragVedtakListener(
         metode: (vedtakhendelse: VedtakHendelse) -> Unit,
     ) {
         LOGGER.debug("Behandler vedtakhendelse med offset: $offset i consumergroup: $groupId for topic: $topic")
-        SECURE_LOGGER.debug("Behandler vedtakhendelse: $hendelse")
+        SECURE_LOGGER.debug { "Behandler vedtakhendelse: $hendelse" }
         try {
             val vedtakHendelse = mapVedtakHendelse(hendelse)
             metode(vedtakHendelse)
         } catch (e: Exception) {
             LOGGER.error("Det skjedde en feil ved prosessering av vedtak hendelse", e)
+            throw e
         }
     }
 
@@ -69,6 +70,6 @@ class BidragVedtakListener(
         try {
             commonObjectmapper.readValue(hendelse, VedtakHendelse::class.java)
         } finally {
-            SECURE_LOGGER.debug("Leser hendelse: {}", hendelse)
+            SECURE_LOGGER.debug { "${"Leser hendelse: {}"} $hendelse" }
         }
 }
