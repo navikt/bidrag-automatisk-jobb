@@ -50,7 +50,10 @@ class AldersjusteringService(
     ): AldersjusteringResponse {
         val sak = sakConsumer.hentSak(saksnummer.verdi)
         val barnISaken = sak.roller.filter { it.type == Rolletype.BARN }
-        val barnListe = barnISaken.flatMap { barnRepository.findAllByKravhaver(it.fødselsnummer!!.verdi) }
+        val barnListe =
+            barnISaken
+                .flatMap { barnRepository.findAllByKravhaver(it.fødselsnummer!!.verdi) }
+                .filter { riktigAldersgruppeForAldersjustering(it, år) }
 
         return opprettOgUtførAldersjusteringForBarn(
             barnListe,
@@ -60,6 +63,17 @@ class AldersjusteringService(
             simuler,
         )
     }
+
+    private fun riktigAldersgruppeForAldersjustering(
+        barn: Barn,
+        år: Int,
+    ): Boolean =
+        when {
+            år - barn.fødselsdato.year == 6 -> true
+            år - barn.fødselsdato.year == 11 -> true
+            år - barn.fødselsdato.year == 15 -> true
+            else -> false
+        }
 
     private fun opprettOgUtførAldersjusteringForBarn(
         barnListe: List<Barn>,
