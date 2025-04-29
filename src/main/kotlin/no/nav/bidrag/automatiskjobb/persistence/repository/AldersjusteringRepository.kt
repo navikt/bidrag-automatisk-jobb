@@ -1,6 +1,7 @@
 package no.nav.bidrag.automatiskjobb.persistence.repository
 
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
+import no.nav.bidrag.automatiskjobb.persistence.entity.Behandlingstype
 import no.nav.bidrag.automatiskjobb.persistence.entity.Status
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -36,4 +37,32 @@ interface AldersjusteringRepository : JpaRepository<Aldersjustering, Int> {
         barnId: Int,
         aldersgruppe: Int,
     ): Boolean
+
+    @Suppress("Brukes i batch")
+    @Query(
+        "SELECT a FROM aldersjustering a " +
+            "WHERE a.behandlingstype IN :behandlingstyper " +
+            "AND a.status IN :statuser " +
+            "AND a.oppgave IS NULL",
+    )
+    fun finnForBehandlingstypeOgStatus(
+        @Param("behandlingstype") behandlingstyper: List<Behandlingstype>,
+        @Param("status") statuser: List<Status>,
+        pageable: Pageable = Pageable.ofSize(100),
+    ): Page<Aldersjustering>
+
+    @Suppress("Brukes i batch")
+    @Query(
+        "SELECT a FROM aldersjustering a " +
+            "WHERE a.barnId in :barnid " +
+            "AND a.behandlingstype IN :behandlingstyper " +
+            "AND a.status IN :statuser " +
+            "AND a.oppgave IS NULL",
+    )
+    fun finnForBarnBehandlingstypeOgStatus(
+        @Param("barnid") barn: List<Int>,
+        @Param("behandlingstype") behandlingstyper: List<Behandlingstype>,
+        @Param("status") statuser: List<Status>,
+        pageable: Pageable = Pageable.ofSize(100),
+    ): Page<Aldersjustering>
 }

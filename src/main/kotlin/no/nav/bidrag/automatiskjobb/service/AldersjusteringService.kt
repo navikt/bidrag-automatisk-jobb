@@ -41,6 +41,8 @@ class AldersjusteringService(
     private val vedtakConsumer: BidragVedtakConsumer,
     private val sakConsumer: BidragSakConsumer,
     private val vedtakMapper: VedtakMapper,
+    private val bidragVedtakConsumer: BidragVedtakConsumer,
+    private val oppgaveService: OppgaveService,
 ) {
     fun kjørAldersjusteringForSak(
         saksnummer: Saksnummer,
@@ -212,6 +214,19 @@ class AldersjusteringService(
             combinedLogger.error(e) { "Det skjedde en feil ved aldersjustering for stønad $stønadsid" }
             return AldersjusteringIkkeAldersjustertResultat(stønadsid, "Teknisk feil: ${e.message}")
         }
+    }
+
+    fun fattVedtakOmAldersjustering(aldersjustering: Aldersjustering) {
+        bidragVedtakConsumer.fatteVedtaksforslag(aldersjustering.vedtak ?: error("Aldersjustering ${aldersjustering.id} mangler vedtak!"))
+        aldersjustering.status = Status.FATTET
+        alderjusteringRepository.save(aldersjustering)
+    }
+
+    fun opprettOppgaveForAldersjustering(aldersjustering: Aldersjustering) {
+        // oppgaveService.opprettRevurderForskuddOppgave()  TODO()
+        val oppdageId = 1
+        aldersjustering.oppgave = oppdageId
+        alderjusteringRepository.save(aldersjustering)
     }
 
     private fun opprettAldersjusteringResponse(resultat: List<AldersjusteringResultat>): AldersjusteringResponse =
