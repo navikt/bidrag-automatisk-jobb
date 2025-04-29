@@ -10,7 +10,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
 
 const val PROFILE_NAIS = "nais"
-val SECURE_LOGGER: Logger = LoggerFactory.getLogger("secureLogger")
+val SECURE_LOGGER: Logger = LoggerFactory.getLogger("secureLog")
 val combinedLogger = KotlinLogging.logger("combinedLogger")
 
 @SpringBootApplication(exclude = [SecurityAutoConfiguration::class, ManagementWebSecurityAutoConfiguration::class])
