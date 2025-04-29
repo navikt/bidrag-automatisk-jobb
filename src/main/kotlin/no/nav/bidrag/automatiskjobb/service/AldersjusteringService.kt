@@ -160,6 +160,10 @@ class AldersjusteringService(
 
             return AldersjusteringAldersjustertResultat(vedtaksid, stønadsid, vedtaksforslagRequest)
         } catch (e: SkalIkkeAldersjusteresException) {
+            if (simuler) {
+                return AldersjusteringIkkeAldersjustertResultat(stønadsid, e.begrunnelser.joinToString(", "))
+            }
+
             aldersjustering.vedtaksidBeregning = e.vedtaksid
             aldersjustering.status = Status.BEHANDLET
             aldersjustering.behandlingstype = Behandlingstype.INGEN
@@ -171,6 +175,9 @@ class AldersjusteringService(
             }
             return AldersjusteringIkkeAldersjustertResultat(stønadsid, e.begrunnelser.joinToString(", "))
         } catch (e: AldersjusteresManueltException) {
+            if (simuler) {
+                return AldersjusteringIkkeAldersjustertResultat(stønadsid, e.begrunnelse.name)
+            }
             aldersjustering.vedtaksidBeregning = e.vedtaksid
             aldersjustering.status = Status.BEHANDLET
             aldersjustering.behandlingstype = Behandlingstype.MANUELL
@@ -180,6 +187,9 @@ class AldersjusteringService(
             combinedLogger.warn(e) { "Stønad $stønadsid skal aldersjusteres manuelt med begrunnelse ${e.begrunnelse}" }
             return AldersjusteringIkkeAldersjustertResultat(stønadsid, e.begrunnelse.name)
         } catch (e: Exception) {
+            if (simuler) {
+                return AldersjusteringIkkeAldersjustertResultat(stønadsid, "Teknisk feil: ${e.message}")
+            }
             aldersjustering.status = Status.FEILET
             aldersjustering.behandlingstype = Behandlingstype.FEILET
 
