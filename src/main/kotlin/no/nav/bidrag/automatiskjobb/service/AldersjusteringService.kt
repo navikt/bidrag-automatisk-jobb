@@ -189,6 +189,7 @@ class AldersjusteringService(
             aldersjustering.vedtaksidBeregning = e.vedtaksid
             aldersjustering.status = Status.BEHANDLET
             aldersjustering.behandlingstype = Behandlingstype.INGEN
+            aldersjustering.begrunnelse = e.begrunnelser.map { it.name }
 
             alderjusteringRepository.save(aldersjustering)
 
@@ -203,6 +204,7 @@ class AldersjusteringService(
             aldersjustering.vedtaksidBeregning = e.vedtaksid
             aldersjustering.status = Status.BEHANDLET
             aldersjustering.behandlingstype = Behandlingstype.MANUELL
+            aldersjustering.begrunnelse = listOf(e.begrunnelse.name)
 
             alderjusteringRepository.save(aldersjustering)
 
@@ -214,6 +216,7 @@ class AldersjusteringService(
             }
             aldersjustering.status = Status.FEILET
             aldersjustering.behandlingstype = Behandlingstype.FEILET
+            aldersjustering.begrunnelse = listOf(e.message ?: "Ukjent feil")
 
             alderjusteringRepository.save(aldersjustering)
 
