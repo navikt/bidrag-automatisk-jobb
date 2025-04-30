@@ -6,6 +6,9 @@ import io.swagger.v3.oas.annotations.Parameters
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.beregn.BeregnAldersjusteringerBidragBatch
+import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.fattvedtak.FattVedtakOmAldersjusteringerBidragBatch
+import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.oppgave.OppgaveAldersjusteringBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.opprett.OpprettAldersjusteringerBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.forskudd.AldersjusteringForskuddBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.slettvedtaksforslag.SlettVedtaksforslagBatch
@@ -22,7 +25,10 @@ import java.time.YearMonth
 class BatchController(
     private val slettVedtaksforslagBatch: SlettVedtaksforslagBatch,
     private val opprettAldersjusteringerBidragBatch: OpprettAldersjusteringerBidragBatch,
+    private val fattVedtakOmAldersjusteringerBidragBatch: FattVedtakOmAldersjusteringerBidragBatch,
+    private val oppgaveAldersjusteringBidragBatch: OppgaveAldersjusteringBidragBatch,
     private val aldersjusteringForskuddBatch: AldersjusteringForskuddBatch,
+    private val beregnAldersjusteringerBidragBatch: BeregnAldersjusteringerBidragBatch,
 ) {
     @PostMapping("/aldersjuster/batch/bidrag")
     @Operation(
@@ -182,6 +188,110 @@ class BatchController(
         opprettAldersjusteringerBidragBatch.startOpprettAldersjusteringBidragBatch(
             kjøretidspunkt,
             år,
+        )
+        return ResponseEntity.ok().build()
+    }
+
+    @PostMapping("/aldersjuster/batch/bidrag/fattVedtak")
+    @Operation(
+        summary = "Start kjøring av batch for å fatte vedtak om aldersjusteringer.",
+        description =
+            "Operasjon for å starte kjøring av batch som fatter vedtak om aldersjusteringer. " +
+                "Fatter vedtak for alle aldersjusteringer som det er sendt vedtakforslag på. ",
+        security = [SecurityRequirement(name = "bearer-key")],
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Batch for fatting av vedtak om aldersjusteringer ble startet.",
+            ),
+        ],
+    )
+    @Parameters(
+        value = [
+            Parameter(
+                name = "barnId",
+                example = "1,2,3",
+                description =
+                    "Liste over barn som det skal fattes vedtak for. Om ingen er sendt kjøres alle. Maks lengde på input er 250!",
+                required = false,
+            ),
+        ],
+    )
+    fun startFattVedtakAldersjusteringBidragBatch(
+        @RequestParam barn: String,
+    ): ResponseEntity<Any> {
+        fattVedtakOmAldersjusteringerBidragBatch.startFattVedtakOmAldersjusteringBidragBatch(
+            barn,
+        )
+        return ResponseEntity.ok().build()
+    }
+
+    @PostMapping("/aldersjuster/batch/bidrag/beregn")
+    @Operation(
+        summary = "Start kjøring av batch for å beregne aldersjusteringer.",
+        description =
+            "Operasjon for å starte kjøring av batch som beregner aldersjusteringer og sender vedtaksforslag. ",
+        security = [SecurityRequirement(name = "bearer-key")],
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Batch for beregning av aldersjusteringer ble startet.",
+            ),
+        ],
+    )
+    @Parameters(
+        value = [
+            Parameter(
+                name = "simuler",
+                example = "true",
+                description = "Simuleringsmodus for aldersjustering. Default er true.",
+                required = false,
+            ),
+        ],
+    )
+    fun startBeregnAldersjusteringBidragBatch(
+        @RequestParam simuler: Boolean = true,
+    ): ResponseEntity<Any> {
+        beregnAldersjusteringerBidragBatch.startBeregnAldersjusteringBidragBatch(
+            simuler,
+        )
+        return ResponseEntity.ok().build()
+    }
+
+    @PostMapping("/aldersjuster/batch/bidrag/oppgave")
+    @Operation(
+        summary = "Start kjøring av batch for å opprette oppgaver for manuelle aldersjusteringer.",
+        description = "Operasjon for å starte kjøring av batch som oppretter oppgaver for manuelle aldersjusteriner.",
+        security = [SecurityRequirement(name = "bearer-key")],
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Batch for oppretting av oppgaver for aldersjusteringer ble startet.",
+            ),
+        ],
+    )
+    @Parameters(
+        value = [
+            Parameter(
+                name = "barnId",
+                example = "1,2,3",
+                description =
+                    "Liste over barn som det skal opprettes oppgaver for. Om ingen er sendt kjøres alle. Maks lengde på input er 250 tegn!",
+                required = false,
+            ),
+        ],
+    )
+    fun startOppgaveAldersjusteringBidragBatch(
+        @RequestParam barn: String,
+    ): ResponseEntity<Any> {
+        oppgaveAldersjusteringBidragBatch.startOppgaveAldersjusteringBidragBatch(
+            barn,
         )
         return ResponseEntity.ok().build()
     }

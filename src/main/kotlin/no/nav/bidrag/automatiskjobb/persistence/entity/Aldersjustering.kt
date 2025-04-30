@@ -37,6 +37,10 @@ data class Aldersjustering(
     var vedtak: Int? = null,
     @Column(name = "oppgave")
     var oppgave: Int? = null,
+    @Column(name = "vedtakforsendelse_id")
+    var vedtakforselselseId: Int? = null,
+    @Column(name = "vedtakjournalpost_id")
+    var vedtakjournalpostId: String? = null,
     @Column(name = "opprettet_tidspunkt", nullable = false, updatable = false)
     val opprettetTidspunkt: Timestamp = Timestamp(System.currentTimeMillis()),
 )

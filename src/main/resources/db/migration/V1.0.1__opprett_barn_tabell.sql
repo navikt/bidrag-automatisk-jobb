@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS barn
     id           integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (INCREMENT 1 START 1 MINVALUE 1),
     saksnummer   text NOT NULL,
     kravhaver    text NOT NULL,
-    fodselsdato  date NOT NULL,
+    fodselsdato  date,
     skyldner     text,
     forskudd_fra date,
     forskudd_til date,

@@ -11,10 +11,13 @@ CREATE TABLE IF NOT EXISTS aldersjustering
     behandlingstype      TEXT CHECK (behandlingstype IN ('INGEN', 'FATTET_FORSLAG', 'MANUELL', 'FEILET')),
     vedtak               INTEGER,
     oppgave              INTEGER,
+    vedtakforsendelse_id INTEGER,
+    vedtakjournalpost_id INTEGER,
     opprettet_tidspunkt  TIMESTAMP DEFAULT current_timestamp
 );
 
 CREATE INDEX IF NOT EXISTS aldersjustering_barn_id_index ON aldersjustering (barn_id);
 CREATE INDEX IF NOT EXISTS aldersjustering_status_index ON aldersjustering (status);
 CREATE INDEX IF NOT EXISTS aldersjustering_behandlingstype_index ON aldersjustering (behandlingstype);
+CREATE INDEX IF NOT EXISTS aldersjustering_vedtakforsendelsId_vedtakjournalpostId_index ON aldersjustering (vedtakforsendelse_id, vedtakjournalpost_id);
 CREATE UNIQUE INDEX IF NOT EXISTS aldersjustering_barn_id_aldersgruppe_unique_index ON aldersjustering (barn_id, aldersgruppe)

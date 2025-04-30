@@ -20,7 +20,7 @@ data class Barn(
     @Column(name = "kravhaver")
     var kravhaver: String = "",
     @Column(name = "fodselsdato")
-    var fødselsdato: LocalDate = LocalDate.now(),
+    var fødselsdato: LocalDate? = null,
     @Column(name = "skyldner")
     var skyldner: String? = null,
     @Column(name = "forskudd_fra")

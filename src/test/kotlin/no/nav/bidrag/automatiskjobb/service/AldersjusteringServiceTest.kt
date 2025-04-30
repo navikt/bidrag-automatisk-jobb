@@ -42,6 +42,9 @@ class AldersjusteringServiceTest {
     @RelaxedMockK
     lateinit var vedtakMapper: VedtakMapper
 
+    @RelaxedMockK
+    lateinit var oppgaveService: OppgaveService
+
     @InjectMockKs
     lateinit var aldersjusteringService: AldersjusteringService
 
