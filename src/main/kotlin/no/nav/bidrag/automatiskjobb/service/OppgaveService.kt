@@ -105,7 +105,7 @@ class OppgaveService(
         }
     }
 
-    fun opprettOppgaveForManuelleAldersjustering(barn: Barn): Int {
+    fun opprettOppgaveForManuellAldersjustering(barn: Barn): Int {
         val enhet = finnEierfogd(barn.saksnummer)
         val oppgaveResponse =
             oppgaveConsumer.opprettOppgave(

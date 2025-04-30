@@ -234,7 +234,7 @@ class AldersjusteringService(
                 .findById(aldersjustering.barnId)
                 .orElseThrow { error("Fant ikke barn med id ${aldersjustering.barnId}") }
 
-        val oppgaveId = oppgaveService.opprettOppgaveForManuelleAldersjustering(barn) //
+        val oppgaveId = oppgaveService.opprettOppgaveForManuellAldersjustering(barn) //
 
         aldersjustering.oppgave = oppgaveId
         alderjusteringRepository.save(aldersjustering)
