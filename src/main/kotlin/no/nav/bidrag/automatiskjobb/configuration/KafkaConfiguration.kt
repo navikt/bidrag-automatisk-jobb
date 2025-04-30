@@ -37,11 +37,10 @@ class KafkaConfiguration {
                 val offset = rec.offset()
                 val topic = rec.topic()
                 val partition = rec.partition()
-                SECURE_LOGGER.error(
+                SECURE_LOGGER.error(e) {
                     "Kafka melding med nøkkel $key, partition $partition og topic $topic feilet på offset $offset. " +
-                        "Melding som feilet: $value",
-                    e,
-                )
+                        "Melding som feilet: $value"
+                }
             }, backoffPolicy)
         errorHandler.setRetryListeners(KafkaRetryListener())
         return errorHandler
@@ -55,9 +54,8 @@ class KafkaRetryListener : RetryListener {
         deliveryAttempt: Int,
     ) {
         SECURE_LOGGER.error(
-            "Håndtering av kafka melding ${record.value()} feilet. Dette er $deliveryAttempt. forsøk",
             exception,
-        )
+        ) { "Håndtering av kafka melding ${record.value()} feilet. Dette er $deliveryAttempt. forsøk" }
     }
 
     override fun recovered(
@@ -65,9 +63,8 @@ class KafkaRetryListener : RetryListener {
         exception: java.lang.Exception,
     ) {
         SECURE_LOGGER.error(
-            "Håndtering av kafka melding ${record.value()} er enten suksess eller ignorert pågrunn av ugyldig data",
             exception,
-        )
+        ) { "Håndtering av kafka melding ${record.value()} er enten suksess eller ignorert pågrunn av ugyldig data" }
     }
 
     override fun recoveryFailed(
