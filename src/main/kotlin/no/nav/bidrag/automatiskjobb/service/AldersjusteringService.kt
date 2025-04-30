@@ -229,9 +229,14 @@ class AldersjusteringService(
     }
 
     fun opprettOppgaveForAldersjustering(aldersjustering: Aldersjustering) {
-        // oppgaveService.opprettRevurderForskuddOppgave()  TODO()
-        val oppdageId = 1
-        aldersjustering.oppgave = oppdageId
+        val barn =
+            barnRepository
+                .findById(aldersjustering.barnId)
+                .orElseThrow { error("Fant ikke barn med id ${aldersjustering.barnId}") }
+
+        val oppgaveId = oppgaveService.opprettOppgaveForManuelleAldersjustering(barn) //
+
+        aldersjustering.oppgave = oppgaveId
         alderjusteringRepository.save(aldersjustering)
     }
 

@@ -9,6 +9,7 @@ val revurderForskuddBeskrivelse = "Revurder forskudd basert på inntekt fra nytt
 val revurderForskuddBeskrivelseSærbidrag = "Revurder forskudd basert på inntekt fra nytt vedtak om særbidrag."
 val revurderForskuddBeskrivelseAdresseendring =
     "Barnet er ikke lenger folkeregistrert på samme adresse som bidragsmottaker, og forskuddet må revurderes."
+val oppgaveAldersjusteringBeskrivelse = "Aldersjustering av barnets må utføres manuelt." // TODO(Oppgavebeskrivelse for aldersjusteringer i bidrag)
 
 fun VedtakHendelse.erForskudd() = stønadsendringListe?.any { it.type == Stønadstype.FORSKUDD } == true
 

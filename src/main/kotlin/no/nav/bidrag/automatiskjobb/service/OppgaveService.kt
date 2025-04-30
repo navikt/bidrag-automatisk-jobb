@@ -12,9 +12,11 @@ import no.nav.bidrag.automatiskjobb.consumer.dto.lagBeskrivelseHeader
 import no.nav.bidrag.automatiskjobb.consumer.dto.lagBeskrivelseHeaderAutomnatiskJobb
 import no.nav.bidrag.automatiskjobb.domene.Endringsmelding
 import no.nav.bidrag.automatiskjobb.domene.erAdresseendring
+import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.service.model.AdresseEndretResultat
 import no.nav.bidrag.automatiskjobb.service.model.ForskuddRedusertResultat
 import no.nav.bidrag.automatiskjobb.utils.erForskudd
+import no.nav.bidrag.automatiskjobb.utils.oppgaveAldersjusteringBeskrivelse
 import no.nav.bidrag.automatiskjobb.utils.revurderForskuddBeskrivelseAdresseendring
 import no.nav.bidrag.automatiskjobb.utils.tilOppgaveBeskrivelse
 import no.nav.bidrag.commons.util.secureLogger
@@ -101,6 +103,24 @@ class OppgaveService(
         secureLogger.info {
             "Opprettet revurder forskudd etter adresseendring oppgave $oppgaveResponse for sak $saksnummer, enhet $enhet og barn $gjelderBarn"
         }
+    }
+
+    fun opprettOppgaveForManuelleAldersjustering(barn: Barn): Int {
+        val enhet = finnEierfogd(barn.saksnummer)
+        val oppgaveResponse =
+            oppgaveConsumer.opprettOppgave(
+                OpprettOppgaveRequest(
+                    beskrivelse = lagBeskrivelseHeader("", enhet) + oppgaveAldersjusteringBeskrivelse,
+                    oppgavetype = OppgaveType.GEN,
+                    saksreferanse = barn.saksnummer,
+                    tildeltEnhetsnr = enhet,
+                    personident = barn.kravhaver,
+                ),
+            )
+        log.info { "Opprettet oppgave ${oppgaveResponse.id} for sak ${barn.saksnummer} og enhet $enhet" }
+        secureLogger.info { "Opprettet oppgave $oppgaveResponse for barn $barn, enhet $enhet." }
+
+        return oppgaveResponse.id.toInt()
     }
 
     private fun VedtakHendelse.opprettRevurderForskuddOppgave(forskuddRedusertResultat: ForskuddRedusertResultat) {
