@@ -22,22 +22,22 @@ class OpprettAldersjusteringerBidragBatchConfiguration {
     @Bean
     fun opprettAldersjusteringerBidragJob(
         jobRepository: JobRepository,
-        partitionedStep: Step,
+        partitionedOpprettAldersjusteringerBidragStep: Step,
         listener: BatchCompletionNotificationListener,
     ): Job =
         JobBuilder("opprettAldersjusteringerBidragJob", jobRepository)
             .listener(listener)
-            .start(partitionedStep)
+            .start(partitionedOpprettAldersjusteringerBidragStep)
             .build()
 
     @Bean
-    fun partitionedStep(
+    fun partitionedOpprettAldersjusteringerBidragStep(
         jobRepository: JobRepository,
         transactionManager: PlatformTransactionManager,
         opprettAldersjusteringerBidragStep: Step,
     ): Step =
         StepBuilder("partitionedStep", jobRepository)
-            .partitioner("beregnAldersjusteringerBidragStep", SimplePartitioner())
+            .partitioner("opprettAldersjusteringerBidragStep", SimplePartitioner())
             .step(opprettAldersjusteringerBidragStep)
             .gridSize(5)
             .taskExecutor(SimpleAsyncTaskExecutor())

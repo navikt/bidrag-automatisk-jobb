@@ -7,10 +7,12 @@ import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.Step
 import org.springframework.batch.core.job.builder.JobBuilder
+import org.springframework.batch.core.partition.support.SimplePartitioner
 import org.springframework.batch.core.repository.JobRepository
 import org.springframework.batch.core.step.builder.StepBuilder
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.task.SimpleAsyncTaskExecutor
 import org.springframework.transaction.PlatformTransactionManager
 
 @Configuration
@@ -22,12 +24,25 @@ class OppgaveAldersjusteringerBidragBatchConfiguration {
     @Bean
     fun oppgaveAldersjusteringerBidragJob(
         jobRepository: JobRepository,
-        oppgaveAldersjusteringerBidragStep: Step,
+        partitionedOppgaveAldersjusteringerBidragStep: Step,
         listener: BatchCompletionNotificationListener,
     ): Job =
         JobBuilder("oppgaveAldersjusteringerBidragJob", jobRepository)
             .listener(listener)
-            .start(oppgaveAldersjusteringerBidragStep)
+            .start(partitionedOppgaveAldersjusteringerBidragStep)
+            .build()
+
+    @Bean
+    fun partitionedOppgaveAldersjusteringerBidragStep(
+        jobRepository: JobRepository,
+        transactionManager: PlatformTransactionManager,
+        opprettAldersjusteringerBidragStep: Step,
+    ): Step =
+        StepBuilder("partitionedStep", jobRepository)
+            .partitioner("oppgaveAldersjusteringerBidragStep", SimplePartitioner())
+            .step(opprettAldersjusteringerBidragStep)
+            .gridSize(5)
+            .taskExecutor(SimpleAsyncTaskExecutor())
             .build()
 
     @Bean

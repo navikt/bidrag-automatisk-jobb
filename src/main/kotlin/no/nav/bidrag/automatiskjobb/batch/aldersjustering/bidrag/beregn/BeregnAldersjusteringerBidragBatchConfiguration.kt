@@ -22,12 +22,12 @@ class BeregnAldersjusteringerBidragBatchConfiguration {
     @Bean
     fun beregnAldersjusteringerBidragJob(
         jobRepository: JobRepository,
-        partitionedStep: Step,
+        partitionedBeregnAldersjusteringerBidragStep: Step,
         listener: BatchCompletionNotificationListener,
     ): Job =
         JobBuilder("beregnAldersjusteringerBidragJob", jobRepository)
             .listener(listener)
-            .start(partitionedStep)
+            .start(partitionedBeregnAldersjusteringerBidragStep)
             .build()
 
     @Bean
@@ -44,7 +44,7 @@ class BeregnAldersjusteringerBidragBatchConfiguration {
             .build()
 
     @Bean
-    fun partitionedStep(
+    fun partitionedBeregnAldersjusteringerBidragStep(
         jobRepository: JobRepository,
         transactionManager: PlatformTransactionManager,
         beregnAldersjusteringerBidragStep: Step,
