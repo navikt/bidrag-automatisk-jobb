@@ -41,7 +41,6 @@ class AldersjusteringService(
     private val vedtakConsumer: BidragVedtakConsumer,
     private val sakConsumer: BidragSakConsumer,
     private val vedtakMapper: VedtakMapper,
-    private val bidragVedtakConsumer: BidragVedtakConsumer,
     private val oppgaveService: OppgaveService,
 ) {
     fun kjørAldersjusteringForSak(
@@ -71,9 +70,9 @@ class AldersjusteringService(
         år: Int,
     ): Boolean =
         when {
-            år - barn.fødselsdato.year == 6 -> true
-            år - barn.fødselsdato.year == 11 -> true
-            år - barn.fødselsdato.year == 15 -> true
+            barn.fødselsdato?.year?.let { år - it } == 6 -> true
+            barn.fødselsdato?.year?.let { år - it } == 11 -> true
+            barn.fødselsdato?.year?.let { år - it } == 15 -> true
             else -> false
         }
 
@@ -110,7 +109,14 @@ class AldersjusteringService(
         år: Int,
         batchId: String,
     ) {
-        val aldersgruppe = år - barn.fødselsdato.year
+        val aldersgruppe = barn.fødselsdato?.year?.let { år - it }
+
+        if (aldersgruppe == null) {
+            log.error {
+                "Aldersjustering for barn ${barn.id} kan ikke opprettes. Barnet har ingen fødselsdato og aldersgruppe kan derfor ikke settes."
+            }
+            return
+        }
 
         if (!alderjusteringRepository.existsAldersjusteringsByBarnIdAndAldersgruppe(barn.id!!, aldersgruppe)) {
             val aldersjustering =
@@ -149,7 +155,7 @@ class AldersjusteringService(
             val (vedtaksidBeregning, løpendeBeløp, resultatBeregning) =
                 aldersjusteringOrchestrator.utførAldersjustering(
                     stønadsid,
-                    barn.fødselsdato.year + aldersjustering.aldersgruppe,
+                    barn.fødselsdato!!.year + aldersjustering.aldersgruppe,
                 )
 
             val vedtaksforslagRequest =
@@ -217,7 +223,7 @@ class AldersjusteringService(
     }
 
     fun fattVedtakOmAldersjustering(aldersjustering: Aldersjustering) {
-        bidragVedtakConsumer.fatteVedtaksforslag(aldersjustering.vedtak ?: error("Aldersjustering ${aldersjustering.id} mangler vedtak!"))
+        vedtakConsumer.fatteVedtaksforslag(aldersjustering.vedtak ?: error("Aldersjustering ${aldersjustering.id} mangler vedtak!"))
         aldersjustering.status = Status.FATTET
         alderjusteringRepository.save(aldersjustering)
     }
@@ -304,7 +310,8 @@ class AldersjusteringService(
         val result =
             barnRepository
                 .finnBarnSomSkalAldersjusteresForÅr(år, pageable = paging)
-                .groupBy { år - it.fødselsdato.year }
+                .filter { it.fødselsdato != null }
+                .groupBy { år - it.fødselsdato!!.year }
                 .mapValues { it.value.sortedBy { barn -> barn.fødselsdato } }
 
         log.info { "Antall barn ${result.getLengths()}" }
@@ -314,7 +321,8 @@ class AldersjusteringService(
     fun hentAntallBarnSomSkalAldersjusteresForÅr(år: Int): Int =
         barnRepository
             .finnBarnSomSkalAldersjusteresForÅr(år)
-            .groupBy { år - it.fødselsdato.year }
+            .filter { it.fødselsdato != null }
+            .groupBy { år - it.fødselsdato!!.year }
             .size
 
     fun hentAldersjustering(id: Int): Aldersjustering? = alderjusteringRepository.findById(id).orElseGet { null }

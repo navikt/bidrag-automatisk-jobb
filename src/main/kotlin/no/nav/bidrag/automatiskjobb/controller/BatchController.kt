@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Parameters
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.beregn.BeregnAldersjusteringerBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.fattvedtak.FattVedtakOmAldersjusteringerBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.oppgave.OppgaveAldersjusteringBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.opprett.OpprettAldersjusteringerBidragBatch
@@ -27,6 +28,7 @@ class BatchController(
     private val fattVedtakOmAldersjusteringerBidragBatch: FattVedtakOmAldersjusteringerBidragBatch,
     private val oppgaveAldersjusteringBidragBatch: OppgaveAldersjusteringBidragBatch,
     private val aldersjusteringForskuddBatch: AldersjusteringForskuddBatch,
+    private val beregnAldersjusteringerBidragBatch: BeregnAldersjusteringerBidragBatch,
 ) {
     @PostMapping("/aldersjuster/batch/bidrag")
     @Operation(
@@ -222,6 +224,40 @@ class BatchController(
     ): ResponseEntity<Any> {
         fattVedtakOmAldersjusteringerBidragBatch.startFattVedtakOmAldersjusteringBidragBatch(
             barn,
+        )
+        return ResponseEntity.ok().build()
+    }
+
+    @PostMapping("/aldersjuster/batch/bidrag/beregn")
+    @Operation(
+        summary = "Start kjøring av batch for å beregne aldersjusteringer.",
+        description =
+            "Operasjon for å starte kjøring av batch som beregner aldersjusteringer og sender vedtaksforslag. ",
+        security = [SecurityRequirement(name = "bearer-key")],
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Batch for beregning av aldersjusteringer ble startet.",
+            ),
+        ],
+    )
+    @Parameters(
+        value = [
+            Parameter(
+                name = "simuler",
+                example = "true",
+                description = "Simuleringsmodus for aldersjustering. Default er true.",
+                required = false,
+            ),
+        ],
+    )
+    fun startBeregnAldersjusteringBidragBatch(
+        @RequestParam simuler: Boolean = true,
+    ): ResponseEntity<Any> {
+        beregnAldersjusteringerBidragBatch.startBeregnAldersjusteringBidragBatch(
+            simuler,
         )
         return ResponseEntity.ok().build()
     }
