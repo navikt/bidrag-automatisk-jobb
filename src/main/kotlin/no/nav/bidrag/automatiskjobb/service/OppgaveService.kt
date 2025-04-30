@@ -9,7 +9,7 @@ import no.nav.bidrag.automatiskjobb.consumer.dto.OppgaveSokRequest
 import no.nav.bidrag.automatiskjobb.consumer.dto.OppgaveType
 import no.nav.bidrag.automatiskjobb.consumer.dto.OpprettOppgaveRequest
 import no.nav.bidrag.automatiskjobb.consumer.dto.lagBeskrivelseHeader
-import no.nav.bidrag.automatiskjobb.consumer.dto.lagBeskrivelseHeaderAutomnatiskJobb
+import no.nav.bidrag.automatiskjobb.consumer.dto.lagBeskrivelseHeaderAutomatiskJobb
 import no.nav.bidrag.automatiskjobb.domene.Endringsmelding
 import no.nav.bidrag.automatiskjobb.domene.erAdresseendring
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
@@ -88,7 +88,7 @@ class OppgaveService(
         val oppgaveResponse =
             oppgaveConsumer.opprettOppgave(
                 OpprettOppgaveRequest(
-                    beskrivelse = lagBeskrivelseHeaderAutomnatiskJobb() + revurderForskuddBeskrivelseAdresseendring,
+                    beskrivelse = lagBeskrivelseHeaderAutomatiskJobb() + revurderForskuddBeskrivelseAdresseendring,
                     oppgavetype = OppgaveType.GEN,
                     tema = if (enhet_farskap == enhet) "FAR" else "BID",
                     saksreferanse = saksnummer,
@@ -110,7 +110,7 @@ class OppgaveService(
         val oppgaveResponse =
             oppgaveConsumer.opprettOppgave(
                 OpprettOppgaveRequest(
-                    beskrivelse = lagBeskrivelseHeader("", enhet) + oppgaveAldersjusteringBeskrivelse,
+                    beskrivelse = lagBeskrivelseHeaderAutomatiskJobb() + oppgaveAldersjusteringBeskrivelse,
                     oppgavetype = OppgaveType.GEN,
                     saksreferanse = barn.saksnummer,
                     tildeltEnhetsnr = enhet,
