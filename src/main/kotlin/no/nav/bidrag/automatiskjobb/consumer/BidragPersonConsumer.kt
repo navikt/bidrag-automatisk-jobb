@@ -12,7 +12,9 @@ import no.nav.bidrag.transport.person.PersonDto
 import no.nav.bidrag.transport.person.PersonRequest
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.web.client.HttpStatusCodeException
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.util.UriComponentsBuilder
 import java.net.URI
@@ -45,8 +47,15 @@ class BidragPersonConsumer(
 
     @BrukerCacheable(PERSON_FØDSELSDATO_CACHE)
     override fun hentFødselsdatoForPerson(personident: Personident): LocalDate? {
-        val response = postForNonNullEntity<NavnFødselDødDto>(hentFødselsnummerUri, PersonRequest(personident))
-        return response.fødselsdato ?: response.fødselsår?.let { opprettFødselsdatoFraFødselsår(it) }
+        try {
+            val response = postForNonNullEntity<NavnFødselDødDto>(hentFødselsnummerUri, PersonRequest(personident))
+            return response.fødselsdato ?: response.fødselsår?.let { opprettFødselsdatoFraFødselsår(it) }
+        } catch (e: HttpStatusCodeException) {
+            if (e.statusCode.value() == HttpStatus.NOT_FOUND.value()) {
+                return null
+            }
+            throw e
+        }
     }
 
     @BrukerCacheable(PERSON_CACHE)
