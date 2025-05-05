@@ -94,7 +94,7 @@ class AldersjusteringService(
 
         val aldersjusteringListe =
             alderjusteringRepository
-                .finnForFlereStatuser(listOf(Status.SLETTET, Status.UBEHANDLET, Status.FEILET))
+                .finnForFlereStatuserOgBarnId(listOf(Status.SLETTET, Status.UBEHANDLET, Status.FEILET), barnListe.mapNotNull { it.id })
                 .toMutableList()
 
         val resultat =
@@ -128,9 +128,9 @@ class AldersjusteringService(
                     status = Status.UBEHANDLET,
                 )
             val id = alderjusteringRepository.save(aldersjustering).id
-            log.info { "Opprettet aldersjustering $id for barn ${barn.id}." }
+            log.debug { "Opprettet aldersjustering $id for barn ${barn.id}." }
         } else {
-            log.info { "Aldersjustering for barn ${barn.id} er allerede opprettet." }
+            log.debug { "Aldersjustering for barn ${barn.id} er allerede opprettet." }
         }
     }
 
@@ -143,7 +143,25 @@ class AldersjusteringService(
             barnRepository
                 .findById(aldersjustering.barnId)
                 .orElseThrow { error("Fant ikke barn med id ${aldersjustering.barnId}") }
+        if (barn.skyldner == null) {
+            val errorMessage = "Mangler skyldner"
+            val stønadsid =
+                Stønadsid(
+                    stønadstype,
+                    Personident(barn.kravhaver),
+                    Personident(barn.kravhaver),
+                    Saksnummer(barn.saksnummer),
+                )
+            if (!simuler) {
+                aldersjustering.status = Status.FEILET
+                aldersjustering.behandlingstype = Behandlingstype.FEILET
+                aldersjustering.begrunnelse = listOf(errorMessage)
 
+                alderjusteringRepository.save(aldersjustering)
+            }
+
+            return AldersjusteringIkkeAldersjustertResultat(stønadsid, errorMessage)
+        }
         val stønadsid =
             Stønadsid(
                 stønadstype,
