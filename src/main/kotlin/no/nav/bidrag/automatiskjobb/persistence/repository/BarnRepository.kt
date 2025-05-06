@@ -10,7 +10,7 @@ import java.time.LocalDate
 
 interface BarnRepository : JpaRepository<Barn, Int> {
     @Query(
-        "SELECT b FROM barn b WHERE :år - YEAR(b.fødselsdato) IN (6, 11, 15) " +
+        "SELECT b FROM barn b WHERE :år - EXTRACT(YEAR FROM b.fødselsdato) IN (6, 11, 15) " +
             "AND b.bidragFra <= :kjøredato " +
             "AND (b.bidragTil IS NULL OR b.bidragTil >= :kjøredato)",
     )
