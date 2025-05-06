@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import java.time.YearMonth
@@ -95,7 +96,63 @@ class AutomatiskJobbController(
         @RequestParam(required = false) simuler: Boolean = true,
         @RequestParam(required = false) stønadstype: Stønadstype = Stønadstype.BIDRAG,
     ): AldersjusteringResponse =
-        aldersjusteringService.kjørAldersjusteringForSak(saksnummer, år ?: YearMonth.now().year, simuler, stønadstype)
+        aldersjusteringService.kjørAldersjusteringForSak(saksnummer, år ?: YearMonth.now().year, simuler, Stønadstype.BIDRAG)
+
+    @PostMapping("/aldersjuster/bidrag/saker")
+    @Operation(
+        summary = "Start kjøring av aldersjustering batch for bidrag.",
+        description = "Operasjon for å starte kjøring av aldersjustering batch for bidrag for et gitt år.",
+        security = [SecurityRequirement(name = "bearer-key")],
+    )
+    fun aldersjusterBidragSaker(
+        @RequestBody saksnummere: List<Saksnummer>,
+        @RequestParam(required = false) år: Int?,
+        @RequestParam(required = false) simuler: Boolean = true,
+        @RequestParam(required = false) stønadstype: Stønadstype = Stønadstype.BIDRAG,
+    ): Map<Saksnummer, AldersjusteringResponse> =
+        saksnummere.associateWith {
+            aldersjusteringService.kjørAldersjusteringForSak(
+                it,
+                år ?: YearMonth.now().year,
+                simuler,
+                Stønadstype.BIDRAG,
+            )
+        }
+
+    @PostMapping("/aldersjuster/bidrag/{saksnummer}/debug")
+    @Operation(
+        summary = "Start kjøring av aldersjustering batch for bidrag.",
+        description = "Operasjon for å starte kjøring av aldersjustering batch for bidrag for et gitt år.",
+        security = [SecurityRequirement(name = "bearer-key")],
+    )
+    fun aldersjusterBidragSakDebug(
+        @PathVariable saksnummer: Saksnummer,
+        @RequestParam(required = false) år: Int?,
+        @RequestParam(required = false) simuler: Boolean = true,
+        @RequestParam(required = false) stønadstype: Stønadstype = Stønadstype.BIDRAG,
+    ): AldersjusteringResponse =
+        aldersjusteringService.kjørAldersjusteringForSakDebug(saksnummer, år ?: YearMonth.now().year, simuler, Stønadstype.BIDRAG)
+
+    @PostMapping("/aldersjuster/bidrag/saker/debug")
+    @Operation(
+        summary = "Start kjøring av aldersjustering batch for bidrag.",
+        description = "Operasjon for å starte kjøring av aldersjustering batch for bidrag for et gitt år.",
+        security = [SecurityRequirement(name = "bearer-key")],
+    )
+    fun aldersjusterBidragSakerDebug(
+        @RequestBody saksnummere: List<Saksnummer>,
+        @RequestParam(required = false) år: Int?,
+        @RequestParam(required = false) simuler: Boolean = true,
+        @RequestParam(required = false) stønadstype: Stønadstype = Stønadstype.BIDRAG,
+    ): Map<Saksnummer, AldersjusteringResponse> =
+        saksnummere.associateWith {
+            aldersjusteringService.kjørAldersjusteringForSakDebug(
+                it,
+                år ?: YearMonth.now().year,
+                simuler,
+                Stønadstype.BIDRAG,
+            )
+        }
 
     @GetMapping("/barn/antall")
     @Operation(

@@ -33,6 +33,14 @@ interface AldersjusteringRepository : JpaRepository<Aldersjustering, Int> {
         pageable: Pageable = Pageable.ofSize(100),
     ): Page<Aldersjustering>
 
+    @Query(
+        "SELECT a FROM aldersjustering a WHERE a.status IN :statuser and a.barnId IN :barnId",
+    )
+    fun finnForFlereStatuserOgBarnId(
+        @Param("statuser") statuser: List<Status>,
+        barnId: List<Int>,
+    ): List<Aldersjustering>
+
     fun existsAldersjusteringsByBarnIdAndAldersgruppe(
         barnId: Int,
         aldersgruppe: Int,

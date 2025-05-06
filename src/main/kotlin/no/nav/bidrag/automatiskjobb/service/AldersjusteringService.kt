@@ -17,6 +17,7 @@ import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringResponse
 import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringResultat
 import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringResultatResponse
 import no.nav.bidrag.automatiskjobb.service.model.OpprettVedtakConflictResponse
+import no.nav.bidrag.automatiskjobb.utils.ugyldigForespørsel
 import no.nav.bidrag.beregn.barnebidrag.service.AldersjusteresManueltException
 import no.nav.bidrag.beregn.barnebidrag.service.AldersjusteringOrchestrator
 import no.nav.bidrag.beregn.barnebidrag.service.SkalIkkeAldersjusteresException
@@ -93,7 +94,7 @@ class AldersjusteringService(
 
         val aldersjusteringListe =
             alderjusteringRepository
-                .finnForFlereStatuser(listOf(Status.SLETTET, Status.UBEHANDLET, Status.FEILET))
+                .finnForFlereStatuserOgBarnId(listOf(Status.SLETTET, Status.UBEHANDLET, Status.FEILET), barnListe.mapNotNull { it.id })
                 .toMutableList()
 
         val resultat =
@@ -127,9 +128,9 @@ class AldersjusteringService(
                     status = Status.UBEHANDLET,
                 )
             val id = alderjusteringRepository.save(aldersjustering).id
-            log.info { "Opprettet aldersjustering $id for barn ${barn.id}." }
+            log.debug { "Opprettet aldersjustering $id for barn ${barn.id}." }
         } else {
-            log.info { "Aldersjustering for barn ${barn.id} er allerede opprettet." }
+            log.debug { "Aldersjustering for barn ${barn.id} er allerede opprettet." }
         }
     }
 
@@ -142,7 +143,25 @@ class AldersjusteringService(
             barnRepository
                 .findById(aldersjustering.barnId)
                 .orElseThrow { error("Fant ikke barn med id ${aldersjustering.barnId}") }
+        if (barn.skyldner == null) {
+            val errorMessage = "Mangler skyldner"
+            val stønadsid =
+                Stønadsid(
+                    stønadstype,
+                    Personident(barn.kravhaver),
+                    Personident(barn.kravhaver),
+                    Saksnummer(barn.saksnummer),
+                )
+            if (!simuler) {
+                aldersjustering.status = Status.FEILET
+                aldersjustering.behandlingstype = Behandlingstype.FEILET
+                aldersjustering.begrunnelse = listOf(errorMessage)
 
+                alderjusteringRepository.save(aldersjustering)
+            }
+
+            return AldersjusteringIkkeAldersjustertResultat(stønadsid, errorMessage)
+        }
         val stønadsid =
             Stønadsid(
                 stønadstype,
@@ -189,6 +208,7 @@ class AldersjusteringService(
             aldersjustering.vedtaksidBeregning = e.vedtaksid
             aldersjustering.status = Status.BEHANDLET
             aldersjustering.behandlingstype = Behandlingstype.INGEN
+            aldersjustering.begrunnelse = e.begrunnelser.map { it.name }
 
             alderjusteringRepository.save(aldersjustering)
 
@@ -203,6 +223,7 @@ class AldersjusteringService(
             aldersjustering.vedtaksidBeregning = e.vedtaksid
             aldersjustering.status = Status.BEHANDLET
             aldersjustering.behandlingstype = Behandlingstype.MANUELL
+            aldersjustering.begrunnelse = listOf(e.begrunnelse.name)
 
             alderjusteringRepository.save(aldersjustering)
 
@@ -214,6 +235,7 @@ class AldersjusteringService(
             }
             aldersjustering.status = Status.FEILET
             aldersjustering.behandlingstype = Behandlingstype.FEILET
+            aldersjustering.begrunnelse = listOf(e.message ?: "Ukjent feil")
 
             alderjusteringRepository.save(aldersjustering)
 
@@ -333,6 +355,86 @@ class AldersjusteringService(
     fun hentAldersjustering(id: Int): Aldersjustering? = alderjusteringRepository.findById(id).orElseGet { null }
 
     fun lagreAldersjustering(aldersjustering: Aldersjustering): Int? = alderjusteringRepository.save(aldersjustering).id
+
+    fun kjørAldersjusteringForSakDebug(
+        saksnummer: Saksnummer,
+        år: Int,
+        simuler: Boolean,
+        stønadstype: Stønadstype,
+    ): AldersjusteringResponse {
+        val sak = sakConsumer.hentSak(saksnummer.verdi)
+        val barnISaken = sak.roller.filter { it.type == Rolletype.BARN }
+        val bp = sak.roller.find { it.type == Rolletype.BIDRAGSPLIKTIG } ?: ugyldigForespørsel("Fant ikke BP for sak $saksnummer")
+        val resultat =
+            barnISaken.map {
+                utførAldersjusteringForBarnDebug(
+                    stønadstype,
+                    Barn(
+                        kravhaver = it.fødselsnummer!!.verdi,
+                        skyldner = bp.fødselsnummer!!.verdi,
+                        saksnummer = saksnummer.verdi,
+                    ),
+                    år,
+                    "aldersjustering-sak-$saksnummer",
+                    simuler,
+                )
+            }
+
+        return AldersjusteringResponse(
+            aldersjustert =
+                resultat.filterIsInstance<AldersjusteringAldersjustertResultat>().let {
+                    AldersjusteringResultatResponse(
+                        antall = it.size,
+                        stønadsider = it.map { barn -> barn.stønadsid },
+                        detaljer = it,
+                    )
+                },
+            ikkeAldersjustert =
+                resultat.filterIsInstance<AldersjusteringIkkeAldersjustertResultat>().let {
+                    AldersjusteringResultatResponse(
+                        antall = it.size,
+                        stønadsider = it.map { barn -> barn.stønadsid },
+                        detaljer = it,
+                    )
+                },
+        )
+    }
+
+    fun utførAldersjusteringForBarnDebug(
+        stønadstype: Stønadstype,
+        barn: Barn,
+        år: Int,
+        batchId: String,
+        simuler: Boolean = true,
+    ): AldersjusteringResultat {
+        val stønadsid =
+            Stønadsid(
+                stønadstype,
+                Personident(barn.kravhaver),
+                Personident(barn.skyldner!!),
+                Saksnummer(barn.saksnummer),
+            )
+        try {
+            val (_, _, resultatBeregning) = aldersjusteringOrchestrator.utførAldersjustering(stønadsid, år)
+            val vedtaksforslagRequest = vedtakMapper.tilOpprettVedtakRequest(resultatBeregning, stønadsid, batchId)
+            if (simuler) {
+                log.info { "Kjører aldersjustering i simuleringsmodus. Oppretter ikke vedtaksforslag" }
+                return AldersjusteringAldersjustertResultat(-1, stønadsid, vedtaksforslagRequest)
+            }
+
+            val vedtaksid = opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
+            return AldersjusteringAldersjustertResultat(vedtaksid, stønadsid, vedtaksforslagRequest)
+        } catch (e: SkalIkkeAldersjusteresException) {
+            combinedLogger.warn(e) { "Stønad $stønadsid skal ikke aldersjusteres med begrunnelse ${e.begrunnelser.joinToString(", ")}" }
+            return AldersjusteringIkkeAldersjustertResultat(stønadsid, e.begrunnelser.joinToString(", "))
+        } catch (e: AldersjusteresManueltException) {
+            combinedLogger.warn(e) { "Stønad $stønadsid skal aldersjusteres manuelt med begrunnelse ${e.begrunnelse}" }
+            return AldersjusteringIkkeAldersjustertResultat(stønadsid, e.begrunnelse.name)
+        } catch (e: Exception) {
+            combinedLogger.error(e) { "Det skjedde en feil ved aldersjustering for stønad $stønadsid" }
+            return AldersjusteringIkkeAldersjustertResultat(stønadsid, "Teknisk feil: ${e.message}")
+        }
+    }
 }
 
 fun Map<Int, List<Barn>>.getLengths(): Map<Int, Int> = this.mapValues { it.value.size }

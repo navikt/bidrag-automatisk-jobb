@@ -26,7 +26,7 @@ data class Aldersjustering(
     @Column(name = "lopende_belop")
     var lopendeBelop: BigDecimal? = null,
     @Column(name = "begrunnelse")
-    var begrunnelse: List<String>? = null,
+    var begrunnelse: List<String> = emptyList(),
     @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
     var status: Status,
@@ -40,7 +40,7 @@ data class Aldersjustering(
     @Column(name = "vedtakforsendelse_id")
     var vedtakforselselseId: Int? = null,
     @Column(name = "vedtakjournalpost_id")
-    var vedtakjournalpostId: String? = null,
+    var vedtakjournalpostId: Int? = null,
     @Column(name = "opprettet_tidspunkt", nullable = false, updatable = false)
     val opprettetTidspunkt: Timestamp = Timestamp(System.currentTimeMillis()),
 )
