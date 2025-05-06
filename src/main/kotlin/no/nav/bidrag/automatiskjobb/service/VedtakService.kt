@@ -49,7 +49,7 @@ class VedtakService(
         lagretBarn: Barn,
         stønadsendringer: List<Stønadsendring>,
     ) {
-        LOGGER.debug("Oppdaterer barn ${lagretBarn.id} for sak ${stønadsendringer.first().sak.verdi}")
+        LOGGER.info("Oppdaterer barn ${lagretBarn.id} for sak ${stønadsendringer.first().sak.verdi}")
         val oppdatertSkyldner = finnSkylder(stønadsendringer)
 
         // Skylder kan oppdateres om det finnes en ny skyldner som ikke er null
@@ -100,7 +100,7 @@ class VedtakService(
                 bidragTil = finnPeriodeTil(stønadsendringer, Stønadstype.BIDRAG),
             )
         val lagretBarn = barnRepository.save(barn)
-        LOGGER.debug("Opprettet nytt barn ${lagretBarn.id} for sak $saksnummer")
+        LOGGER.info("Opprettet nytt barn ${lagretBarn.id} for sak $saksnummer")
     }
 
     private fun hentFødselsdatoForPerson(kravhaver: Personident): LocalDate? {

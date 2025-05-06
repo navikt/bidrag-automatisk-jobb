@@ -6,7 +6,9 @@ import no.nav.bidrag.automatiskjobb.service.VedtakService
 import no.nav.bidrag.transport.behandling.vedtak.VedtakHendelse
 import no.nav.bidrag.transport.felles.commonObjectmapper
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.kafka.annotation.KafkaListener
+import org.springframework.kafka.listener.ConsumerSeekAware
 import org.springframework.kafka.support.KafkaHeaders
 import org.springframework.messaging.handler.annotation.Header
 import org.springframework.stereotype.Component
@@ -15,7 +17,8 @@ import org.springframework.stereotype.Component
 class BidragVedtakListener(
     private val vedtakService: VedtakService,
     private val oppgaveService: OppgaveService,
-) {
+    @Value("\${KAFKA_VEDTAK_TOPIC}") private val topic: String,
+) : ConsumerSeekAware {
     companion object {
         private val LOGGER = LoggerFactory.getLogger(BidragVedtakListener::class.java)
     }
@@ -55,7 +58,7 @@ class BidragVedtakListener(
         hendelse: String,
         metode: (vedtakhendelse: VedtakHendelse) -> Unit,
     ) {
-        LOGGER.debug("Behandler vedtakhendelse med offset: $offset i consumergroup: $groupId for topic: $topic")
+        LOGGER.info("Behandler vedtakhendelse med offset: $offset i consumergroup: $groupId for topic: $topic")
         SECURE_LOGGER.debug { "Behandler vedtakhendelse: $hendelse" }
         try {
             val vedtakHendelse = mapVedtakHendelse(hendelse)
