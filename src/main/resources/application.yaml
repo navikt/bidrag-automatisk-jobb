@@ -110,8 +110,9 @@ spring:
           password: ${KAFKA_CREDSTORE_PASSWORD}
     consumer:
       auto-offset-reset: earliest
-      max-poll-records: 10
+      max-poll-records: 500
       group-id: bidrag-automatisk-jobb
+      fetch-min-size: 10KB
   batch:
     job:
       enabled: false

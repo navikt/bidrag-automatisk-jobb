@@ -30,11 +30,13 @@ import no.nav.bidrag.transport.behandling.vedtak.saksnummer
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 
 @ExtendWith(MockKExtension::class)
+@Transactional
 class VedtakServiceTest {
     @RelaxedMockK
     private lateinit var barnRepository: BarnRepository
@@ -311,21 +313,21 @@ class VedtakServiceTest {
 
         vedtakService.behandleVedtak(vedtakHendelse)
 
-        verify(exactly = 1) { barnRepository.save(any()) }
-        barnSlot.captured shouldNotBe null
-        barnSlot.captured.saksnummer shouldBe vedtakHendelse.saksnummer
-        barnSlot.captured.skyldner shouldBe
+        verify(exactly = 0) { barnRepository.save(any()) }
+        eksisterendeBarn shouldNotBe null
+        eksisterendeBarn.saksnummer shouldBe vedtakHendelse.saksnummer
+        eksisterendeBarn.skyldner shouldBe
             vedtakHendelse.stønadsendringListe
                 ?.first()
                 ?.skyldner
                 ?.verdi
-        barnSlot.captured.kravhaver shouldBe
+        eksisterendeBarn.kravhaver shouldBe
             vedtakHendelse.stønadsendringListe
                 ?.first()
                 ?.kravhaver
                 ?.verdi
-        barnSlot.captured.bidragFra shouldBe eksisterendeBarn.bidragFra
-        barnSlot.captured.bidragTil shouldBe
+        eksisterendeBarn.bidragFra shouldBe eksisterendeBarn.bidragFra
+        eksisterendeBarn.bidragTil shouldBe
             vedtakHendelse.stønadsendringListe
                 ?.first()
                 ?.periodeListe
@@ -333,8 +335,8 @@ class VedtakServiceTest {
                 ?.periode
                 ?.toDatoperiode()
                 ?.til
-        barnSlot.captured.forskuddFra shouldBe eksisterendeBarn.forskuddFra
-        barnSlot.captured.forskuddTil shouldBe eksisterendeBarn.forskuddTil
+        eksisterendeBarn.forskuddFra shouldBe eksisterendeBarn.forskuddFra
+        eksisterendeBarn.forskuddTil shouldBe eksisterendeBarn.forskuddTil
     }
 
     @Test
@@ -392,19 +394,19 @@ class VedtakServiceTest {
 
         vedtakService.behandleVedtak(vedtakHendelse)
 
-        verify(exactly = 1) { barnRepository.save(any()) }
-        barnSlot.captured shouldNotBe null
-        barnSlot.captured.saksnummer shouldBe vedtakHendelse.saksnummer
-        barnSlot.captured.skyldner shouldBe
+        verify(exactly = 0) { barnRepository.save(any()) }
+        eksisterendeBarn shouldNotBe null
+        eksisterendeBarn.saksnummer shouldBe vedtakHendelse.saksnummer
+        eksisterendeBarn.skyldner shouldBe
             vedtakHendelse.stønadsendringListe
                 ?.first()
                 ?.skyldner
                 ?.verdi
-        barnSlot.captured.kravhaver shouldBe kravhaver.verdi
-        barnSlot.captured.bidragFra shouldBe eksisterendeBidragFra
-        barnSlot.captured.bidragTil shouldBe nyttBidragFra
-        barnSlot.captured.forskuddFra shouldBe eksisterendeForskuddFra
-        barnSlot.captured.forskuddTil shouldBe eksisterendeForskuddTil
+        eksisterendeBarn.kravhaver shouldBe kravhaver.verdi
+        eksisterendeBarn.bidragFra shouldBe eksisterendeBidragFra
+        eksisterendeBarn.bidragTil shouldBe nyttBidragFra
+        eksisterendeBarn.forskuddFra shouldBe eksisterendeForskuddFra
+        eksisterendeBarn.forskuddTil shouldBe eksisterendeForskuddTil
     }
 
     private fun mocks(

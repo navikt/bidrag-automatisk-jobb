@@ -70,8 +70,6 @@ class VedtakService(
                 forskuddTil = finnPeriodeTil(stønadsendringer, Stønadstype.FORSKUDD, forskuddTil)
             }
         }
-
-        barnRepository.save(lagretBarn)
     }
 
     /**
