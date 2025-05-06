@@ -11,7 +11,7 @@ replicas:
   min: 2
 database:
   navn: bidrag-automatisk-jobb-prod
-  tier: db-custom-1-3840
+  tier: db-custom-2-7680
   size: 25
   auditlog: "on"
 kafka:
