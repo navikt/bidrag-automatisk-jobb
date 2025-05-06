@@ -1,5 +1,6 @@
 package no.nav.bidrag.automatiskjobb.consumer
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.automatiskjobb.configuration.CacheConfiguration.Companion.PERSON_CACHE
 import no.nav.bidrag.automatiskjobb.configuration.CacheConfiguration.Companion.PERSON_FØDSELSDATO_CACHE
 import no.nav.bidrag.beregn.barnebidrag.service.external.BeregningPersonConsumer
@@ -13,12 +14,16 @@ import no.nav.bidrag.transport.person.PersonRequest
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
+import org.springframework.retry.annotation.Backoff
+import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpStatusCodeException
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.util.UriComponentsBuilder
 import java.net.URI
 import java.time.LocalDate
+
+private val log = KotlinLogging.logger {}
 
 data class HusstandsmedlemmerRequest(
     val personRequest: PersonRequest,
@@ -46,6 +51,11 @@ class BidragPersonConsumer(
             .toUri()
 
     @BrukerCacheable(PERSON_FØDSELSDATO_CACHE)
+    @Retryable(
+        value = [Exception::class],
+        maxAttempts = 3,
+        backoff = Backoff(delay = 200, maxDelay = 1000, multiplier = 2.0),
+    )
     override fun hentFødselsdatoForPerson(personident: Personident): LocalDate? {
         try {
             val response = postForNonNullEntity<NavnFødselDødDto>(hentFødselsnummerUri, PersonRequest(personident))

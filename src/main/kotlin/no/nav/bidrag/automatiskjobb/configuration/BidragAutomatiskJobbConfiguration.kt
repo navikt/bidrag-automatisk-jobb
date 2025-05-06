@@ -22,6 +22,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.EnableAspectJAutoProxy
 import org.springframework.context.annotation.Import
 import org.springframework.context.annotation.Scope
+import org.springframework.retry.annotation.EnableRetry
 
 @EnableAspectJAutoProxy
 @OpenAPIDefinition(
@@ -33,6 +34,7 @@ import org.springframework.context.annotation.Scope
 @EnableJwtTokenValidation
 @EnableOAuth2Client(cacheEnabled = true)
 @EnableSaksbehandlernavnProvider
+@EnableRetry
 @Import(DefaultCorsFilter::class, MdcFilter::class, AldersjusteringOrchestrator::class)
 class BidragAutomatiskJobbConfiguration {
     @Bean

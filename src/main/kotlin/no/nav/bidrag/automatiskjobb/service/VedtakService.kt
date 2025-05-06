@@ -4,6 +4,7 @@ import no.nav.bidrag.automatiskjobb.consumer.BidragPersonConsumer
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
 import no.nav.bidrag.automatiskjobb.utils.IdentUtils
+import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.domene.enums.vedtak.Innkrevingstype
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.ident.Personident
@@ -91,7 +92,7 @@ class VedtakService(
             Barn(
                 saksnummer = saksnummer,
                 kravhaver = kravhaver.verdi,
-                fødselsdato = bidragPersonConsumer.hentFødselsdatoForPerson(kravhaver),
+                fødselsdato = hentFødselsdatoForPerson(kravhaver),
                 skyldner = finnSkylder(stønadsendringer),
                 forskuddFra = finnPeriodeFra(stønadsendringer, Stønadstype.FORSKUDD),
                 forskuddTil = finnPeriodeTil(stønadsendringer, Stønadstype.FORSKUDD),
@@ -100,6 +101,15 @@ class VedtakService(
             )
         val lagretBarn = barnRepository.save(barn)
         LOGGER.debug("Opprettet nytt barn ${lagretBarn.id} for sak $saksnummer")
+    }
+
+    private fun hentFødselsdatoForPerson(kravhaver: Personident): LocalDate? {
+        try {
+            return bidragPersonConsumer.hentFødselsdatoForPerson(kravhaver)
+        } catch (e: Exception) {
+            secureLogger.error(e) { "Det skjedde en feil ved henting av fødselsdato for person $kravhaver" }
+            return null
+        }
     }
 
     private fun finnPeriodeFra(
