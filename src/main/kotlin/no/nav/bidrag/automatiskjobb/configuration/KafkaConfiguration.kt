@@ -55,7 +55,9 @@ class KafkaRetryListener : RetryListener {
     ) {
         SECURE_LOGGER.error(
             exception,
-        ) { "Håndtering av kafka melding ${record.value()} feilet. Dette er $deliveryAttempt. forsøk" }
+        ) {
+            "Håndtering av kafka melding i topic ${record.topic()} med offset ${record.offset()} nøkkel ${record.key()} og innhold ${record.value()} feilet. Dette er $deliveryAttempt. forsøk"
+        }
     }
 
     override fun recovered(
@@ -64,7 +66,9 @@ class KafkaRetryListener : RetryListener {
     ) {
         SECURE_LOGGER.error(
             exception,
-        ) { "Håndtering av kafka melding ${record.value()} er enten suksess eller ignorert pågrunn av ugyldig data" }
+        ) {
+            "Håndtering av kafka melding i topic ${record.topic()} med offset ${record.offset()} nøkkel ${record.key()} og innhold ${record.value()} er enten suksess eller ignorert pågrunn av ugyldig data"
+        }
     }
 
     override fun recoveryFailed(
