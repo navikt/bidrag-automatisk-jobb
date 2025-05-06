@@ -73,4 +73,10 @@ interface AldersjusteringRepository : JpaRepository<Aldersjustering, Int> {
         @Param("status") statuser: List<Status>,
         pageable: Pageable = Pageable.ofSize(100),
     ): Page<Aldersjustering>
+
+    @Suppress("Brukes i batch")
+    fun findAllByVedtakjournalpostIdIsNull(): List<Aldersjustering>
+
+    @Suppress("Brukes i batch")
+    fun findAllByVedtakforselselseIdIsNotNullAndVedtakjournalpostIdIsNull(): List<Aldersjustering>
 }
