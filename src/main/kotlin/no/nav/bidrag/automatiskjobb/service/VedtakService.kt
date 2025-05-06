@@ -108,7 +108,7 @@ class VedtakService(
             return bidragPersonConsumer.hentFødselsdatoForPerson(kravhaver)
         } catch (e: Exception) {
             secureLogger.error(e) { "Det skjedde en feil ved henting av fødselsdato for person $kravhaver" }
-            return null
+            throw e
         }
     }
 
