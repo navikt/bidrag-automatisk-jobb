@@ -24,7 +24,7 @@
         <mockk.version>1.13.12</mockk.version>
         <ktlint.version>1.5.0</ktlint.version>
         <shedlock.version>6.4.0</shedlock.version>
-        <bidrag-beregn-felles.version>2025.05.02.141836</bidrag-beregn-felles.version>
+        <bidrag-beregn-felles.version>2025.05.06.135014</bidrag-beregn-felles.version>
     </properties>
 
     <repositories>
@@ -100,6 +100,10 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-cache</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.retry</groupId>
+            <artifactId>spring-retry</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.kafka</groupId>
