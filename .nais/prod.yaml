@@ -2,10 +2,10 @@ name: bidrag-automatisk-jobb
 ingresses:
   - https://bidrag-automatisk-jobb.intern.nav.no
 limits:
-  memory: 2048Mi
+  memory: 3048Mi
 requests:
-  cpu: 50m
-  memory: 1000Mi
+  cpu: 300m
+  memory: 2000Mi
 replicas:
   max: 2
   min: 2
