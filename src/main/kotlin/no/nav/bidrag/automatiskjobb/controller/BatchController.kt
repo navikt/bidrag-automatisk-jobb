@@ -12,6 +12,7 @@ import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.oppgave.Oppgave
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.opprett.OpprettAldersjusteringerBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.forskudd.AldersjusteringForskuddBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.slettvedtaksforslag.SlettVedtaksforslagBatch
+import no.nav.bidrag.automatiskjobb.batch.aldersjustering.slettvedtaksforslagalle.SlettVedtaksforslagAlleBatch
 import no.nav.security.token.support.core.api.Protected
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
@@ -24,6 +25,7 @@ import java.time.YearMonth
 @RestController
 class BatchController(
     private val slettVedtaksforslagBatch: SlettVedtaksforslagBatch,
+    private val slettVedtaksforslagAlleBatch: SlettVedtaksforslagAlleBatch,
     private val opprettAldersjusteringerBidragBatch: OpprettAldersjusteringerBidragBatch,
     private val fattVedtakOmAldersjusteringerBidragBatch: FattVedtakOmAldersjusteringerBidragBatch,
     private val oppgaveAldersjusteringBidragBatch: OppgaveAldersjusteringBidragBatch,
@@ -105,6 +107,27 @@ class BatchController(
     )
     fun startSlettVedtaksforslagBatch(): ResponseEntity<Any> {
         slettVedtaksforslagBatch.startSlettVedtaksforslagBatch()
+        return ResponseEntity.ok().build()
+    }
+
+    @PostMapping("/aldersjuster/batch/slettvedtaksforslagalle")
+    @Operation(
+        summary = "Starter batch som sletter vedtaksforslag.",
+        description =
+            "Operasjon for å starte kjøring av batch som sletter vedtaksforslag som er " +
+                "markert med status SLETTES og setter disse til SLETTET.",
+        security = [SecurityRequirement(name = "bearer-key")],
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Aldersjustering batch ble startet.",
+            ),
+        ],
+    )
+    fun startSlettVedtaksforslagAlleBatch(): ResponseEntity<Any> {
+        slettVedtaksforslagAlleBatch.startSlettVedtaksforslagBatch()
         return ResponseEntity.ok().build()
     }
 

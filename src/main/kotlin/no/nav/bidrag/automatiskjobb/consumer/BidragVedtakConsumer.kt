@@ -81,6 +81,16 @@ class BidragVedtakConsumer(
             request,
         )
 
+    fun hentAlleVedtaksforslag(limit: Int): List<Int> =
+        getForEntity(
+            bidragVedtakUri
+                .pathSegment("vedtaksforslag")
+                .pathSegment("alle")
+                .queryParam("limit", limit)
+                .build()
+                .toUri(),
+        ) ?: emptyList()
+
     @Cacheable(VEDTAK_CACHE)
     override fun hentVedtak(vedtakId: Int): VedtakDto? =
         getForEntity(
