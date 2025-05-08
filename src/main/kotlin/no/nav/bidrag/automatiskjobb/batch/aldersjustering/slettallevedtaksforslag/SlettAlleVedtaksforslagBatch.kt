@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.batch.aldersjustering.slettvedtaksforslagalle
+package no.nav.bidrag.automatiskjobb.batch.aldersjustering.slettallevedtaksforslag
 
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.JobParametersBuilder
@@ -7,11 +7,11 @@ import org.springframework.stereotype.Component
 import java.util.UUID
 
 @Component
-class SlettVedtaksforslagAlleBatch(
+class SlettAlleVedtaksforslagBatch(
     private val jobLauncher: JobLauncher,
     private val slettVedtaksforslagAlleJob: Job,
 ) {
-    fun startSlettVedtaksforslagBatch() {
+    fun startAlleSlettVedtaksforslagBatch() {
         jobLauncher.run(
             slettVedtaksforslagAlleJob,
             JobParametersBuilder()

@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.batch.aldersjustering.slettvedtaksforslagalle
+package no.nav.bidrag.automatiskjobb.batch.aldersjustering.slettallevedtaksforslag
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer

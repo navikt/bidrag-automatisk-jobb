@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.batch.aldersjustering.slettvedtaksforslagalle
+package no.nav.bidrag.automatiskjobb.batch.aldersjustering.slettallevedtaksforslag
 
 import no.nav.bidrag.automatiskjobb.batch.BatchCompletionNotificationListener
 import org.springframework.batch.core.Job
@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.transaction.PlatformTransactionManager
 
 @Configuration
-class SlettVedtaksforslagAlleBatchConfiguration {
+class SlettAlleVedtaksforslagBatchConfiguration {
     companion object {
         const val CHUNK_SIZE = 100
     }
@@ -31,7 +31,7 @@ class SlettVedtaksforslagAlleBatchConfiguration {
     fun slettVedtaksforslagAlleStep(
         jobRepository: JobRepository,
         transactionManager: PlatformTransactionManager,
-        slettVedtaksforslagBatchReader: SlettVedtaksforslagAlleBatchReader,
+        slettVedtaksforslagBatchReader: SlettAlleVedtaksforslagBatchReader,
         slettVedtaksforslagBatchWriter: SlettVedtaksforslagAlleBatchWriter,
     ): Step =
         StepBuilder("slettVedtaksforslagAlleStep", jobRepository)
