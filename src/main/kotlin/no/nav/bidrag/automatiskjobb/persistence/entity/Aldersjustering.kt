@@ -49,6 +49,7 @@ enum class Status {
     UBEHANDLET,
     TRUKKET,
     BEHANDLET,
+    SIMULERT,
     SLETTES,
     SLETTET,
     FEILET,
