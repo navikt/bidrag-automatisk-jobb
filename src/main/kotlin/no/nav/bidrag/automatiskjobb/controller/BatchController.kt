@@ -32,63 +32,6 @@ class BatchController(
     private val aldersjusteringForskuddBatch: AldersjusteringForskuddBatch,
     private val beregnAldersjusteringerBidragBatch: BeregnAldersjusteringerBidragBatch,
 ) {
-    @PostMapping("/aldersjuster/batch/bidrag")
-    @Operation(
-        summary = "Start kjøring av aldersjustering batch for bidrag.",
-        description = "Operasjon for å starte kjøring av aldersjustering batch for bidrag for et gitt år.",
-        security = [SecurityRequirement(name = "bearer-key")],
-    )
-    @ApiResponses(
-        value = [
-            ApiResponse(
-                responseCode = "200",
-                description = "Aldersjustering batch ble startet.",
-            ),
-        ],
-    )
-    @Parameters(
-        value = [
-            Parameter(
-                name = "forDato",
-                description = "År og måned for aldersjustering",
-                example = "2025-06",
-                required = true,
-            ),
-            Parameter(
-                name = "kjøretidspunkt",
-                example = "2025-06-01",
-                description =
-                    "Kjøretidspunkt for aldersjustering. " +
-                        "Default er dagens dato. Kan settes for å justere cutoff dato for opphørte bidrag.",
-                required = false,
-            ),
-            Parameter(
-                name = "år",
-                example = "2025",
-                description =
-                    "År det skal aldersjusteres for.",
-                required = true,
-            ),
-            Parameter(
-                name = "simuler",
-                example = "true",
-                description =
-                    "Simuleringsmodus for aldersjustering. " +
-                        "Default er true.",
-                required = false,
-            ),
-        ],
-    )
-    fun startAldersjusteringBidragBatch(
-        @RequestParam forDato: YearMonth,
-        @RequestParam(required = false) kjøretidspunkt: LocalDate?,
-        @RequestParam år: Long,
-        @RequestParam(required = false) simuler: Boolean = true,
-    ): ResponseEntity<Any> {
-//        aldersjusteringBidragBatch.startAldersjusteringBatch(forDato, kjøretidspunkt, år, simuler) TODO()
-        return ResponseEntity.ok().build()
-    }
-
     @PostMapping("/aldersjuster/batch/slettvedtaksforslag")
     @Operation(
         summary = "Starter batch som sletter vedtaksforslag.",
@@ -204,7 +147,7 @@ class BatchController(
         ],
     )
     fun startOpprettAldersjusteringBidragBatch(
-        @RequestParam år: Long,
+        @RequestParam(required = true, name = "aar") år: Long,
         @RequestParam(required = false) kjøretidspunkt: LocalDate?,
     ): ResponseEntity<Any> {
         opprettAldersjusteringerBidragBatch.startOpprettAldersjusteringBidragBatch(
