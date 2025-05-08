@@ -1,7 +1,7 @@
 package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.brev.opprett
 
 import no.nav.bidrag.automatiskjobb.batch.BatchCompletionNotificationListener
-import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
+import no.nav.bidrag.automatiskjobb.persistence.entity.ForsendelseBestilling
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.Step
 import org.springframework.batch.core.job.builder.JobBuilder
@@ -36,7 +36,7 @@ class OpprettBrevAldersjusteringerBidragBatchConfiguration {
         opprettBrevAldersjusteringerBidragBatchWriter: OpprettBrevAldersjusteringerBidragBatchWriter,
     ): Step =
         StepBuilder("opprettBrevAldersjusteringerBidragStep", jobRepository)
-            .chunk<Aldersjustering, Aldersjustering>(CHUNK_SIZE, transactionManager)
+            .chunk<ForsendelseBestilling, ForsendelseBestilling>(CHUNK_SIZE, transactionManager)
             .reader(opprettBrevAldersjusteringerBidragBatchReader)
             .writer(opprettBrevAldersjusteringerBidragBatchWriter)
             .build()

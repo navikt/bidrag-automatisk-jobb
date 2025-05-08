@@ -11,7 +11,7 @@ class OpprettBrevAldersjusteringerBidragBatch(
     private val jobLauncher: JobLauncher,
     private val opprettBrevAldersjusteringerBidragJob: Job,
 ) {
-    fun startOpprettBrevAldersjusteringBidragBatch(barnId: String = "") {
+    fun startOpprettBrevAldersjusteringBidragBatch() {
         jobLauncher.run(
             opprettBrevAldersjusteringerBidragJob,
             JobParametersBuilder()

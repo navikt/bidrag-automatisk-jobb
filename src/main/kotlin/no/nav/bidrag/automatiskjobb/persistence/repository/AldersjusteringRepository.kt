@@ -1,6 +1,7 @@
 package no.nav.bidrag.automatiskjobb.persistence.repository
 
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
+import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.entity.Behandlingstype
 import no.nav.bidrag.automatiskjobb.persistence.entity.Status
 import org.springframework.data.domain.Page
@@ -34,15 +35,15 @@ interface AldersjusteringRepository : JpaRepository<Aldersjustering, Int> {
     ): Page<Aldersjustering>
 
     @Query(
-        "SELECT a FROM aldersjustering a WHERE a.status IN :statuser and a.barnId IN :barnId",
+        "SELECT a FROM aldersjustering a WHERE a.status IN :statuser and a.barn.id IN :barnId",
     )
     fun finnForFlereStatuserOgBarnId(
         @Param("statuser") statuser: List<Status>,
         barnId: List<Int>,
     ): List<Aldersjustering>
 
-    fun existsAldersjusteringsByBarnIdAndAldersgruppe(
-        barnId: Int,
+    fun existsAldersjusteringsByBarnAndAldersgruppe(
+        barn: Barn,
         aldersgruppe: Int,
     ): Boolean
 
@@ -62,7 +63,7 @@ interface AldersjusteringRepository : JpaRepository<Aldersjustering, Int> {
     @Suppress("Brukes i batch")
     @Query(
         "SELECT a FROM aldersjustering a " +
-            "WHERE a.barnId in :barnid " +
+            "WHERE a.barn.id in :barnid " +
             "AND a.behandlingstype IN :behandlingstyper " +
             "AND a.status IN :statuser " +
             "AND a.oppgave IS NULL",
@@ -73,10 +74,4 @@ interface AldersjusteringRepository : JpaRepository<Aldersjustering, Int> {
         @Param("status") statuser: List<Status>,
         pageable: Pageable = Pageable.ofSize(100),
     ): Page<Aldersjustering>
-
-    @Suppress("Brukes i batch")
-    fun findAllByVedtakjournalpostIdIsNull(): List<Aldersjustering>
-
-    @Suppress("Brukes i batch")
-    fun findAllByVedtakforselselseIdIsNotNullAndVedtakjournalpostIdIsNull(): List<Aldersjustering>
 }

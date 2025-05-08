@@ -11,7 +11,7 @@ class DistribuerBrevAldersjusteringerBidragBatch(
     private val jobLauncher: JobLauncher,
     private val distribuerBrevAldersjusteringerBidragJob: Job,
 ) {
-    fun startDistribuerBrevAldersjusteringBidragBatch(barnId: String = "") {
+    fun startDistribuerBrevAldersjusteringBidragBatch() {
         jobLauncher.run(
             distribuerBrevAldersjusteringerBidragJob,
             JobParametersBuilder()

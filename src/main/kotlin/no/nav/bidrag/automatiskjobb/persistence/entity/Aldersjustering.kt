@@ -7,6 +7,8 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
 import java.math.BigDecimal
 import java.sql.Timestamp
 
@@ -19,8 +21,9 @@ data class Aldersjustering(
     val batchId: String,
     @Column(name = "vedtaksid_beregning")
     var vedtaksidBeregning: Int? = null,
-    @Column(name = "barn_id", nullable = false)
-    val barnId: Int,
+    @ManyToOne
+    @JoinColumn(name = "barn_id")
+    val barn: Barn,
     @Column(name = "aldersgruppe", nullable = false)
     val aldersgruppe: Int,
     @Column(name = "lopende_belop")
@@ -37,10 +40,6 @@ data class Aldersjustering(
     var vedtak: Int? = null,
     @Column(name = "oppgave")
     var oppgave: Int? = null,
-    @Column(name = "vedtakforsendelse_id")
-    var vedtakforselselseId: Long? = null,
-    @Column(name = "vedtakjournalpost_id")
-    var vedtakjournalpostId: Long? = null,
     @Column(name = "opprettet_tidspunkt", nullable = false, updatable = false)
     val opprettetTidspunkt: Timestamp = Timestamp(System.currentTimeMillis()),
 )

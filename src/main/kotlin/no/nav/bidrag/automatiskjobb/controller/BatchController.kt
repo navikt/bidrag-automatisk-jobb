@@ -7,6 +7,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.beregn.BeregnAldersjusteringerBidragBatch
+import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.brev.distribuer.DistribuerBrevAldersjusteringerBidragBatch
+import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.brev.opprett.OpprettBrevAldersjusteringerBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.fattvedtak.FattVedtakOmAldersjusteringerBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.oppgave.OppgaveAldersjusteringBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.opprett.OpprettAldersjusteringerBidragBatch
@@ -29,6 +31,8 @@ class BatchController(
     private val oppgaveAldersjusteringBidragBatch: OppgaveAldersjusteringBidragBatch,
     private val aldersjusteringForskuddBatch: AldersjusteringForskuddBatch,
     private val beregnAldersjusteringerBidragBatch: BeregnAldersjusteringerBidragBatch,
+    private val opprettBrevAldersjusteringerBidragBatch: OpprettBrevAldersjusteringerBidragBatch,
+    private val distribuerBrevAldersjusteringerBidragBatch: DistribuerBrevAldersjusteringerBidragBatch,
 ) {
     @PostMapping("/aldersjuster/batch/bidrag")
     @Operation(
@@ -293,6 +297,44 @@ class BatchController(
         oppgaveAldersjusteringBidragBatch.startOppgaveAldersjusteringBidragBatch(
             barn,
         )
+        return ResponseEntity.ok().build()
+    }
+
+    @PostMapping("/aldersjuster/batch/brev/opprett")
+    @Operation(
+        summary = "Start kjøring av batch for å opprette brev for aldersjusteringer.",
+        description = "Operasjon for å starte kjøring av batch som oppretter brev for aldersjusteriner.",
+        security = [SecurityRequirement(name = "bearer-key")],
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Batch for oppretting av brev for aldersjusteringer ble startet.",
+            ),
+        ],
+    )
+    fun startOpprettBrevAldersjusteringBidragBatch(): ResponseEntity<Any> {
+        opprettBrevAldersjusteringerBidragBatch.startOpprettBrevAldersjusteringBidragBatch()
+        return ResponseEntity.ok().build()
+    }
+
+    @PostMapping("/aldersjuster/batch/brev/distribuer")
+    @Operation(
+        summary = "Start kjøring av batch for å distribuere brev for aldersjusteringer.",
+        description = "Operasjon for å starte kjøring av batch som distibuerer brew for aldersjusteriner.",
+        security = [SecurityRequirement(name = "bearer-key")],
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Batch for distrubisjon av breev for aldersjusteringer ble startet.",
+            ),
+        ],
+    )
+    fun startDistribuerBrevAldersjusteringBidragBatch(): ResponseEntity<Any> {
+        distribuerBrevAldersjusteringerBidragBatch.startDistribuerBrevAldersjusteringBidragBatch()
         return ResponseEntity.ok().build()
     }
 }
