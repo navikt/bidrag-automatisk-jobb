@@ -14,7 +14,7 @@ import java.sql.Timestamp
 data class Aldersjustering(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Int? = null,
+    override val id: Int? = null,
     @Column(name = "batch_id", nullable = false)
     val batchId: String,
     @Column(name = "vedtaksid_beregning")
@@ -43,7 +43,7 @@ data class Aldersjustering(
     var vedtakjournalpostId: Int? = null,
     @Column(name = "opprettet_tidspunkt", nullable = false, updatable = false)
     val opprettetTidspunkt: Timestamp = Timestamp(System.currentTimeMillis()),
-)
+) : EntityObject
 
 enum class Status {
     UBEHANDLET,
