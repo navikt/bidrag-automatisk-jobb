@@ -1,11 +1,11 @@
 package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.fattvedtak
 
+import no.nav.bidrag.automatiskjobb.batch.common.ModuloItemProcessor
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import no.nav.bidrag.automatiskjobb.persistence.entity.Behandlingstype
 import no.nav.bidrag.automatiskjobb.persistence.entity.Status
 import no.nav.bidrag.automatiskjobb.persistence.repository.AldersjusteringRepository
 import org.springframework.batch.core.configuration.annotation.StepScope
-import org.springframework.batch.item.data.RepositoryItemReader
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Component
@@ -16,7 +16,9 @@ import java.util.Collections
 class FattVedtakOmAldersjusteringerBidragBatchReader(
     aldersjusteringRepository: AldersjusteringRepository,
     @Value("#{jobParameters['barn']}") barn: String? = "",
-) : RepositoryItemReader<Aldersjustering>() {
+    @Value("#{stepExecutionContext['partitionNumber']}") private val partitionNumber: Int?,
+    @Value("#{stepExecutionContext['gridSize']}") private val gridSize: Int?,
+) : ModuloItemProcessor<Aldersjustering>(partitionNumber, gridSize) {
     init {
         val barnListe = barn?.split(",")?.map { it.trim() }?.map { Integer.valueOf(it) } ?: emptyList()
         this.setRepository(aldersjusteringRepository)
