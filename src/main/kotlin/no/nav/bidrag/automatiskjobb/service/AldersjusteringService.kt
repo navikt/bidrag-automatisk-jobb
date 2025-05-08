@@ -128,9 +128,9 @@ class AldersjusteringService(
                     status = Status.UBEHANDLET,
                 )
             val id = alderjusteringRepository.save(aldersjustering).id
-            log.debug { "Opprettet aldersjustering $id for barn ${barn.id}." }
+            log.info { "Opprettet aldersjustering $id for barn ${barn.id}." }
         } else {
-            log.debug { "Aldersjustering for barn ${barn.id} er allerede opprettet." }
+            log.info { "Aldersjustering for barn ${barn.id} er allerede opprettet." }
         }
     }
 
@@ -196,7 +196,7 @@ class AldersjusteringService(
             aldersjustering.vedtak = vedtaksid
             aldersjustering.status = Status.BEHANDLET
             aldersjustering.behandlingstype = Behandlingstype.FATTET_FORSLAG
-
+            aldersjustering.begrunnelse = emptyList()
             alderjusteringRepository.save(aldersjustering)
 
             return AldersjusteringAldersjustertResultat(vedtaksid, stønadsid, vedtaksforslagRequest)
