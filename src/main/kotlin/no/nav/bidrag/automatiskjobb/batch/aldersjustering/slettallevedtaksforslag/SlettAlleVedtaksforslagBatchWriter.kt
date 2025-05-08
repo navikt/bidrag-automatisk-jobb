@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component
 private val log = KotlinLogging.logger {}
 
 @Component
-class SlettVedtaksforslagAlleBatchWriter(
+class SlettAlleVedtaksforslagBatchWriter(
     private val vedtakConsumer: BidragVedtakConsumer,
 ) : ItemWriter<List<Int>?> {
     override fun write(chunk: Chunk<out List<Int>?>) {

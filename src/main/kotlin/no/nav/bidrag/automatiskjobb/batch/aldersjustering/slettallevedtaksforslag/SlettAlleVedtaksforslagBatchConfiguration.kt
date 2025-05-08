@@ -17,24 +17,24 @@ class SlettAlleVedtaksforslagBatchConfiguration {
     }
 
     @Bean
-    fun slettVedtaksforslagAlleJob(
+    fun slettAlleVedtaksforslagJob(
         jobRepository: JobRepository,
-        slettVedtaksforslagAlleStep: Step,
+        slettAlleVedtaksforslagStep: Step,
         listener: BatchCompletionNotificationListener,
     ): Job =
-        JobBuilder("slettVedtaksforslagAlleJob", jobRepository)
+        JobBuilder("slettAlleVedtaksforslagJob", jobRepository)
             .listener(listener)
-            .start(slettVedtaksforslagAlleStep)
+            .start(slettAlleVedtaksforslagStep)
             .build()
 
     @Bean
-    fun slettVedtaksforslagAlleStep(
+    fun slettAlleVedtaksforslagStep(
         jobRepository: JobRepository,
         transactionManager: PlatformTransactionManager,
         slettVedtaksforslagBatchReader: SlettAlleVedtaksforslagBatchReader,
-        slettVedtaksforslagBatchWriter: SlettVedtaksforslagAlleBatchWriter,
+        slettVedtaksforslagBatchWriter: SlettAlleVedtaksforslagBatchWriter,
     ): Step =
-        StepBuilder("slettVedtaksforslagAlleStep", jobRepository)
+        StepBuilder("slettAlleVedtaksforslagStep", jobRepository)
             .chunk<List<Int>, List<Int>>(1, transactionManager)
             .reader(slettVedtaksforslagBatchReader)
             .writer(slettVedtaksforslagBatchWriter)

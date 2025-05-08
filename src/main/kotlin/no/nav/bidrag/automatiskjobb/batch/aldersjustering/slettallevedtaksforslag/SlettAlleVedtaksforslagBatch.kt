@@ -9,11 +9,11 @@ import java.util.UUID
 @Component
 class SlettAlleVedtaksforslagBatch(
     private val jobLauncher: JobLauncher,
-    private val slettVedtaksforslagAlleJob: Job,
+    private val slettAlleVedtaksforslagJob: Job,
 ) {
     fun startAlleSlettVedtaksforslagBatch() {
         jobLauncher.run(
-            slettVedtaksforslagAlleJob,
+            slettAlleVedtaksforslagJob,
             JobParametersBuilder()
                 .addString("runId", UUID.randomUUID().toString())
                 .toJobParameters(),
