@@ -9,12 +9,14 @@ import no.nav.bidrag.automatiskjobb.consumer.dto.OppgaveSokRequest
 import no.nav.bidrag.automatiskjobb.consumer.dto.OppgaveType
 import no.nav.bidrag.automatiskjobb.consumer.dto.OpprettOppgaveRequest
 import no.nav.bidrag.automatiskjobb.consumer.dto.lagBeskrivelseHeader
-import no.nav.bidrag.automatiskjobb.consumer.dto.lagBeskrivelseHeaderAutomnatiskJobb
+import no.nav.bidrag.automatiskjobb.consumer.dto.lagBeskrivelseHeaderAutomatiskJobb
 import no.nav.bidrag.automatiskjobb.domene.Endringsmelding
 import no.nav.bidrag.automatiskjobb.domene.erAdresseendring
+import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.service.model.AdresseEndretResultat
 import no.nav.bidrag.automatiskjobb.service.model.ForskuddRedusertResultat
 import no.nav.bidrag.automatiskjobb.utils.erForskudd
+import no.nav.bidrag.automatiskjobb.utils.oppgaveAldersjusteringBeskrivelse
 import no.nav.bidrag.automatiskjobb.utils.revurderForskuddBeskrivelseAdresseendring
 import no.nav.bidrag.automatiskjobb.utils.tilOppgaveBeskrivelse
 import no.nav.bidrag.commons.util.secureLogger
@@ -86,7 +88,7 @@ class OppgaveService(
         val oppgaveResponse =
             oppgaveConsumer.opprettOppgave(
                 OpprettOppgaveRequest(
-                    beskrivelse = lagBeskrivelseHeaderAutomnatiskJobb() + revurderForskuddBeskrivelseAdresseendring,
+                    beskrivelse = lagBeskrivelseHeaderAutomatiskJobb() + revurderForskuddBeskrivelseAdresseendring,
                     oppgavetype = OppgaveType.GEN,
                     tema = if (enhet_farskap == enhet) "FAR" else "BID",
                     saksreferanse = saksnummer,
@@ -101,6 +103,25 @@ class OppgaveService(
         secureLogger.info {
             "Opprettet revurder forskudd etter adresseendring oppgave $oppgaveResponse for sak $saksnummer, enhet $enhet og barn $gjelderBarn"
         }
+    }
+
+    fun opprettOppgaveForManuellAldersjustering(barn: Barn): Int {
+        val enhet = finnEierfogd(barn.saksnummer)
+        val oppgaveResponse =
+            oppgaveConsumer.opprettOppgave(
+                OpprettOppgaveRequest(
+                    beskrivelse = lagBeskrivelseHeaderAutomatiskJobb() + oppgaveAldersjusteringBeskrivelse,
+                    oppgavetype = OppgaveType.GEN,
+                    saksreferanse = barn.saksnummer,
+                    tema = if (enhet_farskap == enhet) "FAR" else "BID",
+                    tildeltEnhetsnr = enhet,
+                    personident = barn.kravhaver,
+                ),
+            )
+        log.info { "Opprettet oppgave ${oppgaveResponse.id} for sak ${barn.saksnummer} og enhet $enhet" }
+        secureLogger.info { "Opprettet oppgave $oppgaveResponse for barn $barn, enhet $enhet." }
+
+        return oppgaveResponse.id.toInt()
     }
 
     private fun VedtakHendelse.opprettRevurderForskuddOppgave(forskuddRedusertResultat: ForskuddRedusertResultat) {

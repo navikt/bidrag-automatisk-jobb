@@ -45,6 +45,9 @@ class AldersjusteringServiceTest {
     @RelaxedMockK
     lateinit var oppgaveService: OppgaveService
 
+    @RelaxedMockK
+    lateinit var forsendelseBestillingService: ForsendelseBestillingService
+
     @InjectMockKs
     lateinit var aldersjusteringService: AldersjusteringService
 
@@ -80,9 +83,9 @@ class AldersjusteringServiceTest {
     @Test
     fun `skal opprette aldersjustering for barn`() {
         val barn = Barn(id = 1, fødselsdato = LocalDate.now().minusYears(6))
-        every { aldersjusteringRepository.existsAldersjusteringsByBarnIdAndAldersgruppe(1, 6) } returns false
+        every { aldersjusteringRepository.existsAldersjusteringsByBarnAndAldersgruppe(Barn(), 6) } returns false
         every { aldersjusteringRepository.save(any()) } returns
-            Aldersjustering(id = 1, barnId = 1, aldersgruppe = 6, status = Status.UBEHANDLET, batchId = "batch-1")
+            Aldersjustering(id = 1, barn = Barn(), aldersgruppe = 6, status = Status.UBEHANDLET, batchId = "batch-1")
 
         aldersjusteringService.opprettAldersjusteringForBarn(barn, LocalDate.now().year, "batch-1")
 
@@ -92,7 +95,7 @@ class AldersjusteringServiceTest {
     @Test
     fun `skal ikke opprette aldersjustering hvis den allerede finnes`() {
         val barn = Barn(id = 1, fødselsdato = LocalDate.now().minusYears(6))
-        every { aldersjusteringRepository.existsAldersjusteringsByBarnIdAndAldersgruppe(1, 6) } returns true
+        every { aldersjusteringRepository.existsAldersjusteringsByBarnAndAldersgruppe(Barn(), 6) } returns true
 
         aldersjusteringService.opprettAldersjusteringForBarn(barn, LocalDate.now().year, "batch-1")
 
@@ -101,7 +104,7 @@ class AldersjusteringServiceTest {
 
     @Test
     fun `skal hente aldersjustering ved id`() {
-        val aldersjustering = Aldersjustering(id = 1, barnId = 1, aldersgruppe = 6, status = Status.UBEHANDLET, batchId = "batch-1")
+        val aldersjustering = Aldersjustering(id = 1, barn = Barn(), aldersgruppe = 6, status = Status.UBEHANDLET, batchId = "batch-1")
         every { aldersjusteringRepository.findById(1) } returns java.util.Optional.of(aldersjustering)
 
         val result = aldersjusteringService.hentAldersjustering(1)
@@ -120,7 +123,7 @@ class AldersjusteringServiceTest {
 
     @Test
     fun `skal lagre aldersjustering`() {
-        val aldersjustering = Aldersjustering(id = null, barnId = 1, aldersgruppe = 6, status = Status.UBEHANDLET, batchId = "batch-1")
+        val aldersjustering = Aldersjustering(id = null, barn = Barn(), aldersgruppe = 6, status = Status.UBEHANDLET, batchId = "batch-1")
         every { aldersjusteringRepository.save(aldersjustering) } returns aldersjustering.copy(id = 1)
 
         val result = aldersjusteringService.lagreAldersjustering(aldersjustering)
