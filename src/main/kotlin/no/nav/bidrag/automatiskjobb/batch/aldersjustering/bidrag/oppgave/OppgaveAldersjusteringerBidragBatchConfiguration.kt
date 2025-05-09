@@ -1,8 +1,6 @@
 package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.oppgave
 
 import no.nav.bidrag.automatiskjobb.batch.BatchCompletionNotificationListener
-import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.fattvedtak.FattVedtakOmAldersjusteringerBidragBatchReader
-import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.fattvedtak.FattVedtakOmAldersjusteringerBidragBatchWriter
 import no.nav.bidrag.automatiskjobb.batch.common.ModuloPartitioner
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import org.springframework.batch.core.Job
@@ -37,12 +35,12 @@ class OppgaveAldersjusteringerBidragBatchConfiguration {
     fun partitionedOppgaveAldersjusteringerBidragStep(
         jobRepository: JobRepository,
         transactionManager: PlatformTransactionManager,
-        opprettAldersjusteringerBidragStep: Step,
+        oppgaveAldersjusteringerBidragStep: Step,
         moduloPartitioner: ModuloPartitioner,
     ): Step =
         StepBuilder("partitionedStep", jobRepository)
-            .partitioner("oppgaveAldersjusteringerBidragStep", moduloPartitioner)
-            .step(opprettAldersjusteringerBidragStep)
+            .partitioner("partitionedOppgaveAldersjusteringerBidragStep", moduloPartitioner)
+            .step(oppgaveAldersjusteringerBidragStep)
             .gridSize(GRID_SIZE)
             .taskExecutor(SimpleAsyncTaskExecutor())
             .build()
@@ -51,13 +49,13 @@ class OppgaveAldersjusteringerBidragBatchConfiguration {
     fun oppgaveAldersjusteringerBidragStep(
         jobRepository: JobRepository,
         transactionManager: PlatformTransactionManager,
-        fattVedtakOmAldersjusteringerBidragBatchReader: FattVedtakOmAldersjusteringerBidragBatchReader,
-        fattVedtakOmAldersjusteringerBidragBatchWriter: FattVedtakOmAldersjusteringerBidragBatchWriter,
+        oppgaveAldersjusteringerBidragBatchReader: OppgaveAldersjusteringerBidragBatchReader,
+        oppgaveAldersjusteringerBidragBatchWriter: OppgaveAldersjusteringerBidragBatchWriter,
     ): Step =
         StepBuilder("oppgaveAldersjusteringerBidragStep", jobRepository)
             .chunk<Aldersjustering, Aldersjustering>(CHUNK_SIZE, transactionManager)
-            .reader(fattVedtakOmAldersjusteringerBidragBatchReader)
-            .processor(fattVedtakOmAldersjusteringerBidragBatchReader)
-            .writer(fattVedtakOmAldersjusteringerBidragBatchWriter)
+            .reader(oppgaveAldersjusteringerBidragBatchReader)
+            .processor(oppgaveAldersjusteringerBidragBatchReader)
+            .writer(oppgaveAldersjusteringerBidragBatchWriter)
             .build()
 }

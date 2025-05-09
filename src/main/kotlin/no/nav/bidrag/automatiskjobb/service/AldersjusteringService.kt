@@ -96,8 +96,12 @@ class AldersjusteringService(
         val aldersjusteringListe =
             alderjusteringRepository
                 .finnForFlereStatuserOgBarnId(
-                    listOf(Status.SLETTET, Status.UBEHANDLET, Status.FEILET,
-                   Status.SIMULERT),
+                    listOf(
+                        Status.SLETTET,
+                        Status.UBEHANDLET,
+                        Status.FEILET,
+                        Status.SIMULERT,
+                    ),
                     barnListe.mapNotNull { it.id },
                 ).toMutableList()
 
@@ -240,7 +244,7 @@ class AldersjusteringService(
     }
 
     fun opprettOppgaveForAldersjustering(aldersjustering: Aldersjustering) {
-val oppgaveId =         oppgaveService.opprettOppgaveForManuellAldersjustering(aldersjustering.barn) //
+        val oppgaveId = oppgaveService.opprettOppgaveForManuellAldersjustering(aldersjustering.barn) //
 
         aldersjustering.oppgave = oppgaveId
         alderjusteringRepository.save(aldersjustering)

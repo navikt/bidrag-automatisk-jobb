@@ -1,7 +1,6 @@
 package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.brev.distribuer
 
 import no.nav.bidrag.automatiskjobb.batch.BatchCompletionNotificationListener
-import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.beregn.BeregnAldersjusteringerBidragBatchConfiguration.Companion.GRID_SIZE
 import no.nav.bidrag.automatiskjobb.batch.common.ModuloPartitioner
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import org.springframework.batch.core.Job
@@ -18,6 +17,7 @@ import org.springframework.transaction.PlatformTransactionManager
 class DistribuerBrevAldersjusteringerBidragBatchConfiguration {
     companion object {
         const val CHUNK_SIZE = 100
+        const val GRID_SIZE = 5
     }
 
     @Bean
