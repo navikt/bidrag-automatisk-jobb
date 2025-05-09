@@ -17,7 +17,7 @@ import java.sql.Timestamp
 data class ForsendelseBestilling(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Int? = null,
+    override val id: Int? = null,
     @ManyToOne
     @JoinColumn(name = "aldersjustering_id")
     val aldersjustering: Aldersjustering,
@@ -43,4 +43,4 @@ data class ForsendelseBestilling(
     var distribuerTidspunkt: Timestamp? = null,
     @Column(name = "slettet_tidspunkt")
     var slettetTidspunkt: Timestamp? = null,
-)
+) : EntityObject
