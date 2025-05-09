@@ -96,7 +96,8 @@ class AldersjusteringService(
         val aldersjusteringListe =
             alderjusteringRepository
                 .finnForFlereStatuserOgBarnId(
-                    listOf(Status.SLETTET, Status.UBEHANDLET, Status.FEILET),
+                    listOf(Status.SLETTET, Status.UBEHANDLET, Status.FEILET,
+                   Status.SIMULERT),
                     barnListe.mapNotNull { it.id },
                 ).toMutableList()
 
@@ -131,9 +132,9 @@ class AldersjusteringService(
                     status = Status.UBEHANDLET,
                 )
             val id = alderjusteringRepository.save(aldersjustering).id
-            log.debug { "Opprettet aldersjustering $id for barn ${barn.id}." }
+            log.info { "Opprettet aldersjustering $id for barn ${barn.id}." }
         } else {
-            log.debug { "Aldersjustering for barn ${barn.id} er allerede opprettet." }
+            log.info { "Aldersjustering for barn ${barn.id} er allerede opprettet." }
         }
     }
 
@@ -152,13 +153,11 @@ class AldersjusteringService(
                     Personident(barn.kravhaver),
                     Saksnummer(barn.saksnummer),
                 )
-            if (!simuler) {
-                aldersjustering.status = Status.FEILET
-                aldersjustering.behandlingstype = Behandlingstype.FEILET
-                aldersjustering.begrunnelse = listOf(errorMessage)
+            aldersjustering.status = Status.FEILET
+            aldersjustering.behandlingstype = Behandlingstype.FEILET
+            aldersjustering.begrunnelse = listOf(errorMessage)
 
-                alderjusteringRepository.save(aldersjustering)
-            }
+            alderjusteringRepository.save(aldersjustering)
 
             return AldersjusteringIkkeAldersjustertResultat(stønadsid, errorMessage)
         }
@@ -180,33 +179,20 @@ class AldersjusteringService(
             val vedtaksforslagRequest =
                 vedtakMapper.tilOpprettVedtakRequest(resultatBeregning, stønadsid, aldersjustering.batchId)
 
-            if (simuler) {
-                val aldersjusteringAldersjustertResultat =
-                    AldersjusteringAldersjustertResultat(-1, stønadsid, vedtaksforslagRequest)
-                log.info {
-                    "Kjører aldersjustering i simuleringsmodus. Oppretter ikke vedtaksforslag. Dette ble resultatet: $aldersjusteringAldersjustertResultat"
-                }
-                return aldersjusteringAldersjustertResultat
-            }
-
-            val vedtaksid = opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
+            val vedtaksid = if (simuler) null else opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
 
             aldersjustering.vedtaksidBeregning = vedtaksidBeregning
             aldersjustering.lopendeBelop = løpendeBeløp
             aldersjustering.vedtak = vedtaksid
-            aldersjustering.status = Status.BEHANDLET
+            aldersjustering.status = if (simuler) Status.SIMULERT else Status.BEHANDLET
             aldersjustering.behandlingstype = Behandlingstype.FATTET_FORSLAG
-
+            aldersjustering.begrunnelse = emptyList()
             alderjusteringRepository.save(aldersjustering)
 
-            return AldersjusteringAldersjustertResultat(vedtaksid, stønadsid, vedtaksforslagRequest)
+            return AldersjusteringAldersjustertResultat(vedtaksid ?: -1, stønadsid, vedtaksforslagRequest)
         } catch (e: SkalIkkeAldersjusteresException) {
-            if (simuler) {
-                return AldersjusteringIkkeAldersjustertResultat(stønadsid, e.begrunnelser.joinToString(", "))
-            }
-
             aldersjustering.vedtaksidBeregning = e.vedtaksid
-            aldersjustering.status = Status.BEHANDLET
+            aldersjustering.status = if (simuler) Status.SIMULERT else Status.BEHANDLET
             aldersjustering.behandlingstype = Behandlingstype.INGEN
             aldersjustering.begrunnelse = e.begrunnelser.map { it.name }
 
@@ -217,11 +203,8 @@ class AldersjusteringService(
             }
             return AldersjusteringIkkeAldersjustertResultat(stønadsid, e.begrunnelser.joinToString(", "))
         } catch (e: AldersjusteresManueltException) {
-            if (simuler) {
-                return AldersjusteringIkkeAldersjustertResultat(stønadsid, e.begrunnelse.name)
-            }
             aldersjustering.vedtaksidBeregning = e.vedtaksid
-            aldersjustering.status = Status.BEHANDLET
+            aldersjustering.status = if (simuler) Status.SIMULERT else Status.BEHANDLET
             aldersjustering.behandlingstype = Behandlingstype.MANUELL
             aldersjustering.begrunnelse = listOf(e.begrunnelse.name)
 
@@ -230,9 +213,6 @@ class AldersjusteringService(
             combinedLogger.warn(e) { "Stønad $stønadsid skal aldersjusteres manuelt med begrunnelse ${e.begrunnelse}" }
             return AldersjusteringIkkeAldersjustertResultat(stønadsid, e.begrunnelse.name)
         } catch (e: Exception) {
-            if (simuler) {
-                return AldersjusteringIkkeAldersjustertResultat(stønadsid, "Teknisk feil: ${e.message}")
-            }
             aldersjustering.status = Status.FEILET
             aldersjustering.behandlingstype = Behandlingstype.FEILET
             aldersjustering.begrunnelse = listOf(e.message ?: "Ukjent feil")
@@ -245,6 +225,7 @@ class AldersjusteringService(
     }
 
     fun fattVedtakOmAldersjustering(aldersjustering: Aldersjustering) {
+        combinedLogger.info { "Fatter vedtak for aldersjustering ${aldersjustering.id} og vedtaksid ${aldersjustering.vedtak}" }
         vedtakConsumer.fatteVedtaksforslag(
             aldersjustering.vedtak ?: error("Aldersjustering ${aldersjustering.id} mangler vedtak!"),
         )
@@ -259,7 +240,7 @@ class AldersjusteringService(
     }
 
     fun opprettOppgaveForAldersjustering(aldersjustering: Aldersjustering) {
-        val oppgaveId = oppgaveService.opprettOppgaveForManuellAldersjustering(aldersjustering.barn) //
+val oppgaveId =         oppgaveService.opprettOppgaveForManuellAldersjustering(aldersjustering.barn) //
 
         aldersjustering.oppgave = oppgaveId
         alderjusteringRepository.save(aldersjustering)

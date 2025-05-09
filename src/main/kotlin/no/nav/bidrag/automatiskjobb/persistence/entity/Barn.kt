@@ -14,7 +14,7 @@ data class Barn(
     @Id
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Int? = null,
+    override var id: Int? = null,
     @Column(name = "saksnummer")
     var saksnummer: String = "",
     @Column(name = "kravhaver")
@@ -34,4 +34,4 @@ data class Barn(
     @Version
     @Column(name = "opprettet")
     var opprettet: LocalDateTime? = null,
-)
+) : EntityObject
