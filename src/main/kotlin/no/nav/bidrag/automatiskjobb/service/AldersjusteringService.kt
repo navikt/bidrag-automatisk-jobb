@@ -43,6 +43,7 @@ class AldersjusteringService(
     private val sakConsumer: BidragSakConsumer,
     private val vedtakMapper: VedtakMapper,
     private val oppgaveService: OppgaveService,
+    private val forsendelseBestillingService: ForsendelseBestillingService,
 ) {
     fun kjørAldersjusteringForSak(
         saksnummer: Saksnummer,
@@ -95,7 +96,12 @@ class AldersjusteringService(
         val aldersjusteringListe =
             alderjusteringRepository
                 .finnForFlereStatuserOgBarnId(
-                    listOf(Status.SLETTET, Status.UBEHANDLET, Status.FEILET, Status.SIMULERT),
+                    listOf(
+                        Status.SLETTET,
+                        Status.UBEHANDLET,
+                        Status.FEILET,
+                        Status.SIMULERT,
+                    ),
                     barnListe.mapNotNull { it.id },
                 ).toMutableList()
 
@@ -121,11 +127,11 @@ class AldersjusteringService(
             return
         }
 
-        if (!alderjusteringRepository.existsAldersjusteringsByBarnIdAndAldersgruppe(barn.id!!, aldersgruppe)) {
+        if (!alderjusteringRepository.existsAldersjusteringsByBarnAndAldersgruppe(barn.id!!, aldersgruppe)) {
             val aldersjustering =
                 Aldersjustering(
                     batchId = batchId,
-                    barnId = barn.id!!,
+                    barn = barn,
                     aldersgruppe = aldersgruppe,
                     status = Status.UBEHANDLET,
                 )
@@ -141,10 +147,7 @@ class AldersjusteringService(
         stønadstype: Stønadstype,
         simuler: Boolean,
     ): AldersjusteringResultat {
-        val barn =
-            barnRepository
-                .findById(aldersjustering.barnId)
-                .orElseThrow { error("Fant ikke barn med id ${aldersjustering.barnId}") }
+        val barn = aldersjustering.barn
         if (barn.skyldner == null) {
             val errorMessage = "Mangler skyldner"
             val stønadsid =
@@ -227,15 +230,23 @@ class AldersjusteringService(
 
     fun fattVedtakOmAldersjustering(aldersjustering: Aldersjustering) {
         combinedLogger.info { "Fatter vedtak for aldersjustering ${aldersjustering.id} og vedtaksid ${aldersjustering.vedtak}" }
-        vedtakConsumer.fatteVedtaksforslag(aldersjustering.vedtak ?: error("Aldersjustering ${aldersjustering.id} mangler vedtak!"))
+        vedtakConsumer.fatteVedtaksforslag(
+            aldersjustering.vedtak ?: error("Aldersjustering ${aldersjustering.id} mangler vedtak!"),
+        )
         aldersjustering.status = Status.FATTET
         alderjusteringRepository.save(aldersjustering)
+
+        val sak = sakConsumer.hentSak(aldersjustering.barn.saksnummer)
+
+        sak.roller.filter { it.type == Rolletype.BIDRAGSPLIKTIG || it.type == Rolletype.BIDRAGSMOTTAKER }.forEach {
+            forsendelseBestillingService.opprettForsendelseBestilling(aldersjustering, it.fødselsnummer!!.verdi, it.type)
+        }
     }
 
     fun opprettOppgaveForAldersjustering(aldersjustering: Aldersjustering) {
-//         oppgaveService.opprettRevurderForskuddOppgave()  TODO()
-        val oppdageId = 1
-        aldersjustering.oppgave = oppdageId
+        val oppgaveId = oppgaveService.opprettOppgaveForManuellAldersjustering(aldersjustering.barn) //
+
+        aldersjustering.oppgave = oppgaveId
         alderjusteringRepository.save(aldersjustering)
     }
 
@@ -263,10 +274,7 @@ class AldersjusteringService(
         stønadstype: Stønadstype,
         aldersjustering: Aldersjustering,
     ) {
-        val barn =
-            barnRepository
-                .findById(aldersjustering.barnId)
-                .orElseThrow { error("Fant ikke barn med id ${aldersjustering.barnId}") }
+        val barn = aldersjustering.barn
 
         val stønadsid =
             Stønadsid(
@@ -341,7 +349,9 @@ class AldersjusteringService(
     ): AldersjusteringResponse {
         val sak = sakConsumer.hentSak(saksnummer.verdi)
         val barnISaken = sak.roller.filter { it.type == Rolletype.BARN }
-        val bp = sak.roller.find { it.type == Rolletype.BIDRAGSPLIKTIG } ?: ugyldigForespørsel("Fant ikke BP for sak $saksnummer")
+        val bp =
+            sak.roller.find { it.type == Rolletype.BIDRAGSPLIKTIG }
+                ?: ugyldigForespørsel("Fant ikke BP for sak $saksnummer")
         val resultat =
             barnISaken.map {
                 utførAldersjusteringForBarnDebug(
@@ -402,7 +412,13 @@ class AldersjusteringService(
             val vedtaksid = opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
             return AldersjusteringAldersjustertResultat(vedtaksid, stønadsid, vedtaksforslagRequest)
         } catch (e: SkalIkkeAldersjusteresException) {
-            combinedLogger.warn(e) { "Stønad $stønadsid skal ikke aldersjusteres med begrunnelse ${e.begrunnelser.joinToString(", ")}" }
+            combinedLogger.warn(e) {
+                "Stønad $stønadsid skal ikke aldersjusteres med begrunnelse ${
+                    e.begrunnelser.joinToString(
+                        ", ",
+                    )
+                }"
+            }
             return AldersjusteringIkkeAldersjustertResultat(stønadsid, e.begrunnelser.joinToString(", "))
         } catch (e: AldersjusteresManueltException) {
             combinedLogger.warn(e) { "Stønad $stønadsid skal aldersjusteres manuelt med begrunnelse ${e.begrunnelse}" }

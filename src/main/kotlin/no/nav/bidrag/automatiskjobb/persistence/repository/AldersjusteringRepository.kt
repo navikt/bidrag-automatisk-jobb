@@ -34,15 +34,18 @@ interface AldersjusteringRepository : JpaRepository<Aldersjustering, Int> {
     ): Page<Aldersjustering>
 
     @Query(
-        "SELECT a FROM aldersjustering a WHERE a.status IN :statuser and a.barnId IN :barnId",
+        "SELECT a FROM aldersjustering a WHERE a.status IN :statuser and a.barn.id IN :barnId",
     )
     fun finnForFlereStatuserOgBarnId(
         @Param("statuser") statuser: List<Status>,
         barnId: List<Int>,
     ): List<Aldersjustering>
 
-    fun existsAldersjusteringsByBarnIdAndAldersgruppe(
-        barnId: Int,
+    @Query(
+        "SELECT a FROM aldersjustering a WHERE a.barn = :barn AND a.aldersgruppe = :aldersgruppe",
+    )
+    fun existsAldersjusteringsByBarnAndAldersgruppe(
+        barn: Int,
         aldersgruppe: Int,
     ): Boolean
 
@@ -62,15 +65,15 @@ interface AldersjusteringRepository : JpaRepository<Aldersjustering, Int> {
     @Suppress("Brukes i batch")
     @Query(
         "SELECT a FROM aldersjustering a " +
-            "WHERE a.barnId in :barnid " +
+            "WHERE a.barn.id in :barnid " +
             "AND a.behandlingstype IN :behandlingstyper " +
             "AND a.status IN :statuser " +
             "AND a.oppgave IS NULL",
     )
     fun finnForBarnBehandlingstypeOgStatus(
         @Param("barnid") barn: List<Int>,
-        @Param("behandlingstype") behandlingstyper: List<Behandlingstype>,
-        @Param("status") statuser: List<Status>,
+        @Param("behandlingstyper") behandlingstyper: List<Behandlingstype>,
+        @Param("statuser") statuser: List<Status>,
         pageable: Pageable = Pageable.ofSize(100),
     ): Page<Aldersjustering>
 }

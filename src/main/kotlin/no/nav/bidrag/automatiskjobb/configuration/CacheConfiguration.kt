@@ -9,6 +9,7 @@ import org.springframework.cache.caffeine.CaffeineCacheManager
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
+import java.time.Duration
 
 @Configuration
 @EnableCaching
@@ -45,7 +46,7 @@ class CacheConfiguration {
         )
         caffeineCacheManager.registerCustomCache(
             VEDTAK_CACHE,
-            Caffeine.newBuilder().expireAfter(InvaliderCacheFørStartenAvArbeidsdag()).build(),
+            Caffeine.newBuilder().expireAfterWrite(Duration.ofMinutes(10)).build(),
         )
         caffeineCacheManager.registerCustomCache(
             SAK_CACHE,
