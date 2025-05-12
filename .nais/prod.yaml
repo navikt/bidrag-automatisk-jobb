@@ -49,6 +49,10 @@ outbound-access-hosts:
   - bidrag-sjablon.prod-fss-pub.nais.io
   - oppgave.prod-fss-pub.nais.io
   - bidrag-unleash-api.nav.cloud.nais.io
+azure_access_inbound:
+  - application: bisys
+    namespace: bidrag
+    cluster: prod-fss
 unleash:
   env: production
   secret_name: bidrag-automatisk-jobb-unleash-api-token

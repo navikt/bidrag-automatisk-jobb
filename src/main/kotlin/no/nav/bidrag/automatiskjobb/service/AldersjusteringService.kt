@@ -11,10 +11,7 @@ import no.nav.bidrag.automatiskjobb.persistence.entity.Behandlingstype
 import no.nav.bidrag.automatiskjobb.persistence.entity.Status
 import no.nav.bidrag.automatiskjobb.persistence.repository.AldersjusteringRepository
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
-import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringAldersjustertResultat
-import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringIkkeAldersjustertResultat
 import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringResponse
-import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringResultat
 import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringResultatResponse
 import no.nav.bidrag.automatiskjobb.service.model.OpprettVedtakConflictResponse
 import no.nav.bidrag.automatiskjobb.utils.ugyldigForespørsel
@@ -26,6 +23,11 @@ import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.domene.sak.Saksnummer
 import no.nav.bidrag.domene.sak.Stønadsid
+import no.nav.bidrag.transport.automatiskjobb.AldersjusteringAldersjustertResultat
+import no.nav.bidrag.transport.automatiskjobb.AldersjusteringIkkeAldersjustertResultat
+import no.nav.bidrag.transport.automatiskjobb.AldersjusteringResultat
+import no.nav.bidrag.transport.automatiskjobb.AldersjusteringResultatlisteResponse
+import no.nav.bidrag.transport.automatiskjobb.HentAldersjusteringStatusRequest
 import no.nav.bidrag.transport.behandling.vedtak.request.OpprettVedtakRequestDto
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
@@ -45,6 +47,47 @@ class AldersjusteringService(
     private val oppgaveService: OppgaveService,
     private val forsendelseBestillingService: ForsendelseBestillingService,
 ) {
+    fun hentAldersjusteringstatusForBarnOgSak(request: HentAldersjusteringStatusRequest): AldersjusteringResultatlisteResponse =
+        AldersjusteringResultatlisteResponse(
+            request.barnListe.map {
+                val barn =
+                    barnRepository.findByKravhaverAndSaksnummer(it.verdi, request.saksnummer.verdi)
+                        ?: ugyldigForespørsel("Fant ikke barn med fødselsnummer $it og sak ${request.saksnummer}")
+                val alderBarn = request.år - (barn.fødselsdato?.year ?: 0)
+                val aldersjustering =
+                    alderjusteringRepository.finnBarnAldersjustert(barn.id!!)
+                        ?: ugyldigForespørsel("Fant ingen aldersjustering for barn med fødselsnummer $it og sak ${request.saksnummer}")
+
+                if (aldersjustering.aldersgruppe != alderBarn) {
+                    ugyldigForespørsel(
+                        "Fant ingen aldersjustering for barn med fødselsnummer $it og sak ${request.saksnummer} for år ${request.år}",
+                    )
+                }
+
+                val stønadsid =
+                    Stønadsid(
+                        Stønadstype.BIDRAG,
+                        Personident(barn.kravhaver),
+                        Personident(barn.skyldner!!),
+                        Saksnummer(barn.saksnummer),
+                    )
+                if (aldersjustering.behandlingstype == Behandlingstype.FATTET_FORSLAG) {
+                    AldersjusteringAldersjustertResultat(
+                        aldersjustering.vedtak!!,
+                        stønadsid,
+                    )
+                } else {
+                    AldersjusteringIkkeAldersjustertResultat(
+                        stønadsid,
+                        aldersjustering.begrunnelse.joinToString(
+                            ",",
+                        ) { it.lowercase().replaceFirstChar { it.uppercase() }.replace("_", " ") },
+                        aldersjusteresManuelt = aldersjustering.behandlingstype == Behandlingstype.MANUELL,
+                    )
+                }
+            },
+        )
+
     fun kjørAldersjusteringForSak(
         saksnummer: Saksnummer,
         år: Int,
