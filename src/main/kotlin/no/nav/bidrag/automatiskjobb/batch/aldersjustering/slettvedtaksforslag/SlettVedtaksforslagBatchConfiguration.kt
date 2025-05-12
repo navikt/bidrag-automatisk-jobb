@@ -23,12 +23,12 @@ class SlettVedtaksforslagBatchConfiguration {
     @Bean
     fun slettVedtaksforslagJob(
         jobRepository: JobRepository,
-        slettVedtaksforslagStep: Step,
+        partitionedSlettVedtaksforslagStep: Step,
         listener: BatchCompletionNotificationListener,
     ): Job =
         JobBuilder("slettVedtaksforslagJob", jobRepository)
             .listener(listener)
-            .start(slettVedtaksforslagStep)
+            .start(partitionedSlettVedtaksforslagStep)
             .build()
 
     @Bean
