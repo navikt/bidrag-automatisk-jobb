@@ -21,7 +21,7 @@ class SlettVedtaksforslagBatchReader(
         this.setRepository(aldersjusteringRepository)
         this.setMethodName("finnForStatus")
         this.setArguments(listOf(Status.SLETTES))
-        this.setPageSize(100)
+        this.setPageSize(500)
         this.setSort(Collections.singletonMap("id", Sort.Direction.ASC))
     }
 }

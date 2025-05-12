@@ -16,8 +16,8 @@ import org.springframework.transaction.PlatformTransactionManager
 @Configuration
 class BeregnAldersjusteringerBidragBatchConfiguration {
     companion object {
-        const val CHUNK_SIZE = 100
-        const val GRID_SIZE = 5
+        const val CHUNK_SIZE = 500
+        const val GRID_SIZE = 10
     }
 
     @Bean

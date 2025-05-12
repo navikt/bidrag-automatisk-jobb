@@ -21,7 +21,7 @@ class BeregnAldersjusteringerBidragBatchReader(
         this.setRepository(aldersjusteringRepository)
         this.setMethodName("finnForFlereStatuser")
         this.setArguments(listOf(listOf(Status.UBEHANDLET, Status.FEILET, Status.SLETTET, Status.SIMULERT)))
-        this.setPageSize(100)
+        this.setPageSize(500)
         this.setSort(Collections.singletonMap("id", Sort.Direction.ASC))
     }
 }
