@@ -39,7 +39,7 @@ data class ForsendelseBestilling(
     val opprettetTidspunkt: Timestamp = Timestamp(System.currentTimeMillis()),
     @Column(name = "bestilt_tidspunkt")
     var bestiltTidspunkt: Timestamp? = null,
-    @Column(name = "distribuer_tidspunkt")
+    @Column(name = "distribuert_tidspunkt")
     var distribuerTidspunkt: Timestamp? = null,
     @Column(name = "slettet_tidspunkt")
     var slettetTidspunkt: Timestamp? = null,
