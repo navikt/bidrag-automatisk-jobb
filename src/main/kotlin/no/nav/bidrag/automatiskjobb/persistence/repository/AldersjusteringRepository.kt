@@ -72,8 +72,8 @@ interface AldersjusteringRepository : JpaRepository<Aldersjustering, Int> {
     )
     fun finnForBarnBehandlingstypeOgStatus(
         @Param("barnid") barn: List<Int>,
-        @Param("behandlingstype") behandlingstyper: List<Behandlingstype>,
-        @Param("status") statuser: List<Status>,
+        @Param("behandlingstyper") behandlingstyper: List<Behandlingstype>,
+        @Param("statuser") statuser: List<Status>,
         pageable: Pageable = Pageable.ofSize(100),
     ): Page<Aldersjustering>
 }

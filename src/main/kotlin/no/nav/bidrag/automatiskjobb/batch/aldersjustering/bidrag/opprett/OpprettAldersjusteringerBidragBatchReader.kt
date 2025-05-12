@@ -1,9 +1,9 @@
 package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.opprett
 
+import no.nav.bidrag.automatiskjobb.batch.common.ModuloItemProcessor
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
 import org.springframework.batch.core.configuration.annotation.StepScope
-import org.springframework.batch.item.data.RepositoryItemReader
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Component
@@ -16,7 +16,9 @@ class OpprettAldersjusteringerBidragBatchReader(
     @Value("#{jobParameters['kjøredato']}") kjøredato: LocalDate? = LocalDate.now(),
     @Value("#{jobParameters['år']}") år: Long? = -1,
     barnRepository: BarnRepository,
-) : RepositoryItemReader<Barn>() {
+    @Value("#{stepExecutionContext['partitionNumber']}") private val partitionNumber: Int?,
+    @Value("#{stepExecutionContext['gridSize']}") private val gridSize: Int?,
+) : ModuloItemProcessor<Barn>(partitionNumber, gridSize) {
     init {
         this.setRepository(barnRepository)
         this.setMethodName("finnBarnSomSkalAldersjusteresForÅr")

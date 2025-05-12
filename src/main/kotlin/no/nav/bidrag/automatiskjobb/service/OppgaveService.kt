@@ -113,6 +113,7 @@ class OppgaveService(
                     beskrivelse = lagBeskrivelseHeaderAutomatiskJobb() + oppgaveAldersjusteringBeskrivelse,
                     oppgavetype = OppgaveType.GEN,
                     saksreferanse = barn.saksnummer,
+                    tema = if (enhet_farskap == enhet) "FAR" else "BID",
                     tildeltEnhetsnr = enhet,
                     personident = barn.kravhaver,
                 ),
