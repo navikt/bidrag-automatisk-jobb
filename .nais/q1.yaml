@@ -4,8 +4,8 @@ ingresses:
 limits:
   memory: 4000Mi
 requests:
-  cpu: 100m
-  memory: 1000Mi
+  cpu: 500m
+  memory: 2000Mi
 replicas:
   max: 1
   min: 1
