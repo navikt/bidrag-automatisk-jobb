@@ -1,7 +1,6 @@
 package no.nav.bidrag.automatiskjobb.persistence.repository
 
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
-import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.entity.Behandlingstype
 import no.nav.bidrag.automatiskjobb.persistence.entity.Status
 import org.springframework.data.domain.Page
@@ -42,8 +41,11 @@ interface AldersjusteringRepository : JpaRepository<Aldersjustering, Int> {
         barnId: List<Int>,
     ): List<Aldersjustering>
 
+    @Query(
+        "SELECT a FROM aldersjustering a WHERE a.barn = :barn AND a.aldersgruppe = :aldersgruppe",
+    )
     fun existsAldersjusteringsByBarnAndAldersgruppe(
-        barn: Barn,
+        barn: Int,
         aldersgruppe: Int,
     ): Boolean
 

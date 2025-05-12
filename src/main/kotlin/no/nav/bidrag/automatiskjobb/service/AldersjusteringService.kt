@@ -122,7 +122,7 @@ class AldersjusteringService(
             return
         }
 
-        if (!alderjusteringRepository.existsAldersjusteringsByBarnAndAldersgruppe(barn, aldersgruppe)) {
+        if (!alderjusteringRepository.existsAldersjusteringsByBarnAndAldersgruppe(barn.id!!, aldersgruppe)) {
             val aldersjustering =
                 Aldersjustering(
                     batchId = batchId,
