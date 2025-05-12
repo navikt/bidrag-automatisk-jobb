@@ -88,11 +88,12 @@ spring:
   datasource:
     url: ${DB_JDBC_URL}
     hikari:
-      idle-timeout: 10001
-      max-lifetime: 30001
-      connectionTimeout: 1000
-      maximum-pool-size: 10
+      idle-timeout: 100000
+      max-lifetime: 300000
+      connectionTimeout: 300000
+      maximum-pool-size: 15
       minimum-idle: 1
+      leakDetectionThreshold: 300000
       data-source-properties:
         ssl: true
         sslmode: ${DB_SSLMODE}
