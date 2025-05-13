@@ -80,7 +80,7 @@ class AldersjusteringService(
                     AldersjusteringIkkeAldersjustertResultat(
                         stønadsid,
                         aldersjustering.begrunnelse.joinToString(
-                            ",",
+                            ", ",
                         ) { it.lowercase().replaceFirstChar { it.uppercase() }.replace("_", " ") },
                         aldersjusteresManuelt = aldersjustering.behandlingstype == Behandlingstype.MANUELL,
                     )
