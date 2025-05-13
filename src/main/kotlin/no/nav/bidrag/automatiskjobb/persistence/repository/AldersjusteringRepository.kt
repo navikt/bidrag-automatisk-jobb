@@ -42,7 +42,7 @@ interface AldersjusteringRepository : JpaRepository<Aldersjustering, Int> {
     ): List<Aldersjustering>
 
     @Query(
-        "SELECT a FROM aldersjustering a WHERE a.barn = :barn AND a.aldersgruppe = :aldersgruppe",
+        "SELECT a FROM aldersjustering a WHERE a.barn.id = :barn AND a.aldersgruppe = :aldersgruppe",
     )
     fun existsAldersjusteringsByBarnAndAldersgruppe(
         barn: Int,
