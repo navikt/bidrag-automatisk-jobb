@@ -221,7 +221,7 @@ class AldersjusteringService(
             )
 
         try {
-            val (vedtaksidBeregning, løpendeBeløp, resultatBeregning) =
+            val (vedtaksidBeregning, løpendeBeløp, resultatBeregning, resultatSisteVedtak) =
                 aldersjusteringOrchestrator.utførAldersjustering(
                     stønadsid,
                     barn.fødselsdato!!.year + aldersjustering.aldersgruppe,
@@ -238,7 +238,7 @@ class AldersjusteringService(
             aldersjustering.status = if (simuler) Status.SIMULERT else Status.BEHANDLET
             aldersjustering.behandlingstype = Behandlingstype.FATTET_FORSLAG
             aldersjustering.begrunnelse = emptyList()
-            aldersjustering.resultatSisteVedtak = "resultatBeregning" // TODO(Legge til faktisk resultatBeregning)
+            aldersjustering.resultatSisteVedtak = resultatSisteVedtak
             alderjusteringRepository.save(aldersjustering)
 
             return AldersjusteringAldersjustertResultat(vedtaksid ?: -1, stønadsid, vedtaksforslagRequest)
@@ -247,6 +247,7 @@ class AldersjusteringService(
             aldersjustering.status = if (simuler) Status.SIMULERT else Status.BEHANDLET
             aldersjustering.behandlingstype = Behandlingstype.INGEN
             aldersjustering.begrunnelse = e.begrunnelser.map { it.name }
+            aldersjustering.resultatSisteVedtak = e.resultat
 
             alderjusteringRepository.save(aldersjustering)
 
@@ -259,6 +260,7 @@ class AldersjusteringService(
             aldersjustering.status = if (simuler) Status.SIMULERT else Status.BEHANDLET
             aldersjustering.behandlingstype = Behandlingstype.MANUELL
             aldersjustering.begrunnelse = listOf(e.begrunnelse.name)
+            aldersjustering.resultatSisteVedtak = e.resultat
 
             alderjusteringRepository.save(aldersjustering)
 
