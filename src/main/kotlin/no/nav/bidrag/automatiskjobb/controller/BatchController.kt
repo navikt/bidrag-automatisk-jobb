@@ -134,7 +134,7 @@ class BatchController(
     @Parameters(
         value = [
             Parameter(
-                name = "år",
+                name = "aar",
                 example = "2025",
                 description =
                     "År det skal aldersjusteres for.",

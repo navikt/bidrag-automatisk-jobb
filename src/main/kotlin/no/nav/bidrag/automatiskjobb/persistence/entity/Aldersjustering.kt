@@ -9,6 +9,7 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
+import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import java.math.BigDecimal
 import java.sql.Timestamp
 
@@ -42,6 +43,13 @@ data class Aldersjustering(
     var oppgave: Int? = null,
     @Column(name = "opprettet_tidspunkt", nullable = false, updatable = false)
     val opprettetTidspunkt: Timestamp = Timestamp(System.currentTimeMillis()),
+    @Column(name = "fattet_tidspunkt")
+    var fattetTidspunkt: Timestamp? = null,
+    @Column(name = "stonadstype")
+    @Enumerated(EnumType.STRING)
+    val stønadstype: Stønadstype,
+    @Column(name = "resultat_siste_vedtak")
+    var resultatSisteVedtak: String? = null,
 ) : EntityObject
 
 enum class Status {

@@ -1,8 +1,8 @@
 package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.brev.distribuer
 
 import no.nav.bidrag.automatiskjobb.batch.common.ModuloItemProcessor
-import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
-import no.nav.bidrag.automatiskjobb.persistence.repository.AldersjusteringRepository
+import no.nav.bidrag.automatiskjobb.persistence.entity.ForsendelseBestilling
+import no.nav.bidrag.automatiskjobb.persistence.repository.ForsendelseBestillingRepository
 import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Sort
@@ -13,14 +13,14 @@ import java.util.Collections
 @Component
 @StepScope
 class DistribuerBrevAldersjusteringerBidragBatchReader(
-    aldersjusteringRepository: AldersjusteringRepository,
+    forsendelseBestillingRepository: ForsendelseBestillingRepository,
     @Value("#{stepExecutionContext['partitionNumber']}") private val partitionNumber: Int?,
     @Value("#{stepExecutionContext['gridSize']}") private val gridSize: Int?,
     transactionManager: PlatformTransactionManager,
-) : ModuloItemProcessor<Aldersjustering>(partitionNumber, gridSize, transactionManager) {
+) : ModuloItemProcessor<ForsendelseBestilling>(partitionNumber, gridSize, transactionManager) {
     init {
-        this.setRepository(aldersjusteringRepository)
-        this.setMethodName("findAllByVedtakforselselseIdIsNotNullAndVedtakjournalpostIdIsNull") // TODO(endre)
+        this.setRepository(forsendelseBestillingRepository)
+        this.setMethodName("findAllByBestiltTidspunktIsNotNullAndForsendelseIdIsNotNullAndSlettetTidspunktIsNull")
         this.setPageSize(Integer.MAX_VALUE)
         this.setSort(Collections.singletonMap("id", Sort.Direction.ASC))
         this.isSaveState = false

@@ -16,6 +16,7 @@ import no.nav.bidrag.automatiskjobb.persistence.entity.Status
 import no.nav.bidrag.automatiskjobb.persistence.repository.AldersjusteringRepository
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
 import no.nav.bidrag.beregn.barnebidrag.service.AldersjusteringOrchestrator
+import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.data.domain.Page
@@ -85,9 +86,16 @@ class AldersjusteringServiceTest {
         val barn = Barn(id = 1, fødselsdato = LocalDate.now().minusYears(6))
         every { aldersjusteringRepository.existsAldersjusteringsByBarnAndAldersgruppe(1, 6) } returns false
         every { aldersjusteringRepository.save(any()) } returns
-            Aldersjustering(id = 1, barn = Barn(), aldersgruppe = 6, status = Status.UBEHANDLET, batchId = "batch-1")
+            Aldersjustering(
+                id = 1,
+                barn = Barn(),
+                aldersgruppe = 6,
+                status = Status.UBEHANDLET,
+                batchId = "batch-1",
+                stønadstype = Stønadstype.BIDRAG,
+            )
 
-        aldersjusteringService.opprettAldersjusteringForBarn(barn, LocalDate.now().year, "batch-1")
+        aldersjusteringService.opprettAldersjusteringForBarn(barn, LocalDate.now().year, "batch-1", Stønadstype.BIDRAG)
 
         verify { aldersjusteringRepository.save(any()) }
     }
@@ -97,14 +105,22 @@ class AldersjusteringServiceTest {
         val barn = Barn(id = 1, fødselsdato = LocalDate.now().minusYears(6))
         every { aldersjusteringRepository.existsAldersjusteringsByBarnAndAldersgruppe(1, 6) } returns true
 
-        aldersjusteringService.opprettAldersjusteringForBarn(barn, LocalDate.now().year, "batch-2")
+        aldersjusteringService.opprettAldersjusteringForBarn(barn, LocalDate.now().year, "batch-2", Stønadstype.BIDRAG)
 
         verify(exactly = 0) { aldersjusteringRepository.save(any()) }
     }
 
     @Test
     fun `skal hente aldersjustering ved id`() {
-        val aldersjustering = Aldersjustering(id = 1, barn = Barn(), aldersgruppe = 6, status = Status.UBEHANDLET, batchId = "batch-1")
+        val aldersjustering =
+            Aldersjustering(
+                id = 1,
+                barn = Barn(),
+                aldersgruppe = 6,
+                status = Status.UBEHANDLET,
+                batchId = "batch-1",
+                stønadstype = Stønadstype.BIDRAG,
+            )
         every { aldersjusteringRepository.findById(1) } returns java.util.Optional.of(aldersjustering)
 
         val result = aldersjusteringService.hentAldersjustering(1)
@@ -123,7 +139,15 @@ class AldersjusteringServiceTest {
 
     @Test
     fun `skal lagre aldersjustering`() {
-        val aldersjustering = Aldersjustering(id = null, barn = Barn(), aldersgruppe = 6, status = Status.UBEHANDLET, batchId = "batch-1")
+        val aldersjustering =
+            Aldersjustering(
+                id = null,
+                barn = Barn(),
+                aldersgruppe = 6,
+                status = Status.UBEHANDLET,
+                batchId = "batch-1",
+                stønadstype = Stønadstype.BIDRAG,
+            )
         every { aldersjusteringRepository.save(aldersjustering) } returns aldersjustering.copy(id = 1)
 
         val result = aldersjusteringService.lagreAldersjustering(aldersjustering)

@@ -2,7 +2,7 @@ package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.brev.distribue
 
 import no.nav.bidrag.automatiskjobb.batch.BatchCompletionNotificationListener
 import no.nav.bidrag.automatiskjobb.batch.common.ModuloPartitioner
-import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
+import no.nav.bidrag.automatiskjobb.persistence.entity.ForsendelseBestilling
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.Step
 import org.springframework.batch.core.job.builder.JobBuilder
@@ -39,7 +39,7 @@ class DistribuerBrevAldersjusteringerBidragBatchConfiguration {
         distribuerBrevAldersjusteringerBidragBatchWriter: DistribuerBrevAldersjusteringerBidragBatchWriter,
     ): Step =
         StepBuilder("distribuerBrevAldersjusteringerBidragStep", jobRepository)
-            .chunk<Aldersjustering, Aldersjustering>(CHUNK_SIZE, transactionManager)
+            .chunk<ForsendelseBestilling, ForsendelseBestilling>(CHUNK_SIZE, transactionManager)
             .reader(distribuerBrevAldersjusteringerBidragBatchReader)
             .processor(distribuerBrevAldersjusteringerBidragBatchReader)
             .writer(distribuerBrevAldersjusteringerBidragBatchWriter)
