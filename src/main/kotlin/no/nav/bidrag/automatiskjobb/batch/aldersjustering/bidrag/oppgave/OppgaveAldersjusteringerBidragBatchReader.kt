@@ -32,7 +32,7 @@ class OppgaveAldersjusteringerBidragBatchReader(
             this.setMethodName("finnForBehandlingstypeOgStatus")
             this.setArguments(listOf(listOf(Behandlingstype.MANUELL), listOf(Status.BEHANDLET)))
         }
-        this.setPageSize(100)
+        this.setPageSize(Integer.MAX_VALUE)
         this.setSort(Collections.singletonMap("id", Sort.Direction.ASC))
         this.isSaveState = false
     }

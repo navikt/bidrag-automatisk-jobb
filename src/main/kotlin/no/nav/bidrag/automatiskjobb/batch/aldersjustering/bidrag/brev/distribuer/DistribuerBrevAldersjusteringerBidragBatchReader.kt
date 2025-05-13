@@ -21,7 +21,7 @@ class DistribuerBrevAldersjusteringerBidragBatchReader(
     init {
         this.setRepository(aldersjusteringRepository)
         this.setMethodName("findAllByVedtakforselselseIdIsNotNullAndVedtakjournalpostIdIsNull") // TODO(endre)
-        this.setPageSize(100)
+        this.setPageSize(Integer.MAX_VALUE)
         this.setSort(Collections.singletonMap("id", Sort.Direction.ASC))
         this.isSaveState = false
     }
