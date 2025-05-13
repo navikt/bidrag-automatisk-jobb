@@ -8,6 +8,7 @@ import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Component
+import org.springframework.transaction.PlatformTransactionManager
 import java.util.Collections
 
 @Component
@@ -16,12 +17,14 @@ class SlettVedtaksforslagBatchReader(
     aldersjusteringRepository: AldersjusteringRepository,
     @Value("#{stepExecutionContext['partitionNumber']}") private val partitionNumber: Int?,
     @Value("#{stepExecutionContext['gridSize']}") private val gridSize: Int?,
-) : ModuloItemProcessor<Aldersjustering>(partitionNumber, gridSize) {
+    transactionManager: PlatformTransactionManager,
+) : ModuloItemProcessor<Aldersjustering>(partitionNumber, gridSize, transactionManager) {
     init {
         this.setRepository(aldersjusteringRepository)
         this.setMethodName("finnForStatus")
         this.setArguments(listOf(Status.SLETTES))
-        this.setPageSize(100)
+        this.setPageSize(500)
         this.setSort(Collections.singletonMap("id", Sort.Direction.ASC))
+        this.isSaveState = false
     }
 }

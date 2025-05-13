@@ -7,6 +7,7 @@ import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Component
+import org.springframework.transaction.PlatformTransactionManager
 import java.time.LocalDate
 import java.util.Collections
 
@@ -18,12 +19,14 @@ class OpprettAldersjusteringerBidragBatchReader(
     barnRepository: BarnRepository,
     @Value("#{stepExecutionContext['partitionNumber']}") private val partitionNumber: Int?,
     @Value("#{stepExecutionContext['gridSize']}") private val gridSize: Int?,
-) : ModuloItemProcessor<Barn>(partitionNumber, gridSize) {
+    transactionManager: PlatformTransactionManager,
+) : ModuloItemProcessor<Barn>(partitionNumber, gridSize, transactionManager) {
     init {
         this.setRepository(barnRepository)
         this.setMethodName("finnBarnSomSkalAldersjusteresForÅr")
         this.setArguments(listOf(år?.toInt(), kjøredato))
-        this.setPageSize(100)
+        this.setPageSize(500)
         this.setSort(Collections.singletonMap("id", Sort.Direction.ASC))
+        this.isSaveState = false
     }
 }

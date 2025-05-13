@@ -76,4 +76,14 @@ interface AldersjusteringRepository : JpaRepository<Aldersjustering, Int> {
         @Param("statuser") statuser: List<Status>,
         pageable: Pageable = Pageable.ofSize(100),
     ): Page<Aldersjustering>
+
+    @Query(
+        "SELECT a FROM aldersjustering a " +
+            "WHERE a.barn.id = :barnid " +
+            "AND a.behandlingstype != 'FEILET' " +
+            "AND a.status in ('BEHANDLET', 'FATTET')",
+    )
+    fun finnBarnAldersjustert(
+        @Param("barnid") barn: Int,
+    ): Aldersjustering?
 }

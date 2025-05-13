@@ -16,19 +16,19 @@ import org.springframework.transaction.PlatformTransactionManager
 @Configuration
 class SlettVedtaksforslagBatchConfiguration {
     companion object {
-        const val CHUNK_SIZE = 100
-        const val GRID_SIZE = 5
+        const val CHUNK_SIZE = 500
+        const val GRID_SIZE = 10
     }
 
     @Bean
     fun slettVedtaksforslagJob(
         jobRepository: JobRepository,
-        slettVedtaksforslagStep: Step,
+        partitionedSlettVedtaksforslagStep: Step,
         listener: BatchCompletionNotificationListener,
     ): Job =
         JobBuilder("slettVedtaksforslagJob", jobRepository)
             .listener(listener)
-            .start(slettVedtaksforslagStep)
+            .start(partitionedSlettVedtaksforslagStep)
             .build()
 
     @Bean

@@ -9,6 +9,7 @@ import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Component
+import org.springframework.transaction.PlatformTransactionManager
 import java.util.Collections
 
 @Component
@@ -18,7 +19,8 @@ class FattVedtakOmAldersjusteringerBidragBatchReader(
     @Value("#{jobParameters['barn']}") barn: String? = "",
     @Value("#{stepExecutionContext['partitionNumber']}") private val partitionNumber: Int?,
     @Value("#{stepExecutionContext['gridSize']}") private val gridSize: Int?,
-) : ModuloItemProcessor<Aldersjustering>(partitionNumber, gridSize) {
+    transactionManager: PlatformTransactionManager,
+) : ModuloItemProcessor<Aldersjustering>(partitionNumber, gridSize, transactionManager) {
     init {
         val barnListe = barn?.split(",")?.map { it.trim() }?.map { Integer.valueOf(it) } ?: emptyList()
         this.setRepository(aldersjusteringRepository)
@@ -30,7 +32,8 @@ class FattVedtakOmAldersjusteringerBidragBatchReader(
             this.setMethodName("finnForBehandlingstypeOgStatus")
             this.setArguments(listOf(listOf(Behandlingstype.FATTET_FORSLAG), listOf(Status.BEHANDLET)))
         }
-        this.setPageSize(100)
+        this.setPageSize(500)
         this.setSort(Collections.singletonMap("id", Sort.Direction.ASC))
+        this.isSaveState = false
     }
 }
