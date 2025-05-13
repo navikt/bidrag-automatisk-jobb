@@ -44,8 +44,6 @@ spec:
         {{#each outbound-access-apps}}
             - application: {{this}}
         {{/each}}
-  secureLogs:
-    enabled: true
   kafka:
     pool: {{ kafka.pool }}
   image: {{ image }}

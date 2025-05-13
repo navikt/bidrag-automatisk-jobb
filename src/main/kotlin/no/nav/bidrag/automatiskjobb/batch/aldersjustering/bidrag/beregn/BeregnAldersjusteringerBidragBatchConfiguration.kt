@@ -41,7 +41,7 @@ class BeregnAldersjusteringerBidragBatchConfiguration {
         StepBuilder("beregnAldersjusteringerBidragStep", jobRepository)
             .chunk<Aldersjustering, Aldersjustering>(CHUNK_SIZE, transactionManager)
             .reader(beregnAldersjusteringerBidragBatchReader)
-            .processor(beregnAldersjusteringerBidragBatchReader) // Use reader as processor too
+            .processor(beregnAldersjusteringerBidragBatchReader)
             .writer(beregnAldersjusteringerBidragBatchWriter)
             .build()
 

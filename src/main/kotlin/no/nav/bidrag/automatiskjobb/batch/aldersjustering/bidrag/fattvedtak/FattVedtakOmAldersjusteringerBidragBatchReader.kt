@@ -32,7 +32,7 @@ class FattVedtakOmAldersjusteringerBidragBatchReader(
             this.setMethodName("finnForBehandlingstypeOgStatus")
             this.setArguments(listOf(listOf(Behandlingstype.FATTET_FORSLAG), listOf(Status.BEHANDLET)))
         }
-        this.setPageSize(500)
+        this.setPageSize(Integer.MAX_VALUE)
         this.setSort(Collections.singletonMap("id", Sort.Direction.ASC))
         this.isSaveState = false
     }
