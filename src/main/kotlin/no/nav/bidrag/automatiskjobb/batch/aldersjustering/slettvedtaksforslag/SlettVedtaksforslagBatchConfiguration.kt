@@ -8,9 +8,11 @@ import org.springframework.batch.core.Step
 import org.springframework.batch.core.job.builder.JobBuilder
 import org.springframework.batch.core.repository.JobRepository
 import org.springframework.batch.core.step.builder.StepBuilder
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.task.SimpleAsyncTaskExecutor
+import org.springframework.core.task.TaskExecutor
 import org.springframework.transaction.PlatformTransactionManager
 
 @Configuration
@@ -21,14 +23,32 @@ class SlettVedtaksforslagBatchConfiguration {
     }
 
     @Bean
+    fun slettVedtaksforslagExecutor(): TaskExecutor? = SimpleAsyncTaskExecutor("slett_vedtaksforslag")
+
+    @Bean
+    fun sampleStep(
+        @Qualifier("slettVedtaksforslagExecutor") taskExecutor: TaskExecutor,
+        jobRepository: JobRepository,
+        transactionManager: PlatformTransactionManager,
+        slettVedtaksforslagBatchReader: SlettVedtaksforslagBatchReader,
+        slettVedtaksforslagBatchWriter: SlettVedtaksforslagBatchWriter,
+    ): Step =
+        StepBuilder("sampleStep", jobRepository)
+            .chunk<Aldersjustering, Aldersjustering>(10, transactionManager)
+            .reader(slettVedtaksforslagBatchReader)
+            .writer(slettVedtaksforslagBatchWriter)
+            .taskExecutor(taskExecutor)
+            .build()
+
+    @Bean
     fun slettVedtaksforslagJob(
         jobRepository: JobRepository,
-        partitionedSlettVedtaksforslagStep: Step,
+        sampleStep: Step,
         listener: BatchCompletionNotificationListener,
     ): Job =
         JobBuilder("slettVedtaksforslagJob", jobRepository)
             .listener(listener)
-            .start(partitionedSlettVedtaksforslagStep)
+            .start(sampleStep)
             .build()
 
     @Bean
