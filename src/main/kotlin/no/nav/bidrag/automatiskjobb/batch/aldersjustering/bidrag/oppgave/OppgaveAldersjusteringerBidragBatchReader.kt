@@ -34,5 +34,6 @@ class OppgaveAldersjusteringerBidragBatchReader(
         }
         this.setPageSize(100)
         this.setSort(Collections.singletonMap("id", Sort.Direction.ASC))
+        this.isSaveState = false
     }
 }

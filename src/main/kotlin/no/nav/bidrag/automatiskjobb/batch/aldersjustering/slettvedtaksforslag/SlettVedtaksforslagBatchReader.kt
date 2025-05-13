@@ -25,5 +25,6 @@ class SlettVedtaksforslagBatchReader(
         this.setArguments(listOf(Status.SLETTES))
         this.setPageSize(500)
         this.setSort(Collections.singletonMap("id", Sort.Direction.ASC))
+        this.isSaveState = false
     }
 }

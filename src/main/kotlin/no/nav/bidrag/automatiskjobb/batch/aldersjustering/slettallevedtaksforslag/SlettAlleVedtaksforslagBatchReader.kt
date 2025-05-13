@@ -10,5 +10,5 @@ import org.springframework.stereotype.Component
 class SlettAlleVedtaksforslagBatchReader(
     val vedtakConsumer: BidragVedtakConsumer,
 ) : ItemReader<List<Int>?> {
-    override fun read(): List<Int>? = vedtakConsumer.hentAlleVedtaksforslag(100).takeIf { it.isNotEmpty() }
+    override fun read(): List<Int>? = vedtakConsumer.hentAlleVedtaksforslag(500).takeIf { it.isNotEmpty() }
 }
