@@ -2,6 +2,7 @@ package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.opprett
 
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.service.AldersjusteringService
+import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import org.springframework.batch.core.StepExecution
 import org.springframework.batch.core.annotation.BeforeStep
 import org.springframework.batch.core.configuration.annotation.StepScope
@@ -29,6 +30,7 @@ class OpprettAldersjusteringerBidragBatchWriter(
                 barn = barn,
                 år = år!!.toInt(),
                 batchId = runId!!,
+                stønadstype = Stønadstype.BIDRAG,
             )
         }
     }

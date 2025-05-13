@@ -3,6 +3,8 @@ package no.nav.bidrag.automatiskjobb.consumer
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import no.nav.bidrag.commons.web.client.AbstractRestClient
 import no.nav.bidrag.transport.dokument.Avvikshendelse
+import no.nav.bidrag.transport.dokument.DistribuerJournalpostRequest
+import no.nav.bidrag.transport.dokument.DistribuerJournalpostResponse
 import no.nav.bidrag.transport.dokument.forsendelse.JournalTema
 import no.nav.bidrag.transport.dokument.forsendelse.MottakerTo
 import no.nav.bidrag.transport.dokument.forsendelse.OpprettForsendelseForespørsel
@@ -56,6 +58,18 @@ class BidragDokumentForsendelseConsumer(
         postForNonNullEntity<Any>(
             createUri("/api/forsendelse/journal/BIF_$forsendelseId/avvik"),
             avviksHendelse,
+        )
+    }
+
+    fun distribuerForsendelse(
+        batchId: String,
+        forsendelseId: Long,
+    ): DistribuerJournalpostResponse {
+        val distribuerJournalpostRequest = DistribuerJournalpostRequest(batchId = batchId)
+
+        return postForNonNullEntity<DistribuerJournalpostResponse>(
+            createUri("/api/forsendelse/journal/distribuer/$forsendelseId?batchId=$batchId"),
+            distribuerJournalpostRequest,
         )
     }
 }

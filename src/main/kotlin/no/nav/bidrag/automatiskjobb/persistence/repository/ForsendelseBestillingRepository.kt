@@ -5,4 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository
 
 interface ForsendelseBestillingRepository : JpaRepository<ForsendelseBestilling, Int> {
     fun findAllByForsendelseIdIsNullAndSlettetTidspunktIsNull(): List<ForsendelseBestilling>
+
+    fun findAllByBestiltTidspunktIsNotNullAndForsendelseIdIsNotNullAndSlettetTidspunktIsNull(): List<ForsendelseBestilling>
 }

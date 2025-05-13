@@ -33,6 +33,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpStatusCodeException
+import java.sql.Timestamp
 
 private val log = KotlinLogging.logger {}
 
@@ -133,6 +134,7 @@ class AldersjusteringService(
                 it,
                 år,
                 batchId,
+                stønadstype,
             )
         }
 
@@ -160,6 +162,7 @@ class AldersjusteringService(
         barn: Barn,
         år: Int,
         batchId: String,
+        stønadstype: Stønadstype,
     ) {
         val aldersgruppe = barn.fødselsdato?.year?.let { år - it }
 
@@ -177,6 +180,7 @@ class AldersjusteringService(
                     barn = barn,
                     aldersgruppe = aldersgruppe,
                     status = Status.UBEHANDLET,
+                    stønadstype = stønadstype,
                 )
             val id = alderjusteringRepository.save(aldersjustering).id
             log.info { "Opprettet aldersjustering $id for barn ${barn.id}." }
@@ -234,6 +238,7 @@ class AldersjusteringService(
             aldersjustering.status = if (simuler) Status.SIMULERT else Status.BEHANDLET
             aldersjustering.behandlingstype = Behandlingstype.FATTET_FORSLAG
             aldersjustering.begrunnelse = emptyList()
+            aldersjustering.resultatkode = "resultatBeregning" // TODO(Legge til faktisk resultatBeregning)
             alderjusteringRepository.save(aldersjustering)
 
             return AldersjusteringAldersjustertResultat(vedtaksid ?: -1, stønadsid, vedtaksforslagRequest)
@@ -277,6 +282,7 @@ class AldersjusteringService(
             aldersjustering.vedtak ?: error("Aldersjustering ${aldersjustering.id} mangler vedtak!"),
         )
         aldersjustering.status = Status.FATTET
+        aldersjustering.fattetTidspunkt = Timestamp(System.currentTimeMillis())
         alderjusteringRepository.save(aldersjustering)
 
         val sak = sakConsumer.hentSak(aldersjustering.barn.saksnummer)

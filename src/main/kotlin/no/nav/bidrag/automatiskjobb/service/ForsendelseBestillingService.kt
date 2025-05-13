@@ -58,6 +58,15 @@ class ForsendelseBestillingService(
         }
     }
 
+    fun distribuerForsendelse(forsendelseBestilling: ForsendelseBestilling) {
+        val distribuerJournalpostResponse =
+            bidragDokumentForsendelseConsumer.distribuerForsendelse(
+                forsendelseBestilling.aldersjustering.batchId,
+                forsendelseBestilling.forsendelseId!!,
+            )
+        forsendelseBestilling.journalpostId = distribuerJournalpostResponse.journalpostId.toLong()
+    }
+
     private fun sendForsendelseTilBidragDokument(forsendelseBestilling: ForsendelseBestilling) {
         val mottaker =
             MottakerTo(
