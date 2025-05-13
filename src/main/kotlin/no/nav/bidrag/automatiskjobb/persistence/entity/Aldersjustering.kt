@@ -48,8 +48,8 @@ data class Aldersjustering(
     @Column(name = "stonadstype")
     @Enumerated(EnumType.STRING)
     val stønadstype: Stønadstype,
-    @Column(name = "resultatkode")
-    var resultatkode: String? = null,
+    @Column(name = "resultat_siste_vedtak")
+    var resultatSisteVedtak: String? = null,
 ) : EntityObject
 
 enum class Status {

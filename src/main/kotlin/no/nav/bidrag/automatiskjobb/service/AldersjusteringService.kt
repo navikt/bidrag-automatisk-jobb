@@ -238,7 +238,7 @@ class AldersjusteringService(
             aldersjustering.status = if (simuler) Status.SIMULERT else Status.BEHANDLET
             aldersjustering.behandlingstype = Behandlingstype.FATTET_FORSLAG
             aldersjustering.begrunnelse = emptyList()
-            aldersjustering.resultatkode = "resultatBeregning" // TODO(Legge til faktisk resultatBeregning)
+            aldersjustering.resultatSisteVedtak = "resultatBeregning" // TODO(Legge til faktisk resultatBeregning)
             alderjusteringRepository.save(aldersjustering)
 
             return AldersjusteringAldersjustertResultat(vedtaksid ?: -1, stønadsid, vedtaksforslagRequest)
