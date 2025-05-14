@@ -1,60 +1,47 @@
 package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.brev.opprett
 
 import no.nav.bidrag.automatiskjobb.batch.BatchCompletionNotificationListener
-import no.nav.bidrag.automatiskjobb.batch.common.ModuloPartitioner
+import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.CHUNK_SIZE
+import no.nav.bidrag.automatiskjobb.batch.DummyItemWriter
 import no.nav.bidrag.automatiskjobb.persistence.entity.ForsendelseBestilling
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.Step
 import org.springframework.batch.core.job.builder.JobBuilder
 import org.springframework.batch.core.repository.JobRepository
 import org.springframework.batch.core.step.builder.StepBuilder
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.core.task.SimpleAsyncTaskExecutor
+import org.springframework.core.task.TaskExecutor
 import org.springframework.transaction.PlatformTransactionManager
 
 @Configuration
 class OpprettBrevAldersjusteringerBidragBatchConfiguration {
-    companion object {
-        const val CHUNK_SIZE = 100
-        const val GRID_SIZE = 5
-    }
-
     @Bean
     fun opprettBrevAldersjusteringerBidragJob(
         jobRepository: JobRepository,
-        partitionedOpprettBrevAldersjusteringerBidragStep: Step,
+        opprettBrevAldersjusteringerBidragStep: Step,
         listener: BatchCompletionNotificationListener,
     ): Job =
         JobBuilder("opprettBrevAldersjusteringerBidragJob", jobRepository)
             .listener(listener)
-            .start(partitionedOpprettBrevAldersjusteringerBidragStep)
+            .start(opprettBrevAldersjusteringerBidragStep)
             .build()
 
     @Bean
     fun opprettBrevAldersjusteringerBidragStep(
+        @Qualifier("batchTaskExecutor") taskExecutor: TaskExecutor,
         jobRepository: JobRepository,
         transactionManager: PlatformTransactionManager,
         opprettBrevAldersjusteringerBidragBatchReader: OpprettBrevAldersjusteringerBidragBatchReader,
-        opprettBrevAldersjusteringerBidragBatchWriter: OpprettBrevAldersjusteringerBidragBatchWriter,
+        opprettBrevAldersjusteringerBidragBatchProcessor: OpprettBrevAldersjusteringerBidragBatchProcessor,
+        dummyItemWriter: DummyItemWriter,
     ): Step =
         StepBuilder("opprettBrevAldersjusteringerBidragStep", jobRepository)
-            .chunk<ForsendelseBestilling, ForsendelseBestilling>(CHUNK_SIZE, transactionManager)
+            .chunk<ForsendelseBestilling, Unit>(CHUNK_SIZE, transactionManager)
             .reader(opprettBrevAldersjusteringerBidragBatchReader)
-            .writer(opprettBrevAldersjusteringerBidragBatchWriter)
-            .build()
-
-    @Bean
-    fun partitionedOpprettBrevAldersjusteringerBidragStep(
-        jobRepository: JobRepository,
-        transactionManager: PlatformTransactionManager,
-        opprettBrevAldersjusteringerBidragStep: Step,
-        moduloPartitioner: ModuloPartitioner,
-    ): Step =
-        StepBuilder("partitionedOpprettBrevAldersjusteringerBidragStep", jobRepository)
-            .partitioner("opprettBrevAldersjusteringerBidragStep", moduloPartitioner)
-            .step(opprettBrevAldersjusteringerBidragStep)
-            .gridSize(GRID_SIZE)
-            .taskExecutor(SimpleAsyncTaskExecutor())
+            .processor(opprettBrevAldersjusteringerBidragBatchProcessor)
+            .writer(dummyItemWriter)
+            .taskExecutor(taskExecutor)
             .build()
 }

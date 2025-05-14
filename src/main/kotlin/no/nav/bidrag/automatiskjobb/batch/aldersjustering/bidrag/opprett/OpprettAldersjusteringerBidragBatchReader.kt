@@ -1,5 +1,6 @@
 package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.opprett
 
+import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.PAGE_SIZE
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
 import org.springframework.batch.core.configuration.annotation.StepScope
@@ -21,7 +22,7 @@ class OpprettAldersjusteringerBidragBatchReader(
         this.setRepository(barnRepository)
         this.setMethodName("finnBarnSomSkalAldersjusteresForÅr")
         this.setArguments(listOf(år?.toInt(), kjøredato))
-        this.setPageSize(500)
+        this.setPageSize(PAGE_SIZE)
         this.setSort(Collections.singletonMap("id", Sort.Direction.ASC))
         this.isSaveState = false
     }

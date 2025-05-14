@@ -1,7 +1,8 @@
 package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.beregn
 
 import no.nav.bidrag.automatiskjobb.batch.BatchCompletionNotificationListener
-import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.opprett.OpprettAldersjusteringerBidragBatchConfiguration
+import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.CHUNK_SIZE
+import no.nav.bidrag.automatiskjobb.batch.DummyItemWriter
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.Step
@@ -11,23 +12,11 @@ import org.springframework.batch.core.step.builder.StepBuilder
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.core.task.SimpleAsyncTaskExecutor
 import org.springframework.core.task.TaskExecutor
 import org.springframework.transaction.PlatformTransactionManager
 
 @Configuration
 class BeregnAldersjusteringerBidragBatchConfiguration {
-    companion object {
-        const val CHUNK_SIZE = 500
-        const val GRID_SIZE = 10
-    }
-
-    @Bean
-    fun beregnAldersjusteringExecutor(): TaskExecutor? =
-        SimpleAsyncTaskExecutor("beregn_aldersjustering").apply {
-            concurrencyLimit = OpprettAldersjusteringerBidragBatchConfiguration.GRID_SIZE
-        }
-
     @Bean
     fun beregnAldersjusteringerBidragJob(
         jobRepository: JobRepository,
@@ -41,16 +30,18 @@ class BeregnAldersjusteringerBidragBatchConfiguration {
 
     @Bean
     fun beregnAldersjusteringerBidragStep(
-        @Qualifier("beregnAldersjusteringExecutor") taskExecutor: TaskExecutor,
+        @Qualifier("batchTaskExecutor") taskExecutor: TaskExecutor,
         jobRepository: JobRepository,
         transactionManager: PlatformTransactionManager,
         beregnAldersjusteringerBidragBatchReader: BeregnAldersjusteringerBidragBatchReader,
-        beregnAldersjusteringerBidragBatchWriter: BeregnAldersjusteringerBidragBatchWriter,
+        beregnAldersjusteringerBidragBatchProcessor: BeregnAldersjusteringerBidragBatchProcessor,
+        dummyItemWriter: DummyItemWriter,
     ): Step =
         StepBuilder("beregnAldersjusteringerBidragStep", jobRepository)
-            .chunk<Aldersjustering, Aldersjustering>(CHUNK_SIZE, transactionManager)
+            .chunk<Aldersjustering, Unit>(CHUNK_SIZE, transactionManager)
             .reader(beregnAldersjusteringerBidragBatchReader)
-            .writer(beregnAldersjusteringerBidragBatchWriter)
+            .processor(beregnAldersjusteringerBidragBatchProcessor)
+            .writer(dummyItemWriter)
             .taskExecutor(taskExecutor)
             .build()
 }

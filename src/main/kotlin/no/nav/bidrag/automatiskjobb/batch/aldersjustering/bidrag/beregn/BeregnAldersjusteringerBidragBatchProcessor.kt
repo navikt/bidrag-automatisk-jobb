@@ -6,15 +6,14 @@ import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import org.springframework.batch.core.StepExecution
 import org.springframework.batch.core.annotation.BeforeStep
 import org.springframework.batch.core.configuration.annotation.StepScope
-import org.springframework.batch.item.Chunk
-import org.springframework.batch.item.ItemWriter
+import org.springframework.batch.item.ItemProcessor
 import org.springframework.stereotype.Component
 
 @Component
 @StepScope
-class BeregnAldersjusteringerBidragBatchWriter(
+class BeregnAldersjusteringerBidragBatchProcessor(
     private val aldersjusteringService: AldersjusteringService,
-) : ItemWriter<Aldersjustering> {
+) : ItemProcessor<Aldersjustering, Unit> {
     private var simuler: Boolean = true
 
     @BeforeStep
@@ -22,13 +21,11 @@ class BeregnAldersjusteringerBidragBatchWriter(
         simuler = stepExecution.jobParameters.getString("simuler").toBoolean()
     }
 
-    override fun write(chunk: Chunk<out Aldersjustering>) {
-        chunk.forEach { aldersjustering ->
-            aldersjusteringService.utførAldersjustering(
-                aldersjustering = aldersjustering,
-                stønadstype = Stønadstype.BIDRAG,
-                simuler,
-            )
-        }
+    override fun process(aldersjustering: Aldersjustering) {
+        aldersjusteringService.utførAldersjustering(
+            aldersjustering = aldersjustering,
+            stønadstype = Stønadstype.BIDRAG,
+            simuler,
+        )
     }
 }

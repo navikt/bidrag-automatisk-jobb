@@ -1,6 +1,7 @@
 package no.nav.bidrag.automatiskjobb.batch.aldersjustering.slettallevedtaksforslag
 
 import no.nav.bidrag.automatiskjobb.batch.BatchCompletionNotificationListener
+import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.CHUNK_SIZE
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.Step
 import org.springframework.batch.core.job.builder.JobBuilder
@@ -12,10 +13,6 @@ import org.springframework.transaction.PlatformTransactionManager
 
 @Configuration
 class SlettAlleVedtaksforslagBatchConfiguration {
-    companion object {
-        const val CHUNK_SIZE = 100
-    }
-
     @Bean
     fun slettAlleVedtaksforslagJob(
         jobRepository: JobRepository,
@@ -35,7 +32,7 @@ class SlettAlleVedtaksforslagBatchConfiguration {
         slettVedtaksforslagBatchWriter: SlettAlleVedtaksforslagBatchWriter,
     ): Step =
         StepBuilder("slettAlleVedtaksforslagStep", jobRepository)
-            .chunk<List<Int>, List<Int>>(1, transactionManager)
+            .chunk<List<Int>, List<Int>>(CHUNK_SIZE, transactionManager)
             .reader(slettVedtaksforslagBatchReader)
             .writer(slettVedtaksforslagBatchWriter)
             .build()
