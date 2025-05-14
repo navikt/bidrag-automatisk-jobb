@@ -163,29 +163,32 @@ class AldersjusteringService(
         år: Int,
         batchId: String,
         stønadstype: Stønadstype,
-    ) {
+    ): Aldersjustering? {
         val aldersgruppe = barn.fødselsdato?.year?.let { år - it }
 
         if (aldersgruppe == null) {
             log.error {
                 "Aldersjustering for barn ${barn.id} kan ikke opprettes. Barnet har ingen fødselsdato og aldersgruppe kan derfor ikke settes."
             }
-            return
+            return null
         }
 
         if (!alderjusteringRepository.existsAldersjusteringsByBarnAndAldersgruppe(barn.id!!, aldersgruppe)) {
             val aldersjustering =
-                Aldersjustering(
-                    batchId = batchId,
-                    barn = barn,
-                    aldersgruppe = aldersgruppe,
-                    status = Status.UBEHANDLET,
-                    stønadstype = stønadstype,
+                alderjusteringRepository.save(
+                    Aldersjustering(
+                        batchId = batchId,
+                        barn = barn,
+                        aldersgruppe = aldersgruppe,
+                        status = Status.UBEHANDLET,
+                        stønadstype = stønadstype,
+                    ),
                 )
-            val id = alderjusteringRepository.save(aldersjustering).id
-            log.info { "Opprettet aldersjustering $id for barn ${barn.id}." }
+            log.info { "Opprettet aldersjustering ${aldersjustering.id} for barn ${barn.id}." }
+            return aldersjustering
         } else {
             log.info { "Aldersjustering for barn ${barn.id} er allerede opprettet." }
+            return null
         }
     }
 
@@ -279,6 +282,8 @@ class AldersjusteringService(
     }
 
     fun fattVedtakOmAldersjustering(aldersjustering: Aldersjustering) {
+        val sak = sakConsumer.hentSak(aldersjustering.barn.saksnummer)
+
         combinedLogger.info { "Fatter vedtak for aldersjustering ${aldersjustering.id} og vedtaksid ${aldersjustering.vedtak}" }
         vedtakConsumer.fatteVedtaksforslag(
             aldersjustering.vedtak ?: error("Aldersjustering ${aldersjustering.id} mangler vedtak!"),
@@ -287,18 +292,21 @@ class AldersjusteringService(
         aldersjustering.fattetTidspunkt = Timestamp(System.currentTimeMillis())
         alderjusteringRepository.save(aldersjustering)
 
-        val sak = sakConsumer.hentSak(aldersjustering.barn.saksnummer)
-
         sak.roller.filter { it.type == Rolletype.BIDRAGSPLIKTIG || it.type == Rolletype.BIDRAGSMOTTAKER }.forEach {
-            forsendelseBestillingService.opprettForsendelseBestilling(aldersjustering, it.fødselsnummer!!.verdi, it.type)
+            forsendelseBestillingService.opprettForsendelseBestilling(
+                aldersjustering,
+                it.fødselsnummer!!.verdi,
+                it.type,
+            )
         }
     }
 
-    fun opprettOppgaveForAldersjustering(aldersjustering: Aldersjustering) {
+    fun opprettOppgaveForAldersjustering(aldersjustering: Aldersjustering): Int {
         val oppgaveId = oppgaveService.opprettOppgaveForManuellAldersjustering(aldersjustering.barn) //
 
         aldersjustering.oppgave = oppgaveId
         alderjusteringRepository.save(aldersjustering)
+        return oppgaveId
     }
 
     private fun opprettAldersjusteringResponse(resultat: List<AldersjusteringResultat>): AldersjusteringResponse =
@@ -324,7 +332,7 @@ class AldersjusteringService(
     fun slettVedtaksforslag(
         stønadstype: Stønadstype,
         aldersjustering: Aldersjustering,
-    ) {
+    ): Aldersjustering? {
         val barn = aldersjustering.barn
 
         val stønadsid =
@@ -336,10 +344,20 @@ class AldersjusteringService(
             )
 
         log.info { "Aldersjustering for barn ${barn.id} med stønadsid: $aldersjustering. skal slettes. Sletter.." }
+        val unikReferanse = "aldersjustering_${aldersjustering.batchId}_${stønadsid.toReferanse()}"
+
+        vedtakConsumer.hentVedtaksforslagBasertPåReferanase(unikReferanse)?.let {
+            log.info {
+                "Fant eksisterende vedtaksforslag med referanse $unikReferanse og id ${it.vedtaksid}. Sletter eksisterende vedtaksforslag "
+            }
+            vedtakConsumer.slettVedtaksforslag(it.vedtaksid.toInt())
+        } ?: run {
+            log.error { "Fant ikke eksisterende vedtaksforslag med referanse $unikReferanse" }
+            return null
+        }
         aldersjustering.vedtak = null
         aldersjustering.status = Status.SLETTET
-        val unikReferanse = "aldersjustering_${aldersjustering.batchId}_${stønadsid.toReferanse()}"
-        slettEksisterendeVedtaksforslag(unikReferanse)
+        return aldersjustering
     }
 
     private fun opprettEllerOppdaterVedtaksforslag(request: OpprettVedtakRequestDto) =

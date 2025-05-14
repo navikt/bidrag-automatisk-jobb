@@ -12,7 +12,6 @@ import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.brev.opprett.Op
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.fattvedtak.FattVedtakOmAldersjusteringerBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.oppgave.OppgaveAldersjusteringBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.opprett.OpprettAldersjusteringerBidragBatch
-import no.nav.bidrag.automatiskjobb.batch.aldersjustering.forskudd.AldersjusteringForskuddBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.slettallevedtaksforslag.SlettAlleVedtaksforslagBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.slettvedtaksforslag.SlettVedtaksforslagBatch
 import no.nav.security.token.support.core.api.Protected
@@ -31,7 +30,6 @@ class BatchController(
     private val opprettAldersjusteringerBidragBatch: OpprettAldersjusteringerBidragBatch,
     private val fattVedtakOmAldersjusteringerBidragBatch: FattVedtakOmAldersjusteringerBidragBatch,
     private val oppgaveAldersjusteringBidragBatch: OppgaveAldersjusteringBidragBatch,
-    private val aldersjusteringForskuddBatch: AldersjusteringForskuddBatch,
     private val beregnAldersjusteringerBidragBatch: BeregnAldersjusteringerBidragBatch,
     private val opprettBrevAldersjusteringerBidragBatch: OpprettBrevAldersjusteringerBidragBatch,
     private val distribuerBrevAldersjusteringerBidragBatch: DistribuerBrevAldersjusteringerBidragBatch,

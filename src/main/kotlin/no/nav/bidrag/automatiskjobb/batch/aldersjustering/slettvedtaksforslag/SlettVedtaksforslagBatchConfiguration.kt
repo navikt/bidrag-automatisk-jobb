@@ -1,6 +1,8 @@
 package no.nav.bidrag.automatiskjobb.batch.aldersjustering.slettvedtaksforslag
 
 import no.nav.bidrag.automatiskjobb.batch.BatchCompletionNotificationListener
+import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.CHUNK_SIZE
+import no.nav.bidrag.automatiskjobb.batch.DummyItemWriter
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.Step
@@ -10,35 +12,25 @@ import org.springframework.batch.core.step.builder.StepBuilder
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.core.task.SimpleAsyncTaskExecutor
 import org.springframework.core.task.TaskExecutor
 import org.springframework.transaction.PlatformTransactionManager
 
 @Configuration
 class SlettVedtaksforslagBatchConfiguration {
-    companion object {
-        const val CHUNK_SIZE = 500
-        const val GRID_SIZE = 10
-    }
-
-    @Bean
-    fun slettVedtaksforslagExecutor(): TaskExecutor? =
-        SimpleAsyncTaskExecutor("slett_vedtaksforslag").apply {
-            concurrencyLimit = GRID_SIZE
-        }
-
     @Bean
     fun slettVedtaksforslagStep(
-        @Qualifier("slettVedtaksforslagExecutor") taskExecutor: TaskExecutor,
+        @Qualifier("batchTaskExecutor") taskExecutor: TaskExecutor,
         jobRepository: JobRepository,
         transactionManager: PlatformTransactionManager,
         slettVedtaksforslagBatchReader: SlettVedtaksforslagBatchReader,
-        slettVedtaksforslagBatchWriter: SlettVedtaksforslagBatchWriter,
+        slettVedtaksforslagBatchProcessor: SlettVedtaksforslagBatchProcessor,
+        dummyItemWriter: DummyItemWriter,
     ): Step =
         StepBuilder("slettVedtaksforslagStep", jobRepository)
-            .chunk<Aldersjustering, Aldersjustering>(CHUNK_SIZE, transactionManager)
+            .chunk<Aldersjustering, Unit>(CHUNK_SIZE, transactionManager)
             .reader(slettVedtaksforslagBatchReader)
-            .writer(slettVedtaksforslagBatchWriter)
+            .processor(slettVedtaksforslagBatchProcessor)
+            .writer(dummyItemWriter)
             .taskExecutor(taskExecutor)
             .build()
 

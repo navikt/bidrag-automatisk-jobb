@@ -3,18 +3,13 @@ package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.fattvedtak
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import no.nav.bidrag.automatiskjobb.service.AldersjusteringService
 import org.springframework.batch.core.configuration.annotation.StepScope
-import org.springframework.batch.item.Chunk
-import org.springframework.batch.item.ItemWriter
+import org.springframework.batch.item.ItemProcessor
 import org.springframework.stereotype.Component
 
 @Component
 @StepScope
-class FattVedtakOmAldersjusteringerBidragBatchWriter(
+class FattVedtakOmAldersjusteringerBidragBatchProcessor(
     private val aldersjusteringService: AldersjusteringService,
-) : ItemWriter<Aldersjustering> {
-    override fun write(chunk: Chunk<out Aldersjustering>) {
-        chunk.forEach { aldersjustering ->
-            aldersjusteringService.fattVedtakOmAldersjustering(aldersjustering)
-        }
-    }
+) : ItemProcessor<Aldersjustering, Unit> {
+    override fun process(aldersjustering: Aldersjustering): Unit? = aldersjusteringService.fattVedtakOmAldersjustering(aldersjustering)
 }

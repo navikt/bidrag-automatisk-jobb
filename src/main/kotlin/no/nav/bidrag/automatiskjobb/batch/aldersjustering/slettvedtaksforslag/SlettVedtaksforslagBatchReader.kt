@@ -1,5 +1,6 @@
 package no.nav.bidrag.automatiskjobb.batch.aldersjustering.slettvedtaksforslag
 
+import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.PAGE_SIZE
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import no.nav.bidrag.automatiskjobb.persistence.entity.Status
 import no.nav.bidrag.automatiskjobb.persistence.repository.AldersjusteringRepository
@@ -18,7 +19,7 @@ class SlettVedtaksforslagBatchReader(
         this.setRepository(aldersjusteringRepository)
         this.setMethodName("finnForStatus")
         this.setArguments(listOf(Status.SLETTES))
-        this.setPageSize(500)
+        this.setPageSize(PAGE_SIZE)
         this.setSort(Collections.singletonMap("id", Sort.Direction.ASC))
         this.isSaveState = false
     }

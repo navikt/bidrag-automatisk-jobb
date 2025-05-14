@@ -1,5 +1,6 @@
 package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.beregn
 
+import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.PAGE_SIZE
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import no.nav.bidrag.automatiskjobb.persistence.entity.Status
 import no.nav.bidrag.automatiskjobb.persistence.repository.AldersjusteringRepository
@@ -18,7 +19,7 @@ class BeregnAldersjusteringerBidragBatchReader(
         this.setRepository(aldersjusteringRepository)
         this.setMethodName("finnForFlereStatuser")
         this.setArguments(listOf(listOf(Status.UBEHANDLET, Status.FEILET, Status.SLETTET, Status.SIMULERT)))
-        this.setPageSize(500)
+        this.setPageSize(PAGE_SIZE)
         this.setSort(Collections.singletonMap("id", Sort.Direction.ASC))
         this.isSaveState = false
     }
