@@ -18,7 +18,7 @@ import org.springframework.transaction.PlatformTransactionManager
 class OpprettAldersjusteringerBidragBatchConfiguration {
     companion object {
         const val CHUNK_SIZE = 100
-        const val GRID_SIZE = 5
+        const val GRID_SIZE = 10
     }
 
     @Bean
