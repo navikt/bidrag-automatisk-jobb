@@ -1,7 +1,6 @@
 package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.beregn
 
 import no.nav.bidrag.automatiskjobb.batch.BatchCompletionNotificationListener
-import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.opprett.OpprettAldersjusteringerBidragBatchConfiguration
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.Step
@@ -25,7 +24,7 @@ class BeregnAldersjusteringerBidragBatchConfiguration {
     @Bean
     fun beregnAldersjusteringExecutor(): TaskExecutor? =
         SimpleAsyncTaskExecutor("beregn_aldersjustering").apply {
-            concurrencyLimit = OpprettAldersjusteringerBidragBatchConfiguration.GRID_SIZE
+            concurrencyLimit = GRID_SIZE
         }
 
     @Bean
