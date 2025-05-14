@@ -5,6 +5,7 @@ import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
 import no.nav.bidrag.automatiskjobb.utils.IdentUtils
 import no.nav.bidrag.commons.util.secureLogger
+import no.nav.bidrag.domene.enums.vedtak.Beslutningstype
 import no.nav.bidrag.domene.enums.vedtak.Innkrevingstype
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.ident.Personident
@@ -73,12 +74,13 @@ class VedtakService(
     }
 
     /**
-     * Skal filtrere vekk alle vedtak som ikke er bidrag eller forskudd og som er uten innkreving
+     * Skal filtrere vekk alle vedtak som ikke er bidrag eller forskudd, som er uten innkreving og som er endring
      */
     private fun hentStønadsendringerForBidragOgForskudd(vedtakHendelse: VedtakHendelse) =
         vedtakHendelse.stønadsendringListe
             ?.filter { it.type == Stønadstype.BIDRAG || it.type == Stønadstype.FORSKUDD }
             ?.filter { it.innkreving == Innkrevingstype.MED_INNKREVING }
+            ?.filter { it.beslutning == Beslutningstype.ENDRING }
             ?.groupBy { it.kravhaver }
 
     private fun opprettBarnFraStønadsendring(

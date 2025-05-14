@@ -117,7 +117,7 @@ class VedtakServiceTest {
                             kravhaver = kravhaver,
                             mottaker = Personident(PersonidentGenerator.genererFødselsnummer()),
                             innkreving = Innkrevingstype.MED_INNKREVING,
-                            beslutning = Beslutningstype.STADFESTELSE,
+                            beslutning = Beslutningstype.ENDRING,
                             periodeListe =
                                 listOf(
                                     Periode(
@@ -139,7 +139,7 @@ class VedtakServiceTest {
                             kravhaver = kravhaver,
                             mottaker = Personident(PersonidentGenerator.genererFødselsnummer()),
                             innkreving = Innkrevingstype.MED_INNKREVING,
-                            beslutning = Beslutningstype.STADFESTELSE,
+                            beslutning = Beslutningstype.ENDRING,
                             periodeListe =
                                 listOf(
                                     Periode(
@@ -228,7 +228,7 @@ class VedtakServiceTest {
                                 ),
                             mottaker = Personident(PersonidentGenerator.genererFødselsnummer()),
                             innkreving = Innkrevingstype.MED_INNKREVING,
-                            beslutning = Beslutningstype.STADFESTELSE,
+                            beslutning = Beslutningstype.ENDRING,
                             periodeListe =
                                 listOf(
                                     Periode(
@@ -255,7 +255,7 @@ class VedtakServiceTest {
                                 ),
                             mottaker = Personident(PersonidentGenerator.genererFødselsnummer()),
                             innkreving = Innkrevingstype.MED_INNKREVING,
-                            beslutning = Beslutningstype.STADFESTELSE,
+                            beslutning = Beslutningstype.ENDRING,
                             periodeListe =
                                 listOf(
                                     Periode(
@@ -372,7 +372,7 @@ class VedtakServiceTest {
                             kravhaver = kravhaver,
                             mottaker = Personident(PersonidentGenerator.genererFødselsnummer()),
                             innkreving = Innkrevingstype.MED_INNKREVING,
-                            beslutning = Beslutningstype.STADFESTELSE,
+                            beslutning = Beslutningstype.ENDRING,
                             periodeListe =
                                 listOf(
                                     Periode(
@@ -433,7 +433,7 @@ class VedtakServiceTest {
                     kravhaver = kravhaver,
                     mottaker = Personident(PersonidentGenerator.genererFødselsnummer()),
                     innkreving = innkreving,
-                    beslutning = Beslutningstype.STADFESTELSE,
+                    beslutning = Beslutningstype.ENDRING,
                     periodeListe =
                         listOf(
                             Periode(
