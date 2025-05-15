@@ -353,10 +353,10 @@ class AldersjusteringService(
             vedtakConsumer.slettVedtaksforslag(it.vedtaksid.toInt())
         } ?: run {
             log.error { "Fant ikke eksisterende vedtaksforslag med referanse $unikReferanse" }
+            aldersjustering.vedtak = null
+            aldersjustering.status = Status.SLETTET
             return null
         }
-        aldersjustering.vedtak = null
-        aldersjustering.status = Status.SLETTET
         return aldersjustering
     }
 
