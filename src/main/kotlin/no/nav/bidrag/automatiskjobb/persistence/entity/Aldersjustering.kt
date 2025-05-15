@@ -47,7 +47,7 @@ data class Aldersjustering(
     var fattetTidspunkt: Timestamp? = null,
     @Column(name = "stonadstype")
     @Enumerated(EnumType.STRING)
-    val stønadstype: Stønadstype,
+    val stønadstype: Stønadstype = Stønadstype.BIDRAG,
     @Column(name = "resultat_siste_vedtak")
     var resultatSisteVedtak: String? = null,
 ) : EntityObject
