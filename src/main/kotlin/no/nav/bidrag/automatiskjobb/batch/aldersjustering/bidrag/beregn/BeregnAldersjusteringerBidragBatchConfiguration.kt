@@ -40,13 +40,13 @@ class BeregnAldersjusteringerBidragBatchConfiguration {
         @Qualifier("batchTaskExecutor") taskExecutor: TaskExecutor,
         jobRepository: JobRepository,
         transactionManager: PlatformTransactionManager,
-        beregnAldersjusteringJpaPagingItemReader: JpaPagingItemReader<Aldersjustering>,
+        beregnAldersjusteringerBidragBatchReader: BeregnAldersjusteringerBidragBatchReader,
         beregnAldersjusteringerBidragBatchProcessor: BeregnAldersjusteringerBidragBatchProcessor,
         dummyItemWriter: DummyItemWriter,
     ): Step =
         StepBuilder("beregnAldersjusteringerBidragStep", jobRepository)
             .chunk<Aldersjustering, AldersjusteringResultat>(CHUNK_SIZE, transactionManager)
-            .reader(beregnAldersjusteringJpaPagingItemReader)
+            .reader(beregnAldersjusteringerBidragBatchReader)
             .processor(beregnAldersjusteringerBidragBatchProcessor)
             .writer(dummyItemWriter)
             .taskExecutor(taskExecutor)

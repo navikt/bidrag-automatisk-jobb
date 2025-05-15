@@ -28,13 +28,13 @@ class SlettVedtaksforslagBatchConfiguration {
         @Qualifier("batchTaskExecutor") taskExecutor: TaskExecutor,
         jobRepository: JobRepository,
         transactionManager: PlatformTransactionManager,
-        slettVedtaksforslagJpaPagingItemReader: JpaPagingItemReader<Aldersjustering>,
+        slettVedtaksforslagBatchReader: SlettVedtaksforslagBatchReader,
         slettVedtaksforslagBatchProcessor: SlettVedtaksforslagBatchProcessor,
         dummyItemWriter: DummyItemWriter,
     ): Step =
         StepBuilder("slettVedtaksforslagStep", jobRepository)
             .chunk<Aldersjustering, Aldersjustering>(CHUNK_SIZE, transactionManager)
-            .reader(slettVedtaksforslagJpaPagingItemReader)
+            .reader(slettVedtaksforslagBatchReader)
             .processor(slettVedtaksforslagBatchProcessor)
             .writer(dummyItemWriter)
             .taskExecutor(taskExecutor)
