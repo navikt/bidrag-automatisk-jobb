@@ -3,7 +3,6 @@ package no.nav.bidrag.automatiskjobb.batch.aldersjustering
 import org.springframework.batch.item.data.RepositoryItemReader
 import org.springframework.beans.factory.InitializingBean
 import org.springframework.lang.Nullable
-import org.springframework.stereotype.Component
 import org.springframework.util.ClassUtils
 import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
@@ -13,8 +12,7 @@ import kotlin.concurrent.Volatile
  * Modifisert versjon av [RepositoryItemReader] som kan brukes i batcher som oppdaterer status på argumenter under kjøring.
  * Dette er nødvendig da pagineringen ikke forstår at readeren ikke lenger returnerer samme rader etter at ny status er satt.
  */
-@Component
-class StatusRepositoryItemReader<T> :
+open class StatusRepositoryItemReader<T> :
     RepositoryItemReader<T?>(),
     InitializingBean {
     @Volatile
