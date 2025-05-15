@@ -18,6 +18,7 @@ import no.nav.bidrag.automatiskjobb.utils.ugyldigForespørsel
 import no.nav.bidrag.beregn.barnebidrag.service.AldersjusteresManueltException
 import no.nav.bidrag.beregn.barnebidrag.service.AldersjusteringOrchestrator
 import no.nav.bidrag.beregn.barnebidrag.service.SkalIkkeAldersjusteresException
+import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.domene.enums.rolle.Rolletype
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.ident.Personident
@@ -339,11 +340,11 @@ class AldersjusteringService(
                 Saksnummer(barn.saksnummer),
             )
 
-        log.info { "Aldersjustering for barn ${barn.id} med stønadsid: $aldersjustering. skal slettes. Sletter.." }
+        secureLogger.info { "Aldersjustering for barn ${barn.id} med stønadsid: $aldersjustering. skal slettes. Sletter.." }
         val unikReferanse = "aldersjustering_${aldersjustering.batchId}_${stønadsid.toReferanse()}"
 
         vedtakConsumer.hentVedtaksforslagBasertPåReferanase(unikReferanse)?.let {
-            log.info {
+            secureLogger.info {
                 "Fant eksisterende vedtaksforslag med referanse $unikReferanse og id ${it.vedtaksid}. Sletter eksisterende vedtaksforslag "
             }
             vedtakConsumer.slettVedtaksforslag(it.vedtaksid.toInt())
@@ -364,18 +365,18 @@ class AldersjusteringService(
             vedtakConsumer.opprettVedtaksforslag(request)
         } catch (e: HttpStatusCodeException) {
             if (e.statusCode == HttpStatus.CONFLICT) {
-                log.info { "Vedtaksforslag med referanse ${request.unikReferanse} finnes allerede. Oppdaterer vedtaksforslaget" }
+                secureLogger.info { "Vedtaksforslag med referanse ${request.unikReferanse} finnes allerede. Oppdaterer vedtaksforslaget" }
                 val resultat = e.getResponseBodyAs(OpprettVedtakConflictResponse::class.java)!!
                 vedtakConsumer.oppdaterVedtaksforslag(resultat.vedtaksid, request)
             } else {
-                log.error(e) { "Feil ved oppretting av vedtaksforslag med referanse ${request.unikReferanse}" }
+                secureLogger.error(e) { "Feil ved oppretting av vedtaksforslag med referanse ${request.unikReferanse}" }
                 throw e
             }
         }
 
     private fun slettEksisterendeVedtaksforslag(referanse: String) {
         vedtakConsumer.hentVedtaksforslagBasertPåReferanase(referanse)?.let {
-            log.info {
+            secureLogger.info {
                 "Fant eksisterende vedtaksforslag med referanse $referanse og id ${it.vedtaksid}. Sletter eksisterende vedtaksforslag "
             }
             vedtakConsumer.slettVedtaksforslag(it.vedtaksid.toInt())

@@ -10,7 +10,7 @@ class BatchConfiguration {
     companion object {
         const val CHUNK_SIZE = 500
         const val PAGE_SIZE = 100
-        const val GRID_SIZE = 5
+        const val GRID_SIZE = 1
     }
 
     @Bean
