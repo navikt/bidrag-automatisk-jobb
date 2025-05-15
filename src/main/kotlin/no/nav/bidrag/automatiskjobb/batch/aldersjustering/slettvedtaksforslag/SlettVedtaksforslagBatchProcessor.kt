@@ -1,10 +1,13 @@
 package no.nav.bidrag.automatiskjobb.batch.aldersjustering.slettvedtaksforslag
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import no.nav.bidrag.automatiskjobb.service.AldersjusteringService
 import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.stereotype.Component
+
+private val log = KotlinLogging.logger {}
 
 @Component
 @StepScope
@@ -12,9 +15,13 @@ class SlettVedtaksforslagBatchProcessor(
     private val aldersjusteringService: AldersjusteringService,
 ) : ItemProcessor<Aldersjustering, Unit> {
     override fun process(item: Aldersjustering) {
-        aldersjusteringService.slettVedtaksforslag(
-            stønadstype = item.stønadstype,
-            aldersjustering = item,
-        )
+        try {
+            aldersjusteringService.slettVedtaksforslag(
+                stønadstype = item.stønadstype,
+                aldersjustering = item,
+            )
+        } catch (e: Exception) {
+            log.warn(e) { "Det skjedde en feil ved prosessering av aldersjustering ${item.id}" }
+        }
     }
 }
