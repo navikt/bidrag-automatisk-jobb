@@ -32,6 +32,7 @@ import no.nav.bidrag.transport.behandling.vedtak.request.OpprettVedtakRequestDto
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.client.HttpStatusCodeException
 import java.sql.Timestamp
 
@@ -192,6 +193,7 @@ class AldersjusteringService(
         }
     }
 
+    @Transactional
     fun utførAldersjustering(
         aldersjustering: Aldersjustering,
         stønadstype: Stønadstype,
@@ -329,6 +331,7 @@ class AldersjusteringService(
                 },
         )
 
+    @Transactional
     fun slettVedtaksforslag(
         stønadstype: Stønadstype,
         aldersjustering: Aldersjustering,
@@ -357,6 +360,8 @@ class AldersjusteringService(
             aldersjustering.status = Status.SLETTET
             return null
         }
+        aldersjustering.vedtak = null
+        aldersjustering.status = Status.SLETTET
         return aldersjustering
     }
 
