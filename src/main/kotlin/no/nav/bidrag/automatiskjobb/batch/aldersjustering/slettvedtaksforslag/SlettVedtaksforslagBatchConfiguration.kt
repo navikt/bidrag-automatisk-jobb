@@ -27,7 +27,7 @@ class SlettVedtaksforslagBatchConfiguration {
         dummyItemWriter: DummyItemWriter,
     ): Step =
         StepBuilder("slettVedtaksforslagStep", jobRepository)
-            .chunk<Aldersjustering, Unit>(CHUNK_SIZE, transactionManager)
+            .chunk<Aldersjustering, Aldersjustering>(CHUNK_SIZE, transactionManager)
             .reader(slettVedtaksforslagBatchReader)
             .processor(slettVedtaksforslagBatchProcessor)
             .writer(dummyItemWriter)

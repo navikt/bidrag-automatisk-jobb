@@ -13,8 +13,8 @@ private val log = KotlinLogging.logger {}
 @StepScope
 class SlettVedtaksforslagBatchProcessor(
     private val aldersjusteringService: AldersjusteringService,
-) : ItemProcessor<Aldersjustering, Unit> {
-    override fun process(item: Aldersjustering) {
+) : ItemProcessor<Aldersjustering, Aldersjustering> {
+    override fun process(item: Aldersjustering) =
         try {
             aldersjusteringService.slettVedtaksforslag(
                 stønadstype = item.stønadstype,
@@ -22,6 +22,6 @@ class SlettVedtaksforslagBatchProcessor(
             )
         } catch (e: Exception) {
             log.warn(e) { "Det skjedde en feil ved prosessering av aldersjustering ${item.id}" }
+            null
         }
-    }
 }
