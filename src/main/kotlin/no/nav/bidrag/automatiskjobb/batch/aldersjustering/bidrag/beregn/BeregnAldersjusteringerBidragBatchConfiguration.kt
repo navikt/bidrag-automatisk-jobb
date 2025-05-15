@@ -56,7 +56,7 @@ class BeregnAldersjusteringerBidragBatchConfiguration {
     fun beregnAldersjusteringJpaPagingItemReader(entityManagerFactory: EntityManagerFactory): JpaPagingItemReader<Aldersjustering> {
         val queryProvider =
             JpaNativeQueryProvider<Aldersjustering>().apply {
-                setSqlQuery("SELECT a FROM Aldersjustering a WHERE a.status IN (:statuses) ORDER BY a.id ASC")
+                setSqlQuery("SELECT a FROM Aldersjustering a WHERE a.status IN (:statuses)")
                 setEntityClass(Aldersjustering::class.java)
             }
         val reader =

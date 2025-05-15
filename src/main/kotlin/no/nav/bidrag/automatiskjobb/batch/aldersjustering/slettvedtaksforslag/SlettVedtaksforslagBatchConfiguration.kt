@@ -55,7 +55,7 @@ class SlettVedtaksforslagBatchConfiguration {
     fun slettVedtaksforslagJpaPagingItemReader(entityManagerFactory: EntityManagerFactory): JpaPagingItemReader<Aldersjustering> {
         val queryProvider =
             JpaNativeQueryProvider<Aldersjustering>().apply {
-                setSqlQuery("SELECT a FROM Aldersjustering a WHERE a.status = :status ORDER BY a.id ASC")
+                setSqlQuery("SELECT a FROM Aldersjustering a WHERE a.status = :status")
                 setEntityClass(Aldersjustering::class.java)
             }
         val reader =
