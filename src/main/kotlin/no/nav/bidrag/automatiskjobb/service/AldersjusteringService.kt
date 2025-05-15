@@ -244,7 +244,6 @@ class AldersjusteringService(
             aldersjustering.behandlingstype = Behandlingstype.FATTET_FORSLAG
             aldersjustering.begrunnelse = emptyList()
             aldersjustering.resultatSisteVedtak = resultatSisteVedtak
-            alderjusteringRepository.save(aldersjustering)
 
             return AldersjusteringAldersjustertResultat(vedtaksid ?: -1, stønadsid, vedtaksforslagRequest)
         } catch (e: SkalIkkeAldersjusteresException) {
@@ -253,8 +252,6 @@ class AldersjusteringService(
             aldersjustering.behandlingstype = Behandlingstype.INGEN
             aldersjustering.begrunnelse = e.begrunnelser.map { it.name }
             aldersjustering.resultatSisteVedtak = e.resultat
-
-            alderjusteringRepository.save(aldersjustering)
 
             combinedLogger.warn(e) {
                 "Stønad $stønadsid skal ikke aldersjusteres med begrunnelse ${e.begrunnelser.joinToString(", ")}"
@@ -267,16 +264,12 @@ class AldersjusteringService(
             aldersjustering.begrunnelse = listOf(e.begrunnelse.name)
             aldersjustering.resultatSisteVedtak = e.resultat
 
-            alderjusteringRepository.save(aldersjustering)
-
             combinedLogger.warn(e) { "Stønad $stønadsid skal aldersjusteres manuelt med begrunnelse ${e.begrunnelse}" }
             return AldersjusteringIkkeAldersjustertResultat(stønadsid, e.begrunnelse.name)
         } catch (e: Exception) {
             aldersjustering.status = Status.FEILET
             aldersjustering.behandlingstype = Behandlingstype.FEILET
             aldersjustering.begrunnelse = listOf(e.message ?: "Ukjent feil")
-
-            alderjusteringRepository.save(aldersjustering)
 
             combinedLogger.error(e) { "Det skjedde en feil ved aldersjustering for stønad $stønadsid" }
             return AldersjusteringIkkeAldersjustertResultat(stønadsid, "Teknisk feil: ${e.message}")

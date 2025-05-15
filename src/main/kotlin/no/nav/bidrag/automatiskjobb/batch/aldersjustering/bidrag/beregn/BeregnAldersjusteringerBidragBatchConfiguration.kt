@@ -4,6 +4,7 @@ import no.nav.bidrag.automatiskjobb.batch.BatchCompletionNotificationListener
 import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.CHUNK_SIZE
 import no.nav.bidrag.automatiskjobb.batch.DummyItemWriter
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
+import no.nav.bidrag.transport.automatiskjobb.AldersjusteringResultat
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.Step
 import org.springframework.batch.core.job.builder.JobBuilder
@@ -38,7 +39,7 @@ class BeregnAldersjusteringerBidragBatchConfiguration {
         dummyItemWriter: DummyItemWriter,
     ): Step =
         StepBuilder("beregnAldersjusteringerBidragStep", jobRepository)
-            .chunk<Aldersjustering, Unit>(CHUNK_SIZE, transactionManager)
+            .chunk<Aldersjustering, AldersjusteringResultat>(CHUNK_SIZE, transactionManager)
             .reader(beregnAldersjusteringerBidragBatchReader)
             .processor(beregnAldersjusteringerBidragBatchProcessor)
             .writer(dummyItemWriter)
