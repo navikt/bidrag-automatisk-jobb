@@ -61,7 +61,7 @@ class SlettVedtaksforslagBatchConfiguration {
         val reader =
             StatusJpaPagingItemReader<Aldersjustering>().apply {
                 setQueryProvider(queryProvider)
-                setParameterValues(mapOf("status" to listOf(Status.SLETTES)))
+                setParameterValues(mapOf("status" to listOf(Status.SLETTES.name)))
                 setEntityManagerFactory(entityManagerFactory)
                 pageSize = PAGE_SIZE
                 isSaveState = false

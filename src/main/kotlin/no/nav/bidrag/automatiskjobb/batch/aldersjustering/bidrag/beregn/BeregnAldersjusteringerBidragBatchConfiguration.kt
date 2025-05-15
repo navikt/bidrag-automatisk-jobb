@@ -62,7 +62,11 @@ class BeregnAldersjusteringerBidragBatchConfiguration {
         val reader =
             StatusJpaPagingItemReader<Aldersjustering>().apply {
                 setQueryProvider(queryProvider)
-                setParameterValues(mapOf("statuses" to listOf(Status.UBEHANDLET, Status.FEILET, Status.SLETTET, Status.SIMULERT)))
+                setParameterValues(
+                    mapOf(
+                        "statuses" to listOf(Status.UBEHANDLET.name, Status.FEILET.name, Status.SLETTET.name, Status.SIMULERT.name),
+                    ),
+                )
                 setEntityManagerFactory(entityManagerFactory)
                 pageSize = PAGE_SIZE
                 isSaveState = false
