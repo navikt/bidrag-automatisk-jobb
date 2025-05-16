@@ -14,14 +14,18 @@ import java.util.Collections
 @Component
 @StepScope
 class OpprettAldersjusteringerBidragBatchReader(
-    @Value("#{jobParameters['kjøredato']}") kjøredato: LocalDate? = LocalDate.now(),
+    @Value("#{jobParameters['aldersjusteringsdato']}") aldersjusteringsdato: LocalDate? =
+        LocalDate
+            .now()
+            .withMonth(7)
+            .withDayOfMonth(1),
     @Value("#{jobParameters['år']}") år: Long? = -1,
     barnRepository: BarnRepository,
 ) : RepositoryItemReader<Barn>() {
     init {
         this.setRepository(barnRepository)
         this.setMethodName("finnBarnSomSkalAldersjusteresForÅr")
-        this.setArguments(listOf(år?.toInt(), kjøredato))
+        this.setArguments(listOf(år?.toInt(), aldersjusteringsdato))
         this.setPageSize(PAGE_SIZE)
         this.setSort(Collections.singletonMap("id", Sort.Direction.ASC))
         this.isSaveState = false
