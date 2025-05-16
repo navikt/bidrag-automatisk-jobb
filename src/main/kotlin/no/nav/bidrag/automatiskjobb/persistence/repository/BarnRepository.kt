@@ -12,7 +12,7 @@ interface BarnRepository : JpaRepository<Barn, Int> {
     @Query(
         "SELECT b FROM barn b WHERE :år - EXTRACT(YEAR FROM b.fødselsdato) IN (6, 11, 15) " +
             "AND b.bidragFra <= :aldersjusteringsdato " +
-            "AND (b.bidragTil IS NULL OR b.bidragTil >= :aldersjusteringsdato)",
+            "AND (b.bidragTil IS NULL OR b.bidragTil > :aldersjusteringsdato)",
     )
     fun finnBarnSomSkalAldersjusteresForÅr(
         @Param("år") år: Int,
