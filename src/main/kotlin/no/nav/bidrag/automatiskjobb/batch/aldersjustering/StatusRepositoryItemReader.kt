@@ -18,6 +18,8 @@ open class StatusRepositoryItemReader<T> :
     @Volatile
     private var page = 0
 
+    private var pageSize = 10
+
     @Volatile
     private var current = 0
 
@@ -28,6 +30,10 @@ open class StatusRepositoryItemReader<T> :
 
     init {
         name = ClassUtils.getShortName(StatusRepositoryItemReader::class.java)
+    }
+
+    override fun setPageSize(pageSize: Int) {
+        this.pageSize = pageSize
     }
 
     @Nullable
@@ -60,6 +66,17 @@ open class StatusRepositoryItemReader<T> :
             } else {
                 return null
             }
+        } finally {
+            this.lock.unlock()
+        }
+    }
+
+    @Throws(java.lang.Exception::class)
+    override fun jumpToItem(itemLastIndex: Int) {
+        this.lock.lock()
+        try {
+            page = 0
+            current = itemLastIndex % pageSize
         } finally {
             this.lock.unlock()
         }
