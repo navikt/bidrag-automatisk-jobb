@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.brev.opprett
+package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.forsendelse.distribuer
 
 import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.PAGE_SIZE
 import no.nav.bidrag.automatiskjobb.persistence.entity.ForsendelseBestilling
@@ -11,12 +11,12 @@ import java.util.Collections
 
 @Component
 @StepScope
-class OpprettBrevAldersjusteringerBidragBatchReader(
+class SlettForsendelserSomSkalSlettesBatchReader(
     forsendelseBestillingRepository: ForsendelseBestillingRepository,
 ) : RepositoryItemReader<ForsendelseBestilling>() {
     init {
         this.setRepository(forsendelseBestillingRepository)
-        this.setMethodName("findAllByForsendelseIdIsNullAndSlettetTidspunktIsNull")
+        this.setMethodName("finnAlleSomSkalSlettes")
         this.setPageSize(PAGE_SIZE)
         this.setSort(Collections.singletonMap("id", Sort.Direction.ASC))
         this.isSaveState = false

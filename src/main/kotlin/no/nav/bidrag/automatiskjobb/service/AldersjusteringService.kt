@@ -82,9 +82,7 @@ class AldersjusteringService(
                 } else {
                     AldersjusteringIkkeAldersjustertResultat(
                         stønadsid,
-                        aldersjustering.begrunnelse.joinToString(
-                            ", ",
-                        ) { it.lowercase().replaceFirstChar { it.uppercase() }.replace("_", " ") },
+                        aldersjustering.begrunnelseVisningsnavn.joinToString(", "),
                         aldersjusteresManuelt = aldersjustering.behandlingstype == Behandlingstype.MANUELL,
                     )
                 }
@@ -298,7 +296,7 @@ class AldersjusteringService(
     }
 
     fun opprettOppgaveForAldersjustering(aldersjustering: Aldersjustering): Int {
-        val oppgaveId = oppgaveService.opprettOppgaveForManuellAldersjustering(aldersjustering.barn) //
+        val oppgaveId = oppgaveService.opprettOppgaveForManuellAldersjustering(aldersjustering) //
 
         aldersjustering.oppgave = oppgaveId
         alderjusteringRepository.save(aldersjustering)

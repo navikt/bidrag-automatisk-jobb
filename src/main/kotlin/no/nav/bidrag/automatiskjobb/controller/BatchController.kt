@@ -7,9 +7,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.beregn.BeregnAldersjusteringerBidragBatch
-import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.brev.distribuer.DistribuerBrevAldersjusteringerBidragBatch
-import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.brev.opprett.OpprettBrevAldersjusteringerBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.fattvedtak.FattVedtakOmAldersjusteringerBidragBatch
+import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.forsendelse.distribuer.DistribuerForsendelseAldersjusteringerBidragBatch
+import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.forsendelse.opprett.OpprettForsendelseAldersjusteringerBidragBatch
+import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.forsendelse.slett.SlettForsendelsrSomSkalSlettesBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.oppgave.OppgaveAldersjusteringBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.opprett.OpprettAldersjusteringerBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.slettallevedtaksforslag.SlettAlleVedtaksforslagBatch
@@ -31,8 +32,9 @@ class BatchController(
     private val fattVedtakOmAldersjusteringerBidragBatch: FattVedtakOmAldersjusteringerBidragBatch,
     private val oppgaveAldersjusteringBidragBatch: OppgaveAldersjusteringBidragBatch,
     private val beregnAldersjusteringerBidragBatch: BeregnAldersjusteringerBidragBatch,
-    private val opprettBrevAldersjusteringerBidragBatch: OpprettBrevAldersjusteringerBidragBatch,
-    private val distribuerBrevAldersjusteringerBidragBatch: DistribuerBrevAldersjusteringerBidragBatch,
+    private val opprettForsendelseAldersjusteringerBidragBatch: OpprettForsendelseAldersjusteringerBidragBatch,
+    private val distribuerForsendelseAldersjusteringerBidragBatch: DistribuerForsendelseAldersjusteringerBidragBatch,
+    private val slettForsendelsrSomSkalSlettesBidragBatch: SlettForsendelsrSomSkalSlettesBidragBatch,
 ) {
     @PostMapping("/aldersjuster/batch/slettvedtaksforslag")
     @Operation(
@@ -187,7 +189,7 @@ class BatchController(
         ],
     )
     fun startFattVedtakAldersjusteringBidragBatch(
-        @RequestParam barn: String,
+        @RequestParam barn: String?,
     ): ResponseEntity<Any> {
         fattVedtakOmAldersjusteringerBidragBatch.startFattVedtakOmAldersjusteringBidragBatch(
             barn,
@@ -263,41 +265,60 @@ class BatchController(
         return ResponseEntity.ok().build()
     }
 
-    @PostMapping("/aldersjuster/batch/brev/opprett")
+    @PostMapping("/aldersjuster/batch/forsendelse/opprett")
     @Operation(
-        summary = "Start kjøring av batch for å opprette brev for aldersjusteringer.",
-        description = "Operasjon for å starte kjøring av batch som oppretter brev for aldersjusteriner.",
+        summary = "Start kjøring av batch for å opprette forsendelse for aldersjusteringer.",
+        description = "Operasjon for å starte kjøring av batch som oppretter forsendelse for aldersjusteriner.",
         security = [SecurityRequirement(name = "bearer-key")],
     )
     @ApiResponses(
         value = [
             ApiResponse(
                 responseCode = "200",
-                description = "Batch for oppretting av brev for aldersjusteringer ble startet.",
+                description = "Batch for oppretting av forsendelser for aldersjusteringer ble startet.",
             ),
         ],
     )
-    fun startOpprettBrevAldersjusteringBidragBatch(): ResponseEntity<Any> {
-        opprettBrevAldersjusteringerBidragBatch.startOpprettBrevAldersjusteringBidragBatch()
+    fun startOpprettForsendelseAldersjusteringBidragBatch(): ResponseEntity<Any> {
+        opprettForsendelseAldersjusteringerBidragBatch.startOpprettForsendelseAldersjusteringBidragBatch()
         return ResponseEntity.ok().build()
     }
 
-    @PostMapping("/aldersjuster/batch/brev/distribuer")
+    @PostMapping("/batch/forsendelse/slett")
     @Operation(
-        summary = "Start kjøring av batch for å distribuere brev for aldersjusteringer.",
-        description = "Operasjon for å starte kjøring av batch som distibuerer brew for aldersjusteriner.",
+        summary = "Start kjøring av batch som sletter alle forsendelser som har blitt satt til skalSlettes=true.",
+        description = "Operasjon for å starte kjøring av batch som skal slette alle forsendelser.",
         security = [SecurityRequirement(name = "bearer-key")],
     )
     @ApiResponses(
         value = [
             ApiResponse(
                 responseCode = "200",
-                description = "Batch for distrubisjon av breev for aldersjusteringer ble startet.",
+                description = "Batch for sletting av forsendelser ble startet",
             ),
         ],
     )
-    fun startDistribuerBrevAldersjusteringBidragBatch(): ResponseEntity<Any> {
-        distribuerBrevAldersjusteringerBidragBatch.startDistribuerBrevAldersjusteringBidragBatch()
+    fun starSlettForsendelserSomSkalSlettesBatch(): ResponseEntity<Any> {
+        slettForsendelsrSomSkalSlettesBidragBatch.startSlettForsendelserSomSkalSlettesBatch()
+        return ResponseEntity.ok().build()
+    }
+
+    @PostMapping("/aldersjuster/batch/forsendelse/distribuer")
+    @Operation(
+        summary = "Start kjøring av batch for å distribuere forsendelse for aldersjusteringer.",
+        description = "Operasjon for å starte kjøring av batch som distibuerer forsendelser for aldersjusteriner.",
+        security = [SecurityRequirement(name = "bearer-key")],
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Batch for distrubisjon av forsendelser for aldersjusteringer ble startet.",
+            ),
+        ],
+    )
+    fun startDistribuerForsendelseAldersjusteringBidragBatch(): ResponseEntity<Any> {
+        distribuerForsendelseAldersjusteringerBidragBatch.startDistribuerForsendelseAldersjusteringBidragBatch()
         return ResponseEntity.ok().build()
     }
 }

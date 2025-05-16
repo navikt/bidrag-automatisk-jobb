@@ -57,8 +57,8 @@ interface AldersjusteringRepository : JpaRepository<Aldersjustering, Int> {
             "AND a.oppgave IS NULL",
     )
     fun finnForBehandlingstypeOgStatus(
-        @Param("behandlingstype") behandlingstyper: List<Behandlingstype>,
-        @Param("status") statuser: List<Status>,
+        @Param("behandlingstyper") behandlingstyper: List<Behandlingstype>,
+        @Param("statuser") statuser: List<Status>,
         pageable: Pageable = Pageable.ofSize(100),
     ): Page<Aldersjustering>
 
