@@ -35,6 +35,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.client.HttpStatusCodeException
+import java.sql.Timestamp
 
 private val log = KotlinLogging.logger {}
 
@@ -278,12 +279,12 @@ class AldersjusteringService(
         val sak = sakConsumer.hentSak(aldersjustering.barn.saksnummer)
 
         combinedLogger.info { "Fatter vedtak for aldersjustering ${aldersjustering.id} og vedtaksid ${aldersjustering.vedtak}" }
-//        vedtakConsumer.fatteVedtaksforslag(
-//            aldersjustering.vedtak ?: error("Aldersjustering ${aldersjustering.id} mangler vedtak!"),
-//        )
-//        aldersjustering.status = Status.FATTET
-//        aldersjustering.fattetTidspunkt = Timestamp(System.currentTimeMillis())
-//        alderjusteringRepository.save(aldersjustering)
+        vedtakConsumer.fatteVedtaksforslag(
+            aldersjustering.vedtak ?: error("Aldersjustering ${aldersjustering.id} mangler vedtak!"),
+        )
+        aldersjustering.status = Status.FATTET
+        aldersjustering.fattetTidspunkt = Timestamp(System.currentTimeMillis())
+        alderjusteringRepository.save(aldersjustering)
 
         sak.roller.filter { it.type == Rolletype.BIDRAGSPLIKTIG || it.type == Rolletype.BIDRAGSMOTTAKER }.forEach {
             forsendelseBestillingService.opprettForsendelseBestilling(
