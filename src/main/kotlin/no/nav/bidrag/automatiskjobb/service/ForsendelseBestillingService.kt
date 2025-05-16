@@ -36,21 +36,26 @@ class ForsendelseBestillingService(
                 dokumentmal = DOKUMENTMAL_BI01B05,
                 språkkode = Språk.NB,
             )
-        forsendelseBestillingRepository.save(forsendelseBestilling)
+        val opprettetForsendelse = forsendelseBestillingRepository.save(forsendelseBestilling)
+        log.info {
+            "Opprettet forsendelse bestilling ${opprettetForsendelse.id} " +
+                "for rolle ${opprettetForsendelse.rolletype} med dokumentmalId ${opprettetForsendelse.dokumentmal}" +
+                "relatert til aldersjustering ${opprettetForsendelse.aldersjustering.id} og sak ${opprettetForsendelse.aldersjustering.barn.saksnummer}"
+        }
     }
 
     fun slettForsendelse(forsendelseBestilling: ForsendelseBestilling) {
         // Ignorer behandling hvis det er distribuert
         if (forsendelseBestilling.distribuertTidspunkt != null) return
 
-        log.info {
-            "Sletter forsendelse ${forsendelseBestilling.forsendelseId} opprettet ${forsendelseBestilling.forsendelseOpprettetTidspunkt}"
-        }
-
         bidragDokumentForsendelseConsumer.slettForsendelse(
             forsendelseBestilling.forsendelseId!!,
             forsendelseBestilling.aldersjustering.barn.saksnummer,
         )
+        log.info {
+            "Slettet forsendelse ${forsendelseBestilling.forsendelseId} opprettet ${forsendelseBestilling.forsendelseOpprettetTidspunkt}" +
+                "relatert til aldersjustering ${forsendelseBestilling.aldersjustering.id} og sak ${forsendelseBestilling.aldersjustering.barn.saksnummer}"
+        }
         forsendelseBestilling.slettetTidspunkt = Timestamp(System.currentTimeMillis())
     }
 
@@ -77,6 +82,10 @@ class ForsendelseBestillingService(
                 forsendelseBestilling.aldersjustering.batchId,
                 forsendelseBestilling.forsendelseId!!,
             )
+        log.info {
+            "Distribuerte forsendelse ${forsendelseBestilling.forsendelseId} med journalpostId ${distribuerJournalpostResponse.journalpostId.numeric} " +
+                "relatert til aldersjustering ${forsendelseBestilling.aldersjustering.id} og sak ${forsendelseBestilling.aldersjustering.barn.saksnummer}"
+        }
         forsendelseBestilling.journalpostId = distribuerJournalpostResponse.journalpostId.numeric
         forsendelseBestilling.distribuertTidspunkt = Timestamp(System.currentTimeMillis())
     }
@@ -101,7 +110,7 @@ class ForsendelseBestillingService(
         forsendelseBestilling.forsendelseOpprettetTidspunkt = Timestamp(System.currentTimeMillis())
         log.info {
             "Opprettet forsendelse ${forsendelseBestilling.forsendelseId} for rolle ${forsendelseBestilling.rolletype} " +
-                "relatert til aldersjustering ${forsendelseBestilling.aldersjustering.id} i sak ${forsendelseBestilling.aldersjustering.barn.saksnummer}"
+                "relatert til aldersjustering ${forsendelseBestilling.aldersjustering.id} og sak ${forsendelseBestilling.aldersjustering.barn.saksnummer}"
         }
         forsendelseBestillingRepository.save(forsendelseBestilling)
     }
