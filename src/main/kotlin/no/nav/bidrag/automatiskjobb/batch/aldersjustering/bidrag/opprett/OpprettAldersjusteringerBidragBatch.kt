@@ -13,14 +13,16 @@ class OpprettAldersjusteringerBidragBatch(
     private val opprettAldersjusteringerBidragJob: Job,
 ) {
     fun startOpprettAldersjusteringBidragBatch(
-        kjøredato: LocalDate?,
+        aldersjusteringsdato: LocalDate?,
         år: Long,
     ) {
         jobLauncher.run(
             opprettAldersjusteringerBidragJob,
             JobParametersBuilder()
-                .addLocalDate("kjøredato", kjøredato ?: LocalDate.now())
-                .addLong("år", år)
+                .addLocalDate(
+                    "aldersjusteringsdato",
+                    aldersjusteringsdato ?: LocalDate.now().withMonth(7).withDayOfMonth(1),
+                ).addLong("år", år)
                 .addString("runId", "aldersjustering_bidrag_${UUID.randomUUID()}")
                 .toJobParameters(),
         )

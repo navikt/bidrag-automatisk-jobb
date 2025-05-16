@@ -8,6 +8,7 @@ import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.domene.enums.vedtak.Beslutningstype
 import no.nav.bidrag.domene.enums.vedtak.Innkrevingstype
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
+import no.nav.bidrag.domene.enums.vedtak.Vedtakstype
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.transport.behandling.vedtak.Stønadsendring
 import no.nav.bidrag.transport.behandling.vedtak.VedtakHendelse
@@ -28,6 +29,7 @@ class VedtakService(
 
     @Transactional
     fun behandleVedtak(vedtakHendelse: VedtakHendelse) {
+        if (vedtakHendelse.type == Vedtakstype.INDEKSREGULERING) return
         val stønadsendringer = hentStønadsendringerForBidragOgForskudd(vedtakHendelse)
 
         stønadsendringer?.forEach { (kravhaver, stønadsendringer) ->
@@ -142,6 +144,7 @@ class VedtakService(
             stønadsendring
                 .find { it.type == stønadstype }
                 ?.periodeListe
+                ?.filter { it.beløp != null }
                 ?.map { it.periode.toDatoperiode() }
                 ?.takeIf { it.all { periode -> periode.til != null } }
                 ?.sortedByDescending { it.til }
@@ -149,7 +152,12 @@ class VedtakService(
                 ?.til
 
         // Om det er avsluttende periode så skal den avsluttende periodens fra dato settes som tilDato da dette er starten på opphøret.
-        val avsluttendePeriode = stønadsendring.flatMap { it.periodeListe }.find { it.beløp == null }?.periode
+        val avsluttendePeriode =
+            stønadsendring
+                .filter { it.type == stønadstype }
+                .flatMap { it.periodeListe }
+                .find { it.beløp == null }
+                ?.periode
         if (avsluttendePeriode != null) {
             return avsluttendePeriode.toDatoperiode().fom
         }

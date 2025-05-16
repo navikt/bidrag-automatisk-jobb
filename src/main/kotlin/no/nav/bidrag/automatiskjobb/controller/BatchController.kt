@@ -141,21 +141,21 @@ class BatchController(
                 required = true,
             ),
             Parameter(
-                name = "kjøretidspunkt",
+                name = "aldersjusteringsdato",
                 example = "2025-06-01",
                 description =
                     "Kjøretidspunkt for aldersjustering. " +
-                        "Default er dagens dato. Kan settes for å justere cutoff dato for opphørte bidrag.",
+                        "Default er 1. juli inneværende år. Kan settes for å justere cutoff dato for opphørte bidrag.",
                 required = false,
             ),
         ],
     )
     fun startOpprettAldersjusteringBidragBatch(
         @RequestParam(required = true, name = "aar") år: Long,
-        @RequestParam(required = false) kjøretidspunkt: LocalDate?,
+        @RequestParam(required = false) aldersjusteringsdato: LocalDate?,
     ): ResponseEntity<Any> {
         opprettAldersjusteringerBidragBatch.startOpprettAldersjusteringBidragBatch(
-            kjøretidspunkt,
+            aldersjusteringsdato,
             år,
         )
         return ResponseEntity.ok().build()
