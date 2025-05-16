@@ -43,10 +43,10 @@ open class StatusRepositoryItemReader<T> :
     @Volatile
     private var current = 0
 
-    private var arguments: MutableList<*>? = null
+    private var arguments: List<*>? = null
 
     @Volatile
-    private var results: MutableList<T?>? = null
+    private var results: List<T?>? = null
 
     private val lock: Lock = ReentrantLock()
 
@@ -60,7 +60,7 @@ open class StatusRepositoryItemReader<T> :
      * Arguments to be passed to the data providing method.
      * @param arguments list of method arguments to be passed to the repository
      */
-    fun setArguments(arguments: MutableList<*>) {
+    fun setArguments(arguments: List<*>) {
         this.arguments = arguments
     }
 
