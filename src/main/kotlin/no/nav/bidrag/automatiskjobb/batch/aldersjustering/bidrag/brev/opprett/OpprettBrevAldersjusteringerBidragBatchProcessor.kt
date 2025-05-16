@@ -12,6 +12,6 @@ class OpprettBrevAldersjusteringerBidragBatchProcessor(
     private val forsendelseBestillingService: ForsendelseBestillingService,
 ) : ItemProcessor<ForsendelseBestilling, Unit> {
     override fun process(forsendelseBestilling: ForsendelseBestilling) {
-        forsendelseBestillingService.sendForsendelse(forsendelseBestilling)
+        forsendelseBestillingService.opprettForsendelse(forsendelseBestilling)
     }
 }

@@ -1,17 +1,18 @@
 package no.nav.bidrag.automatiskjobb.persistence.repository
 
 import no.nav.bidrag.automatiskjobb.persistence.entity.ForsendelseBestilling
+import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 
 interface ForsendelseBestillingRepository : JpaRepository<ForsendelseBestilling, Int> {
-    @Suppress("Brukes i batch")
+    @SuppressWarnings("Brukes i batch")
     fun findAllByForsendelseIdIsNullAndSlettetTidspunktIsNull(
         pageable: Pageable =
             Pageable.ofSize(
                 100,
             ),
-    ): List<ForsendelseBestilling>
+    ): Page<ForsendelseBestilling>
 
     @Suppress("Brukes i batch")
     fun findAllByBestiltTidspunktIsNotNullAndForsendelseIdIsNotNullAndSlettetTidspunktIsNull(
@@ -19,5 +20,5 @@ interface ForsendelseBestillingRepository : JpaRepository<ForsendelseBestilling,
             Pageable.ofSize(
                 100,
             ),
-    ): List<ForsendelseBestilling>
+    ): Page<ForsendelseBestilling>
 }

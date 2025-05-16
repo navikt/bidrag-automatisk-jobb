@@ -9,6 +9,7 @@ import no.nav.bidrag.domene.enums.diverse.Språk
 import no.nav.bidrag.domene.enums.rolle.Rolletype
 import no.nav.bidrag.transport.dokument.forsendelse.MottakerIdentTypeTo
 import no.nav.bidrag.transport.dokument.forsendelse.MottakerTo
+import no.nav.bidrag.transport.dokument.numeric
 import org.springframework.stereotype.Service
 import java.sql.Timestamp
 
@@ -36,7 +37,7 @@ class ForsendelseBestillingService(
         forsendelseBestillingRepository.save(forsendelseBestilling)
     }
 
-    fun sendForsendelse(forsendelseBestilling: ForsendelseBestilling) {
+    fun opprettForsendelse(forsendelseBestilling: ForsendelseBestilling) {
         if (forsendelseBestilling.forsendelseId != null && forsendelseBestilling.distribuerTidspunkt != null) {
             bidragDokumentForsendelseConsumer.slettForsendelse(
                 forsendelseBestilling.forsendelseId!!,
@@ -52,9 +53,9 @@ class ForsendelseBestillingService(
                     språkkode = forsendelseBestilling.språkkode,
                     dokumentmal = forsendelseBestilling.dokumentmal,
                 )
-            sendForsendelseTilBidragDokument(nyForsendelseBestilling)
+            opprettForsendelseTilBidragDokument(nyForsendelseBestilling)
         } else {
-            sendForsendelseTilBidragDokument(forsendelseBestilling)
+            opprettForsendelseTilBidragDokument(forsendelseBestilling)
         }
     }
 
@@ -64,10 +65,11 @@ class ForsendelseBestillingService(
                 forsendelseBestilling.aldersjustering.batchId,
                 forsendelseBestilling.forsendelseId!!,
             )
-        forsendelseBestilling.journalpostId = distribuerJournalpostResponse.journalpostId.toLong()
+        forsendelseBestilling.journalpostId = distribuerJournalpostResponse.journalpostId.numeric
+        forsendelseBestilling.distribuerTidspunkt = Timestamp(System.currentTimeMillis())
     }
 
-    private fun sendForsendelseTilBidragDokument(forsendelseBestilling: ForsendelseBestilling) {
+    private fun opprettForsendelseTilBidragDokument(forsendelseBestilling: ForsendelseBestilling) {
         val mottaker =
             MottakerTo(
                 ident = forsendelseBestilling.mottaker,
@@ -76,7 +78,7 @@ class ForsendelseBestillingService(
             )
 
         val forsendelseId =
-            bidragDokumentForsendelseConsumer.sendForsendelse(
+            bidragDokumentForsendelseConsumer.opprettForsendelse(
                 forsendelseBestilling.aldersjustering,
                 mottaker,
                 forsendelseBestilling.aldersjustering.barn.saksnummer,
