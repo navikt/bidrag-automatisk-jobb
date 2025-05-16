@@ -83,7 +83,8 @@ class ForsendelseBestillingService(
                 forsendelseBestilling.forsendelseId!!,
             )
         log.info {
-            "Distribuerte forsendelse ${forsendelseBestilling.forsendelseId} med journalpostId ${distribuerJournalpostResponse.journalpostId.numeric} " +
+            "Distribuerte forsendelse ${forsendelseBestilling.forsendelseId} " +
+                "med journalpostId ${distribuerJournalpostResponse.journalpostId.numeric} " +
                 "relatert til aldersjustering ${forsendelseBestilling.aldersjustering.id} og sak ${forsendelseBestilling.aldersjustering.barn.saksnummer}"
         }
         forsendelseBestilling.journalpostId = distribuerJournalpostResponse.journalpostId.numeric
