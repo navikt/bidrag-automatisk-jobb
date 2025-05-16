@@ -12,7 +12,6 @@ import org.springframework.data.repository.PagingAndSortingRepository
 import org.springframework.util.ClassUtils
 import org.springframework.util.MethodInvoker
 import java.lang.reflect.InvocationTargetException
-import kotlin.concurrent.Volatile
 
 /**
  * Modifisert versjon av [RepositoryItemReader] som kan brukes i batcher som oppdaterer status på argumenter under kjøring.
@@ -21,8 +20,8 @@ import kotlin.concurrent.Volatile
 open class StatusRepositoryItemReader<T> :
     RepositoryItemReader<T?>(),
     InitializingBean {
-    @Volatile
-    private var page = 0
+//    @Volatile
+//    private var page = 0
 
     private var pageSize = 10
 
@@ -48,18 +47,22 @@ open class StatusRepositoryItemReader<T> :
 
     override fun setPageSize(pageSize: Int) {
         this.pageSize = pageSize
+        super.setPageSize(pageSize)
     }
 
     override fun setSort(sorts: MutableMap<String?, Sort.Direction?>) {
         this.sort = convertToSort(sorts)
+        super.setSort(sorts)
     }
 
     override fun setRepository(repository: PagingAndSortingRepository<*, *>) {
         this.repository = repository
+        super.setRepository(repository)
     }
 
     override fun setMethodName(methodName: String) {
         this.methodName = methodName
+        super.setMethodName(methodName)
     }
 
     @Throws(java.lang.Exception::class)
