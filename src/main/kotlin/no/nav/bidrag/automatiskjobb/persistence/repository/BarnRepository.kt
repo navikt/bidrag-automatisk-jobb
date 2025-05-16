@@ -11,12 +11,12 @@ import java.time.LocalDate
 interface BarnRepository : JpaRepository<Barn, Int> {
     @Query(
         "SELECT b FROM barn b WHERE :år - EXTRACT(YEAR FROM b.fødselsdato) IN (6, 11, 15) " +
-            "AND b.bidragFra <= :kjøredato " +
-            "AND (b.bidragTil IS NULL OR b.bidragTil >= :kjøredato)",
+            "AND b.bidragFra <= :aldersjusteringsdato " +
+            "AND (b.bidragTil IS NULL OR b.bidragTil > :aldersjusteringsdato)",
     )
     fun finnBarnSomSkalAldersjusteresForÅr(
         @Param("år") år: Int,
-        @Param("kjøredato") kjøredato: LocalDate = LocalDate.now(),
+        @Param("kjøredato") aldersjusteringsdato: LocalDate = LocalDate.now().withMonth(7).withDayOfMonth(1),
         pageable: Pageable = Pageable.ofSize(100),
     ): Page<Barn>
 
