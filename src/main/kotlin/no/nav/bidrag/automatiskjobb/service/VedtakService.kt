@@ -121,6 +121,7 @@ class VedtakService(
             stønadsendring
                 .find { it.type == stønadstype }
                 ?.periodeListe
+                ?.filter { it.beløp != null }
                 ?.map { it.periode.toDatoperiode() }
                 ?.minByOrNull { it.fom }
                 ?.fom

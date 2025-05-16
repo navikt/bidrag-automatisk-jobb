@@ -15,23 +15,15 @@ data class Barn(
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     override var id: Int? = null,
-    @Column(name = "saksnummer")
     var saksnummer: String = "",
-    @Column(name = "kravhaver")
     var kravhaver: String = "",
     @Column(name = "fodselsdato")
     var fødselsdato: LocalDate? = null,
-    @Column(name = "skyldner")
     var skyldner: String? = null,
-    @Column(name = "forskudd_fra")
     var forskuddFra: LocalDate? = null,
-    @Column(name = "forskudd_til")
     var forskuddTil: LocalDate? = null,
-    @Column(name = "bidrag_fra")
     var bidragFra: LocalDate? = null,
-    @Column(name = "bidrag_til")
     var bidragTil: LocalDate? = null,
     @Version
-    @Column(name = "opprettet")
     var opprettet: LocalDateTime? = null,
 ) : EntityObject

@@ -21,7 +21,7 @@ class OpprettAldersjusteringerBidragBatch(
             JobParametersBuilder()
                 .addLocalDate("kjøredato", kjøredato ?: LocalDate.now())
                 .addLong("år", år)
-                .addString("runId", UUID.randomUUID().toString())
+                .addString("runId", "aldersjustering_bidrag_${UUID.randomUUID()}")
                 .toJobParameters(),
         )
     }

@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.brev.distribuer
+package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.forsendelse.distribuer
 
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.JobParametersBuilder
@@ -7,13 +7,13 @@ import org.springframework.stereotype.Component
 import java.util.UUID
 
 @Component
-class DistribuerBrevAldersjusteringerBidragBatch(
+class DistribuerForsendelseAldersjusteringerBidragBatch(
     private val jobLauncher: JobLauncher,
-    private val distribuerBrevAldersjusteringerBidragJob: Job,
+    private val distribuerForsendelseAldersjusteringerBidragJob: Job,
 ) {
-    fun startDistribuerBrevAldersjusteringBidragBatch() {
+    fun startDistribuerForsendelseAldersjusteringBidragBatch() {
         jobLauncher.run(
-            distribuerBrevAldersjusteringerBidragJob,
+            distribuerForsendelseAldersjusteringerBidragJob,
             JobParametersBuilder()
                 .addString("runId", UUID.randomUUID().toString())
                 .toJobParameters(),

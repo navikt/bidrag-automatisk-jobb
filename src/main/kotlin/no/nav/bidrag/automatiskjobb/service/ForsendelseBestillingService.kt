@@ -1,5 +1,6 @@
 package no.nav.bidrag.automatiskjobb.service
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.automatiskjobb.consumer.BidragDokumentForsendelseConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service
 import java.sql.Timestamp
 
 private const val DOKUMENTMAL_BI01B05 = "BI01B05"
+private val log = KotlinLogging.logger {}
 
 @Service
 class ForsendelseBestillingService(
@@ -37,14 +39,24 @@ class ForsendelseBestillingService(
         forsendelseBestillingRepository.save(forsendelseBestilling)
     }
 
-    fun opprettForsendelse(forsendelseBestilling: ForsendelseBestilling) {
-        if (forsendelseBestilling.forsendelseId != null && forsendelseBestilling.distribuerTidspunkt != null) {
-            bidragDokumentForsendelseConsumer.slettForsendelse(
-                forsendelseBestilling.forsendelseId!!,
-                forsendelseBestilling.aldersjustering.barn.saksnummer,
-            )
-            forsendelseBestilling.slettetTidspunkt = Timestamp(System.currentTimeMillis())
+    fun slettForsendelse(forsendelseBestilling: ForsendelseBestilling) {
+        // Ignorer behandling hvis det er distribuert
+        if (forsendelseBestilling.distribuertTidspunkt != null) return
 
+        log.info {
+            "Sletter forsendelse ${forsendelseBestilling.forsendelseId} opprettet ${forsendelseBestilling.forsendelseOpprettetTidspunkt}"
+        }
+
+        bidragDokumentForsendelseConsumer.slettForsendelse(
+            forsendelseBestilling.forsendelseId!!,
+            forsendelseBestilling.aldersjustering.barn.saksnummer,
+        )
+        forsendelseBestilling.slettetTidspunkt = Timestamp(System.currentTimeMillis())
+    }
+
+    fun opprettForsendelse(forsendelseBestilling: ForsendelseBestilling) {
+        if (forsendelseBestilling.forsendelseId != null && forsendelseBestilling.skalSlettes) {
+            slettForsendelse(forsendelseBestilling)
             val nyForsendelseBestilling =
                 ForsendelseBestilling(
                     aldersjustering = forsendelseBestilling.aldersjustering,
@@ -66,7 +78,7 @@ class ForsendelseBestillingService(
                 forsendelseBestilling.forsendelseId!!,
             )
         forsendelseBestilling.journalpostId = distribuerJournalpostResponse.journalpostId.numeric
-        forsendelseBestilling.distribuerTidspunkt = Timestamp(System.currentTimeMillis())
+        forsendelseBestilling.distribuertTidspunkt = Timestamp(System.currentTimeMillis())
     }
 
     private fun opprettForsendelseTilBidragDokument(forsendelseBestilling: ForsendelseBestilling) {
@@ -86,7 +98,10 @@ class ForsendelseBestillingService(
             )
 
         forsendelseBestilling.forsendelseId = forsendelseId
-        forsendelseBestilling.bestiltTidspunkt = Timestamp(System.currentTimeMillis())
+        forsendelseBestilling.forsendelseOpprettetTidspunkt = Timestamp(System.currentTimeMillis())
+        log.info {
+            "Opprettet forsendelse ${forsendelseBestilling.forsendelseId} for rolle ${forsendelseBestilling.rolletype} relatert til aldersjustering ${forsendelseBestilling.aldersjustering.id}"
+        }
         forsendelseBestillingRepository.save(forsendelseBestilling)
     }
 

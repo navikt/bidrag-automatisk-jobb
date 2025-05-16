@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.brev.opprett
+package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.forsendelse.opprett
 
 import no.nav.bidrag.automatiskjobb.batch.BatchCompletionNotificationListener
 import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.CHUNK_SIZE
@@ -16,31 +16,31 @@ import org.springframework.core.task.TaskExecutor
 import org.springframework.transaction.PlatformTransactionManager
 
 @Configuration
-class OpprettBrevAldersjusteringerBidragBatchConfiguration {
+class OpprettForsendelseAldersjusteringerBidragBatchConfiguration {
     @Bean
-    fun opprettBrevAldersjusteringerBidragJob(
+    fun opprettForsendelseAldersjusteringerBidragJob(
         jobRepository: JobRepository,
-        opprettBrevAldersjusteringerBidragStep: Step,
+        opprettForsendelseAldersjusteringerBidragStep: Step,
         listener: BatchCompletionNotificationListener,
     ): Job =
-        JobBuilder("opprettBrevAldersjusteringerBidragJob", jobRepository)
+        JobBuilder("opprettForsendelseAldersjusteringerBidragJob", jobRepository)
             .listener(listener)
-            .start(opprettBrevAldersjusteringerBidragStep)
+            .start(opprettForsendelseAldersjusteringerBidragStep)
             .build()
 
     @Bean
-    fun opprettBrevAldersjusteringerBidragStep(
+    fun opprettForsendelseAldersjusteringerBidragStep(
         @Qualifier("batchTaskExecutor") taskExecutor: TaskExecutor,
         jobRepository: JobRepository,
         transactionManager: PlatformTransactionManager,
-        opprettBrevAldersjusteringerBidragBatchReader: OpprettBrevAldersjusteringerBidragBatchReader,
-        opprettBrevAldersjusteringerBidragBatchProcessor: OpprettBrevAldersjusteringerBidragBatchProcessor,
+        opprettForsendelseAldersjusteringerBidragBatchReader: OpprettForsendelseAldersjusteringerBidragBatchReader,
+        opprettForsendelseAldersjusteringerBidragBatchProcessor: OpprettForsendelseAldersjusteringerBidragBatchProcessor,
         dummyItemWriter: DummyItemWriter,
     ): Step =
-        StepBuilder("opprettBrevAldersjusteringerBidragStep", jobRepository)
+        StepBuilder("opprettForsendelseAldersjusteringerBidragStep", jobRepository)
             .chunk<ForsendelseBestilling, Unit>(CHUNK_SIZE, transactionManager)
-            .reader(opprettBrevAldersjusteringerBidragBatchReader)
-            .processor(opprettBrevAldersjusteringerBidragBatchProcessor)
+            .reader(opprettForsendelseAldersjusteringerBidragBatchReader)
+            .processor(opprettForsendelseAldersjusteringerBidragBatchProcessor)
             .writer(dummyItemWriter)
             .taskExecutor(taskExecutor)
             .build()

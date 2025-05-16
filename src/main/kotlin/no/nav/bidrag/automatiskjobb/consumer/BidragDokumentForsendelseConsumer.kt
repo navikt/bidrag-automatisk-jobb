@@ -82,7 +82,7 @@ class BidragDokumentForsendelseConsumer(
                 avvikType = "SLETT_JOURNALPOST",
                 saksnummer = saksnummer,
             )
-        postForNonNullEntity<Any>(
+        postForEntity<Any>(
             createUri("api/forsendelse/journal/BIF-$forsendelseId/avvik"),
             avviksHendelse,
         )

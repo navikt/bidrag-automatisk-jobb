@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.fattvedtak
+package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.forsendelse.opprett
 
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.JobParametersBuilder
@@ -7,15 +7,14 @@ import org.springframework.stereotype.Component
 import java.util.UUID
 
 @Component
-class FattVedtakOmAldersjusteringerBidragBatch(
+class OpprettForsendelseAldersjusteringerBidragBatch(
     private val jobLauncher: JobLauncher,
-    private val fattVedtakOmAldersjusteringerBidragJob: Job,
+    private val opprettForsendelseAldersjusteringerBidragJob: Job,
 ) {
-    fun startFattVedtakOmAldersjusteringBidragBatch(barnId: String? = "") {
+    fun startOpprettForsendelseAldersjusteringBidragBatch() {
         jobLauncher.run(
-            fattVedtakOmAldersjusteringerBidragJob,
+            opprettForsendelseAldersjusteringerBidragJob,
             JobParametersBuilder()
-                .addString("barn", barnId ?: "")
                 .addString("runId", UUID.randomUUID().toString())
                 .toJobParameters(),
         )

@@ -19,7 +19,12 @@ class FattVedtakOmAldersjusteringerBidragBatchReader(
     @Value("#{jobParameters['barn']}") barn: String? = "",
 ) : RepositoryItemReader<Aldersjustering>() {
     init {
-        val barnListe = barn?.split(",")?.map { it.trim() }?.map { Integer.valueOf(it) } ?: emptyList()
+        val barnListe =
+            barn
+                .takeIf { !it.isNullOrEmpty() }
+                ?.split(",")
+                ?.map { it.trim() }
+                ?.map { Integer.valueOf(it) } ?: emptyList()
         this.setRepository(aldersjusteringRepository)
 
         if (barnListe.isNotEmpty()) {

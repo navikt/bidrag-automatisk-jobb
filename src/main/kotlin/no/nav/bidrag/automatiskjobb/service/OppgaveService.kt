@@ -12,7 +12,7 @@ import no.nav.bidrag.automatiskjobb.consumer.dto.lagBeskrivelseHeader
 import no.nav.bidrag.automatiskjobb.consumer.dto.lagBeskrivelseHeaderAutomatiskJobb
 import no.nav.bidrag.automatiskjobb.domene.Endringsmelding
 import no.nav.bidrag.automatiskjobb.domene.erAdresseendring
-import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
+import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import no.nav.bidrag.automatiskjobb.service.model.AdresseEndretResultat
 import no.nav.bidrag.automatiskjobb.service.model.ForskuddRedusertResultat
 import no.nav.bidrag.automatiskjobb.utils.erForskudd
@@ -105,12 +105,15 @@ class OppgaveService(
         }
     }
 
-    fun opprettOppgaveForManuellAldersjustering(barn: Barn): Int {
+    fun opprettOppgaveForManuellAldersjustering(aldersjustering: Aldersjustering): Int {
+        val barn = aldersjustering.barn
         val enhet = finnEierfogd(barn.saksnummer)
         val oppgaveResponse =
             oppgaveConsumer.opprettOppgave(
                 OpprettOppgaveRequest(
-                    beskrivelse = lagBeskrivelseHeaderAutomatiskJobb() + oppgaveAldersjusteringBeskrivelse,
+                    beskrivelse =
+                        lagBeskrivelseHeaderAutomatiskJobb() +
+                            oppgaveAldersjusteringBeskrivelse.replace("{}", aldersjustering.begrunnelseVisningsnavn.firstOrNull() ?: ""),
                     oppgavetype = OppgaveType.GEN,
                     saksreferanse = barn.saksnummer,
                     tema = if (enhet_farskap == enhet) "FAR" else "BID",
