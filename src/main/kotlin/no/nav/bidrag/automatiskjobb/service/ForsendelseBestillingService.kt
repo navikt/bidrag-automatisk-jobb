@@ -100,7 +100,8 @@ class ForsendelseBestillingService(
         forsendelseBestilling.forsendelseId = forsendelseId
         forsendelseBestilling.forsendelseOpprettetTidspunkt = Timestamp(System.currentTimeMillis())
         log.info {
-            "Opprettet forsendelse ${forsendelseBestilling.forsendelseId} for rolle ${forsendelseBestilling.rolletype} relatert til aldersjustering ${forsendelseBestilling.aldersjustering.id}"
+            "Opprettet forsendelse ${forsendelseBestilling.forsendelseId} for rolle ${forsendelseBestilling.rolletype} " +
+                "relatert til aldersjustering ${forsendelseBestilling.aldersjustering.id} i sak ${forsendelseBestilling.aldersjustering.barn.saksnummer}"
         }
         forsendelseBestillingRepository.save(forsendelseBestilling)
     }
