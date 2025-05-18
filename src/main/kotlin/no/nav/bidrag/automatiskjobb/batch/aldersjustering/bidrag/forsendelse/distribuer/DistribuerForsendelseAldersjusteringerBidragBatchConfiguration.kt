@@ -33,8 +33,8 @@ class DistribuerForsendelseAldersjusteringerBidragBatchConfiguration {
         @Qualifier("batchTaskExecutor") taskExecutor: TaskExecutor,
         jobRepository: JobRepository,
         transactionManager: PlatformTransactionManager,
-        distribuerForsendelseAldersjusteringerBidragBatchReader: SlettForsendelserSomSkalSlettesBatchReader,
-        distribuerForsendelseAldersjusteringerBidragBatchProcessor: SlettForsendelserSomSkalSlettesProcessor,
+        distribuerForsendelseAldersjusteringerBidragBatchReader: DistribuerForsendelseAldersjusteringerBidragBatchReader,
+        distribuerForsendelseAldersjusteringerBidragBatchProcessor: DistribuerForsendelseAldersjusteringerBidragBatchProcessor,
         dummyItemWriter: DummyItemWriter,
     ): Step =
         StepBuilder("distribuerForsendelseAldersjusteringerBidragStep", jobRepository)
