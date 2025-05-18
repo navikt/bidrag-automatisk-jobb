@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.oppgave
+package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.oppgave.slettoppgave
 
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import no.nav.bidrag.automatiskjobb.service.AldersjusteringService
@@ -8,8 +8,8 @@ import org.springframework.stereotype.Component
 
 @Component
 @StepScope
-class OppgaveAldersjusteringerBidragBatchProcessor(
+class SlettOppgaveAldersjusteringerBidragBatchProcessor(
     private val aldersjusteringService: AldersjusteringService,
 ) : ItemProcessor<Aldersjustering, Int?> {
-    override fun process(aldersjustering: Aldersjustering): Int? = aldersjusteringService.opprettOppgaveForAldersjustering(aldersjustering)
+    override fun process(aldersjustering: Aldersjustering): Int? = aldersjusteringService.slettOppgaveForAldersjustering(aldersjustering)
 }

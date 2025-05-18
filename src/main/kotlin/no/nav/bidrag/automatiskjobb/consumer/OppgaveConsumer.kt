@@ -1,5 +1,6 @@
 package no.nav.bidrag.automatiskjobb.consumer
 
+import no.nav.bidrag.automatiskjobb.consumer.dto.OppdaterOppgaveDto
 import no.nav.bidrag.automatiskjobb.consumer.dto.OppgaveDto
 import no.nav.bidrag.automatiskjobb.consumer.dto.OppgaveSokRequest
 import no.nav.bidrag.automatiskjobb.consumer.dto.OppgaveSokResponse
@@ -42,4 +43,28 @@ class OppgaveConsumer(
         getForNonNullEntity(
             oppgaveURI.query(request.hentParametre()).build().toUri(),
         )
+
+    @Retryable(
+        value = [Exception::class],
+        maxAttempts = 3,
+        backoff = Backoff(delay = 200, maxDelay = 1000, multiplier = 2.0),
+    )
+    fun hentOppgaveForId(id: Int): OppgaveDto =
+        getForNonNullEntity(
+            oppgaveURI.pathSegment(id.toString()).build().toUri(),
+        )
+
+    @Retryable(
+        value = [Exception::class],
+        maxAttempts = 3,
+        backoff = Backoff(delay = 200, maxDelay = 1000, multiplier = 2.0),
+    )
+    fun slettOppgave(
+        id: Int,
+        versjon: Int,
+    ): OppgaveDto =
+        patchForEntity(
+            oppgaveURI.pathSegment(id.toString()).build().toUri(),
+            OppdaterOppgaveDto(versjon, "FERDIGSTILT"),
+        )!!
 }

@@ -216,13 +216,7 @@ class AldersjusteringService(
 
             return AldersjusteringIkkeAldersjustertResultat(stønadsid, errorMessage)
         }
-        val stønadsid =
-            Stønadsid(
-                stønadstype,
-                Personident(barn.kravhaver),
-                Personident(barn.skyldner!!),
-                Saksnummer(barn.saksnummer),
-            )
+        val stønadsid = barn.tilStønadsid(stønadstype)
 
         try {
             val (vedtaksidBeregning, løpendeBeløp, resultatBeregning, resultatSisteVedtak) =
@@ -232,7 +226,7 @@ class AldersjusteringService(
                 )
 
             val vedtaksforslagRequest =
-                vedtakMapper.tilOpprettVedtakRequest(resultatBeregning, stønadsid, aldersjustering.batchId)
+                vedtakMapper.tilOpprettVedtakRequest(resultatBeregning, stønadsid, aldersjustering.batchId, aldersjustering.unikReferanse)
 
             val vedtaksid = if (simuler) null else opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
 
@@ -276,23 +270,25 @@ class AldersjusteringService(
     }
 
     fun fattVedtakOmAldersjustering(aldersjustering: Aldersjustering) {
-        val sak = sakConsumer.hentSak(aldersjustering.barn.saksnummer)
-
         combinedLogger.info { "Fatter vedtak for aldersjustering ${aldersjustering.id} og vedtaksid ${aldersjustering.vedtak}" }
-        vedtakConsumer.fatteVedtaksforslag(
-            aldersjustering.vedtak ?: error("Aldersjustering ${aldersjustering.id} mangler vedtak!"),
-        )
+//        vedtakConsumer.fatteVedtaksforslag(
+//            aldersjustering.vedtak ?: error("Aldersjustering ${aldersjustering.id} mangler vedtak!"),
+//        )
         aldersjustering.status = Status.FATTET
         aldersjustering.fattetTidspunkt = Timestamp(System.currentTimeMillis())
         alderjusteringRepository.save(aldersjustering)
 
-        sak.roller.filter { it.type == Rolletype.BIDRAGSPLIKTIG || it.type == Rolletype.BIDRAGSMOTTAKER }.forEach {
-            forsendelseBestillingService.opprettForsendelseBestilling(
-                aldersjustering,
-                it.fødselsnummer!!.verdi,
-                it.type,
-            )
+        forsendelseBestillingService.opprettBestillingForAldersjustering(aldersjustering)
+    }
+
+    fun slettOppgaveForAldersjustering(aldersjustering: Aldersjustering): Int? {
+        if (aldersjustering.oppgave == null) {
+            log.info { "Ingen oppgave å slette for aldersjustering ${aldersjustering.id}" }
+            return null
         }
+        val oppgaveId = oppgaveService.slettOppgave(aldersjustering.oppgave!!) //
+        aldersjustering.oppgave = null
+        return oppgaveId.toInt()
     }
 
     fun opprettOppgaveForAldersjustering(aldersjustering: Aldersjustering): Int {
@@ -469,7 +465,13 @@ class AldersjusteringService(
             )
         try {
             val (_, _, resultatBeregning) = aldersjusteringOrchestrator.utførAldersjustering(stønadsid, år)
-            val vedtaksforslagRequest = vedtakMapper.tilOpprettVedtakRequest(resultatBeregning, stønadsid, batchId)
+            val vedtaksforslagRequest =
+                vedtakMapper.tilOpprettVedtakRequest(
+                    resultatBeregning,
+                    stønadsid,
+                    batchId,
+                    "aldersjustering_${batchId}_$stønadsid",
+                )
             if (simuler) {
                 log.info { "Kjører aldersjustering i simuleringsmodus. Oppretter ikke vedtaksforslag" }
                 return AldersjusteringAldersjustertResultat(-1, stønadsid, vedtaksforslagRequest)

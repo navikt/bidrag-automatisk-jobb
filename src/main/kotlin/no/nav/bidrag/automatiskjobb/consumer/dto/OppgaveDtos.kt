@@ -45,6 +45,11 @@ data class OppgaveSokResponse(
     var oppgaver: List<OppgaveDto> = emptyList(),
 )
 
+data class OppdaterOppgaveDto(
+    val versjon: Int = 0,
+    val status: String = "",
+)
+
 data class OppgaveDto(
     val id: Long,
     val tildeltEnhetsnr: String? = null,
