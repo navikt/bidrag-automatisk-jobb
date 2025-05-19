@@ -27,6 +27,7 @@ data class ForsendelseBestilling(
     var journalpostId: Long? = null,
     @Enumerated(EnumType.STRING)
     val rolletype: Rolletype?,
+    val gjelder: String? = null,
     val mottaker: String? = null,
     @Column(name = "sprakkode")
     @Enumerated(EnumType.STRING)
@@ -38,4 +39,5 @@ data class ForsendelseBestilling(
     var distribuertTidspunkt: Timestamp? = null,
     var slettetTidspunkt: Timestamp? = null,
     val skalSlettes: Boolean = false,
+    var feilBegrunnelse: String? = null,
 ) : EntityObject

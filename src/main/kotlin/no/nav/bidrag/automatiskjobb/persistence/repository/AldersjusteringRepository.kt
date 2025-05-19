@@ -49,23 +49,10 @@ interface AldersjusteringRepository : JpaRepository<Aldersjustering, Int> {
         aldersgruppe: Int,
     ): Boolean
 
-    @Suppress("Brukes i batch")
+    @Suppress("unused")
     @Query(
         "SELECT a FROM aldersjustering a " +
-            "WHERE a.behandlingstype IN :behandlingstyper " +
-            "AND a.status IN :statuser " +
-            "AND a.oppgave IS NULL",
-    )
-    fun finnForBehandlingstypeOgStatus(
-        @Param("behandlingstyper") behandlingstyper: List<Behandlingstype>,
-        @Param("statuser") statuser: List<Status>,
-        pageable: Pageable = Pageable.ofSize(100),
-    ): Page<Aldersjustering>
-
-    @Suppress("Brukes i batch")
-    @Query(
-        "SELECT a FROM aldersjustering a " +
-            "WHERE a.barn.id in :barnid " +
+            "WHERE (:#{#barnid == null or #barnid.isEmpty()} = true OR a.barn.id IN :barnid) " +
             "AND a.behandlingstype IN :behandlingstyper " +
             "AND a.status IN :statuser " +
             "AND a.oppgave IS NULL",
@@ -74,6 +61,18 @@ interface AldersjusteringRepository : JpaRepository<Aldersjustering, Int> {
         @Param("barnid") barn: List<Int>,
         @Param("behandlingstyper") behandlingstyper: List<Behandlingstype>,
         @Param("statuser") statuser: List<Status>,
+        pageable: Pageable = Pageable.ofSize(100),
+    ): Page<Aldersjustering>
+
+    @Query(
+        "SELECT a FROM aldersjustering a " +
+            "WHERE (:#{#barnid == null or #barnid.isEmpty()} = true OR a.barn.id IN :barnid) " +
+            "AND a.batchId = :batchId " +
+            "AND a.oppgave IS NOT NULL",
+    )
+    fun finnOppgaveOpprettetForBarnOgBatchId(
+        barnid: List<Int>,
+        batchId: String,
         pageable: Pageable = Pageable.ofSize(100),
     ): Page<Aldersjustering>
 

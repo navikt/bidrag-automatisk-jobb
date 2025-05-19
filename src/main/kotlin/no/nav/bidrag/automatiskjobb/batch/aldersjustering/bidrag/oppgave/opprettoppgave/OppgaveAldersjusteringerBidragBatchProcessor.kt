@@ -1,0 +1,15 @@
+package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.oppgave.opprettoppgave
+
+import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
+import no.nav.bidrag.automatiskjobb.service.AldersjusteringService
+import org.springframework.batch.core.configuration.annotation.StepScope
+import org.springframework.batch.item.ItemProcessor
+import org.springframework.stereotype.Component
+
+@Component
+@StepScope
+class OppgaveAldersjusteringerBidragBatchProcessor(
+    private val aldersjusteringService: AldersjusteringService,
+) : ItemProcessor<Aldersjustering, Int?> {
+    override fun process(aldersjustering: Aldersjustering): Int? = aldersjusteringService.opprettOppgaveForAldersjustering(aldersjustering)
+}

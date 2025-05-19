@@ -11,7 +11,8 @@ import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.fattvedtak.Fatt
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.forsendelse.distribuer.DistribuerForsendelseAldersjusteringerBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.forsendelse.opprett.OpprettForsendelseAldersjusteringerBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.forsendelse.slett.SlettForsendelsrSomSkalSlettesBidragBatch
-import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.oppgave.OppgaveAldersjusteringBidragBatch
+import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.oppgave.opprettoppgave.OppgaveAldersjusteringBidragBatch
+import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.oppgave.slettoppgave.SlettOppgaveAldersjusteringBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.opprett.OpprettAldersjusteringerBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.slettallevedtaksforslag.SlettAlleVedtaksforslagBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.slettvedtaksforslag.SlettVedtaksforslagBatch
@@ -31,6 +32,7 @@ class BatchController(
     private val opprettAldersjusteringerBidragBatch: OpprettAldersjusteringerBidragBatch,
     private val fattVedtakOmAldersjusteringerBidragBatch: FattVedtakOmAldersjusteringerBidragBatch,
     private val oppgaveAldersjusteringBidragBatch: OppgaveAldersjusteringBidragBatch,
+    private val slettOppgaveAldersjusteringBidragBatch: SlettOppgaveAldersjusteringBidragBatch,
     private val beregnAldersjusteringerBidragBatch: BeregnAldersjusteringerBidragBatch,
     private val opprettForsendelseAldersjusteringerBidragBatch: OpprettForsendelseAldersjusteringerBidragBatch,
     private val distribuerForsendelseAldersjusteringerBidragBatch: DistribuerForsendelseAldersjusteringerBidragBatch,
@@ -257,10 +259,53 @@ class BatchController(
         ],
     )
     fun startOppgaveAldersjusteringBidragBatch(
-        @RequestParam barn: String,
+        @RequestParam barn: String?,
     ): ResponseEntity<Any> {
         oppgaveAldersjusteringBidragBatch.startOppgaveAldersjusteringBidragBatch(
             barn,
+        )
+        return ResponseEntity.ok().build()
+    }
+
+    @PostMapping("/aldersjuster/batch/bidrag/oppgave/slett")
+    @Operation(
+        summary = "Start kjøring av batch for å slette oppgaver for manuelle aldersjusteringer.",
+        description = "Operasjon for å starte kjøring av batch som sletter oppgaver for manuelle aldersjusteriner.",
+        security = [SecurityRequirement(name = "bearer-key")],
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Batch for sletter av oppgaver for aldersjusteringer ble startet.",
+            ),
+        ],
+    )
+    @Parameters(
+        value = [
+            Parameter(
+                name = "barnId",
+                example = "1,2,3",
+                description =
+                    "Liste over barn som det skal opprettes oppgaver for. Om ingen er sendt kjøres alle. Maks lengde på input er 250 tegn!",
+                required = false,
+            ),
+            Parameter(
+                name = "batchId",
+                example = "XXXYYY",
+                description =
+                    "BatchId det skal slettes for",
+                required = false,
+            ),
+        ],
+    )
+    fun startSlettOppgaveAldersjusteringBidragBatch(
+        @RequestParam barn: String?,
+        @RequestParam batchId: String,
+    ): ResponseEntity<Any> {
+        slettOppgaveAldersjusteringBidragBatch.startSlettOppgaveAldersjusteringBidragBatch(
+            barn,
+            batchId,
         )
         return ResponseEntity.ok().build()
     }

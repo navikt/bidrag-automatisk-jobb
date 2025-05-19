@@ -6,6 +6,10 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Version
+import no.nav.bidrag.domene.enums.vedtak.Stønadstype
+import no.nav.bidrag.domene.ident.Personident
+import no.nav.bidrag.domene.sak.Saksnummer
+import no.nav.bidrag.domene.sak.Stønadsid
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -26,4 +30,12 @@ data class Barn(
     var bidragTil: LocalDate? = null,
     @Version
     var opprettet: LocalDateTime? = null,
-) : EntityObject
+) : EntityObject {
+    fun tilStønadsid(stønadstype: Stønadstype) =
+        Stønadsid(
+            stønadstype,
+            Personident(kravhaver),
+            Personident(skyldner!!),
+            Saksnummer(saksnummer),
+        )
+}

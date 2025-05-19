@@ -1,5 +1,6 @@
 package no.nav.bidrag.automatiskjobb.consumer
 
+import no.nav.bidrag.automatiskjobb.SECURE_LOGGER
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import no.nav.bidrag.commons.web.client.AbstractRestClient
 import no.nav.bidrag.domene.enums.rolle.SøktAvType
@@ -9,6 +10,7 @@ import no.nav.bidrag.transport.dokument.Avvikshendelse
 import no.nav.bidrag.transport.dokument.DistribuerJournalpostRequest
 import no.nav.bidrag.transport.dokument.DistribuerJournalpostResponse
 import no.nav.bidrag.transport.dokument.forsendelse.BehandlingInfoDto
+import no.nav.bidrag.transport.dokument.forsendelse.ForsendelseConflictResponse
 import no.nav.bidrag.transport.dokument.forsendelse.JournalTema
 import no.nav.bidrag.transport.dokument.forsendelse.MottakerTo
 import no.nav.bidrag.transport.dokument.forsendelse.OpprettDokumentForespørsel
@@ -16,7 +18,9 @@ import no.nav.bidrag.transport.dokument.forsendelse.OpprettForsendelseForespørs
 import no.nav.bidrag.transport.dokument.forsendelse.OpprettForsendelseRespons
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.web.client.HttpStatusCodeException
 import org.springframework.web.client.RestOperations
 import java.net.URI
 
@@ -34,13 +38,15 @@ class BidragDokumentForsendelseConsumer(
 
     fun opprettForsendelse(
         aldersjustering: Aldersjustering,
+        gjelder: String,
         mottakerTo: MottakerTo,
         saksnummer: String,
         enhet: String,
     ): Long? {
         val opprettForsendelseForespørsel =
             OpprettForsendelseForespørsel(
-                gjelderIdent = mottakerTo.ident!!,
+                unikReferanse = "${aldersjustering.unikReferanse}_${mottakerTo.ident}",
+                gjelderIdent = gjelder,
                 mottaker = mottakerTo,
                 saksnummer = saksnummer,
                 enhet = enhet,
@@ -65,12 +71,23 @@ class BidragDokumentForsendelseConsumer(
                     ),
             )
 
-        val forsendelseResponse =
-            postForNonNullEntity<OpprettForsendelseRespons>(
-                createUri("api/forsendelse"),
-                opprettForsendelseForespørsel,
-            )
-        return forsendelseResponse.forsendelseId
+        try {
+            val forsendelseResponse =
+                postForNonNullEntity<OpprettForsendelseRespons>(
+                    createUri("api/forsendelse"),
+                    opprettForsendelseForespørsel,
+                )
+            return forsendelseResponse.forsendelseId
+        } catch (e: HttpStatusCodeException) {
+            if (e.statusCode == HttpStatus.CONFLICT) {
+                SECURE_LOGGER.info { "Forsendelse med referanse ${opprettForsendelseForespørsel.unikReferanse} finnes allerede. " }
+                val resultat = e.getResponseBodyAs(ForsendelseConflictResponse::class.java)!!
+                return resultat.forsendelseId
+            } else {
+                SECURE_LOGGER.error(e) { "Feil ved oppretting av forsendelse med referanse ${opprettForsendelseForespørsel.unikReferanse}" }
+                throw e
+            }
+        }
     }
 
     fun slettForsendelse(

@@ -1,9 +1,9 @@
-package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.forsendelse.distribuer
+package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.oppgave.slettoppgave
 
 import no.nav.bidrag.automatiskjobb.batch.BatchCompletionNotificationListener
 import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.CHUNK_SIZE
 import no.nav.bidrag.automatiskjobb.batch.DummyItemWriter
-import no.nav.bidrag.automatiskjobb.persistence.entity.ForsendelseBestilling
+import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.Step
 import org.springframework.batch.core.job.builder.JobBuilder
@@ -16,31 +16,31 @@ import org.springframework.core.task.TaskExecutor
 import org.springframework.transaction.PlatformTransactionManager
 
 @Configuration
-class DistribuerForsendelseAldersjusteringerBidragBatchConfiguration {
+class SlettOppgaveAldersjusteringerBidragBatchConfiguration {
     @Bean
-    fun distribuerForsendelseAldersjusteringerBidragJob(
+    fun slettOppgaveAldersjusteringerBidragJob(
         jobRepository: JobRepository,
-        distribuerForsendelseAldersjusteringerBidragStep: Step,
+        slettOppgaveAldersjusteringerBidragStep: Step,
         listener: BatchCompletionNotificationListener,
     ): Job =
-        JobBuilder("distribuerForsendelseAldersjusteringerBidragJob", jobRepository)
+        JobBuilder("slettOppgaveAldersjusteringerBidragJob", jobRepository)
             .listener(listener)
-            .start(distribuerForsendelseAldersjusteringerBidragStep)
+            .start(slettOppgaveAldersjusteringerBidragStep)
             .build()
 
     @Bean
-    fun distribuerForsendelseAldersjusteringerBidragStep(
+    fun slettOppgaveAldersjusteringerBidragStep(
         @Qualifier("batchTaskExecutor") taskExecutor: TaskExecutor,
         jobRepository: JobRepository,
         transactionManager: PlatformTransactionManager,
-        distribuerForsendelseAldersjusteringerBidragBatchReader: DistribuerForsendelseAldersjusteringerBidragBatchReader,
-        distribuerForsendelseAldersjusteringerBidragBatchProcessor: DistribuerForsendelseAldersjusteringerBidragBatchProcessor,
+        slettOppgaveAldersjusteringerBidragBatchReader: SlettOppgaveAldersjusteringerBidragBatchReader,
+        slettOppgaveAldersjusteringerBidragBatchProcessor: SlettOppgaveAldersjusteringerBidragBatchProcessor,
         dummyItemWriter: DummyItemWriter,
     ): Step =
-        StepBuilder("distribuerForsendelseAldersjusteringerBidragStep", jobRepository)
-            .chunk<ForsendelseBestilling, Unit>(CHUNK_SIZE, transactionManager)
-            .reader(distribuerForsendelseAldersjusteringerBidragBatchReader)
-            .processor(distribuerForsendelseAldersjusteringerBidragBatchProcessor)
+        StepBuilder("slettOppgaveAldersjusteringerBidragStep", jobRepository)
+            .chunk<Aldersjustering, Int?>(CHUNK_SIZE, transactionManager)
+            .reader(slettOppgaveAldersjusteringerBidragBatchReader)
+            .processor(slettOppgaveAldersjusteringerBidragBatchProcessor)
             .writer(dummyItemWriter)
             .taskExecutor(taskExecutor)
             .build()
