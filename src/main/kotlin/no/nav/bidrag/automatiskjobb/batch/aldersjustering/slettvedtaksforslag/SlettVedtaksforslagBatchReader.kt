@@ -19,7 +19,7 @@ class SlettVedtaksforslagBatchReader(
                 setDataSource(dataSource)
                 setSelectClause("SELECT *")
                 setFromClause("FROM aldersjustering")
-                setWhereClause("WHERE status LIKE 'SLETTES'")
+                setWhereClause("WHERE status = 'SLETTES'")
                 setSortKey("id")
             }
         try {
