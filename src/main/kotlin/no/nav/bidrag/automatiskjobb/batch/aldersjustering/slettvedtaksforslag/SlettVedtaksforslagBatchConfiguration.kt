@@ -2,6 +2,7 @@ package no.nav.bidrag.automatiskjobb.batch.aldersjustering.slettvedtaksforslag
 
 import no.nav.bidrag.automatiskjobb.batch.BatchCompletionNotificationListener
 import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.CHUNK_SIZE
+import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.SKIP_LIMIT
 import no.nav.bidrag.automatiskjobb.batch.DummyItemWriter
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import org.springframework.batch.core.Job
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.task.TaskExecutor
+import org.springframework.dao.OptimisticLockingFailureException
 import org.springframework.transaction.PlatformTransactionManager
 
 @Configuration
@@ -32,6 +34,10 @@ class SlettVedtaksforslagBatchConfiguration {
             .processor(slettVedtaksforslagBatchProcessor)
             .writer(dummyItemWriter)
             .taskExecutor(taskExecutor)
+            .faultTolerant()
+            .skipLimit(SKIP_LIMIT)
+            .retryLimit(3)
+            .retry(OptimisticLockingFailureException::class.java)
             .build()
 
     @Bean

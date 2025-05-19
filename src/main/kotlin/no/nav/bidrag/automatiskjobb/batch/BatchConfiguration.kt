@@ -11,6 +11,7 @@ class BatchConfiguration {
         const val CHUNK_SIZE = 500
         const val PAGE_SIZE = 500
         const val GRID_SIZE = 5
+        const val SKIP_LIMIT = PAGE_SIZE - 1
     }
 
     @Bean
