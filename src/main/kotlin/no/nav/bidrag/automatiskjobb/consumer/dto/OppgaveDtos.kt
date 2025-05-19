@@ -45,6 +45,11 @@ data class OppgaveSokResponse(
     var oppgaver: List<OppgaveDto> = emptyList(),
 )
 
+data class OppdaterOppgaveDto(
+    val versjon: Int = 0,
+    val status: String = "",
+)
+
 data class OppgaveDto(
     val id: Long,
     val tildeltEnhetsnr: String? = null,
@@ -77,7 +82,11 @@ data class OppgaveDto(
     val prioritet: String? = null,
     val status: OppgaveStatus? = null,
     val metadata: Map<String, String>? = null,
-)
+) {
+    fun erLukket(): Boolean = status == OppgaveStatus.FERDIGSTILT || status == OppgaveStatus.FEILREGISTRERT
+
+    fun erÅpnet(): Boolean = status == OppgaveStatus.AAPNET || status == OppgaveStatus.UNDER_BEHANDLING
+}
 
 data class OppgaveSokRequest(
     private val parametre: StringBuilder = StringBuilder(),

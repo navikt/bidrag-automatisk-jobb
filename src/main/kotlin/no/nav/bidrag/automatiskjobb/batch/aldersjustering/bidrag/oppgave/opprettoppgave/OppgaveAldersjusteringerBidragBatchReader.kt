@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.fattvedtak
+package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.oppgave.opprettoppgave
 
 import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.PAGE_SIZE
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
@@ -14,26 +14,21 @@ import java.util.Collections
 
 @Component
 @StepScope
-class FattVedtakOmAldersjusteringerBidragBatchReader(
+class OppgaveAldersjusteringerBidragBatchReader(
     aldersjusteringRepository: AldersjusteringRepository,
     @Value("#{jobParameters['barn']}") barn: String? = "",
 ) : RepositoryItemReader<Aldersjustering>() {
     init {
         val barnListe =
             barn
-                .takeIf { !it.isNullOrEmpty() }
+                ?.takeIf { it.isNotEmpty() }
                 ?.split(",")
                 ?.map { it.trim() }
                 ?.map { Integer.valueOf(it) } ?: emptyList()
         this.setRepository(aldersjusteringRepository)
 
-        if (barnListe.isNotEmpty()) {
-            this.setMethodName("finnForBarnBehandlingstypeOgStatus")
-            this.setArguments(listOf(barnListe, listOf(Behandlingstype.FATTET_FORSLAG), listOf(Status.BEHANDLET)))
-        } else {
-            this.setMethodName("finnForBehandlingstypeOgStatus")
-            this.setArguments(listOf(listOf(Behandlingstype.FATTET_FORSLAG), listOf(Status.BEHANDLET)))
-        }
+        this.setMethodName("finnForBarnBehandlingstypeOgStatus")
+        this.setArguments(listOf(barnListe, listOf(Behandlingstype.MANUELL), listOf(Status.BEHANDLET)))
         this.setPageSize(PAGE_SIZE)
         this.setSort(Collections.singletonMap("id", Sort.Direction.ASC))
         this.isSaveState = false

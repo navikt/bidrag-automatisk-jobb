@@ -16,7 +16,7 @@ interface BarnRepository : JpaRepository<Barn, Int> {
     )
     fun finnBarnSomSkalAldersjusteresForÅr(
         @Param("år") år: Int,
-        @Param("kjøredato") aldersjusteringsdato: LocalDate = LocalDate.now().withMonth(7).withDayOfMonth(1),
+        @Param("aldersjusteringsdato") aldersjusteringsdato: LocalDate = LocalDate.now().withMonth(7).withDayOfMonth(1),
         pageable: Pageable = Pageable.ofSize(100),
     ): Page<Barn>
 

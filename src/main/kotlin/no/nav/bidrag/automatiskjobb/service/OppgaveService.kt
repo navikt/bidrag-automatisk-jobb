@@ -5,6 +5,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.automatiskjobb.combinedLogger
 import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
 import no.nav.bidrag.automatiskjobb.consumer.OppgaveConsumer
+import no.nav.bidrag.automatiskjobb.consumer.dto.OppgaveDto
 import no.nav.bidrag.automatiskjobb.consumer.dto.OppgaveSokRequest
 import no.nav.bidrag.automatiskjobb.consumer.dto.OppgaveType
 import no.nav.bidrag.automatiskjobb.consumer.dto.OpprettOppgaveRequest
@@ -12,7 +13,7 @@ import no.nav.bidrag.automatiskjobb.consumer.dto.lagBeskrivelseHeader
 import no.nav.bidrag.automatiskjobb.consumer.dto.lagBeskrivelseHeaderAutomatiskJobb
 import no.nav.bidrag.automatiskjobb.domene.Endringsmelding
 import no.nav.bidrag.automatiskjobb.domene.erAdresseendring
-import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
+import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import no.nav.bidrag.automatiskjobb.service.model.AdresseEndretResultat
 import no.nav.bidrag.automatiskjobb.service.model.ForskuddRedusertResultat
 import no.nav.bidrag.automatiskjobb.utils.erForskudd
@@ -105,12 +106,48 @@ class OppgaveService(
         }
     }
 
-    fun opprettOppgaveForManuellAldersjustering(barn: Barn): Int {
+    private fun finnEksisterendeOppgaveForManuellAldersjusteringISak(aldersjustering: Aldersjustering): OppgaveDto? {
+        val oppgaver =
+            oppgaveConsumer.hentOppgave(
+                OppgaveSokRequest()
+                    .søkForGenerellOppgave()
+                    .leggTilAktoerId(aldersjustering.barn.kravhaver)
+                    .leggTilSaksreferanse(aldersjustering.barn.saksnummer),
+            )
+        return oppgaver.oppgaver.find { it.beskrivelse!!.contains(aldersjustering.tilManuellOppgaveBeskrivelse()) }
+    }
+
+    fun slettOppgave(oppgaveId: Int): Long {
+        val oppgave = oppgaveConsumer.hentOppgaveForId(oppgaveId)
+        if (oppgave.erLukket()) {
+            log.info { "Oppgave $oppgaveId er allerede lukket med status ${oppgave.status}. Gjør ingen endring" }
+            return oppgaveId.toLong()
+        }
+        if (oppgave.erÅpnet()) error("Oppgave har status ${oppgave.status} og kan derfor ikke slettes")
+        val slettetOppgave = oppgaveConsumer.slettOppgave(oppgaveId, oppgave.versjon)
+        log.info { "Slettet oppgave med id $oppgaveId: $slettetOppgave" }
+        return slettetOppgave.id
+    }
+
+    fun opprettOppgaveForManuellAldersjustering(aldersjustering: Aldersjustering): Int {
+        val eksisterendeOppgave = finnEksisterendeOppgaveForManuellAldersjusteringISak(aldersjustering)
+        if (eksisterendeOppgave != null) {
+            combinedLogger.info {
+                "Fant eksisterende oppgave $eksisterendeOppgave for " +
+                    "manuell aldersjustering ${aldersjustering.id} i sak ${aldersjustering.barn.saksnummer} " +
+                    "og barn ${aldersjustering.barn.saksnummer}. " +
+                    "Oppretter ikke ny oppgave"
+            }
+            return eksisterendeOppgave.id.toInt()
+        }
+        val barn = aldersjustering.barn
         val enhet = finnEierfogd(barn.saksnummer)
         val oppgaveResponse =
             oppgaveConsumer.opprettOppgave(
                 OpprettOppgaveRequest(
-                    beskrivelse = lagBeskrivelseHeaderAutomatiskJobb() + oppgaveAldersjusteringBeskrivelse,
+                    beskrivelse =
+                        lagBeskrivelseHeaderAutomatiskJobb() +
+                            aldersjustering.tilManuellOppgaveBeskrivelse(),
                     oppgavetype = OppgaveType.GEN,
                     saksreferanse = barn.saksnummer,
                     tema = if (enhet_farskap == enhet) "FAR" else "BID",
@@ -196,4 +233,10 @@ class OppgaveService(
         }
         return false
     }
+
+    private fun Aldersjustering.tilManuellOppgaveBeskrivelse() =
+        oppgaveAldersjusteringBeskrivelse.replace(
+            "{}",
+            begrunnelseVisningsnavn.firstOrNull() ?: "",
+        )
 }

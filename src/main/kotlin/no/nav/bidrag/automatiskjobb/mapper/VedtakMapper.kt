@@ -29,9 +29,10 @@ class VedtakMapper(
         resultat: BeregnetBarnebidragResultat,
         stønad: Stønadsid,
         batchId: String,
+        unikReferanse: String,
     ) = byggOpprettVedtakRequestObjekt()
         .copy(
-            unikReferanse = "aldersjustering_${batchId}_${stønad.toReferanse()}",
+            unikReferanse = unikReferanse,
             grunnlagListe =
                 resultat.grunnlagListe.map {
                     OpprettGrunnlagRequestDto(

@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.fattvedtak
+package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.oppgave.slettoppgave
 
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.JobParametersBuilder
@@ -7,15 +7,19 @@ import org.springframework.stereotype.Component
 import java.util.UUID
 
 @Component
-class FattVedtakOmAldersjusteringerBidragBatch(
+class SlettOppgaveAldersjusteringBidragBatch(
     private val jobLauncher: JobLauncher,
-    private val fattVedtakOmAldersjusteringerBidragJob: Job,
+    private val slettOppgaveAldersjusteringerBidragJob: Job,
 ) {
-    fun startFattVedtakOmAldersjusteringBidragBatch(barnId: String? = "") {
+    fun startSlettOppgaveAldersjusteringBidragBatch(
+        barnId: String? = "",
+        batchId: String,
+    ) {
         jobLauncher.run(
-            fattVedtakOmAldersjusteringerBidragJob,
+            slettOppgaveAldersjusteringerBidragJob,
             JobParametersBuilder()
                 .addString("barn", barnId ?: "")
+                .addString("batchId", batchId)
                 .addString("runId", UUID.randomUUID().toString())
                 .toJobParameters(),
         )

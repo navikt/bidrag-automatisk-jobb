@@ -6,6 +6,10 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Version
+import no.nav.bidrag.domene.enums.vedtak.Stønadstype
+import no.nav.bidrag.domene.ident.Personident
+import no.nav.bidrag.domene.sak.Saksnummer
+import no.nav.bidrag.domene.sak.Stønadsid
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -15,23 +19,23 @@ data class Barn(
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     override var id: Int? = null,
-    @Column(name = "saksnummer")
     var saksnummer: String = "",
-    @Column(name = "kravhaver")
     var kravhaver: String = "",
     @Column(name = "fodselsdato")
     var fødselsdato: LocalDate? = null,
-    @Column(name = "skyldner")
     var skyldner: String? = null,
-    @Column(name = "forskudd_fra")
     var forskuddFra: LocalDate? = null,
-    @Column(name = "forskudd_til")
     var forskuddTil: LocalDate? = null,
-    @Column(name = "bidrag_fra")
     var bidragFra: LocalDate? = null,
-    @Column(name = "bidrag_til")
     var bidragTil: LocalDate? = null,
     @Version
-    @Column(name = "opprettet")
     var opprettet: LocalDateTime? = null,
-) : EntityObject
+) : EntityObject {
+    fun tilStønadsid(stønadstype: Stønadstype) =
+        Stønadsid(
+            stønadstype,
+            Personident(kravhaver),
+            Personident(skyldner!!),
+            Saksnummer(saksnummer),
+        )
+}

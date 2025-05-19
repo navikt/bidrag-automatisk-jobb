@@ -1,9 +1,9 @@
-package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.brev.distribuer
+package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.oppgave.opprettoppgave
 
 import no.nav.bidrag.automatiskjobb.batch.BatchCompletionNotificationListener
 import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.CHUNK_SIZE
 import no.nav.bidrag.automatiskjobb.batch.DummyItemWriter
-import no.nav.bidrag.automatiskjobb.persistence.entity.ForsendelseBestilling
+import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.Step
 import org.springframework.batch.core.job.builder.JobBuilder
@@ -16,31 +16,31 @@ import org.springframework.core.task.TaskExecutor
 import org.springframework.transaction.PlatformTransactionManager
 
 @Configuration
-class DistribuerBrevAldersjusteringerBidragBatchConfiguration {
+class OppgaveAldersjusteringerBidragBatchConfiguration {
     @Bean
-    fun distribuerBrevAldersjusteringerBidragJob(
+    fun oppgaveAldersjusteringerBidragJob(
         jobRepository: JobRepository,
-        distribuerBrevAldersjusteringerBidragStep: Step,
+        oppgaveAldersjusteringerBidragStep: Step,
         listener: BatchCompletionNotificationListener,
     ): Job =
-        JobBuilder("distribuerBrevAldersjusteringerBidragJob", jobRepository)
+        JobBuilder("oppgaveAldersjusteringerBidragJob", jobRepository)
             .listener(listener)
-            .start(distribuerBrevAldersjusteringerBidragStep)
+            .start(oppgaveAldersjusteringerBidragStep)
             .build()
 
     @Bean
-    fun distribuerBrevAldersjusteringerBidragStep(
+    fun oppgaveAldersjusteringerBidragStep(
         @Qualifier("batchTaskExecutor") taskExecutor: TaskExecutor,
         jobRepository: JobRepository,
         transactionManager: PlatformTransactionManager,
-        distribuerBrevAldersjusteringerBidragBatchReader: DistribuerBrevAldersjusteringerBidragBatchReader,
-        distribuerBrevAldersjusteringerBidragBatchProcessor: DistribuerBrevAldersjusteringerBidragBatchProcessor,
+        oppgaveAldersjusteringerBidragBatchReader: OppgaveAldersjusteringerBidragBatchReader,
+        oppgaveAldersjusteringerBidragBatchProcessor: OppgaveAldersjusteringerBidragBatchProcessor,
         dummyItemWriter: DummyItemWriter,
     ): Step =
-        StepBuilder("distribuerBrevAldersjusteringerBidragStep", jobRepository)
-            .chunk<ForsendelseBestilling, Unit>(CHUNK_SIZE, transactionManager)
-            .reader(distribuerBrevAldersjusteringerBidragBatchReader)
-            .processor(distribuerBrevAldersjusteringerBidragBatchProcessor)
+        StepBuilder("oppgaveAldersjusteringerBidragStep", jobRepository)
+            .chunk<Aldersjustering, Int?>(CHUNK_SIZE, transactionManager)
+            .reader(oppgaveAldersjusteringerBidragBatchReader)
+            .processor(oppgaveAldersjusteringerBidragBatchProcessor)
             .writer(dummyItemWriter)
             .taskExecutor(taskExecutor)
             .build()

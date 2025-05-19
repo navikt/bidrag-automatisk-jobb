@@ -82,9 +82,7 @@ class AldersjusteringService(
                 } else {
                     AldersjusteringIkkeAldersjustertResultat(
                         stønadsid,
-                        aldersjustering.begrunnelse.joinToString(
-                            ", ",
-                        ) { it.lowercase().replaceFirstChar { it.uppercase() }.replace("_", " ") },
+                        aldersjustering.begrunnelseVisningsnavn.joinToString(", "),
                         aldersjusteresManuelt = aldersjustering.behandlingstype == Behandlingstype.MANUELL,
                     )
                 }
@@ -218,13 +216,7 @@ class AldersjusteringService(
 
             return AldersjusteringIkkeAldersjustertResultat(stønadsid, errorMessage)
         }
-        val stønadsid =
-            Stønadsid(
-                stønadstype,
-                Personident(barn.kravhaver),
-                Personident(barn.skyldner!!),
-                Saksnummer(barn.saksnummer),
-            )
+        val stønadsid = barn.tilStønadsid(stønadstype)
 
         try {
             val (vedtaksidBeregning, løpendeBeløp, resultatBeregning, resultatSisteVedtak) =
@@ -234,7 +226,7 @@ class AldersjusteringService(
                 )
 
             val vedtaksforslagRequest =
-                vedtakMapper.tilOpprettVedtakRequest(resultatBeregning, stønadsid, aldersjustering.batchId)
+                vedtakMapper.tilOpprettVedtakRequest(resultatBeregning, stønadsid, aldersjustering.batchId, aldersjustering.unikReferanse)
 
             val vedtaksid = if (simuler) null else opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
 
@@ -278,27 +270,34 @@ class AldersjusteringService(
     }
 
     fun fattVedtakOmAldersjustering(aldersjustering: Aldersjustering) {
-        val sak = sakConsumer.hentSak(aldersjustering.barn.saksnummer)
-
         combinedLogger.info { "Fatter vedtak for aldersjustering ${aldersjustering.id} og vedtaksid ${aldersjustering.vedtak}" }
-        vedtakConsumer.fatteVedtaksforslag(
-            aldersjustering.vedtak ?: error("Aldersjustering ${aldersjustering.id} mangler vedtak!"),
-        )
+//        vedtakConsumer.fatteVedtaksforslag(
+//            aldersjustering.vedtak ?: error("Aldersjustering ${aldersjustering.id} mangler vedtak!"),
+//        )
         aldersjustering.status = Status.FATTET
         aldersjustering.fattetTidspunkt = Timestamp(System.currentTimeMillis())
         alderjusteringRepository.save(aldersjustering)
 
-        sak.roller.filter { it.type == Rolletype.BIDRAGSPLIKTIG || it.type == Rolletype.BIDRAGSMOTTAKER }.forEach {
-            forsendelseBestillingService.opprettForsendelseBestilling(
-                aldersjustering,
-                it.fødselsnummer!!.verdi,
-                it.type,
-            )
+        forsendelseBestillingService.opprettBestillingForAldersjustering(aldersjustering)
+    }
+
+    fun slettOppgaveForAldersjustering(aldersjustering: Aldersjustering): Int? {
+        if (aldersjustering.oppgave == null) {
+            log.info { "Ingen oppgave å slette for aldersjustering ${aldersjustering.id}" }
+            return null
+        }
+        try {
+            val oppgaveId = oppgaveService.slettOppgave(aldersjustering.oppgave!!)
+            aldersjustering.oppgave = null
+            return oppgaveId.toInt()
+        } catch (e: Exception) {
+            log.error(e) { "Feil ved sletting av oppgave for aldersjustering ${aldersjustering.id}" }
+            throw e
         }
     }
 
     fun opprettOppgaveForAldersjustering(aldersjustering: Aldersjustering): Int {
-        val oppgaveId = oppgaveService.opprettOppgaveForManuellAldersjustering(aldersjustering.barn) //
+        val oppgaveId = oppgaveService.opprettOppgaveForManuellAldersjustering(aldersjustering) //
 
         aldersjustering.oppgave = oppgaveId
         alderjusteringRepository.save(aldersjustering)
@@ -332,24 +331,15 @@ class AldersjusteringService(
     ): Aldersjustering? {
         val barn = aldersjustering.barn
 
-        val stønadsid =
-            Stønadsid(
-                stønadstype,
-                Personident(barn.kravhaver),
-                Personident(barn.skyldner!!),
-                Saksnummer(barn.saksnummer),
-            )
-
         secureLogger.info { "Aldersjustering for barn ${barn.id} med stønadsid: $aldersjustering. skal slettes. Sletter.." }
-        val unikReferanse = "aldersjustering_${aldersjustering.batchId}_${stønadsid.toReferanse()}"
 
-        vedtakConsumer.hentVedtaksforslagBasertPåReferanase(unikReferanse)?.let {
+        vedtakConsumer.hentVedtaksforslagBasertPåReferanase(aldersjustering.unikReferanse)?.let {
             secureLogger.info {
-                "Fant eksisterende vedtaksforslag med referanse $unikReferanse og id ${it.vedtaksid}. Sletter eksisterende vedtaksforslag "
+                "Fant eksisterende vedtaksforslag med referanse ${aldersjustering.unikReferanse} og id ${it.vedtaksid}. Sletter eksisterende vedtaksforslag "
             }
             vedtakConsumer.slettVedtaksforslag(it.vedtaksid.toInt())
         } ?: run {
-            log.error { "Fant ikke eksisterende vedtaksforslag med referanse $unikReferanse" }
+            log.error { "Fant ikke eksisterende vedtaksforslag med referanse ${aldersjustering.unikReferanse}" }
             aldersjustering.vedtak = null
             aldersjustering.status = Status.SLETTET
             return null
@@ -471,7 +461,13 @@ class AldersjusteringService(
             )
         try {
             val (_, _, resultatBeregning) = aldersjusteringOrchestrator.utførAldersjustering(stønadsid, år)
-            val vedtaksforslagRequest = vedtakMapper.tilOpprettVedtakRequest(resultatBeregning, stønadsid, batchId)
+            val vedtaksforslagRequest =
+                vedtakMapper.tilOpprettVedtakRequest(
+                    resultatBeregning,
+                    stønadsid,
+                    batchId,
+                    "aldersjustering_${batchId}_$stønadsid",
+                )
             if (simuler) {
                 log.info { "Kjører aldersjustering i simuleringsmodus. Oppretter ikke vedtaksforslag" }
                 return AldersjusteringAldersjustertResultat(-1, stønadsid, vedtaksforslagRequest)

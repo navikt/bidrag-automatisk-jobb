@@ -20,37 +20,31 @@ data class Aldersjustering(
     override val id: Int? = null,
     @Column(name = "batch_id", nullable = false)
     val batchId: String,
-    @Column(name = "vedtaksid_beregning")
     var vedtaksidBeregning: Int? = null,
     @ManyToOne
     @JoinColumn(name = "barn_id")
     val barn: Barn,
-    @Column(name = "aldersgruppe", nullable = false)
     val aldersgruppe: Int,
-    @Column(name = "lopende_belop")
     var lopendeBelop: BigDecimal? = null,
-    @Column(name = "begrunnelse")
     var begrunnelse: List<String> = emptyList(),
-    @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
     var status: Status,
-    @Column(name = "behandlingstype")
     @Enumerated(EnumType.STRING)
     var behandlingstype: Behandlingstype? = null,
-    @Column(name = "vedtak")
     var vedtak: Int? = null,
-    @Column(name = "oppgave")
     var oppgave: Int? = null,
     @Column(name = "opprettet_tidspunkt", nullable = false, updatable = false)
     val opprettetTidspunkt: Timestamp = Timestamp(System.currentTimeMillis()),
-    @Column(name = "fattet_tidspunkt")
     var fattetTidspunkt: Timestamp? = null,
     @Column(name = "stonadstype")
     @Enumerated(EnumType.STRING)
     val stønadstype: Stønadstype = Stønadstype.BIDRAG,
-    @Column(name = "resultat_siste_vedtak")
     var resultatSisteVedtak: String? = null,
-) : EntityObject
+) : EntityObject {
+    val unikReferanse get() = "aldersjustering_${batchId}_${barn.tilStønadsid(stønadstype).toReferanse()}"
+    val begrunnelseVisningsnavn get() =
+        begrunnelse.map { it.lowercase().replaceFirstChar { it.uppercase() }.replace("_", " ") }
+}
 
 enum class Status {
     UBEHANDLET,

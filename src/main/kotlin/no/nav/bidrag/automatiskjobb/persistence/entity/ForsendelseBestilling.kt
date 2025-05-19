@@ -11,9 +11,11 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import no.nav.bidrag.domene.enums.diverse.Språk
 import no.nav.bidrag.domene.enums.rolle.Rolletype
+import org.hibernate.annotations.SQLRestriction
 import java.sql.Timestamp
 
 @Entity(name = "forsendelseBestilling")
+@SQLRestriction(value = "slettet_tidspunkt is null")
 data class ForsendelseBestilling(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,26 +23,21 @@ data class ForsendelseBestilling(
     @ManyToOne
     @JoinColumn(name = "aldersjustering_id")
     val aldersjustering: Aldersjustering,
-    @Column(name = "forsendelse_id")
     var forsendelseId: Long? = null,
-    @Column(name = "journalpost_id")
     var journalpostId: Long? = null,
-    @Column(name = "rolletype")
     @Enumerated(EnumType.STRING)
     val rolletype: Rolletype?,
-    @Column(name = "mottaker")
+    val gjelder: String? = null,
     val mottaker: String? = null,
     @Column(name = "sprakkode")
     @Enumerated(EnumType.STRING)
     val språkkode: Språk? = null,
-    @Column(name = "dokumentmal")
     val dokumentmal: String? = null,
     @Column(name = "opprettet_tidspunkt", nullable = false, updatable = false)
     val opprettetTidspunkt: Timestamp = Timestamp(System.currentTimeMillis()),
-    @Column(name = "bestilt_tidspunkt")
-    var bestiltTidspunkt: Timestamp? = null,
-    @Column(name = "distribuert_tidspunkt")
-    var distribuerTidspunkt: Timestamp? = null,
-    @Column(name = "slettet_tidspunkt")
+    var forsendelseOpprettetTidspunkt: Timestamp? = null,
+    var distribuertTidspunkt: Timestamp? = null,
     var slettetTidspunkt: Timestamp? = null,
+    val skalSlettes: Boolean = false,
+    var feilBegrunnelse: String? = null,
 ) : EntityObject
