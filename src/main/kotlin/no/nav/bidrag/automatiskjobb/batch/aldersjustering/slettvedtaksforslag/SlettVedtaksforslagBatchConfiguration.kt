@@ -2,7 +2,6 @@ package no.nav.bidrag.automatiskjobb.batch.aldersjustering.slettvedtaksforslag
 
 import no.nav.bidrag.automatiskjobb.batch.BatchCompletionNotificationListener
 import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.CHUNK_SIZE
-import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.SKIP_LIMIT
 import no.nav.bidrag.automatiskjobb.batch.DummyItemWriter
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import org.springframework.batch.core.Job
@@ -14,11 +13,23 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.task.TaskExecutor
-import org.springframework.dao.OptimisticLockingFailureException
 import org.springframework.transaction.PlatformTransactionManager
 
 @Configuration
 class SlettVedtaksforslagBatchConfiguration {
+    @Bean
+    fun slettVedtaksforslagJob(
+        jobRepository: JobRepository,
+        slettVedtaksforslagStep: Step,
+        listener: BatchCompletionNotificationListener,
+        slettVedtaksforslagInnlesingStep: Step,
+    ): Job =
+        JobBuilder("slettVedtaksforslagJob", jobRepository)
+            .listener(listener)
+            .start(slettVedtaksforslagInnlesingStep)
+            .next(slettVedtaksforslagStep)
+            .build()
+
     @Bean
     fun slettVedtaksforslagStep(
         @Qualifier("batchTaskExecutor") taskExecutor: TaskExecutor,
@@ -34,20 +45,22 @@ class SlettVedtaksforslagBatchConfiguration {
             .processor(slettVedtaksforslagBatchProcessor)
             .writer(dummyItemWriter)
             .taskExecutor(taskExecutor)
-            .faultTolerant()
-            .skipLimit(SKIP_LIMIT)
-            .retryLimit(3)
-            .retry(OptimisticLockingFailureException::class.java)
             .build()
 
     @Bean
-    fun slettVedtaksforslagJob(
+    fun slettVedtaksforslagInnlesingStep(
+        @Qualifier("batchTaskExecutor") taskExecutor: TaskExecutor,
         jobRepository: JobRepository,
-        slettVedtaksforslagStep: Step,
-        listener: BatchCompletionNotificationListener,
-    ): Job =
-        JobBuilder("slettVedtaksforslagJob", jobRepository)
-            .listener(listener)
-            .start(slettVedtaksforslagStep)
+        transactionManager: PlatformTransactionManager,
+        slettVedtaksforslagBatchInnlesingReader: SlettVedtaksforslagBatchInnlesingReader,
+        slettVedtaksforslagBatchInnlesingProcessor: SlettVedtaksforslagBatchInnlesingProcessor,
+        dummyItemWriter: DummyItemWriter,
+    ): Step =
+        StepBuilder("slettVedtaksforslagInnlesingStep", jobRepository)
+            .chunk<Aldersjustering, Aldersjustering>(CHUNK_SIZE, transactionManager)
+            .reader(slettVedtaksforslagBatchInnlesingReader)
+            .processor(slettVedtaksforslagBatchInnlesingProcessor)
+            .writer(dummyItemWriter)
+            .taskExecutor(taskExecutor)
             .build()
 }
