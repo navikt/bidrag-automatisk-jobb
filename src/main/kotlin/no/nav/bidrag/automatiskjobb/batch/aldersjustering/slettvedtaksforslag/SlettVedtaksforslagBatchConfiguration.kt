@@ -9,11 +9,16 @@ import org.springframework.batch.core.Step
 import org.springframework.batch.core.job.builder.JobBuilder
 import org.springframework.batch.core.repository.JobRepository
 import org.springframework.batch.core.step.builder.StepBuilder
+import org.springframework.batch.item.ItemReader
+import org.springframework.batch.item.database.JdbcPagingItemReader
+import org.springframework.batch.item.database.support.SqlPagingQueryProviderFactoryBean
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.task.TaskExecutor
+import org.springframework.jdbc.core.BeanPropertyRowMapper
 import org.springframework.transaction.PlatformTransactionManager
+import javax.sql.DataSource
 
 @Configuration
 class SlettVedtaksforslagBatchConfiguration {
@@ -22,12 +27,10 @@ class SlettVedtaksforslagBatchConfiguration {
         jobRepository: JobRepository,
         slettVedtaksforslagStep: Step,
         listener: BatchCompletionNotificationListener,
-        slettVedtaksforslagInnlesingStep: Step,
     ): Job =
         JobBuilder("slettVedtaksforslagJob", jobRepository)
             .listener(listener)
-            .start(slettVedtaksforslagInnlesingStep)
-            .next(slettVedtaksforslagStep)
+            .start(slettVedtaksforslagStep)
             .build()
 
     @Bean
@@ -35,32 +38,36 @@ class SlettVedtaksforslagBatchConfiguration {
         @Qualifier("batchTaskExecutor") taskExecutor: TaskExecutor,
         jobRepository: JobRepository,
         transactionManager: PlatformTransactionManager,
-        slettVedtaksforslagBatchReader: SlettVedtaksforslagBatchReader,
+        slettVedtaksforslagReader: ItemReader<Aldersjustering>,
         slettVedtaksforslagBatchProcessor: SlettVedtaksforslagBatchProcessor,
         dummyItemWriter: DummyItemWriter,
     ): Step =
         StepBuilder("slettVedtaksforslagStep", jobRepository)
             .chunk<Aldersjustering, Aldersjustering>(CHUNK_SIZE, transactionManager)
-            .reader(slettVedtaksforslagBatchReader)
+            .reader(slettVedtaksforslagReader)
             .processor(slettVedtaksforslagBatchProcessor)
             .writer(dummyItemWriter)
             .taskExecutor(taskExecutor)
             .build()
 
     @Bean
-    fun slettVedtaksforslagInnlesingStep(
-        @Qualifier("batchTaskExecutor") taskExecutor: TaskExecutor,
-        jobRepository: JobRepository,
-        transactionManager: PlatformTransactionManager,
-        slettVedtaksforslagBatchInnlesingReader: SlettVedtaksforslagBatchInnlesingReader,
-        slettVedtaksforslagBatchInnlesingProcessor: SlettVedtaksforslagBatchInnlesingProcessor,
-        dummyItemWriter: DummyItemWriter,
-    ): Step =
-        StepBuilder("slettVedtaksforslagInnlesingStep", jobRepository)
-            .chunk<Aldersjustering, Aldersjustering>(CHUNK_SIZE, transactionManager)
-            .reader(slettVedtaksforslagBatchInnlesingReader)
-            .processor(slettVedtaksforslagBatchInnlesingProcessor)
-            .writer(dummyItemWriter)
-            .taskExecutor(taskExecutor)
-            .build()
+    fun slettVedtaksforslagReader(dataSource: DataSource): ItemReader<Aldersjustering> {
+        val reader = JdbcPagingItemReader<Aldersjustering>()
+        val sqlPagingQuaryPoviderFactoryBean =
+            SqlPagingQueryProviderFactoryBean().apply {
+                setDataSource(dataSource)
+                setSelectClause("SELECT *")
+                setFromClause("FROM aldersjustering")
+                setWhereClause("WHERE status IS 'SLETTES'")
+                setSortKey("id")
+            }
+        try {
+            reader.setQueryProvider(sqlPagingQuaryPoviderFactoryBean.`object`)
+            reader.pageSize = 100
+            reader.setRowMapper(BeanPropertyRowMapper(Aldersjustering::class.java))
+        } catch (e: Exception) {
+            throw RuntimeException("Failed to create JdbcPagingItemReader", e)
+        }
+        return reader
+    }
 }
