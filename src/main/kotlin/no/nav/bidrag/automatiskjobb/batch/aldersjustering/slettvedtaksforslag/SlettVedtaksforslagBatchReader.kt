@@ -25,6 +25,7 @@ class SlettVedtaksforslagBatchReader(
         try {
             this.setQueryProvider(sqlPagingQuaryPoviderFactoryBean.`object`)
             this.pageSize = 100
+            this.setDataSource(dataSource)
             this.setRowMapper(BeanPropertyRowMapper(Aldersjustering::class.java))
         } catch (e: Exception) {
             throw RuntimeException("Failed to create JdbcPagingItemReader", e)
