@@ -41,7 +41,7 @@ data class Aldersjustering(
     val stønadstype: Stønadstype = Stønadstype.BIDRAG,
     var resultatSisteVedtak: String? = null,
 ) : EntityObject {
-    val unikReferanse get() = "aldersjustering_${batchId}_${barn.tilStønadsid(stønadstype)}"
+    val unikReferanse get() = "aldersjustering_${batchId}_${barn.tilStønadsid(stønadstype).toReferanse()}"
     val begrunnelseVisningsnavn get() =
         begrunnelse.map { it.lowercase().replaceFirstChar { it.uppercase() }.replace("_", " ") }
 }

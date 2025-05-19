@@ -286,9 +286,14 @@ class AldersjusteringService(
             log.info { "Ingen oppgave å slette for aldersjustering ${aldersjustering.id}" }
             return null
         }
-        val oppgaveId = oppgaveService.slettOppgave(aldersjustering.oppgave!!) //
-        aldersjustering.oppgave = null
-        return oppgaveId.toInt()
+        try {
+            val oppgaveId = oppgaveService.slettOppgave(aldersjustering.oppgave!!)
+            aldersjustering.oppgave = null
+            return oppgaveId.toInt()
+        } catch (e: Exception) {
+            log.error(e) { "Feil ved sletting av oppgave for aldersjustering ${aldersjustering.id}" }
+            throw e
+        }
     }
 
     fun opprettOppgaveForAldersjustering(aldersjustering: Aldersjustering): Int {
@@ -326,24 +331,15 @@ class AldersjusteringService(
     ): Aldersjustering? {
         val barn = aldersjustering.barn
 
-        val stønadsid =
-            Stønadsid(
-                stønadstype,
-                Personident(barn.kravhaver),
-                Personident(barn.skyldner!!),
-                Saksnummer(barn.saksnummer),
-            )
-
         secureLogger.info { "Aldersjustering for barn ${barn.id} med stønadsid: $aldersjustering. skal slettes. Sletter.." }
-        val unikReferanse = "aldersjustering_${aldersjustering.batchId}_${stønadsid.toReferanse()}"
 
-        vedtakConsumer.hentVedtaksforslagBasertPåReferanase(unikReferanse)?.let {
+        vedtakConsumer.hentVedtaksforslagBasertPåReferanase(aldersjustering.unikReferanse)?.let {
             secureLogger.info {
-                "Fant eksisterende vedtaksforslag med referanse $unikReferanse og id ${it.vedtaksid}. Sletter eksisterende vedtaksforslag "
+                "Fant eksisterende vedtaksforslag med referanse ${aldersjustering.unikReferanse} og id ${it.vedtaksid}. Sletter eksisterende vedtaksforslag "
             }
             vedtakConsumer.slettVedtaksforslag(it.vedtaksid.toInt())
         } ?: run {
-            log.error { "Fant ikke eksisterende vedtaksforslag med referanse $unikReferanse" }
+            log.error { "Fant ikke eksisterende vedtaksforslag med referanse ${aldersjustering.unikReferanse}" }
             aldersjustering.vedtak = null
             aldersjustering.status = Status.SLETTET
             return null

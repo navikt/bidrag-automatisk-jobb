@@ -65,6 +65,6 @@ class OppgaveConsumer(
     ): OppgaveDto =
         patchForEntity(
             oppgaveURI.pathSegment(id.toString()).build().toUri(),
-            OppdaterOppgaveDto(versjon, "FERDIGSTILT"),
+            OppdaterOppgaveDto(versjon, "FEILREGISTRERT"),
         )!!
 }

@@ -119,6 +119,11 @@ class OppgaveService(
 
     fun slettOppgave(oppgaveId: Int): Long {
         val oppgave = oppgaveConsumer.hentOppgaveForId(oppgaveId)
+        if (oppgave.erLukket()) {
+            log.info { "Oppgave $oppgaveId er allerede lukket med status ${oppgave.status}. Gjør ingen endring" }
+            return oppgaveId.toLong()
+        }
+        if (oppgave.erÅpnet()) error("Oppgave har status ${oppgave.status} og kan derfor ikke slettes")
         val slettetOppgave = oppgaveConsumer.slettOppgave(oppgaveId, oppgave.versjon)
         log.info { "Slettet oppgave med id $oppgaveId: $slettetOppgave" }
         return slettetOppgave.id
@@ -129,7 +134,8 @@ class OppgaveService(
         if (eksisterendeOppgave != null) {
             combinedLogger.info {
                 "Fant eksisterende oppgave $eksisterendeOppgave for " +
-                    "manuell aldersjustering ${aldersjustering.id} i sak ${aldersjustering.barn.saksnummer} og barn ${aldersjustering.barn.saksnummer}. " +
+                    "manuell aldersjustering ${aldersjustering.id} i sak ${aldersjustering.barn.saksnummer} " +
+                    "og barn ${aldersjustering.barn.saksnummer}. " +
                     "Oppretter ikke ny oppgave"
             }
             return eksisterendeOppgave.id.toInt()
