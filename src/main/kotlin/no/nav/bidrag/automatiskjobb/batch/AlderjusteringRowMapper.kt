@@ -1,0 +1,32 @@
+package no.nav.bidrag.automatiskjobb.batch
+
+import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
+import no.nav.bidrag.automatiskjobb.persistence.entity.Behandlingstype
+import no.nav.bidrag.automatiskjobb.persistence.entity.Status
+import no.nav.bidrag.domene.enums.vedtak.Stønadstype
+import org.springframework.jdbc.core.RowMapper
+import java.sql.ResultSet
+
+class AlderjusteringRowMapper : RowMapper<Aldersjustering> {
+    override fun mapRow(
+        rs: ResultSet,
+        rowNum: Int,
+    ): Aldersjustering =
+        Aldersjustering(
+            id = rs.getInt("id"),
+            batchId = rs.getString("batch_id"),
+            vedtaksidBeregning = rs.getInt("vedtaksidBeregning"),
+            barn = rs.getObject("barn_id") as no.nav.bidrag.automatiskjobb.persistence.entity.Barn,
+            aldersgruppe = rs.getInt("aldersgruppe"),
+            lopendeBelop = rs.getBigDecimal("lopendeBelop"),
+            begrunnelse = rs.getArray("begrunnelse")?.array as List<String>,
+            status = Status.valueOf(rs.getString("status")),
+            behandlingstype = rs.getString("behandlingstype")?.let { Behandlingstype.valueOf(rs.getString("behandlingstype")) },
+            vedtak = rs.getInt("vedtak"),
+            oppgave = rs.getInt("oppgave"),
+            opprettetTidspunkt = rs.getTimestamp("opprettet_tidspunkt"),
+            fattetTidspunkt = rs.getTimestamp("fattet_tidspunkt"),
+            stønadstype = Stønadstype.valueOf(rs.getString("stonadstype")),
+            resultatSisteVedtak = rs.getString("resultatSisteVedtak"),
+        )
+}

@@ -1,10 +1,10 @@
 package no.nav.bidrag.automatiskjobb.batch.aldersjustering.slettvedtaksforslag
 
+import no.nav.bidrag.automatiskjobb.batch.AlderjusteringRowMapper
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.batch.item.database.JdbcPagingItemReader
 import org.springframework.batch.item.database.support.SqlPagingQueryProviderFactoryBean
-import org.springframework.jdbc.core.BeanPropertyRowMapper
 import org.springframework.stereotype.Component
 import javax.sql.DataSource
 
@@ -26,7 +26,7 @@ class SlettVedtaksforslagBatchReader(
             this.setQueryProvider(sqlPagingQuaryPoviderFactoryBean.`object`)
             this.pageSize = 100
             this.setDataSource(dataSource)
-            this.setRowMapper(BeanPropertyRowMapper(Aldersjustering::class.java))
+            this.setRowMapper(AlderjusteringRowMapper())
         } catch (e: Exception) {
             throw RuntimeException("Failed to create JdbcPagingItemReader", e)
         }
