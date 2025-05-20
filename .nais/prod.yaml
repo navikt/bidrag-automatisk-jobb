@@ -23,6 +23,8 @@ env:
   BIDRAG_STONAD_SCOPE: prod-gcp.bidrag.bidrag-stonad
   BIDRAG_VEDTAK_URL: http://bidrag-vedtak
   BIDRAG_VEDTAK_SCOPE: prod-gcp.bidrag.bidrag-vedtak
+  BIDRAG_SAMHANDLER_URL: http://bidrag-samhandler
+  BIDRAG_SAMHANDLER_SCOPE: prod-gcp.bidrag.bidrag-samhandler
   BIDRAG_DOKUMENT_FORSENDELSE_URL: http://bidrag-dokument-forsendelse
   BIDRAG_DOKUMENT_FORSENDELSE_SCOPE: prod-gcp.bidrag.bidrag-dokument-forsendelse
   BIDRAG_SAK_URL: https://bidrag-sak.prod-fss-pub.nais.io
@@ -43,6 +45,8 @@ outbound-access-apps:
   - bidrag-stonad
   - bidrag-vedtak
   - bidrag-kodeverk
+  - bidrag-samhandler
+  - bidrag-dokument-forsendelse
 outbound-access-hosts:
   - bidrag-person.prod-fss-pub.nais.io
   - bidrag-sak.prod-fss-pub.nais.io
