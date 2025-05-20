@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.batch
+package no.nav.bidrag.automatiskjobb.persistence.rowmapper
 
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import no.nav.bidrag.automatiskjobb.persistence.entity.Behandlingstype
