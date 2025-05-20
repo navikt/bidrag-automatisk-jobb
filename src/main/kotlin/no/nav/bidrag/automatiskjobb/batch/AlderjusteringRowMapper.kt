@@ -1,6 +1,7 @@
 package no.nav.bidrag.automatiskjobb.batch
 
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
+import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.entity.Behandlingstype
 import no.nav.bidrag.automatiskjobb.persistence.entity.Status
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
@@ -16,7 +17,7 @@ class AlderjusteringRowMapper : RowMapper<Aldersjustering> {
             id = rs.getInt("id"),
             batchId = rs.getString("batch_id"),
             vedtaksidBeregning = rs.getInt("vedtaksid_beregning"),
-            barn = rs.getObject("barn_id") as no.nav.bidrag.automatiskjobb.persistence.entity.Barn,
+            barn = Barn(rs.getInt("barn_id")),
             aldersgruppe = rs.getInt("aldersgruppe"),
             lopendeBelop = rs.getBigDecimal("lopende_belop"),
             begrunnelse = rs.getArray("begrunnelse")?.array as List<String>,
