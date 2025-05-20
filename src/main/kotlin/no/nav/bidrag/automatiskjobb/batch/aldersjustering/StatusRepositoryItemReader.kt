@@ -1,11 +1,8 @@
 package no.nav.bidrag.automatiskjobb.batch.aldersjustering
 
-import org.apache.commons.logging.Log
-import org.apache.commons.logging.LogFactory
 import org.springframework.batch.item.adapter.AbstractMethodInvokingDelegator.InvocationTargetThrowableWrapper
 import org.springframework.batch.item.adapter.DynamicMethodInvocationException
 import org.springframework.batch.item.data.RepositoryItemReader
-import org.springframework.batch.item.support.AbstractItemCountingItemStreamItemReader
 import org.springframework.beans.factory.InitializingBean
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
@@ -27,10 +24,8 @@ import kotlin.concurrent.Volatile
  * Dette er nødvendig da pagineringen ikke forstår at readeren ikke lenger returnerer samme rader etter at ny status er satt.
  */
 open class StatusRepositoryItemReader<T> :
-    AbstractItemCountingItemStreamItemReader<T?>(),
+    RepositoryItemReader<T?>(),
     InitializingBean {
-    protected var logger: Log = LogFactory.getLog(javaClass)
-
     private var repository: PagingAndSortingRepository<*, *>? = null
 
     private var sort: Sort? = null
@@ -60,7 +55,7 @@ open class StatusRepositoryItemReader<T> :
      * Arguments to be passed to the data providing method.
      * @param arguments list of method arguments to be passed to the repository
      */
-    fun setArguments(arguments: List<*>) {
+    override fun setArguments(arguments: List<*>) {
         this.arguments = arguments
     }
 
@@ -70,14 +65,14 @@ open class StatusRepositoryItemReader<T> :
      * order.
      * @param sorts the fields to sort by and the directions
      */
-    fun setSort(sorts: MutableMap<String?, Sort.Direction?>) {
+    override fun setSort(sorts: MutableMap<String?, Sort.Direction?>) {
         this.sort = convertToSort(sorts)
     }
 
     /**
      * @param pageSize The number of items to retrieve per page. Must be greater than 0.
      */
-    fun setPageSize(pageSize: Int) {
+    override fun setPageSize(pageSize: Int) {
         this.pageSize = pageSize
     }
 
@@ -86,7 +81,7 @@ open class StatusRepositoryItemReader<T> :
      * implementation used to read input from.
      * @param repository underlying repository for input to be read from.
      */
-    fun setRepository(repository: PagingAndSortingRepository<*, *>) {
+    override fun setRepository(repository: PagingAndSortingRepository<*, *>) {
         this.repository = repository
     }
 
@@ -95,7 +90,7 @@ open class StatusRepositoryItemReader<T> :
      * [Pageable] as the *last* argument.
      * @param methodName name of the method to invoke
      */
-    fun setMethodName(methodName: String) {
+    override fun setMethodName(methodName: String) {
         this.methodName = methodName
     }
 
@@ -165,7 +160,7 @@ open class StatusRepositoryItemReader<T> :
      * calling of the method
      */
     @Throws(Exception::class)
-    protected fun doPageRead(): MutableList<T?> {
+    override fun doPageRead(): MutableList<T?> {
         val pageRequest: Pageable = PageRequest.of(0, pageSize, sort!!)
 
         val invoker = createMethodInvoker(repository!!, methodName!!)
