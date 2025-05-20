@@ -15,10 +15,10 @@ class AlderjusteringRowMapper : RowMapper<Aldersjustering> {
         Aldersjustering(
             id = rs.getInt("id"),
             batchId = rs.getString("batch_id"),
-            vedtaksidBeregning = rs.getInt("vedtaksidBeregning"),
+            vedtaksidBeregning = rs.getInt("vedtaksid_beregning"),
             barn = rs.getObject("barn_id") as no.nav.bidrag.automatiskjobb.persistence.entity.Barn,
             aldersgruppe = rs.getInt("aldersgruppe"),
-            lopendeBelop = rs.getBigDecimal("lopendeBelop"),
+            lopendeBelop = rs.getBigDecimal("lopende_belop"),
             begrunnelse = rs.getArray("begrunnelse")?.array as List<String>,
             status = Status.valueOf(rs.getString("status")),
             behandlingstype = rs.getString("behandlingstype")?.let { Behandlingstype.valueOf(rs.getString("behandlingstype")) },
@@ -27,6 +27,6 @@ class AlderjusteringRowMapper : RowMapper<Aldersjustering> {
             opprettetTidspunkt = rs.getTimestamp("opprettet_tidspunkt"),
             fattetTidspunkt = rs.getTimestamp("fattet_tidspunkt"),
             stønadstype = Stønadstype.valueOf(rs.getString("stonadstype")),
-            resultatSisteVedtak = rs.getString("resultatSisteVedtak"),
+            resultatSisteVedtak = rs.getString("resultat_siste_vedtak"),
         )
 }
