@@ -55,7 +55,8 @@ class BidragVedtakConsumer(
     fun fatteVedtaksforslag(vedtakId: Int): Int =
         postForNonNullEntity(
             bidragVedtakUri
-                .pathSegment("vedtaksforslag")
+                // TODO: Endre dette til riktig url. Sikre at det ikke fattes vedtak under testing
+                .pathSegment("vedtaksforslag2")
                 .pathSegment(vedtakId.toString())
                 .build()
                 .toUri(),

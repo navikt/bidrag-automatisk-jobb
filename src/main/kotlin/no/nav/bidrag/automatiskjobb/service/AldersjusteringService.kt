@@ -486,7 +486,7 @@ class AldersjusteringService(
             return AldersjusteringIkkeAldersjustertResultat(stønadsid, e.begrunnelser.joinToString(", "))
         } catch (e: AldersjusteresManueltException) {
             combinedLogger.warn(e) { "Stønad $stønadsid skal aldersjusteres manuelt med begrunnelse ${e.begrunnelse}" }
-            return AldersjusteringIkkeAldersjustertResultat(stønadsid, e.begrunnelse.name)
+            return AldersjusteringIkkeAldersjustertResultat(stønadsid, e.begrunnelse.name, aldersjusteresManuelt = true)
         } catch (e: Exception) {
             combinedLogger.error(e) { "Det skjedde en feil ved aldersjustering for stønad $stønadsid" }
             return AldersjusteringIkkeAldersjustertResultat(stønadsid, "Teknisk feil: ${e.message}")
