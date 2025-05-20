@@ -23,6 +23,8 @@ env:
   BIDRAG_STONAD_SCOPE: dev-gcp.bidrag.bidrag-stonad-q4
   BIDRAG_VEDTAK_URL: http://bidrag-vedtak-q4
   BIDRAG_VEDTAK_SCOPE: dev-gcp.bidrag.bidrag-vedtak-q4
+  BIDRAG_SAMHANDLER_URL: http://bidrag-samhandler-q4
+  BIDRAG_SAMHANDLER_SCOPE: dev-gcp.bidrag.bidrag-samhandler-q4
   BIDRAG_DOKUMENT_FORSENDELSE_URL: http://bidrag-dokument-forsendelse-feature
   BIDRAG_DOKUMENT_FORSENDELSE_SCOPE: dev-gcp.bidrag.bidrag-dokument-forsendelse-feature
   BIDRAG_SAK_URL: https://bidrag-sak-q4.dev-fss-pub.nais.io
@@ -42,7 +44,9 @@ env:
 outbound-access-apps:
   - bidrag-stonad-q4
   - bidrag-vedtak-q4
+  - bidrag-samhandler-q4
   - bidrag-kodeverk
+  - bidrag-dokument-forsendelse-feature
 outbound-access-hosts:
   - bidrag-person-q4.dev-fss-pub.nais.io
   - bidrag-sak-q4.dev-fss-pub.nais.io
