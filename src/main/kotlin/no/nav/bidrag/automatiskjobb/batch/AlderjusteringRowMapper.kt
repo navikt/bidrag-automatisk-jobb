@@ -20,7 +20,7 @@ class AlderjusteringRowMapper : RowMapper<Aldersjustering> {
             barn = Barn(rs.getInt("barn_id")),
             aldersgruppe = rs.getInt("aldersgruppe"),
             lopendeBelop = rs.getBigDecimal("lopende_belop"),
-            begrunnelse = rs.getArray("begrunnelse")?.array as List<String>,
+            begrunnelse = (rs.getArray("begrunnelse")?.array as? Array<*>)?.map { it as String } ?: emptyList(),
             status = Status.valueOf(rs.getString("status")),
             behandlingstype = rs.getString("behandlingstype")?.let { Behandlingstype.valueOf(rs.getString("behandlingstype")) },
             vedtak = rs.getInt("vedtak"),
