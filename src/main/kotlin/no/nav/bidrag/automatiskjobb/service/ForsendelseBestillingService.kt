@@ -4,34 +4,51 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.automatiskjobb.consumer.BidragDokumentForsendelseConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragPersonConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
+import no.nav.bidrag.automatiskjobb.consumer.BidragSamhandlerConsumer
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import no.nav.bidrag.automatiskjobb.persistence.entity.ForsendelseBestilling
 import no.nav.bidrag.automatiskjobb.persistence.repository.ForsendelseBestillingRepository
+import no.nav.bidrag.automatiskjobb.utils.bidragsmottaker
+import no.nav.bidrag.automatiskjobb.utils.bidragspliktig
+import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.domene.enums.diverse.Språk
 import no.nav.bidrag.domene.enums.rolle.Rolletype
 import no.nav.bidrag.domene.ident.Personident
+import no.nav.bidrag.domene.ident.SamhandlerId
 import no.nav.bidrag.transport.dokument.forsendelse.MottakerIdentTypeTo
 import no.nav.bidrag.transport.dokument.forsendelse.MottakerTo
 import no.nav.bidrag.transport.dokument.numeric
 import no.nav.bidrag.transport.sak.BidragssakDto
+import no.nav.bidrag.transport.sak.RolleDto
+import no.nav.bidrag.transport.samhandler.Områdekode
 import org.springframework.stereotype.Service
 import java.sql.Timestamp
 
 private const val DOKUMENTMAL_BI01B05 = "BI01B05"
 private val log = KotlinLogging.logger {}
 
+data class ForsendelseGjelderMottakerInfo(
+    val gjelder: String?,
+    val mottakerIdent: String?,
+    val mottakerRolle: Rolletype,
+    val feilBegrunnelse: String? = null,
+)
+
 @Service
 class ForsendelseBestillingService(
     private val forsendelseBestillingRepository: ForsendelseBestillingRepository,
     private val bidragDokumentForsendelseConsumer: BidragDokumentForsendelseConsumer,
     private val bidragSakConsumer: BidragSakConsumer,
+    private val bidragSamhandlerConsumer: BidragSamhandlerConsumer,
     private val bidragPersonConsumer: BidragPersonConsumer,
+    private val samhandlerConsumer: BidragSamhandlerConsumer,
 ) {
     fun opprettForsendelseBestilling(
         aldersjustering: Aldersjustering,
-        gjelderIdent: String,
-        mottakerident: String,
+        gjelderIdent: String?,
+        mottakerident: String?,
         rolletype: Rolletype,
+        feilBegrunnelse: String? = null,
     ) {
         val forsendelseBestilling =
             ForsendelseBestilling(
@@ -41,11 +58,12 @@ class ForsendelseBestillingService(
                 mottaker = mottakerident,
                 dokumentmal = DOKUMENTMAL_BI01B05,
                 språkkode = Språk.NB,
+                feilBegrunnelse = feilBegrunnelse,
             )
         val opprettetForsendelse = forsendelseBestillingRepository.save(forsendelseBestilling)
         log.info {
             "Opprettet forsendelse bestilling ${opprettetForsendelse.id} " +
-                "for rolle ${opprettetForsendelse.rolletype} med dokumentmalId ${opprettetForsendelse.dokumentmal}" +
+                "for rolle ${opprettetForsendelse.rolletype} med dokumentmalId ${opprettetForsendelse.dokumentmal} " +
                 "relatert til aldersjustering ${opprettetForsendelse.aldersjustering.id} og sak ${opprettetForsendelse.aldersjustering.barn.saksnummer}"
         }
     }
@@ -66,6 +84,13 @@ class ForsendelseBestillingService(
     }
 
     fun opprettForsendelse(forsendelseBestilling: ForsendelseBestilling) {
+        if (!forsendelseBestilling.feilBegrunnelse.isNullOrEmpty()) {
+            log.warn {
+                "Forsendelse bestilling ${forsendelseBestilling.id} har feilet med begrunnelse ${forsendelseBestilling.feilBegrunnelse}. " +
+                    "Ignorer bestilling"
+            }
+            return
+        }
         if (forsendelseBestilling.forsendelseId != null && forsendelseBestilling.skalSlettes) {
             slettForsendelse(forsendelseBestilling)
             val nyForsendelseBestilling =
@@ -98,11 +123,19 @@ class ForsendelseBestillingService(
     }
 
     private fun opprettForsendelseTilBidragDokument(forsendelseBestilling: ForsendelseBestilling) {
+        val mottakerErSamhandler = forsendelseBestilling.mottaker?.let { SamhandlerId(it).gyldig() } == true
+        val navn = if (mottakerErSamhandler) samhandlerConsumer.hentSamhandler(forsendelseBestilling.mottaker!!)?.navn else null
         val mottaker =
             MottakerTo(
                 ident = forsendelseBestilling.mottaker,
                 språk = forsendelseBestilling.språkkode?.name,
-                identType = MottakerIdentTypeTo.FNR,
+                navn = navn,
+                identType =
+                    if (mottakerErSamhandler) {
+                        MottakerIdentTypeTo.SAMHANDLER
+                    } else {
+                        MottakerIdentTypeTo.FNR
+                    },
             )
 
         if (forsendelseBestilling.gjelder.isNullOrEmpty() || forsendelseBestilling.mottaker.isNullOrEmpty()) {
@@ -141,6 +174,12 @@ class ForsendelseBestillingService(
 
     fun opprettBestillingForAldersjustering(aldersjustering: Aldersjustering) {
         val sak = bidragSakConsumer.hentSak(aldersjustering.barn.saksnummer)
+        if (sak.bidragspliktig == null || erPersonDød(sak.bidragspliktig!!.fødselsnummer!!)) {
+            log.warn {
+                "Bidragspliktig finnes ikke eller er død. Oppretter ikke forsendelse. Gjelder aldersjustering ${aldersjustering.id}"
+            }
+            return
+        }
         opprettBestillingForBidragspliktig(aldersjustering, sak)
         opprettBestillingForBidragsmottaker(aldersjustering, sak)
     }
@@ -149,7 +188,7 @@ class ForsendelseBestillingService(
         aldersjustering: Aldersjustering,
         sak: BidragssakDto,
     ) {
-        val bp = sak.roller.find { it.type == Rolletype.BIDRAGSPLIKTIG }!!
+        val bp = sak.bidragspliktig!!
         opprettForsendelseBestilling(
             aldersjustering = aldersjustering,
             gjelderIdent = bp.fødselsnummer!!.verdi,
@@ -162,22 +201,100 @@ class ForsendelseBestillingService(
         aldersjustering: Aldersjustering,
         sak: BidragssakDto,
     ) {
-        val bm = sak.roller.find { it.type == Rolletype.BIDRAGSMOTTAKER }!!
-        if (erPersonDød(bm.fødselsnummer!!)) {
-            log.warn { "Bidragsmottaker er død. Oppretter ikke forsendelse. Gjelder aldersjustering ${aldersjustering.id}" }
-            return
-        }
+        val mottakerIdent = finnMottakerIdent(aldersjustering, sak)
         opprettForsendelseBestilling(
             aldersjustering = aldersjustering,
-            gjelderIdent = bm.fødselsnummer!!.verdi,
-            mottakerident = bm.fødselsnummer!!.verdi,
-            rolletype = Rolletype.BIDRAGSMOTTAKER,
+            gjelderIdent = mottakerIdent.gjelder,
+            mottakerident = mottakerIdent.mottakerIdent,
+            rolletype = mottakerIdent.mottakerRolle,
+            feilBegrunnelse = mottakerIdent.feilBegrunnelse,
         )
     }
 
     private fun erPersonDød(personident: Personident): Boolean {
         val person = bidragPersonConsumer.hentPerson(personident)
         return person.dødsdato != null
+    }
+
+    private fun finnMottakerIdent(
+        aldersjustering: Aldersjustering,
+        sak: BidragssakDto,
+    ): ForsendelseGjelderMottakerInfo {
+        val rolleBarn = sak.roller.find { it.fødselsnummer?.verdi == aldersjustering.barn.kravhaver }!!
+
+        val bm =
+            sak.bidragsmottaker ?: return ForsendelseGjelderMottakerInfo(
+                null,
+                null,
+                Rolletype.BIDRAGSMOTTAKER,
+                feilBegrunnelse = "Sak ${sak.saksnummer} har ingen bidragsmottaker",
+            )
+
+        val mottakerGjelderBM = ForsendelseGjelderMottakerInfo(bm.fødselsnummer?.verdi, bm.fødselsnummer?.verdi, Rolletype.BIDRAGSMOTTAKER)
+        if (rolleBarn.reellMottaker != null) {
+            return finnRmSomMottaker(rolleBarn) ?: mottakerGjelderBM
+        }
+        return mottakerGjelderBM
+    }
+
+    private fun finnRmSomMottaker(barn: RolleDto): ForsendelseGjelderMottakerInfo? {
+        // *** REGEL ***
+        // hvis RM er lik barn så betyr det at barnet bor for seg selv. Sendt forsendelse til barnet
+        // hvis RM er institusjon
+        // hvis institusjon er VERGE -> forsendelse
+        // hvis IKKE VERGE -> sjekk om institusjon er barnevern institusjon
+        // -> hvis barnevern inst -> forsendelse
+        // -> hvis IKKE barnevern inst -> forsendelse til BM
+
+        val rm = barn.reellMottaker ?: return null
+        if (rm.ident.verdi == barn.fødselsnummer!!.verdi) {
+            secureLogger.info {
+                "Fødselsnummer til RM til barn er har samme fødselsnummer som barnet ${barn.fødselsnummer}. Setter mottaker av forsendelsen til barnet"
+            }
+            return ForsendelseGjelderMottakerInfo(
+                barn.fødselsnummer!!.verdi,
+                barn.fødselsnummer!!.verdi,
+                Rolletype.BARN,
+            )
+        }
+        // sjekker om denne reelle mottaker er verge -> forsendelse skal til RM
+        if (rm.verge) {
+            secureLogger.info { "RM ${rm.ident} til barn ${barn.fødselsnummer} er verge. Setter mottaker av forsendelsen til RM" }
+            // Hvis reell mottaker eksisterer og er verge, sendes forsendelsen til vergen
+            return ForsendelseGjelderMottakerInfo(barn.fødselsnummer!!.verdi, rm.ident.verdi, Rolletype.REELMOTTAKER)
+        }
+
+        if (!rm.ident.gyldig()) {
+            log.warn {
+                "RM har ikke en gyldig samhandlerId ${rm.ident}. Går videre uten å sjekke om RM er Barnevernsinstitusjon"
+            }
+            return null
+        }
+
+        val samhandler =
+            samhandlerConsumer.hentSamhandler(rm.ident.verdi) ?: return ForsendelseGjelderMottakerInfo(
+                barn.fødselsnummer!!.verdi,
+                rm.ident.verdi,
+                Rolletype.REELMOTTAKER,
+                "Fant ikke samhandler med id ${rm.ident} i bidrag-samhandler",
+            )
+        if (samhandler.områdekode == Områdekode.BARNEVERNSINSTITUSJON) {
+            secureLogger.info {
+                "RM ${rm.ident} til barnet ${barn.fødselsnummer} er barnevernsinstitusjon." +
+                    " Setter mottaker av forsendelsen til RM"
+            }
+            return ForsendelseGjelderMottakerInfo(
+                barn.fødselsnummer!!.verdi,
+                rm.ident.verdi,
+                Rolletype.REELMOTTAKER,
+            )
+        }
+        secureLogger.info {
+            "RM ${rm.ident} til barnet ${barn.fødselsnummer} er ikke barnevernsinstitusjon eller verge." +
+                " Setter mottaker av forsendelsen til BM"
+        }
+        // hvis RM er samhandler, men ikke barnevern institusjon skal brevet sendes til BM
+        return null
     }
 
     private fun finnEierfogd(saksnummer: String): String {
