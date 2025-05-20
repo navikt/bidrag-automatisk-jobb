@@ -1,14 +1,16 @@
 package no.nav.bidrag.automatiskjobb.batch
 
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
-import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.entity.Behandlingstype
 import no.nav.bidrag.automatiskjobb.persistence.entity.Status
+import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import org.springframework.jdbc.core.RowMapper
 import java.sql.ResultSet
 
-class AlderjusteringRowMapper : RowMapper<Aldersjustering> {
+class AlderjusteringRowMapper(
+    private val barnRepository: BarnRepository,
+) : RowMapper<Aldersjustering> {
     override fun mapRow(
         rs: ResultSet,
         rowNum: Int,
@@ -17,7 +19,7 @@ class AlderjusteringRowMapper : RowMapper<Aldersjustering> {
             id = rs.getInt("id"),
             batchId = rs.getString("batch_id"),
             vedtaksidBeregning = rs.getInt("vedtaksid_beregning"),
-            barn = Barn(rs.getInt("barn_id")),
+            barn = barnRepository.findById(rs.getInt("barn_id")).get(),
             aldersgruppe = rs.getInt("aldersgruppe"),
             lopendeBelop = rs.getBigDecimal("lopende_belop"),
             begrunnelse = (rs.getArray("begrunnelse")?.array as? Array<*>)?.map { it as String } ?: emptyList(),
