@@ -123,7 +123,7 @@ class OppgaveService(
             log.info { "Oppgave $oppgaveId er allerede lukket med status ${oppgave.status}. Gjør ingen endring" }
             return oppgaveId.toLong()
         }
-        if (oppgave.erÅpnet()) error("Oppgave har status ${oppgave.status} og kan derfor ikke slettes")
+//        if (oppgave.erÅpnet()) error("Oppgave har status ${oppgave.status} og kan derfor ikke slettes")
         val slettetOppgave = oppgaveConsumer.slettOppgave(oppgaveId, oppgave.versjon)
         log.info { "Slettet oppgave med id $oppgaveId: $slettetOppgave" }
         return slettetOppgave.id
