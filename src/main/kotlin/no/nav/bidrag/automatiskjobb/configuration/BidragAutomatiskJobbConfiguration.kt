@@ -12,7 +12,6 @@ import io.swagger.v3.oas.annotations.security.SecurityScheme
 import no.nav.bidrag.beregn.barnebidrag.service.AldersjusteringOrchestrator
 import no.nav.bidrag.commons.service.organisasjon.EnableSaksbehandlernavnProvider
 import no.nav.bidrag.commons.util.EnableSjekkForNyIdent
-import no.nav.bidrag.commons.util.IdentUtils
 import no.nav.bidrag.commons.web.DefaultCorsFilter
 import no.nav.bidrag.commons.web.MdcFilter
 import no.nav.security.token.support.client.spring.oauth2.EnableOAuth2Client
@@ -40,7 +39,7 @@ import org.springframework.retry.annotation.EnableRetry
 @EnableRetry
 @EnableBatchProcessing
 @EnableSjekkForNyIdent
-@Import(DefaultCorsFilter::class, MdcFilter::class, AldersjusteringOrchestrator::class, IdentUtils::class)
+@Import(DefaultCorsFilter::class, MdcFilter::class, AldersjusteringOrchestrator::class)
 class BidragAutomatiskJobbConfiguration {
     @Bean
     fun unleashConfig(
