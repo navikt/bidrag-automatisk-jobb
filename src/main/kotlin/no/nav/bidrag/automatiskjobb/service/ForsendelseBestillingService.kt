@@ -85,6 +85,7 @@ class ForsendelseBestillingService(
                 "relatert til aldersjustering ${forsendelseBestilling.aldersjustering.id} og sak ${forsendelseBestilling.aldersjustering.barn.saksnummer}"
         }
         forsendelseBestilling.slettetTidspunkt = Timestamp(System.currentTimeMillis())
+        forsendelseBestillingRepository.save(forsendelseBestilling)
     }
 
     fun opprettForsendelse(
@@ -128,6 +129,7 @@ class ForsendelseBestillingService(
         }
         forsendelseBestilling.journalpostId = distribuerJournalpostResponse.journalpostId.numeric
         forsendelseBestilling.distribuertTidspunkt = Timestamp(System.currentTimeMillis())
+        forsendelseBestillingRepository.save(forsendelseBestilling)
     }
 
     private fun opprettForsendelseTilBidragDokument(forsendelseBestilling: ForsendelseBestilling) {

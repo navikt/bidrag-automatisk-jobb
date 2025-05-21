@@ -31,6 +31,7 @@ class SlettVedtaksforslagBatchReader(
             this.pageSize = PAGE_SIZE
             this.setFetchSize(PAGE_SIZE)
             this.setDataSource(dataSource)
+            this.isSaveState = true
             this.setRowMapper(AlderjusteringRowMapper(barnRepository))
         } catch (e: Exception) {
             throw RuntimeException("Failed to create JdbcPagingItemReader", e)
