@@ -298,11 +298,6 @@ class ForsendelseBestillingService(
         return null
     }
 
-    private fun finnEierfogd(saksnummer: String): String {
-        val sak = bidragSakConsumer.hentSak(saksnummer)
-        return sak.eierfogd.verdi
-    }
-
     private fun erOver18År(personident: Personident): Boolean {
         val fødselsdato = bidragPersonConsumer.hentFødselsdatoForPerson(personident)
         // TODO: Bør dette sjekkes for en eksakt dato (feks 1.Juli?). Ikke behov i aldersjustering pga barnet alltid er under 18
