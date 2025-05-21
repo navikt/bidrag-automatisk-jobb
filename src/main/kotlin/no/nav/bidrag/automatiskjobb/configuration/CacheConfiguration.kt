@@ -22,6 +22,7 @@ class CacheConfiguration {
         const val PERSON_HUSTANDSMEDLEMMER_CACHE = "PERSON_HUSTANDSMEDLEMMER_CACHE"
         const val VEDTAK_CACHE = "VEDTAK_CACHE"
         const val SAK_CACHE = "SAK_CACHE"
+        const val SAMHANDLER_CACHE = "SAMHANDLER_CACHE"
         const val SAKER_PERSON_CACHE = "SAKER_PERSON_CACHE"
     }
 
@@ -30,6 +31,10 @@ class CacheConfiguration {
         val caffeineCacheManager = CaffeineCacheManager()
         caffeineCacheManager.registerCustomCache(
             PERSON_FØDSELSDATO_CACHE,
+            Caffeine.newBuilder().expireAfter(InvaliderCacheFørStartenAvArbeidsdag()).build(),
+        )
+        caffeineCacheManager.registerCustomCache(
+            SAMHANDLER_CACHE,
             Caffeine.newBuilder().expireAfter(InvaliderCacheFørStartenAvArbeidsdag()).build(),
         )
         caffeineCacheManager.registerCustomCache(
