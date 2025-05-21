@@ -102,6 +102,83 @@ class VedtakServiceTest {
     }
 
     @Test
+    fun skalOppretteNyttBarnForFlereSaker() {
+        val kravhaver = Personident(PersonidentGenerator.genererFødselsnummer())
+        val vedtakHendelse =
+            opprettVedtakHendelse(
+                Stønadstype.BIDRAG,
+                Innkrevingstype.MED_INNKREVING,
+                stønadsendringListe =
+                    listOf(
+                        Stønadsendring(
+                            type = Stønadstype.BIDRAG,
+                            sak = Saksnummer("112323"),
+                            skyldner = Personident(PersonidentGenerator.genererFødselsnummer()),
+                            kravhaver = kravhaver,
+                            mottaker = Personident(PersonidentGenerator.genererFødselsnummer()),
+                            innkreving = Innkrevingstype.MED_INNKREVING,
+                            beslutning = Beslutningstype.ENDRING,
+                            periodeListe =
+                                listOf(
+                                    Periode(
+                                        periode = ÅrMånedsperiode(LocalDate.now().minusMonths(2).withDayOfMonth(1), null),
+                                        beløp = BigDecimal.valueOf(1000),
+                                        valutakode = "NOK",
+                                        resultatkode = "OK",
+                                        delytelseId = null,
+                                    ),
+                                ),
+                            førsteIndeksreguleringsår = null,
+                            omgjørVedtakId = null,
+                            eksternReferanse = null,
+                        ),
+                        Stønadsendring(
+                            type = Stønadstype.FORSKUDD,
+                            sak = Saksnummer("123"),
+                            skyldner = Personident(PersonidentGenerator.genererFødselsnummer()),
+                            kravhaver = kravhaver,
+                            mottaker = Personident(PersonidentGenerator.genererFødselsnummer()),
+                            innkreving = Innkrevingstype.MED_INNKREVING,
+                            beslutning = Beslutningstype.ENDRING,
+                            periodeListe =
+                                listOf(
+                                    Periode(
+                                        periode = ÅrMånedsperiode(LocalDate.now().minusMonths(1).withDayOfMonth(1), null),
+                                        beløp = BigDecimal.valueOf(1000),
+                                        valutakode = "NOK",
+                                        resultatkode = "OK",
+                                        delytelseId = null,
+                                    ),
+                                ),
+                            førsteIndeksreguleringsår = null,
+                            omgjørVedtakId = null,
+                            eksternReferanse = null,
+                        ),
+                    ),
+            )
+
+        mocks(vedtakHendelse)
+
+        vedtakService.behandleVedtak(vedtakHendelse)
+
+        verify(exactly = 1) {
+            barnRepository.save(
+                withArg {
+                    it.saksnummer shouldBe "123"
+                },
+            )
+        }
+
+        verify(exactly = 1) {
+            barnRepository.save(
+                withArg {
+                    it.saksnummer shouldBe "112323"
+                },
+            )
+        }
+    }
+
+    @Test
     fun skalOppretteNyttBarnForBidragOgForskudd() {
         val kravhaver = Personident(PersonidentGenerator.genererFødselsnummer())
         val vedtakHendelse =
@@ -416,6 +493,7 @@ class VedtakServiceTest {
         every { objectMapper.readValue(any<String>(), VedtakHendelse::class.java) } returns vedtakHendelse
         every { bidragPersonConsumer.hentFødselsdatoForPerson(any()) } returns LocalDate.now().minusYears(8)
         every { barnRepository.findByKravhaverAndSaksnummer(any(), any()) } returns eksisterendeBarn
+        every { barnRepository.finnBarnForKravhaverIdenterOgSaksnummer(any(), any()) } returns eksisterendeBarn
         every { barnRepository.save(capture(barnSlot)) } answers { firstArg() }
     }
 

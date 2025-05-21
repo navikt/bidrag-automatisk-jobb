@@ -32,20 +32,19 @@ class VedtakService(
         if (vedtakHendelse.type == Vedtakstype.INDEKSREGULERING) return
         val stønadsendringerFraVedtak = hentStønadsendringerForBidragOgForskudd(vedtakHendelse)
 
-        stønadsendringerFraVedtak?.forEach { (kravhaver, stønadsendringer) ->
+        stønadsendringerFraVedtak?.forEach { (kravhaverSak, stønadsendringer) ->
+            val (sak, kravhaver) = kravhaverSak
             val kravhaverNyesteIdent = identUtils.hentNyesteIdent(kravhaver)
             val kravhaverAlleIdenter = identUtils.hentAlleIdenter(kravhaver)
-            stønadsendringer.forEach { stønadsendring ->
-                val lagretBarn =
-                    barnRepository.finnBarnForKravhaverIdenterOgSaksnummer(
-                        kravhaverAlleIdenter,
-                        stønadsendring.sak.verdi,
-                    )
-                if (lagretBarn != null) {
-                    oppdaterBarn(lagretBarn, stønadsendringer)
-                } else {
-                    opprettBarnFraStønadsendring(kravhaverNyesteIdent, stønadsendringer)
-                }
+            val lagretBarn =
+                barnRepository.finnBarnForKravhaverIdenterOgSaksnummer(
+                    kravhaverAlleIdenter,
+                    sak.verdi,
+                )
+            if (lagretBarn != null) {
+                oppdaterBarn(lagretBarn, stønadsendringer)
+            } else {
+                opprettBarnFraStønadsendring(kravhaverNyesteIdent, stønadsendringer)
             }
         }
     }
@@ -55,7 +54,7 @@ class VedtakService(
         stønadsendringer: List<Stønadsendring>,
     ) {
         LOGGER.info("Oppdaterer barn ${lagretBarn.id} for sak ${stønadsendringer.first().sak.verdi}")
-        val oppdatertSkyldner = finnSkylder(stønadsendringer)
+        val oppdatertSkyldner = finnSkyldner(stønadsendringer)
 
         // Skylder kan oppdateres om det finnes en ny skyldner som ikke er null
         if (!oppdatertSkyldner.isNullOrEmpty()) {
@@ -85,7 +84,7 @@ class VedtakService(
             ?.filter { it.type == Stønadstype.BIDRAG || it.type == Stønadstype.FORSKUDD }
             ?.filter { it.innkreving == Innkrevingstype.MED_INNKREVING }
             ?.filter { it.beslutning == Beslutningstype.ENDRING }
-            ?.groupBy { it.kravhaver }
+            ?.groupBy { it.sak to it.kravhaver }
 
     private fun opprettBarnFraStønadsendring(
         kravhaver: Personident,
@@ -97,7 +96,7 @@ class VedtakService(
                 saksnummer = saksnummer,
                 kravhaver = kravhaver.verdi,
                 fødselsdato = hentFødselsdatoForPerson(kravhaver),
-                skyldner = finnSkylder(stønadsendringer),
+                skyldner = finnSkyldner(stønadsendringer),
                 forskuddFra = finnPeriodeFra(stønadsendringer, Stønadstype.FORSKUDD),
                 forskuddTil = finnPeriodeTil(stønadsendringer, Stønadstype.FORSKUDD),
                 bidragFra = finnPeriodeFra(stønadsendringer, Stønadstype.BIDRAG),
@@ -172,7 +171,7 @@ class VedtakService(
         }
     }
 
-    private fun finnSkylder(stønadsendring: List<Stønadsendring>): String? =
+    private fun finnSkyldner(stønadsendring: List<Stønadsendring>): String? =
         stønadsendring
             .find {
                 it.type == Stønadstype.BIDRAG
