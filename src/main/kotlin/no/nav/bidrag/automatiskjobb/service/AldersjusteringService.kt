@@ -269,14 +269,21 @@ class AldersjusteringService(
         }
     }
 
-    fun fattVedtakOmAldersjustering(aldersjustering: Aldersjustering) {
-        combinedLogger.info { "Fatter vedtak for aldersjustering ${aldersjustering.id} og vedtaksid ${aldersjustering.vedtak}" }
+    fun fattVedtakOmAldersjustering(
+        aldersjustering: Aldersjustering,
+        simuler: Boolean,
+    ) {
+        if (simuler) {
+            log.info { "Simulering er satt til true. Fatter ikke vedtaksforslag men oppretter forsendelse bestillinger" }
+        } else {
+            combinedLogger.info { "Fatter vedtak for aldersjustering ${aldersjustering.id} og vedtaksid ${aldersjustering.vedtak}" }
 //        vedtakConsumer.fatteVedtaksforslag(
 //            aldersjustering.vedtak ?: error("Aldersjustering ${aldersjustering.id} mangler vedtak!"),
 //        )
-        aldersjustering.status = Status.FATTET
-        aldersjustering.fattetTidspunkt = Timestamp(System.currentTimeMillis())
-        alderjusteringRepository.save(aldersjustering)
+            aldersjustering.status = Status.FATTET
+            aldersjustering.fattetTidspunkt = Timestamp(System.currentTimeMillis())
+            alderjusteringRepository.save(aldersjustering)
+        }
 
         forsendelseBestillingService.opprettBestillingForAldersjustering(aldersjustering)
     }

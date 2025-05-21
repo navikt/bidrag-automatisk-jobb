@@ -1,5 +1,6 @@
 package no.nav.bidrag.automatiskjobb.persistence.repository
 
+import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import no.nav.bidrag.automatiskjobb.persistence.entity.ForsendelseBestilling
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -40,4 +41,7 @@ interface ForsendelseBestillingRepository : JpaRepository<ForsendelseBestilling,
                 100,
             ),
     ): Page<ForsendelseBestilling>
+
+    @Suppress("unused")
+    fun findByAldersjustering(aldersjustering: Aldersjustering): List<ForsendelseBestilling>
 }

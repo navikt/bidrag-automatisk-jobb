@@ -11,10 +11,14 @@ class FattVedtakOmAldersjusteringerBidragBatch(
     private val jobLauncher: JobLauncher,
     private val fattVedtakOmAldersjusteringerBidragJob: Job,
 ) {
-    fun startFattVedtakOmAldersjusteringBidragBatch(barnId: String? = "") {
+    fun startFattVedtakOmAldersjusteringBidragBatch(
+        barnId: String? = "",
+        simuler: Boolean,
+    ) {
         jobLauncher.run(
             fattVedtakOmAldersjusteringerBidragJob,
             JobParametersBuilder()
+                .addString("simuler", simuler.toString())
                 .addString("barn", barnId ?: "")
                 .addString("runId", UUID.randomUUID().toString())
                 .toJobParameters(),
