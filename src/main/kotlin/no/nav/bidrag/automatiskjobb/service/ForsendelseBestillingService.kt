@@ -241,15 +241,22 @@ class ForsendelseBestillingService(
         // -> hvis IKKE barnevern inst -> forsendelse til BM
 
         val rm = barn.reellMottaker ?: return null
-        if (rm.ident.verdi == barn.fødselsnummer!!.verdi && erOver18År(barn.fødselsnummer!!)) {
-            secureLogger.info {
-                "Fødselsnummer til RM til barn er har samme fødselsnummer som barnet ${barn.fødselsnummer} og barnet er over 18 år. Setter mottaker av forsendelsen til barnet"
+        if (rm.ident.verdi == barn.fødselsnummer!!.verdi) {
+            return if (erOver18År(barn.fødselsnummer!!)) {
+                secureLogger.info {
+                    "Fødselsnummer til RM til barn er har samme fødselsnummer som barnet ${barn.fødselsnummer!!.verdi} og barnet er over 18 år. Setter mottaker av forsendelsen til barnet"
+                }
+                ForsendelseGjelderMottakerInfo(
+                    barn.fødselsnummer!!.verdi,
+                    barn.fødselsnummer!!.verdi,
+                    Rolletype.BARN,
+                )
+            } else {
+                secureLogger.info {
+                    "Fødselsnummer til RM til barn er har samme fødselsnummer som barnet ${barn.fødselsnummer!!.verdi} og men er under 18 år. Setter mottaker av forsendelsen til BM"
+                }
+                null
             }
-            return ForsendelseGjelderMottakerInfo(
-                barn.fødselsnummer!!.verdi,
-                barn.fødselsnummer!!.verdi,
-                Rolletype.BARN,
-            )
         }
         // sjekker om denne reelle mottaker er verge -> forsendelse skal til RM
         if (rm.verge) {
