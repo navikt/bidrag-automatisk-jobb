@@ -8,9 +8,9 @@ import org.springframework.core.task.TaskExecutor
 @Configuration
 class BatchConfiguration {
     companion object {
-        const val CHUNK_SIZE = 500
-        const val PAGE_SIZE = 500
-        const val GRID_SIZE = 10
+        const val CHUNK_SIZE = 100
+        const val PAGE_SIZE = 100
+        const val GRID_SIZE = 5
     }
 
     @Bean
