@@ -30,20 +30,22 @@ class VedtakService(
     @Transactional
     fun behandleVedtak(vedtakHendelse: VedtakHendelse) {
         if (vedtakHendelse.type == Vedtakstype.INDEKSREGULERING) return
-        val stønadsendringer = hentStønadsendringerForBidragOgForskudd(vedtakHendelse)
+        val stønadsendringerFraVedtak = hentStønadsendringerForBidragOgForskudd(vedtakHendelse)
 
-        stønadsendringer?.forEach { (kravhaver, stønadsendringer) ->
+        stønadsendringerFraVedtak?.forEach { (kravhaver, stønadsendringer) ->
             val kravhaverNyesteIdent = identUtils.hentNyesteIdent(kravhaver)
-
-            val lagretBarn =
-                barnRepository.findByKravhaverAndSaksnummer(
-                    kravhaverNyesteIdent.verdi,
-                    stønadsendringer.first().sak.verdi,
-                )
-            if (lagretBarn != null) {
-                oppdaterBarn(lagretBarn, stønadsendringer)
-            } else {
-                opprettBarnFraStønadsendring(kravhaverNyesteIdent, stønadsendringer)
+            val kravhaverAlleIdenter = identUtils.hentAlleIdenter(kravhaver)
+            stønadsendringer.forEach { stønadsendring ->
+                val lagretBarn =
+                    barnRepository.finnBarnForKravhaverIdenterOgSaksnummer(
+                        kravhaverAlleIdenter,
+                        stønadsendring.sak.verdi,
+                    )
+                if (lagretBarn != null) {
+                    oppdaterBarn(lagretBarn, stønadsendringer)
+                } else {
+                    opprettBarnFraStønadsendring(kravhaverNyesteIdent, stønadsendringer)
+                }
             }
         }
     }

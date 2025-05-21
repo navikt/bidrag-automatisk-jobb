@@ -20,6 +20,12 @@ interface BarnRepository : JpaRepository<Barn, Int> {
         pageable: Pageable = Pageable.ofSize(100),
     ): Page<Barn>
 
+    @Query("select b from barn b where b.kravhaver in :identer and b.saksnummer = :saksnummer")
+    fun finnBarnForKravhaverIdenterOgSaksnummer(
+        identer: List<String>,
+        saksnummer: String,
+    ): Barn?
+
     fun findByKravhaverAndSaksnummer(
         kravhaver: String,
         saksnummer: String,
