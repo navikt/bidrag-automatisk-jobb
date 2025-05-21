@@ -5,6 +5,7 @@ import no.nav.bidrag.automatiskjobb.consumer.BidragDokumentForsendelseConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragPersonConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragSamhandlerConsumer
+import no.nav.bidrag.automatiskjobb.mapper.ForsendelseMapper
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import no.nav.bidrag.automatiskjobb.persistence.entity.ForsendelseBestilling
 import no.nav.bidrag.automatiskjobb.persistence.repository.ForsendelseBestillingRepository
@@ -14,15 +15,13 @@ import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.domene.enums.diverse.Språk
 import no.nav.bidrag.domene.enums.rolle.Rolletype
 import no.nav.bidrag.domene.ident.Personident
-import no.nav.bidrag.domene.ident.SamhandlerId
-import no.nav.bidrag.transport.dokument.forsendelse.MottakerIdentTypeTo
-import no.nav.bidrag.transport.dokument.forsendelse.MottakerTo
 import no.nav.bidrag.transport.dokument.numeric
 import no.nav.bidrag.transport.sak.BidragssakDto
 import no.nav.bidrag.transport.sak.RolleDto
 import no.nav.bidrag.transport.samhandler.Områdekode
 import org.springframework.stereotype.Service
 import java.sql.Timestamp
+import java.time.LocalDate
 
 private const val DOKUMENTMAL_BI01B05 = "BI01B05"
 private val log = KotlinLogging.logger {}
@@ -39,9 +38,9 @@ class ForsendelseBestillingService(
     private val forsendelseBestillingRepository: ForsendelseBestillingRepository,
     private val bidragDokumentForsendelseConsumer: BidragDokumentForsendelseConsumer,
     private val bidragSakConsumer: BidragSakConsumer,
-    private val bidragSamhandlerConsumer: BidragSamhandlerConsumer,
     private val bidragPersonConsumer: BidragPersonConsumer,
     private val samhandlerConsumer: BidragSamhandlerConsumer,
+    private val mapper: ForsendelseMapper,
 ) {
     fun opprettForsendelseBestilling(
         aldersjustering: Aldersjustering,
@@ -70,21 +69,29 @@ class ForsendelseBestillingService(
 
     fun slettForsendelse(forsendelseBestilling: ForsendelseBestilling) {
         // Ignorer behandling hvis det er distribuert
-        if (forsendelseBestilling.distribuertTidspunkt != null) return
+        if (forsendelseBestilling.distribuertTidspunkt != null || forsendelseBestilling.slettetTidspunkt != null) return
+
+        if (forsendelseBestilling.forsendelseId == null) {
+            forsendelseBestillingRepository.delete(forsendelseBestilling)
+            return
+        }
 
         bidragDokumentForsendelseConsumer.slettForsendelse(
             forsendelseBestilling.forsendelseId!!,
             forsendelseBestilling.aldersjustering.barn.saksnummer,
         )
         log.info {
-            "Slettet forsendelse ${forsendelseBestilling.forsendelseId} opprettet ${forsendelseBestilling.forsendelseOpprettetTidspunkt}" +
+            "Slettet forsendelse ${forsendelseBestilling.forsendelseId} opprettet ${forsendelseBestilling.forsendelseOpprettetTidspunkt} " +
                 "relatert til aldersjustering ${forsendelseBestilling.aldersjustering.id} og sak ${forsendelseBestilling.aldersjustering.barn.saksnummer}"
         }
         forsendelseBestilling.slettetTidspunkt = Timestamp(System.currentTimeMillis())
     }
 
-    fun opprettForsendelse(forsendelseBestilling: ForsendelseBestilling) {
-        if (!forsendelseBestilling.feilBegrunnelse.isNullOrEmpty()) {
+    fun opprettForsendelse(
+        forsendelseBestilling: ForsendelseBestilling,
+        prosesserFeilet: Boolean,
+    ) {
+        if (!forsendelseBestilling.feilBegrunnelse.isNullOrEmpty() && !prosesserFeilet) {
             log.warn {
                 "Forsendelse bestilling ${forsendelseBestilling.id} har feilet med begrunnelse ${forsendelseBestilling.feilBegrunnelse}. " +
                     "Ignorer bestilling"
@@ -96,6 +103,7 @@ class ForsendelseBestillingService(
             val nyForsendelseBestilling =
                 ForsendelseBestilling(
                     aldersjustering = forsendelseBestilling.aldersjustering,
+                    gjelder = forsendelseBestilling.gjelder,
                     mottaker = forsendelseBestilling.mottaker,
                     rolletype = forsendelseBestilling.rolletype,
                     språkkode = forsendelseBestilling.språkkode,
@@ -123,35 +131,10 @@ class ForsendelseBestillingService(
     }
 
     private fun opprettForsendelseTilBidragDokument(forsendelseBestilling: ForsendelseBestilling) {
-        val mottakerErSamhandler = forsendelseBestilling.mottaker?.let { SamhandlerId(it).gyldig() } == true
-        val navn = if (mottakerErSamhandler) samhandlerConsumer.hentSamhandler(forsendelseBestilling.mottaker!!)?.navn else null
-        val mottaker =
-            MottakerTo(
-                ident = forsendelseBestilling.mottaker,
-                språk = forsendelseBestilling.språkkode?.name,
-                navn = navn,
-                identType =
-                    if (mottakerErSamhandler) {
-                        MottakerIdentTypeTo.SAMHANDLER
-                    } else {
-                        MottakerIdentTypeTo.FNR
-                    },
-            )
-
-        if (forsendelseBestilling.gjelder.isNullOrEmpty() || forsendelseBestilling.mottaker.isNullOrEmpty()) {
-            log.info { "Forsendelse ${forsendelseBestilling.id} har ingen gjelder eller mottaker. Ignorerer forespørsel" }
-            forsendelseBestilling.feilBegrunnelse = "ForsendelseBestilling har ingen gjelder eller mottaker"
-            return
-        }
+        val request = mapper.tilOpprettForsendelseRequest(forsendelseBestilling) ?: return
         try {
             val forsendelseId =
-                bidragDokumentForsendelseConsumer.opprettForsendelse(
-                    forsendelseBestilling.aldersjustering,
-                    forsendelseBestilling.gjelder,
-                    mottaker,
-                    forsendelseBestilling.aldersjustering.barn.saksnummer,
-                    finnEierfogd(forsendelseBestilling.aldersjustering.barn.saksnummer),
-                )
+                bidragDokumentForsendelseConsumer.opprettForsendelse(request)
             forsendelseBestilling.forsendelseId = forsendelseId
             forsendelseBestilling.forsendelseOpprettetTidspunkt = Timestamp(System.currentTimeMillis())
             forsendelseBestilling.feilBegrunnelse = null
@@ -180,8 +163,19 @@ class ForsendelseBestillingService(
             }
             return
         }
+        slettEksisterendeBestillingerSomIkkeErOpprettet(aldersjustering)
         opprettBestillingForBidragspliktig(aldersjustering, sak)
         opprettBestillingForBidragsmottaker(aldersjustering, sak)
+    }
+
+    private fun slettEksisterendeBestillingerSomIkkeErOpprettet(aldersjustering: Aldersjustering) {
+        val eksisterende = forsendelseBestillingRepository.findByAldersjustering(aldersjustering)
+        eksisterende
+            .filter {
+                it.skalSlettes && it.slettetTidspunkt == null || it.forsendelseId == null && it.distribuertTidspunkt == null
+            }.forEach {
+                slettForsendelse(it)
+            }
     }
 
     private fun opprettBestillingForBidragspliktig(
@@ -239,7 +233,7 @@ class ForsendelseBestillingService(
 
     private fun finnRmSomMottaker(barn: RolleDto): ForsendelseGjelderMottakerInfo? {
         // *** REGEL ***
-        // hvis RM er lik barn så betyr det at barnet bor for seg selv. Sendt forsendelse til barnet
+        // hvis RM er lik barn så betyr det at barnet bor for seg selv. Sendt forsendelse til barnet hvis barnet er over 18
         // hvis RM er institusjon
         // hvis institusjon er VERGE -> forsendelse
         // hvis IKKE VERGE -> sjekk om institusjon er barnevern institusjon
@@ -247,9 +241,9 @@ class ForsendelseBestillingService(
         // -> hvis IKKE barnevern inst -> forsendelse til BM
 
         val rm = barn.reellMottaker ?: return null
-        if (rm.ident.verdi == barn.fødselsnummer!!.verdi) {
+        if (rm.ident.verdi == barn.fødselsnummer!!.verdi && erOver18År(barn.fødselsnummer!!)) {
             secureLogger.info {
-                "Fødselsnummer til RM til barn er har samme fødselsnummer som barnet ${barn.fødselsnummer}. Setter mottaker av forsendelsen til barnet"
+                "Fødselsnummer til RM til barn er har samme fødselsnummer som barnet ${barn.fødselsnummer} og barnet er over 18 år. Setter mottaker av forsendelsen til barnet"
             }
             return ForsendelseGjelderMottakerInfo(
                 barn.fødselsnummer!!.verdi,
@@ -300,5 +294,11 @@ class ForsendelseBestillingService(
     private fun finnEierfogd(saksnummer: String): String {
         val sak = bidragSakConsumer.hentSak(saksnummer)
         return sak.eierfogd.verdi
+    }
+
+    private fun erOver18År(personident: Personident): Boolean {
+        val fødselsdato = bidragPersonConsumer.hentFødselsdatoForPerson(personident)
+        // TODO: Bør dette sjekkes for en eksakt dato (feks 1.Juli?). Ikke behov i aldersjustering pga barnet alltid er under 18
+        return fødselsdato != null && fødselsdato.plusYears(18).isBefore(LocalDate.now())
     }
 }

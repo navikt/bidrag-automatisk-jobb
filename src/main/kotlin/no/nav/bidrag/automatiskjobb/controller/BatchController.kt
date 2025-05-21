@@ -188,13 +188,23 @@ class BatchController(
                     "Liste over barn som det skal fattes vedtak for. Om ingen er sendt kjøres alle. Maks lengde på input er 250!",
                 required = false,
             ),
+            Parameter(
+                name = "simuler",
+                example = "false",
+                description =
+                    "Hvis simuler ikke er satt til false så vil det " +
+                        "ikke fattes vedtak men det vil opprettes forsendelse bestilling",
+                required = false,
+            ),
         ],
     )
     fun startFattVedtakAldersjusteringBidragBatch(
         @RequestParam barn: String?,
+        @RequestParam simuler: Boolean = true,
     ): ResponseEntity<Any> {
         fattVedtakOmAldersjusteringerBidragBatch.startFattVedtakOmAldersjusteringBidragBatch(
             barn,
+            simuler,
         )
         return ResponseEntity.ok().build()
     }
@@ -324,8 +334,10 @@ class BatchController(
             ),
         ],
     )
-    fun startOpprettForsendelseAldersjusteringBidragBatch(): ResponseEntity<Any> {
-        opprettForsendelseAldersjusteringerBidragBatch.startOpprettForsendelseAldersjusteringBidragBatch()
+    fun startOpprettForsendelseAldersjusteringBidragBatch(
+        @RequestParam prosesserFeilet: Boolean = false,
+    ): ResponseEntity<Any> {
+        opprettForsendelseAldersjusteringerBidragBatch.startOpprettForsendelseAldersjusteringBidragBatch(prosesserFeilet)
         return ResponseEntity.ok().build()
     }
 

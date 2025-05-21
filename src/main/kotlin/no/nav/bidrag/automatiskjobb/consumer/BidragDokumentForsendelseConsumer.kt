@@ -1,19 +1,12 @@
 package no.nav.bidrag.automatiskjobb.consumer
 
 import no.nav.bidrag.automatiskjobb.SECURE_LOGGER
-import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import no.nav.bidrag.commons.web.client.AbstractRestClient
-import no.nav.bidrag.domene.enums.rolle.SøktAvType
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
-import no.nav.bidrag.domene.enums.vedtak.Vedtakstype
 import no.nav.bidrag.transport.dokument.Avvikshendelse
 import no.nav.bidrag.transport.dokument.DistribuerJournalpostRequest
 import no.nav.bidrag.transport.dokument.DistribuerJournalpostResponse
-import no.nav.bidrag.transport.dokument.forsendelse.BehandlingInfoDto
 import no.nav.bidrag.transport.dokument.forsendelse.ForsendelseConflictResponse
-import no.nav.bidrag.transport.dokument.forsendelse.JournalTema
-import no.nav.bidrag.transport.dokument.forsendelse.MottakerTo
-import no.nav.bidrag.transport.dokument.forsendelse.OpprettDokumentForespørsel
 import no.nav.bidrag.transport.dokument.forsendelse.OpprettForsendelseForespørsel
 import no.nav.bidrag.transport.dokument.forsendelse.OpprettForsendelseRespons
 import org.springframework.beans.factory.annotation.Qualifier
@@ -36,41 +29,7 @@ class BidragDokumentForsendelseConsumer(
 ) : AbstractRestClient(restTemplate, "bidrag-dokument-forsendelse") {
     private fun createUri(path: String = "") = URI.create("$url/$path")
 
-    fun opprettForsendelse(
-        aldersjustering: Aldersjustering,
-        gjelder: String,
-        mottakerTo: MottakerTo,
-        saksnummer: String,
-        enhet: String,
-    ): Long? {
-        val opprettForsendelseForespørsel =
-            OpprettForsendelseForespørsel(
-                unikReferanse = "${aldersjustering.unikReferanse}_${mottakerTo.ident}",
-                gjelderIdent = gjelder,
-                mottaker = mottakerTo,
-                saksnummer = saksnummer,
-                enhet = enhet,
-                batchId = aldersjustering.batchId,
-                tema = JournalTema.BID,
-                behandlingInfo =
-                    BehandlingInfoDto(
-                        vedtakId = aldersjustering.vedtak.toString(),
-                        stonadType = aldersjustering.stønadstype,
-                        barnIBehandling = listOf(aldersjustering.barn.kravhaver),
-                        erFattetBeregnet = true,
-                        soknadType = "EGET_TILTAK",
-                        soknadFra = SøktAvType.NAV_BIDRAG,
-                        vedtakType = Vedtakstype.ALDERSJUSTERING,
-                    ),
-                dokumenter =
-                    listOf(
-                        OpprettDokumentForespørsel(
-                            dokumentmalId = dokumentMaler[aldersjustering.stønadstype],
-                            bestillDokument = true,
-                        ),
-                    ),
-            )
-
+    fun opprettForsendelse(opprettForsendelseForespørsel: OpprettForsendelseForespørsel): Long? {
         try {
             val forsendelseResponse =
                 postForNonNullEntity<OpprettForsendelseRespons>(

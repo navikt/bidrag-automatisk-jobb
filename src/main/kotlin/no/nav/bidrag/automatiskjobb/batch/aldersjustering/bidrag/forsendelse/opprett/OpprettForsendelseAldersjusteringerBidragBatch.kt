@@ -11,10 +11,11 @@ class OpprettForsendelseAldersjusteringerBidragBatch(
     private val jobLauncher: JobLauncher,
     private val opprettForsendelseAldersjusteringerBidragJob: Job,
 ) {
-    fun startOpprettForsendelseAldersjusteringBidragBatch() {
+    fun startOpprettForsendelseAldersjusteringBidragBatch(prosesserFeilet: Boolean = false) {
         jobLauncher.run(
             opprettForsendelseAldersjusteringerBidragJob,
             JobParametersBuilder()
+                .addString("prosesserFeilet", prosesserFeilet.toString())
                 .addString("runId", UUID.randomUUID().toString())
                 .toJobParameters(),
         )
