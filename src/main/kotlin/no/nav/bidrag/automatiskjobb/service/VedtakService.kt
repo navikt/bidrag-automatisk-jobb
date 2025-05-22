@@ -1,5 +1,7 @@
 package no.nav.bidrag.automatiskjobb.service
 
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import no.nav.bidrag.automatiskjobb.consumer.BidragPersonConsumer
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
@@ -28,14 +30,17 @@ class VedtakService(
     }
 
     @Transactional
-    fun behandleVedtak(vedtakHendelse: VedtakHendelse) {
+    suspend fun behandleVedtak(vedtakHendelse: VedtakHendelse) {
         if (vedtakHendelse.type == Vedtakstype.INDEKSREGULERING) return
         val stønadsendringerFraVedtak = hentStønadsendringerForBidragOgForskudd(vedtakHendelse)
-
         stønadsendringerFraVedtak?.forEach { (kravhaverSak, stønadsendringer) ->
             val (sak, kravhaver) = kravhaverSak
-            val kravhaverNyesteIdent = identUtils.hentNyesteIdent(kravhaver)
-            val kravhaverAlleIdenter = identUtils.hentAlleIdenter(kravhaver)
+            val (kravhaverNyesteIdent, kravhaverAlleIdenter) =
+                coroutineScope {
+                    val nyesteIdentDeferred = async { identUtils.hentNyesteIdent(kravhaver) }
+                    val alleIdenterDeferred = async { identUtils.hentAlleIdenter(kravhaver) }
+                    nyesteIdentDeferred.await() to alleIdenterDeferred.await()
+                }
             val lagretBarn =
                 barnRepository.finnBarnForKravhaverIdenterOgSaksnummer(
                     kravhaverAlleIdenter,
