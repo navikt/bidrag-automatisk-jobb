@@ -1,5 +1,6 @@
 package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.opprett
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.service.AldersjusteringService
@@ -9,6 +10,8 @@ import org.springframework.batch.core.annotation.BeforeStep
 import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.stereotype.Component
+
+private val log = KotlinLogging.logger {}
 
 @Component
 @StepScope
@@ -24,9 +27,11 @@ class OpprettAldersjusteringerBidragBatchProcessor(
         år = stepExecution.jobParameters.getLong("år")
     }
 
-    override fun process(barn: Barn): Aldersjustering? {
-        val aldersjustering =
+    override fun process(barn: Barn): Aldersjustering? =
+        try {
             aldersjusteringService.opprettAldersjusteringForBarn(barn, år!!.toInt(), runId!!, Stønadstype.BIDRAG)
-        return aldersjustering
-    }
+        } catch (e: Exception) {
+            log.error(e) { "Det skjedde en feil ved opprettelse av aldersjustering for barn ${barn.id}" }
+            null
+        }
 }

@@ -21,7 +21,7 @@ class SlettVedtaksforslagBatchProcessor(
                 aldersjustering = item,
             )
         } catch (e: Exception) {
-            log.warn(e) { "Det skjedde en feil ved prosessering av aldersjustering ${item.id}" }
+            log.error(e) { "Det skjedde en feil ved prosessering av aldersjustering ${item.id}" }
             null
         }
 }
