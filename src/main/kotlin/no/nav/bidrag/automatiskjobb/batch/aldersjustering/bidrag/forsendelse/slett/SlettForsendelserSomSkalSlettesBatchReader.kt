@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.forsendelse.distribuer
+package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.forsendelse.slett
 
 import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.PAGE_SIZE
 import no.nav.bidrag.automatiskjobb.persistence.entity.ForsendelseBestilling
