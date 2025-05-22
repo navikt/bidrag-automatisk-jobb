@@ -15,10 +15,10 @@ class ForsendelseBestillingRowMapper(
         rowNum: Int,
     ): ForsendelseBestilling =
         ForsendelseBestilling(
-            id = rs.getInt("id"),
+            id = rs.getIntOrNull("id"),
             aldersjustering = aldersjusteringRepository.findById(rs.getInt("aldersjustering_id")).get(),
-            forsendelseId = rs.getLong("forsendelse_id"),
-            journalpostId = rs.getLong("journalpost_id"),
+            forsendelseId = rs.getLongOrNull("forsendelse_id"),
+            journalpostId = rs.getLongOrNull("journalpost_id"),
             rolletype = rs.getString("rolletype")?.let { Rolletype.valueOf(it) },
             gjelder = rs.getString("gjelder"),
             mottaker = rs.getString("mottaker"),
