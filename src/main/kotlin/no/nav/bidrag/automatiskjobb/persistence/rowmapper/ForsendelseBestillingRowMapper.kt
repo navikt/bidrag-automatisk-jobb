@@ -16,7 +16,7 @@ class ForsendelseBestillingRowMapper(
     ): ForsendelseBestilling =
         ForsendelseBestilling(
             id = rs.getInt("id"),
-            aldersjustering = aldersjusteringRepository.findById(rs.getInt("aldersjustering")).get(),
+            aldersjustering = aldersjusteringRepository.findById(rs.getInt("aldersjustering_id")).get(),
             forsendelseId = rs.getLong("forsendelse_id"),
             journalpostId = rs.getLong("journalpost_id"),
             rolletype = rs.getString("rolletype")?.let { Rolletype.valueOf(it) },

@@ -51,7 +51,6 @@ class SlettOppgaveAldersjusteringerBidragBatchReader(
                 setSortKeys(mapOf("id" to Order.ASCENDING))
             }
 
-        this.setPageSize(PAGE_SIZE)
         try {
             this.setQueryProvider(sqlPagingQuaryPoviderFactoryBean.`object`)
             this.pageSize = PAGE_SIZE
