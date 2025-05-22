@@ -6,7 +6,6 @@ import no.nav.bidrag.commons.web.client.AbstractRestClient
 import no.nav.bidrag.transport.behandling.vedtak.request.HentVedtakForStønadRequest
 import no.nav.bidrag.transport.behandling.vedtak.request.OpprettVedtakRequestDto
 import no.nav.bidrag.transport.behandling.vedtak.response.HentVedtakForStønadResponse
-import no.nav.bidrag.transport.behandling.vedtak.response.OpprettVedtakResponseDto
 import no.nav.bidrag.transport.behandling.vedtak.response.VedtakDto
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
@@ -26,12 +25,6 @@ class BidragVedtakConsumer(
     BeregningVedtakConsumer {
     private val bidragVedtakUri
         get() = UriComponentsBuilder.fromUri(bidragVedtakUrl)
-
-    fun fatteVedtak(request: OpprettVedtakRequestDto): OpprettVedtakResponseDto =
-        postForNonNullEntity(
-            bidragVedtakUri.pathSegment("vedtak").build().toUri(),
-            request,
-        )
 
     fun hentVedtaksforslagBasertPåReferanase(referanse: String): VedtakDto? =
         postForEntity(
@@ -93,6 +86,11 @@ class BidragVedtakConsumer(
         ) ?: emptyList()
 
     @Cacheable(VEDTAK_CACHE)
+    @Retryable(
+        value = [Exception::class],
+        maxAttempts = 3,
+        backoff = Backoff(delay = 200, maxDelay = 1000, multiplier = 2.0),
+    )
     override fun hentVedtak(vedtakId: Int): VedtakDto? =
         getForEntity(
             bidragVedtakUri

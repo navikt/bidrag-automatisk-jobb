@@ -23,11 +23,6 @@ class OppgaveConsumer(
     private val oppgaveURI
         get() = UriComponentsBuilder.fromUri(oppgaveUrl).pathSegment("api", "v1", "oppgaver")
 
-    @Retryable(
-        value = [Exception::class],
-        maxAttempts = 3,
-        backoff = Backoff(delay = 200, maxDelay = 1000, multiplier = 2.0),
-    )
     fun opprettOppgave(request: OpprettOppgaveRequest): OppgaveDto =
         postForNonNullEntity(
             oppgaveURI.build().toUri(),
