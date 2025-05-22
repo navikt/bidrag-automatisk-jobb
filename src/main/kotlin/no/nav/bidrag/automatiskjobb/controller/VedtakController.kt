@@ -30,7 +30,7 @@ class VedtakController(
             ),
         ],
     )
-    fun opprettVedtak(vedtakHendelse: VedtakHendelse): ResponseEntity<Any> {
+    suspend fun opprettVedtak(vedtakHendelse: VedtakHendelse): ResponseEntity<Any> {
         vedtakService.behandleVedtak(vedtakHendelse)
         return ResponseEntity.ok().build()
     }

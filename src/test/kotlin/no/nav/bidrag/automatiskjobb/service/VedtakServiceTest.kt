@@ -1,6 +1,7 @@
 package no.nav.bidrag.automatiskjobb.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.kotest.common.runBlocking
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.mockk.every
@@ -61,430 +62,437 @@ class VedtakServiceTest {
     }
 
     @Test
-    fun skalOppretteNyttBarnForBidrag() {
-        val vedtakHendelse = opprettVedtakHendelse(Stønadstype.BIDRAG, Innkrevingstype.MED_INNKREVING)
+    fun skalOppretteNyttBarnForBidrag(): Unit =
+        runBlocking {
+            val vedtakHendelse = opprettVedtakHendelse(Stønadstype.BIDRAG, Innkrevingstype.MED_INNKREVING)
 
-        mocks(vedtakHendelse)
+            mocks(vedtakHendelse)
 
-        vedtakService.behandleVedtak(vedtakHendelse)
+            vedtakService.behandleVedtak(vedtakHendelse)
 
-        verify(exactly = 1) { barnRepository.save(any()) }
-        barnSlot.captured shouldNotBe null
-        barnSlot.captured.saksnummer shouldBe vedtakHendelse.saksnummer
-        barnSlot.captured.skyldner shouldBe
-            vedtakHendelse.stønadsendringListe
-                ?.first()
-                ?.skyldner
-                ?.verdi
-        barnSlot.captured.kravhaver shouldBe
-            vedtakHendelse.stønadsendringListe
-                ?.first()
-                ?.kravhaver
-                ?.verdi
-        barnSlot.captured.bidragFra shouldBe
-            vedtakHendelse.stønadsendringListe
-                ?.first()
-                ?.periodeListe
-                ?.first()
-                ?.periode
-                ?.toDatoperiode()
-                ?.fom
-        barnSlot.captured.bidragTil shouldBe
-            vedtakHendelse.stønadsendringListe
-                ?.first()
-                ?.periodeListe
-                ?.first()
-                ?.periode
-                ?.toDatoperiode()
-                ?.til
-        barnSlot.captured.forskuddFra shouldBe null
-        barnSlot.captured.forskuddTil shouldBe null
-    }
-
-    @Test
-    fun skalOppretteNyttBarnForFlereSaker() {
-        val kravhaver = Personident(PersonidentGenerator.genererFødselsnummer())
-        val vedtakHendelse =
-            opprettVedtakHendelse(
-                Stønadstype.BIDRAG,
-                Innkrevingstype.MED_INNKREVING,
-                stønadsendringListe =
-                    listOf(
-                        Stønadsendring(
-                            type = Stønadstype.BIDRAG,
-                            sak = Saksnummer("112323"),
-                            skyldner = Personident(PersonidentGenerator.genererFødselsnummer()),
-                            kravhaver = kravhaver,
-                            mottaker = Personident(PersonidentGenerator.genererFødselsnummer()),
-                            innkreving = Innkrevingstype.MED_INNKREVING,
-                            beslutning = Beslutningstype.ENDRING,
-                            periodeListe =
-                                listOf(
-                                    Periode(
-                                        periode = ÅrMånedsperiode(LocalDate.now().minusMonths(2).withDayOfMonth(1), null),
-                                        beløp = BigDecimal.valueOf(1000),
-                                        valutakode = "NOK",
-                                        resultatkode = "OK",
-                                        delytelseId = null,
-                                    ),
-                                ),
-                            førsteIndeksreguleringsår = null,
-                            omgjørVedtakId = null,
-                            eksternReferanse = null,
-                        ),
-                        Stønadsendring(
-                            type = Stønadstype.FORSKUDD,
-                            sak = Saksnummer("123"),
-                            skyldner = Personident(PersonidentGenerator.genererFødselsnummer()),
-                            kravhaver = kravhaver,
-                            mottaker = Personident(PersonidentGenerator.genererFødselsnummer()),
-                            innkreving = Innkrevingstype.MED_INNKREVING,
-                            beslutning = Beslutningstype.ENDRING,
-                            periodeListe =
-                                listOf(
-                                    Periode(
-                                        periode = ÅrMånedsperiode(LocalDate.now().minusMonths(1).withDayOfMonth(1), null),
-                                        beløp = BigDecimal.valueOf(1000),
-                                        valutakode = "NOK",
-                                        resultatkode = "OK",
-                                        delytelseId = null,
-                                    ),
-                                ),
-                            førsteIndeksreguleringsår = null,
-                            omgjørVedtakId = null,
-                            eksternReferanse = null,
-                        ),
-                    ),
-            )
-
-        mocks(vedtakHendelse)
-
-        vedtakService.behandleVedtak(vedtakHendelse)
-
-        verify(exactly = 1) {
-            barnRepository.save(
-                withArg {
-                    it.saksnummer shouldBe "123"
-                },
-            )
+            verify(exactly = 1) { barnRepository.save(any()) }
+            barnSlot.captured shouldNotBe null
+            barnSlot.captured.saksnummer shouldBe vedtakHendelse.saksnummer
+            barnSlot.captured.skyldner shouldBe
+                vedtakHendelse.stønadsendringListe
+                    ?.first()
+                    ?.skyldner
+                    ?.verdi
+            barnSlot.captured.kravhaver shouldBe
+                vedtakHendelse.stønadsendringListe
+                    ?.first()
+                    ?.kravhaver
+                    ?.verdi
+            barnSlot.captured.bidragFra shouldBe
+                vedtakHendelse.stønadsendringListe
+                    ?.first()
+                    ?.periodeListe
+                    ?.first()
+                    ?.periode
+                    ?.toDatoperiode()
+                    ?.fom
+            barnSlot.captured.bidragTil shouldBe
+                vedtakHendelse.stønadsendringListe
+                    ?.first()
+                    ?.periodeListe
+                    ?.first()
+                    ?.periode
+                    ?.toDatoperiode()
+                    ?.til
+            barnSlot.captured.forskuddFra shouldBe null
+            barnSlot.captured.forskuddTil shouldBe null
         }
 
-        verify(exactly = 1) {
-            barnRepository.save(
-                withArg {
-                    it.saksnummer shouldBe "112323"
-                },
-            )
+    @Test
+    fun skalOppretteNyttBarnForFlereSaker(): Unit =
+        runBlocking {
+            val kravhaver = Personident(PersonidentGenerator.genererFødselsnummer())
+            val vedtakHendelse =
+                opprettVedtakHendelse(
+                    Stønadstype.BIDRAG,
+                    Innkrevingstype.MED_INNKREVING,
+                    stønadsendringListe =
+                        listOf(
+                            Stønadsendring(
+                                type = Stønadstype.BIDRAG,
+                                sak = Saksnummer("112323"),
+                                skyldner = Personident(PersonidentGenerator.genererFødselsnummer()),
+                                kravhaver = kravhaver,
+                                mottaker = Personident(PersonidentGenerator.genererFødselsnummer()),
+                                innkreving = Innkrevingstype.MED_INNKREVING,
+                                beslutning = Beslutningstype.ENDRING,
+                                periodeListe =
+                                    listOf(
+                                        Periode(
+                                            periode = ÅrMånedsperiode(LocalDate.now().minusMonths(2).withDayOfMonth(1), null),
+                                            beløp = BigDecimal.valueOf(1000),
+                                            valutakode = "NOK",
+                                            resultatkode = "OK",
+                                            delytelseId = null,
+                                        ),
+                                    ),
+                                førsteIndeksreguleringsår = null,
+                                omgjørVedtakId = null,
+                                eksternReferanse = null,
+                            ),
+                            Stønadsendring(
+                                type = Stønadstype.FORSKUDD,
+                                sak = Saksnummer("123"),
+                                skyldner = Personident(PersonidentGenerator.genererFødselsnummer()),
+                                kravhaver = kravhaver,
+                                mottaker = Personident(PersonidentGenerator.genererFødselsnummer()),
+                                innkreving = Innkrevingstype.MED_INNKREVING,
+                                beslutning = Beslutningstype.ENDRING,
+                                periodeListe =
+                                    listOf(
+                                        Periode(
+                                            periode = ÅrMånedsperiode(LocalDate.now().minusMonths(1).withDayOfMonth(1), null),
+                                            beløp = BigDecimal.valueOf(1000),
+                                            valutakode = "NOK",
+                                            resultatkode = "OK",
+                                            delytelseId = null,
+                                        ),
+                                    ),
+                                førsteIndeksreguleringsår = null,
+                                omgjørVedtakId = null,
+                                eksternReferanse = null,
+                            ),
+                        ),
+                )
+
+            mocks(vedtakHendelse)
+
+            vedtakService.behandleVedtak(vedtakHendelse)
+
+            verify(exactly = 1) {
+                barnRepository.save(
+                    withArg {
+                        it.saksnummer shouldBe "123"
+                    },
+                )
+            }
+
+            verify(exactly = 1) {
+                barnRepository.save(
+                    withArg {
+                        it.saksnummer shouldBe "112323"
+                    },
+                )
+            }
         }
-    }
 
     @Test
-    fun skalOppretteNyttBarnForBidragOgForskudd() {
-        val kravhaver = Personident(PersonidentGenerator.genererFødselsnummer())
-        val vedtakHendelse =
-            opprettVedtakHendelse(
-                Stønadstype.BIDRAG,
-                Innkrevingstype.MED_INNKREVING,
-                stønadsendringListe =
-                    listOf(
-                        Stønadsendring(
-                            type = Stønadstype.BIDRAG,
-                            sak = Saksnummer("123"),
-                            skyldner = Personident(PersonidentGenerator.genererFødselsnummer()),
-                            kravhaver = kravhaver,
-                            mottaker = Personident(PersonidentGenerator.genererFødselsnummer()),
-                            innkreving = Innkrevingstype.MED_INNKREVING,
-                            beslutning = Beslutningstype.ENDRING,
-                            periodeListe =
-                                listOf(
-                                    Periode(
-                                        periode = ÅrMånedsperiode(LocalDate.now().minusMonths(2).withDayOfMonth(1), null),
-                                        beløp = BigDecimal.valueOf(1000),
-                                        valutakode = "NOK",
-                                        resultatkode = "OK",
-                                        delytelseId = null,
+    fun skalOppretteNyttBarnForBidragOgForskudd(): Unit =
+        runBlocking {
+            val kravhaver = Personident(PersonidentGenerator.genererFødselsnummer())
+            val vedtakHendelse =
+                opprettVedtakHendelse(
+                    Stønadstype.BIDRAG,
+                    Innkrevingstype.MED_INNKREVING,
+                    stønadsendringListe =
+                        listOf(
+                            Stønadsendring(
+                                type = Stønadstype.BIDRAG,
+                                sak = Saksnummer("123"),
+                                skyldner = Personident(PersonidentGenerator.genererFødselsnummer()),
+                                kravhaver = kravhaver,
+                                mottaker = Personident(PersonidentGenerator.genererFødselsnummer()),
+                                innkreving = Innkrevingstype.MED_INNKREVING,
+                                beslutning = Beslutningstype.ENDRING,
+                                periodeListe =
+                                    listOf(
+                                        Periode(
+                                            periode = ÅrMånedsperiode(LocalDate.now().minusMonths(2).withDayOfMonth(1), null),
+                                            beløp = BigDecimal.valueOf(1000),
+                                            valutakode = "NOK",
+                                            resultatkode = "OK",
+                                            delytelseId = null,
+                                        ),
                                     ),
-                                ),
-                            førsteIndeksreguleringsår = null,
-                            omgjørVedtakId = null,
-                            eksternReferanse = null,
-                        ),
-                        Stønadsendring(
-                            type = Stønadstype.FORSKUDD,
-                            sak = Saksnummer("123"),
-                            skyldner = Personident(PersonidentGenerator.genererFødselsnummer()),
-                            kravhaver = kravhaver,
-                            mottaker = Personident(PersonidentGenerator.genererFødselsnummer()),
-                            innkreving = Innkrevingstype.MED_INNKREVING,
-                            beslutning = Beslutningstype.ENDRING,
-                            periodeListe =
-                                listOf(
-                                    Periode(
-                                        periode = ÅrMånedsperiode(LocalDate.now().minusMonths(1).withDayOfMonth(1), null),
-                                        beløp = BigDecimal.valueOf(1000),
-                                        valutakode = "NOK",
-                                        resultatkode = "OK",
-                                        delytelseId = null,
+                                førsteIndeksreguleringsår = null,
+                                omgjørVedtakId = null,
+                                eksternReferanse = null,
+                            ),
+                            Stønadsendring(
+                                type = Stønadstype.FORSKUDD,
+                                sak = Saksnummer("123"),
+                                skyldner = Personident(PersonidentGenerator.genererFødselsnummer()),
+                                kravhaver = kravhaver,
+                                mottaker = Personident(PersonidentGenerator.genererFødselsnummer()),
+                                innkreving = Innkrevingstype.MED_INNKREVING,
+                                beslutning = Beslutningstype.ENDRING,
+                                periodeListe =
+                                    listOf(
+                                        Periode(
+                                            periode = ÅrMånedsperiode(LocalDate.now().minusMonths(1).withDayOfMonth(1), null),
+                                            beløp = BigDecimal.valueOf(1000),
+                                            valutakode = "NOK",
+                                            resultatkode = "OK",
+                                            delytelseId = null,
+                                        ),
                                     ),
-                                ),
-                            førsteIndeksreguleringsår = null,
-                            omgjørVedtakId = null,
-                            eksternReferanse = null,
+                                førsteIndeksreguleringsår = null,
+                                omgjørVedtakId = null,
+                                eksternReferanse = null,
+                            ),
                         ),
-                    ),
-            )
+                )
 
-        mocks(vedtakHendelse)
+            mocks(vedtakHendelse)
 
-        vedtakService.behandleVedtak(vedtakHendelse)
+            vedtakService.behandleVedtak(vedtakHendelse)
 
-        verify(exactly = 1) { barnRepository.save(any()) }
-        barnSlot.captured shouldNotBe null
-        barnSlot.captured.saksnummer shouldBe vedtakHendelse.saksnummer
-        barnSlot.captured.skyldner shouldBe
-            vedtakHendelse.stønadsendringListe
-                ?.first()
-                ?.skyldner
-                ?.verdi
-        barnSlot.captured.kravhaver shouldBe
-            vedtakHendelse.stønadsendringListe
-                ?.first()
-                ?.kravhaver
-                ?.verdi
-        barnSlot.captured.bidragFra shouldBe
-            vedtakHendelse.stønadsendringListe
-                ?.first()
-                ?.periodeListe
-                ?.first()
-                ?.periode
-                ?.toDatoperiode()
-                ?.fom
-        barnSlot.captured.bidragTil shouldBe
-            vedtakHendelse.stønadsendringListe
-                ?.first()
-                ?.periodeListe
-                ?.first()
-                ?.periode
-                ?.toDatoperiode()
-                ?.til
-        barnSlot.captured.forskuddFra shouldBe
-            vedtakHendelse.stønadsendringListe
-                ?.last()
-                ?.periodeListe
-                ?.first()
-                ?.periode
-                ?.toDatoperiode()
-                ?.fom
-        barnSlot.captured.forskuddTil shouldBe
-            vedtakHendelse.stønadsendringListe
-                ?.last()
-                ?.periodeListe
-                ?.first()
-                ?.periode
-                ?.toDatoperiode()
-                ?.til
-    }
+            verify(exactly = 1) { barnRepository.save(any()) }
+            barnSlot.captured shouldNotBe null
+            barnSlot.captured.saksnummer shouldBe vedtakHendelse.saksnummer
+            barnSlot.captured.skyldner shouldBe
+                vedtakHendelse.stønadsendringListe
+                    ?.first()
+                    ?.skyldner
+                    ?.verdi
+            barnSlot.captured.kravhaver shouldBe
+                vedtakHendelse.stønadsendringListe
+                    ?.first()
+                    ?.kravhaver
+                    ?.verdi
+            barnSlot.captured.bidragFra shouldBe
+                vedtakHendelse.stønadsendringListe
+                    ?.first()
+                    ?.periodeListe
+                    ?.first()
+                    ?.periode
+                    ?.toDatoperiode()
+                    ?.fom
+            barnSlot.captured.bidragTil shouldBe
+                vedtakHendelse.stønadsendringListe
+                    ?.first()
+                    ?.periodeListe
+                    ?.first()
+                    ?.periode
+                    ?.toDatoperiode()
+                    ?.til
+            barnSlot.captured.forskuddFra shouldBe
+                vedtakHendelse.stønadsendringListe
+                    ?.last()
+                    ?.periodeListe
+                    ?.first()
+                    ?.periode
+                    ?.toDatoperiode()
+                    ?.fom
+            barnSlot.captured.forskuddTil shouldBe
+                vedtakHendelse.stønadsendringListe
+                    ?.last()
+                    ?.periodeListe
+                    ?.first()
+                    ?.periode
+                    ?.toDatoperiode()
+                    ?.til
+        }
 
     @Test
-    fun skalOppretteToBarnOmVedtakInnholderToKravhavere() {
-        val vedtakHendelse =
-            opprettVedtakHendelse(
-                Stønadstype.BIDRAG,
-                Innkrevingstype.MED_INNKREVING,
-                stønadsendringListe =
-                    listOf(
-                        Stønadsendring(
-                            type = Stønadstype.BIDRAG,
-                            sak = Saksnummer("123"),
-                            skyldner = Personident(PersonidentGenerator.genererFødselsnummer()),
-                            kravhaver =
-                                Personident(
-                                    PersonidentGenerator.genererFødselsnummer(
-                                        innsendtFodselsdato = LocalDate.now().minusYears(10),
+    fun skalOppretteToBarnOmVedtakInnholderToKravhavere(): Unit =
+        runBlocking {
+            val vedtakHendelse =
+                opprettVedtakHendelse(
+                    Stønadstype.BIDRAG,
+                    Innkrevingstype.MED_INNKREVING,
+                    stønadsendringListe =
+                        listOf(
+                            Stønadsendring(
+                                type = Stønadstype.BIDRAG,
+                                sak = Saksnummer("123"),
+                                skyldner = Personident(PersonidentGenerator.genererFødselsnummer()),
+                                kravhaver =
+                                    Personident(
+                                        PersonidentGenerator.genererFødselsnummer(
+                                            innsendtFodselsdato = LocalDate.now().minusYears(10),
+                                        ),
                                     ),
-                                ),
-                            mottaker = Personident(PersonidentGenerator.genererFødselsnummer()),
-                            innkreving = Innkrevingstype.MED_INNKREVING,
-                            beslutning = Beslutningstype.ENDRING,
-                            periodeListe =
-                                listOf(
-                                    Periode(
-                                        periode = ÅrMånedsperiode(LocalDate.now().minusMonths(2).withDayOfMonth(1), null),
-                                        beløp = BigDecimal.valueOf(1000),
-                                        valutakode = "NOK",
-                                        resultatkode = "OK",
-                                        delytelseId = null,
+                                mottaker = Personident(PersonidentGenerator.genererFødselsnummer()),
+                                innkreving = Innkrevingstype.MED_INNKREVING,
+                                beslutning = Beslutningstype.ENDRING,
+                                periodeListe =
+                                    listOf(
+                                        Periode(
+                                            periode = ÅrMånedsperiode(LocalDate.now().minusMonths(2).withDayOfMonth(1), null),
+                                            beløp = BigDecimal.valueOf(1000),
+                                            valutakode = "NOK",
+                                            resultatkode = "OK",
+                                            delytelseId = null,
+                                        ),
                                     ),
-                                ),
-                            førsteIndeksreguleringsår = null,
-                            omgjørVedtakId = null,
-                            eksternReferanse = null,
+                                førsteIndeksreguleringsår = null,
+                                omgjørVedtakId = null,
+                                eksternReferanse = null,
+                            ),
+                            Stønadsendring(
+                                type = Stønadstype.BIDRAG,
+                                sak = Saksnummer("123"),
+                                skyldner = Personident(PersonidentGenerator.genererFødselsnummer()),
+                                kravhaver =
+                                    Personident(
+                                        PersonidentGenerator.genererFødselsnummer(
+                                            innsendtFodselsdato = LocalDate.now().minusYears(12),
+                                        ),
+                                    ),
+                                mottaker = Personident(PersonidentGenerator.genererFødselsnummer()),
+                                innkreving = Innkrevingstype.MED_INNKREVING,
+                                beslutning = Beslutningstype.ENDRING,
+                                periodeListe =
+                                    listOf(
+                                        Periode(
+                                            periode = ÅrMånedsperiode(LocalDate.now().minusMonths(1).withDayOfMonth(1), null),
+                                            beløp = BigDecimal.valueOf(1000),
+                                            valutakode = "NOK",
+                                            resultatkode = "OK",
+                                            delytelseId = null,
+                                        ),
+                                    ),
+                                førsteIndeksreguleringsår = null,
+                                omgjørVedtakId = null,
+                                eksternReferanse = null,
+                            ),
                         ),
-                        Stønadsendring(
-                            type = Stønadstype.BIDRAG,
-                            sak = Saksnummer("123"),
-                            skyldner = Personident(PersonidentGenerator.genererFødselsnummer()),
-                            kravhaver =
-                                Personident(
-                                    PersonidentGenerator.genererFødselsnummer(
-                                        innsendtFodselsdato = LocalDate.now().minusYears(12),
-                                    ),
-                                ),
-                            mottaker = Personident(PersonidentGenerator.genererFødselsnummer()),
-                            innkreving = Innkrevingstype.MED_INNKREVING,
-                            beslutning = Beslutningstype.ENDRING,
-                            periodeListe =
-                                listOf(
-                                    Periode(
-                                        periode = ÅrMånedsperiode(LocalDate.now().minusMonths(1).withDayOfMonth(1), null),
-                                        beløp = BigDecimal.valueOf(1000),
-                                        valutakode = "NOK",
-                                        resultatkode = "OK",
-                                        delytelseId = null,
-                                    ),
-                                ),
-                            førsteIndeksreguleringsår = null,
-                            omgjørVedtakId = null,
-                            eksternReferanse = null,
-                        ),
-                    ),
-            )
+                )
 
-        mocks(vedtakHendelse)
+            mocks(vedtakHendelse)
 
-        vedtakService.behandleVedtak(vedtakHendelse)
+            vedtakService.behandleVedtak(vedtakHendelse)
 
-        verify(exactly = 2) { barnRepository.save(any()) }
-    }
+            verify(exactly = 2) { barnRepository.save(any()) }
+        }
 
     @Test
-    fun vedtakUtenInnkrevingSkalIkkeOppretteBarn() {
-        val vedtakHendelse = opprettVedtakHendelse(Stønadstype.BIDRAG, Innkrevingstype.UTEN_INNKREVING)
+    fun vedtakUtenInnkrevingSkalIkkeOppretteBarn(): Unit =
+        runBlocking {
+            val vedtakHendelse = opprettVedtakHendelse(Stønadstype.BIDRAG, Innkrevingstype.UTEN_INNKREVING)
 
-        mocks(vedtakHendelse)
+            mocks(vedtakHendelse)
 
-        vedtakService.behandleVedtak(vedtakHendelse)
+            vedtakService.behandleVedtak(vedtakHendelse)
 
-        verify(exactly = 0) { barnRepository.save(any()) }
-    }
-
-    @Test
-    fun skalOppdatereEksisterendeBarn() {
-        val kravhaver = Personident(PersonidentGenerator.genererFødselsnummer())
-        val eksisterendeBarn =
-            Barn(
-                saksnummer = "123",
-                kravhaver = kravhaver.verdi,
-                fødselsdato = LocalDate.now().minusYears(10),
-                skyldner = "123",
-                forskuddFra = LocalDate.now().minusMonths(2),
-                forskuddTil = LocalDate.now().minusMonths(1),
-                bidragFra = LocalDate.now().minusMonths(8),
-                bidragTil = LocalDate.now().minusMonths(5),
-            )
-
-        val vedtakHendelse =
-            opprettVedtakHendelse(Stønadstype.BIDRAG, Innkrevingstype.MED_INNKREVING, kravhaver = kravhaver)
-
-        mocks(vedtakHendelse, eksisterendeBarn)
-
-        vedtakService.behandleVedtak(vedtakHendelse)
-
-        verify(exactly = 0) { barnRepository.save(any()) }
-        eksisterendeBarn shouldNotBe null
-        eksisterendeBarn.saksnummer shouldBe vedtakHendelse.saksnummer
-        eksisterendeBarn.skyldner shouldBe
-            vedtakHendelse.stønadsendringListe
-                ?.first()
-                ?.skyldner
-                ?.verdi
-        eksisterendeBarn.kravhaver shouldBe
-            vedtakHendelse.stønadsendringListe
-                ?.first()
-                ?.kravhaver
-                ?.verdi
-        eksisterendeBarn.bidragFra shouldBe eksisterendeBarn.bidragFra
-        eksisterendeBarn.bidragTil shouldBe
-            vedtakHendelse.stønadsendringListe
-                ?.first()
-                ?.periodeListe
-                ?.first()
-                ?.periode
-                ?.toDatoperiode()
-                ?.til
-        eksisterendeBarn.forskuddFra shouldBe eksisterendeBarn.forskuddFra
-        eksisterendeBarn.forskuddTil shouldBe eksisterendeBarn.forskuddTil
-    }
+            verify(exactly = 0) { barnRepository.save(any()) }
+        }
 
     @Test
-    fun skalOpphøreLøpendeBidragPåBarnNårBeløpErNull() {
-        val kravhaver = Personident(PersonidentGenerator.genererFødselsnummer())
-        val eksisterendeBidragFra = LocalDate.now().minusMonths(5)
-        val eksisterendeForskuddFra = LocalDate.now().minusMonths(2)
-        val eksisterendeForskuddTil = LocalDate.now().minusMonths(1)
-        val eksisterendeBarn =
-            Barn(
-                saksnummer = "123",
-                kravhaver = kravhaver.verdi,
-                fødselsdato = LocalDate.now().minusYears(10),
-                skyldner = "123",
-                forskuddFra = eksisterendeForskuddFra,
-                forskuddTil = eksisterendeForskuddTil,
-                bidragFra = eksisterendeBidragFra,
-                bidragTil = null,
-            )
+    fun skalOppdatereEksisterendeBarn(): Unit =
+        runBlocking {
+            val kravhaver = Personident(PersonidentGenerator.genererFødselsnummer())
+            val eksisterendeBarn =
+                Barn(
+                    saksnummer = "123",
+                    kravhaver = kravhaver.verdi,
+                    fødselsdato = LocalDate.now().minusYears(10),
+                    skyldner = "123",
+                    forskuddFra = LocalDate.now().minusMonths(2),
+                    forskuddTil = LocalDate.now().minusMonths(1),
+                    bidragFra = LocalDate.now().minusMonths(8),
+                    bidragTil = LocalDate.now().minusMonths(5),
+                )
 
-        val nyttBidragFra = LocalDate.now().minusMonths(4).withDayOfMonth(1)
-        val vedtakHendelse =
-            opprettVedtakHendelse(
-                Stønadstype.BIDRAG,
-                Innkrevingstype.MED_INNKREVING,
-                kravhaver = kravhaver,
-                stønadsendringListe =
-                    listOf(
-                        Stønadsendring(
-                            type = Stønadstype.BIDRAG,
-                            sak = Saksnummer("123"),
-                            skyldner = Personident(PersonidentGenerator.genererFødselsnummer()),
-                            kravhaver = kravhaver,
-                            mottaker = Personident(PersonidentGenerator.genererFødselsnummer()),
-                            innkreving = Innkrevingstype.MED_INNKREVING,
-                            beslutning = Beslutningstype.ENDRING,
-                            periodeListe =
-                                listOf(
-                                    Periode(
-                                        periode = ÅrMånedsperiode(nyttBidragFra, null),
-                                        beløp = null,
-                                        valutakode = null,
-                                        resultatkode = "OK",
-                                        delytelseId = null,
+            val vedtakHendelse =
+                opprettVedtakHendelse(Stønadstype.BIDRAG, Innkrevingstype.MED_INNKREVING, kravhaver = kravhaver)
+
+            mocks(vedtakHendelse, eksisterendeBarn)
+
+            vedtakService.behandleVedtak(vedtakHendelse)
+
+            verify(exactly = 0) { barnRepository.save(any()) }
+            eksisterendeBarn shouldNotBe null
+            eksisterendeBarn.saksnummer shouldBe vedtakHendelse.saksnummer
+            eksisterendeBarn.skyldner shouldBe
+                vedtakHendelse.stønadsendringListe
+                    ?.first()
+                    ?.skyldner
+                    ?.verdi
+            eksisterendeBarn.kravhaver shouldBe
+                vedtakHendelse.stønadsendringListe
+                    ?.first()
+                    ?.kravhaver
+                    ?.verdi
+            eksisterendeBarn.bidragFra shouldBe eksisterendeBarn.bidragFra
+            eksisterendeBarn.bidragTil shouldBe
+                vedtakHendelse.stønadsendringListe
+                    ?.first()
+                    ?.periodeListe
+                    ?.first()
+                    ?.periode
+                    ?.toDatoperiode()
+                    ?.til
+            eksisterendeBarn.forskuddFra shouldBe eksisterendeBarn.forskuddFra
+            eksisterendeBarn.forskuddTil shouldBe eksisterendeBarn.forskuddTil
+        }
+
+    @Test
+    fun skalOpphøreLøpendeBidragPåBarnNårBeløpErNull(): Unit =
+        runBlocking {
+            val kravhaver = Personident(PersonidentGenerator.genererFødselsnummer())
+            val eksisterendeBidragFra = LocalDate.now().minusMonths(5)
+            val eksisterendeForskuddFra = LocalDate.now().minusMonths(2)
+            val eksisterendeForskuddTil = LocalDate.now().minusMonths(1)
+            val eksisterendeBarn =
+                Barn(
+                    saksnummer = "123",
+                    kravhaver = kravhaver.verdi,
+                    fødselsdato = LocalDate.now().minusYears(10),
+                    skyldner = "123",
+                    forskuddFra = eksisterendeForskuddFra,
+                    forskuddTil = eksisterendeForskuddTil,
+                    bidragFra = eksisterendeBidragFra,
+                    bidragTil = null,
+                )
+
+            val nyttBidragFra = LocalDate.now().minusMonths(4).withDayOfMonth(1)
+            val vedtakHendelse =
+                opprettVedtakHendelse(
+                    Stønadstype.BIDRAG,
+                    Innkrevingstype.MED_INNKREVING,
+                    kravhaver = kravhaver,
+                    stønadsendringListe =
+                        listOf(
+                            Stønadsendring(
+                                type = Stønadstype.BIDRAG,
+                                sak = Saksnummer("123"),
+                                skyldner = Personident(PersonidentGenerator.genererFødselsnummer()),
+                                kravhaver = kravhaver,
+                                mottaker = Personident(PersonidentGenerator.genererFødselsnummer()),
+                                innkreving = Innkrevingstype.MED_INNKREVING,
+                                beslutning = Beslutningstype.ENDRING,
+                                periodeListe =
+                                    listOf(
+                                        Periode(
+                                            periode = ÅrMånedsperiode(nyttBidragFra, null),
+                                            beløp = null,
+                                            valutakode = null,
+                                            resultatkode = "OK",
+                                            delytelseId = null,
+                                        ),
                                     ),
-                                ),
-                            førsteIndeksreguleringsår = null,
-                            omgjørVedtakId = null,
-                            eksternReferanse = null,
+                                førsteIndeksreguleringsår = null,
+                                omgjørVedtakId = null,
+                                eksternReferanse = null,
+                            ),
                         ),
-                    ),
-            )
+                )
 
-        mocks(vedtakHendelse, eksisterendeBarn)
+            mocks(vedtakHendelse, eksisterendeBarn)
 
-        vedtakService.behandleVedtak(vedtakHendelse)
+            vedtakService.behandleVedtak(vedtakHendelse)
 
-        verify(exactly = 0) { barnRepository.save(any()) }
-        eksisterendeBarn shouldNotBe null
-        eksisterendeBarn.saksnummer shouldBe vedtakHendelse.saksnummer
-        eksisterendeBarn.skyldner shouldBe
-            vedtakHendelse.stønadsendringListe
-                ?.first()
-                ?.skyldner
-                ?.verdi
-        eksisterendeBarn.kravhaver shouldBe kravhaver.verdi
-        eksisterendeBarn.bidragFra shouldBe eksisterendeBidragFra
-        eksisterendeBarn.bidragTil shouldBe nyttBidragFra
-        eksisterendeBarn.forskuddFra shouldBe eksisterendeForskuddFra
-        eksisterendeBarn.forskuddTil shouldBe eksisterendeForskuddTil
-    }
+            verify(exactly = 0) { barnRepository.save(any()) }
+            eksisterendeBarn shouldNotBe null
+            eksisterendeBarn.saksnummer shouldBe vedtakHendelse.saksnummer
+            eksisterendeBarn.skyldner shouldBe
+                vedtakHendelse.stønadsendringListe
+                    ?.first()
+                    ?.skyldner
+                    ?.verdi
+            eksisterendeBarn.kravhaver shouldBe kravhaver.verdi
+            eksisterendeBarn.bidragFra shouldBe eksisterendeBidragFra
+            eksisterendeBarn.bidragTil shouldBe nyttBidragFra
+            eksisterendeBarn.forskuddFra shouldBe eksisterendeForskuddFra
+            eksisterendeBarn.forskuddTil shouldBe eksisterendeForskuddTil
+        }
 
     private fun mocks(
         vedtakHendelse: VedtakHendelse,

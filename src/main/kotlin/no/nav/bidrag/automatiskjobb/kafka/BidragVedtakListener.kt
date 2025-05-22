@@ -1,23 +1,24 @@
 package no.nav.bidrag.automatiskjobb.kafka
 
+import kotlinx.coroutines.runBlocking
 import no.nav.bidrag.automatiskjobb.SECURE_LOGGER
 import no.nav.bidrag.automatiskjobb.service.OppgaveService
 import no.nav.bidrag.automatiskjobb.service.VedtakService
+import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.transport.behandling.vedtak.VedtakHendelse
 import no.nav.bidrag.transport.felles.commonObjectmapper
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.kafka.listener.ConsumerSeekAware
 import org.springframework.kafka.support.KafkaHeaders
 import org.springframework.messaging.handler.annotation.Header
 import org.springframework.stereotype.Component
+import kotlin.reflect.KSuspendFunction1
 
 @Component
 class BidragVedtakListener(
     private val vedtakService: VedtakService,
     private val oppgaveService: OppgaveService,
-    @Value("\${KAFKA_VEDTAK_TOPIC}") private val topic: String,
 ) : ConsumerSeekAware {
     companion object {
         private val LOGGER = LoggerFactory.getLogger(BidragVedtakListener::class.java)
@@ -56,13 +57,37 @@ class BidragVedtakListener(
         groupId: String,
         topic: String,
         hendelse: String,
-        metode: (vedtakhendelse: VedtakHendelse) -> Unit,
+        metode: (vedtakHendelse: VedtakHendelse) -> Unit,
+    ) {
+        runBlocking {
+            handleInternal(offset, groupId, topic, hendelse) { metode(it) }
+        }
+    }
+
+    private fun behandleHendelse(
+        offset: Long,
+        groupId: String,
+        topic: String,
+        hendelse: String,
+        metode: KSuspendFunction1<VedtakHendelse, Unit>,
+    ) {
+        runBlocking {
+            handleInternal(offset, groupId, topic, hendelse) { metode(it) }
+        }
+    }
+
+    private suspend fun handleInternal(
+        offset: Long,
+        groupId: String,
+        topic: String,
+        hendelse: String,
+        handler: suspend (VedtakHendelse) -> Unit,
     ) {
         LOGGER.info("Behandler vedtakhendelse med offset: $offset i consumergroup: $groupId for topic: $topic")
-        SECURE_LOGGER.debug { "Behandler vedtakhendelse: $hendelse" }
+        secureLogger.debug { "Behandler vedtakhendelse: $hendelse" }
         try {
             val vedtakHendelse = mapVedtakHendelse(hendelse)
-            metode(vedtakHendelse)
+            handler(vedtakHendelse)
         } catch (e: Exception) {
             LOGGER.error("Det skjedde en feil ved prosessering av vedtak hendelse", e)
             throw e
