@@ -15,6 +15,7 @@ import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.domene.enums.diverse.Språk
 import no.nav.bidrag.domene.enums.rolle.Rolletype
 import no.nav.bidrag.domene.ident.Personident
+import no.nav.bidrag.domene.ident.SamhandlerId
 import no.nav.bidrag.transport.dokument.numeric
 import no.nav.bidrag.transport.sak.BidragssakDto
 import no.nav.bidrag.transport.sak.RolleDto
@@ -267,7 +268,7 @@ class ForsendelseBestillingService(
             return ForsendelseGjelderMottakerInfo(barn.fødselsnummer!!.verdi, rm.ident.verdi, Rolletype.REELMOTTAKER)
         }
 
-        if (!rm.ident.gyldig()) {
+        if (!SamhandlerId(rm.ident.verdi).gyldig()) {
             log.warn {
                 "RM har ikke en gyldig samhandlerId ${rm.ident}. Går videre uten å sjekke om RM er Barnevernsinstitusjon"
             }
