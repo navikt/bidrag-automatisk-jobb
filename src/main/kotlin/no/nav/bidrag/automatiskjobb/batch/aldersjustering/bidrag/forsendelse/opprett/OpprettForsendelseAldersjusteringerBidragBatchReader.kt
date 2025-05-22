@@ -26,7 +26,7 @@ class OpprettForsendelseAldersjusteringerBidragBatchReader(
                 setWhereClause(
                     "WHERE slettet_tidspunkt IS NULL " +
                         "AND forsendelse_id IS NULL " +
-                        "OR (skal_slettes IS TRUE AND distribuert_tidspunkt IS NULL AND journalpost_id IS NULL)",
+                        "OR (skal_slettes = true AND distribuert_tidspunkt IS NULL AND journalpost_id IS NULL)",
                 )
                 setSortKeys(mapOf("id" to Order.ASCENDING))
             }

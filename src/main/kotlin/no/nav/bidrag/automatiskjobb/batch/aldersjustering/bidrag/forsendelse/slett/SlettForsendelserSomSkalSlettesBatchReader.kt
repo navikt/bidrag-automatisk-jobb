@@ -25,7 +25,7 @@ class SlettForsendelserSomSkalSlettesBatchReader(
                 setFromClause("FROM forsendelse_bestilling")
                 setWhereClause(
                     "WHERE forsendelse_id IS NOT NULL " +
-                        "AND skal_slettes IS TRUE " +
+                        "AND skal_slettes = true " +
                         "AND distribuert_tidspunkt IS NULL " +
                         "AND journalpost_id IS NULL " +
                         "AND slettet_tidspunkt IS NULL ",
