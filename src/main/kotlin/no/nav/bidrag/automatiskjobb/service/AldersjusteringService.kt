@@ -225,32 +225,33 @@ class AldersjusteringService(
                     barn.fødselsdato!!.year + aldersjustering.aldersgruppe,
                 )
 
-            val vedtaksforslagRequest =
-                vedtakMapper.tilOpprettVedtakRequest(resultatBeregning, stønadsid, aldersjustering)
-
-            val vedtaksid = if (simuler) null else opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
-
             aldersjustering.vedtaksidBeregning = vedtaksidBeregning
             aldersjustering.lopendeBelop = løpendeBeløp
-            aldersjustering.vedtak = vedtaksid
             aldersjustering.status = if (simuler) Status.SIMULERT else Status.BEHANDLET
             aldersjustering.behandlingstype = Behandlingstype.FATTET_FORSLAG
             aldersjustering.begrunnelse = emptyList()
             aldersjustering.resultatSisteVedtak = resultatSisteVedtak
+
+            val vedtaksforslagRequest =
+                vedtakMapper.tilOpprettVedtakRequest(resultatBeregning, stønadsid, aldersjustering)
+
+            val vedtaksid = if (simuler) null else opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
+            aldersjustering.vedtak = vedtaksid
+
             alderjusteringRepository.save(aldersjustering)
 
             return AldersjusteringAldersjustertResultat(vedtaksid ?: -1, stønadsid, vedtaksforslagRequest)
         } catch (e: SkalIkkeAldersjusteresException) {
-            val vedtaksforslagRequest =
-                vedtakMapper.tilOpprettVedtakRequestIngenAldersjustering(aldersjustering)
-            val vedtaksid = if (simuler) null else opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
-
             aldersjustering.vedtaksidBeregning = e.vedtaksid
-            aldersjustering.vedtak = vedtaksid
             aldersjustering.status = if (simuler) Status.SIMULERT else Status.BEHANDLET
             aldersjustering.behandlingstype = Behandlingstype.INGEN
             aldersjustering.begrunnelse = e.begrunnelser.map { it.name }
             aldersjustering.resultatSisteVedtak = e.resultat
+
+            val vedtaksforslagRequest =
+                vedtakMapper.tilOpprettVedtakRequestIngenAldersjustering(aldersjustering)
+            val vedtaksid = if (simuler) null else opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
+            aldersjustering.vedtak = vedtaksid
 
             alderjusteringRepository.save(aldersjustering)
 
@@ -259,15 +260,17 @@ class AldersjusteringService(
             }
             return AldersjusteringIkkeAldersjustertResultat(stønadsid, e.begrunnelser.joinToString(", "))
         } catch (e: AldersjusteresManueltException) {
-            val vedtaksforslagRequest =
-                vedtakMapper.tilOpprettVedtakRequestIngenAldersjustering(aldersjustering)
-            val vedtaksid = if (simuler) null else opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
-            aldersjustering.vedtak = vedtaksid
             aldersjustering.vedtaksidBeregning = e.vedtaksid
             aldersjustering.status = if (simuler) Status.SIMULERT else Status.BEHANDLET
             aldersjustering.behandlingstype = Behandlingstype.MANUELL
             aldersjustering.begrunnelse = listOf(e.begrunnelse.name)
             aldersjustering.resultatSisteVedtak = e.resultat
+
+            val vedtaksforslagRequest =
+                vedtakMapper.tilOpprettVedtakRequestIngenAldersjustering(aldersjustering)
+            val vedtaksid = if (simuler) null else opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
+            aldersjustering.vedtak = vedtaksid
+
             alderjusteringRepository.save(aldersjustering)
 
             combinedLogger.warn(e) { "Stønad $stønadsid skal aldersjusteres manuelt med begrunnelse ${e.begrunnelse}" }
