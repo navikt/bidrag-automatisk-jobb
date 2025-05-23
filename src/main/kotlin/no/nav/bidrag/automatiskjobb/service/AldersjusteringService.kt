@@ -300,7 +300,9 @@ class AldersjusteringService(
             alderjusteringRepository.save(aldersjustering)
         }
 
-        forsendelseBestillingService.opprettBestillingForAldersjustering(aldersjustering)
+        if (aldersjustering.behandlingstype == Behandlingstype.FATTET_FORSLAG) {
+            forsendelseBestillingService.opprettBestillingForAldersjustering(aldersjustering)
+        }
     }
 
     fun slettOppgaveForAldersjustering(aldersjustering: Aldersjustering): Int? {
