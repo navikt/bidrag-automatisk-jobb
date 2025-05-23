@@ -8,8 +8,8 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 @Configuration
 class BatchConfiguration {
     companion object {
-        const val CHUNK_SIZE = 100
-        const val PAGE_SIZE = 100
+        const val CHUNK_SIZE = 500
+        const val PAGE_SIZE = 500
         const val GRID_SIZE = 10
     }
 
