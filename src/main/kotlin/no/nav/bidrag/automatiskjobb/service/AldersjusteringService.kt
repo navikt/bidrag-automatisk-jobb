@@ -33,7 +33,6 @@ import no.nav.bidrag.transport.behandling.vedtak.request.OpprettVedtakRequestDto
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.client.HttpStatusCodeException
 import java.sql.Timestamp
 
@@ -192,7 +191,6 @@ class AldersjusteringService(
         }
     }
 
-    @Transactional
     fun utførAldersjustering(
         aldersjustering: Aldersjustering,
         stønadstype: Stønadstype,
@@ -222,21 +220,23 @@ class AldersjusteringService(
             val (vedtaksidBeregning, løpendeBeløp, resultatBeregning, resultatSisteVedtak) =
                 aldersjusteringOrchestrator.utførAldersjustering(
                     stønadsid,
-                    barn.fødselsdato!!.year + aldersjustering.aldersgruppe,
+                    aldersjustering.aldersjusteresForÅr,
                 )
-
-            val vedtaksforslagRequest =
-                vedtakMapper.tilOpprettVedtakRequest(resultatBeregning, stønadsid, aldersjustering.batchId, aldersjustering.unikReferanse)
-
-            val vedtaksid = if (simuler) null else opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
 
             aldersjustering.vedtaksidBeregning = vedtaksidBeregning
             aldersjustering.lopendeBelop = løpendeBeløp
-            aldersjustering.vedtak = vedtaksid
             aldersjustering.status = if (simuler) Status.SIMULERT else Status.BEHANDLET
             aldersjustering.behandlingstype = Behandlingstype.FATTET_FORSLAG
             aldersjustering.begrunnelse = emptyList()
             aldersjustering.resultatSisteVedtak = resultatSisteVedtak
+
+            val vedtaksforslagRequest =
+                vedtakMapper.tilOpprettVedtakRequest(resultatBeregning, stønadsid, aldersjustering)
+
+            val vedtaksid = if (simuler) null else opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
+            aldersjustering.vedtak = vedtaksid
+
+            alderjusteringRepository.save(aldersjustering)
 
             return AldersjusteringAldersjustertResultat(vedtaksid ?: -1, stønadsid, vedtaksforslagRequest)
         } catch (e: SkalIkkeAldersjusteresException) {
@@ -245,6 +245,13 @@ class AldersjusteringService(
             aldersjustering.behandlingstype = Behandlingstype.INGEN
             aldersjustering.begrunnelse = e.begrunnelser.map { it.name }
             aldersjustering.resultatSisteVedtak = e.resultat
+
+            val vedtaksforslagRequest =
+                vedtakMapper.tilOpprettVedtakRequestIngenAldersjustering(aldersjustering)
+            val vedtaksid = if (simuler) null else opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
+            aldersjustering.vedtak = vedtaksid
+
+            alderjusteringRepository.save(aldersjustering)
 
             combinedLogger.warn(e) {
                 "Stønad $stønadsid skal ikke aldersjusteres med begrunnelse ${e.begrunnelser.joinToString(", ")}"
@@ -257,12 +264,20 @@ class AldersjusteringService(
             aldersjustering.begrunnelse = listOf(e.begrunnelse.name)
             aldersjustering.resultatSisteVedtak = e.resultat
 
+            val vedtaksforslagRequest =
+                vedtakMapper.tilOpprettVedtakRequestIngenAldersjustering(aldersjustering)
+            val vedtaksid = if (simuler) null else opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
+            aldersjustering.vedtak = vedtaksid
+
+            alderjusteringRepository.save(aldersjustering)
+
             combinedLogger.warn(e) { "Stønad $stønadsid skal aldersjusteres manuelt med begrunnelse ${e.begrunnelse}" }
             return AldersjusteringIkkeAldersjustertResultat(stønadsid, e.begrunnelse.name)
         } catch (e: Exception) {
             aldersjustering.status = Status.FEILET
             aldersjustering.behandlingstype = Behandlingstype.FEILET
             aldersjustering.begrunnelse = listOf(e.message ?: "Ukjent feil")
+            alderjusteringRepository.save(aldersjustering)
 
             combinedLogger.error(e) { "Det skjedde en feil ved aldersjustering for stønad $stønadsid" }
             return AldersjusteringIkkeAldersjustertResultat(stønadsid, "Teknisk feil: ${e.message}")
@@ -296,6 +311,7 @@ class AldersjusteringService(
         try {
             val oppgaveId = oppgaveService.slettOppgave(aldersjustering.oppgave!!)
             aldersjustering.oppgave = null
+            alderjusteringRepository.save(aldersjustering)
             return oppgaveId.toInt()
         } catch (e: Exception) {
             log.error(e) { "Feil ved sletting av oppgave for aldersjustering ${aldersjustering.id}" }
@@ -331,7 +347,6 @@ class AldersjusteringService(
                 },
         )
 
-    @Transactional
     fun slettVedtaksforslag(
         stønadstype: Stønadstype,
         aldersjustering: Aldersjustering,
@@ -349,11 +364,12 @@ class AldersjusteringService(
             log.error { "Fant ikke eksisterende vedtaksforslag med referanse ${aldersjustering.unikReferanse}" }
             aldersjustering.vedtak = null
             aldersjustering.status = Status.SLETTET
+            alderjusteringRepository.save(aldersjustering)
             return null
         }
         aldersjustering.vedtak = null
         aldersjustering.status = Status.SLETTET
-        return aldersjustering
+        return alderjusteringRepository.save(aldersjustering)
     }
 
     private fun opprettEllerOppdaterVedtaksforslag(request: OpprettVedtakRequestDto) =
@@ -472,8 +488,13 @@ class AldersjusteringService(
                 vedtakMapper.tilOpprettVedtakRequest(
                     resultatBeregning,
                     stønadsid,
-                    batchId,
-                    "aldersjustering_${batchId}_$stønadsid",
+                    Aldersjustering(
+                        batchId = batchId,
+                        barn = barn,
+                        status = Status.BEHANDLET,
+                        aldersgruppe = barn.fødselsdato!!.year + år,
+                        stønadstype = stønadstype,
+                    ),
                 )
             if (simuler) {
                 log.info { "Kjører aldersjustering i simuleringsmodus. Oppretter ikke vedtaksforslag" }

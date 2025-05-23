@@ -12,6 +12,8 @@ import no.nav.bidrag.transport.dokument.forsendelse.OpprettForsendelseRespons
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
+import org.springframework.retry.annotation.Backoff
+import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpStatusCodeException
 import org.springframework.web.client.RestOperations
@@ -29,6 +31,11 @@ class BidragDokumentForsendelseConsumer(
 ) : AbstractRestClient(restTemplate, "bidrag-dokument-forsendelse") {
     private fun createUri(path: String = "") = URI.create("$url/$path")
 
+    @Retryable(
+        value = [Exception::class],
+        maxAttempts = 3,
+        backoff = Backoff(delay = 200, maxDelay = 1000, multiplier = 2.0),
+    )
     fun opprettForsendelse(opprettForsendelseForespørsel: OpprettForsendelseForespørsel): Long? {
         try {
             val forsendelseResponse =
@@ -49,6 +56,11 @@ class BidragDokumentForsendelseConsumer(
         }
     }
 
+    @Retryable(
+        value = [Exception::class],
+        maxAttempts = 3,
+        backoff = Backoff(delay = 200, maxDelay = 1000, multiplier = 2.0),
+    )
     fun slettForsendelse(
         forsendelseId: Long,
         saksnummer: String,
@@ -64,6 +76,11 @@ class BidragDokumentForsendelseConsumer(
         )
     }
 
+    @Retryable(
+        value = [Exception::class],
+        maxAttempts = 3,
+        backoff = Backoff(delay = 200, maxDelay = 1000, multiplier = 2.0),
+    )
     fun distribuerForsendelse(
         batchId: String,
         forsendelseId: Long,

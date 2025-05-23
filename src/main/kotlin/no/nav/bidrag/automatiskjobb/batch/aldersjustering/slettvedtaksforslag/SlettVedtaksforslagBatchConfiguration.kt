@@ -18,6 +18,17 @@ import org.springframework.transaction.PlatformTransactionManager
 @Configuration
 class SlettVedtaksforslagBatchConfiguration {
     @Bean
+    fun slettVedtaksforslagJob(
+        jobRepository: JobRepository,
+        slettVedtaksforslagStep: Step,
+        listener: BatchCompletionNotificationListener,
+    ): Job =
+        JobBuilder("slettVedtaksforslagJob", jobRepository)
+            .listener(listener)
+            .start(slettVedtaksforslagStep)
+            .build()
+
+    @Bean
     fun slettVedtaksforslagStep(
         @Qualifier("batchTaskExecutor") taskExecutor: TaskExecutor,
         jobRepository: JobRepository,
@@ -32,16 +43,5 @@ class SlettVedtaksforslagBatchConfiguration {
             .processor(slettVedtaksforslagBatchProcessor)
             .writer(dummyItemWriter)
             .taskExecutor(taskExecutor)
-            .build()
-
-    @Bean
-    fun slettVedtaksforslagJob(
-        jobRepository: JobRepository,
-        slettVedtaksforslagStep: Step,
-        listener: BatchCompletionNotificationListener,
-    ): Job =
-        JobBuilder("slettVedtaksforslagJob", jobRepository)
-            .listener(listener)
-            .start(slettVedtaksforslagStep)
             .build()
 }

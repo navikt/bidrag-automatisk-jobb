@@ -1,7 +1,7 @@
 package no.nav.bidrag.automatiskjobb.batch.aldersjustering.slettallevedtaksforslag
 
 import no.nav.bidrag.automatiskjobb.batch.BatchCompletionNotificationListener
-import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.CHUNK_SIZE
+import no.nav.bidrag.automatiskjobb.batch.DummyItemWriter
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.Step
 import org.springframework.batch.core.job.builder.JobBuilder
@@ -29,11 +29,13 @@ class SlettAlleVedtaksforslagBatchConfiguration {
         jobRepository: JobRepository,
         transactionManager: PlatformTransactionManager,
         slettVedtaksforslagBatchReader: SlettAlleVedtaksforslagBatchReader,
-        slettVedtaksforslagBatchWriter: SlettAlleVedtaksforslagBatchWriter,
+        slettAlleVedtaksforslagBatchProcessor: SlettAlleVedtaksforslagBatchProcessor,
+        dummyItemWriter: DummyItemWriter,
     ): Step =
         StepBuilder("slettAlleVedtaksforslagStep", jobRepository)
-            .chunk<List<Int>, List<Int>>(CHUNK_SIZE, transactionManager)
+            .chunk<List<Int>, List<Int>>(1, transactionManager)
             .reader(slettVedtaksforslagBatchReader)
-            .writer(slettVedtaksforslagBatchWriter)
+            .processor(slettAlleVedtaksforslagBatchProcessor)
+            .writer(dummyItemWriter)
             .build()
 }
