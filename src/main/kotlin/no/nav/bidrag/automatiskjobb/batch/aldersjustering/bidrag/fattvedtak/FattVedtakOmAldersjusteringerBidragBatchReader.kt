@@ -37,9 +37,8 @@ class FattVedtakOmAldersjusteringerBidragBatchReader(
         }
         whereClause.append(")")
 
-        whereClause.append(" AND behandlingstype = 'FATTET_FORSLAG'")
         whereClause.append(" AND status = 'BEHANDLET'")
-        whereClause.append(" AND oppgave IS NULL")
+        whereClause.append(" AND vedtak IS NOT NULL")
 
         val sqlPagingQuaryPoviderFactoryBean =
             SqlPagingQueryProviderFactoryBean().apply {

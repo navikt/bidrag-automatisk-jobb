@@ -226,7 +226,7 @@ class AldersjusteringService(
                 )
 
             val vedtaksforslagRequest =
-                vedtakMapper.tilOpprettVedtakRequest(resultatBeregning, stønadsid, aldersjustering.batchId, aldersjustering.unikReferanse)
+                vedtakMapper.tilOpprettVedtakRequest(resultatBeregning, stønadsid, aldersjustering)
 
             val vedtaksid = if (simuler) null else opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
 
@@ -241,11 +241,17 @@ class AldersjusteringService(
 
             return AldersjusteringAldersjustertResultat(vedtaksid ?: -1, stønadsid, vedtaksforslagRequest)
         } catch (e: SkalIkkeAldersjusteresException) {
+            val vedtaksforslagRequest =
+                vedtakMapper.tilOpprettVedtakRequestIngenAldersjustering(aldersjustering)
+            val vedtaksid = if (simuler) null else opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
+
             aldersjustering.vedtaksidBeregning = e.vedtaksid
+            aldersjustering.vedtak = vedtaksid
             aldersjustering.status = if (simuler) Status.SIMULERT else Status.BEHANDLET
             aldersjustering.behandlingstype = Behandlingstype.INGEN
             aldersjustering.begrunnelse = e.begrunnelser.map { it.name }
             aldersjustering.resultatSisteVedtak = e.resultat
+
             alderjusteringRepository.save(aldersjustering)
 
             combinedLogger.warn(e) {
@@ -253,6 +259,10 @@ class AldersjusteringService(
             }
             return AldersjusteringIkkeAldersjustertResultat(stønadsid, e.begrunnelser.joinToString(", "))
         } catch (e: AldersjusteresManueltException) {
+            val vedtaksforslagRequest =
+                vedtakMapper.tilOpprettVedtakRequestIngenAldersjustering(aldersjustering)
+            val vedtaksid = if (simuler) null else opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
+            aldersjustering.vedtak = vedtaksid
             aldersjustering.vedtaksidBeregning = e.vedtaksid
             aldersjustering.status = if (simuler) Status.SIMULERT else Status.BEHANDLET
             aldersjustering.behandlingstype = Behandlingstype.MANUELL
@@ -477,8 +487,13 @@ class AldersjusteringService(
                 vedtakMapper.tilOpprettVedtakRequest(
                     resultatBeregning,
                     stønadsid,
-                    batchId,
-                    "aldersjustering_${batchId}_$stønadsid",
+                    Aldersjustering(
+                        batchId = batchId,
+                        barn = barn,
+                        status = Status.BEHANDLET,
+                        aldersgruppe = barn.fødselsdato!!.year + år,
+                        stønadstype = stønadstype,
+                    ),
                 )
             if (simuler) {
                 log.info { "Kjører aldersjustering i simuleringsmodus. Oppretter ikke vedtaksforslag" }
