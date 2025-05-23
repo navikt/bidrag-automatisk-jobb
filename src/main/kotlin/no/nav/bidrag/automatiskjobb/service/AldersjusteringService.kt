@@ -222,7 +222,7 @@ class AldersjusteringService(
             val (vedtaksidBeregning, løpendeBeløp, resultatBeregning, resultatSisteVedtak) =
                 aldersjusteringOrchestrator.utførAldersjustering(
                     stønadsid,
-                    barn.fødselsdato!!.year + aldersjustering.aldersgruppe,
+                    aldersjustering.aldersjusteresForÅr,
                 )
 
             aldersjustering.vedtaksidBeregning = vedtaksidBeregning

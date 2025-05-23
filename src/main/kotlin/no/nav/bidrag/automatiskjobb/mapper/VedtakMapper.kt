@@ -21,6 +21,7 @@ import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.domene.organisasjon.Enhetsnummer
 import no.nav.bidrag.domene.sak.Saksnummer
 import no.nav.bidrag.domene.sak.Stønadsid
+import no.nav.bidrag.domene.tid.ÅrMånedsperiode
 import no.nav.bidrag.transport.behandling.beregning.barnebidrag.BeregnetBarnebidragResultat
 import no.nav.bidrag.transport.behandling.felles.grunnlag.AldersjusteringDetaljerGrunnlag
 import no.nav.bidrag.transport.behandling.felles.grunnlag.Person
@@ -35,6 +36,7 @@ import no.nav.bidrag.transport.behandling.vedtak.request.OpprettStønadsendringR
 import no.nav.bidrag.transport.behandling.vedtak.request.OpprettVedtakRequestDto
 import no.nav.bidrag.transport.sak.RolleDto
 import org.springframework.stereotype.Component
+import java.time.YearMonth
 
 @Component
 class VedtakMapper(
@@ -145,6 +147,7 @@ class VedtakMapper(
         innhold =
             POJONode(
                 AldersjusteringDetaljerGrunnlag(
+                    periode = ÅrMånedsperiode(YearMonth.now().withYear(aldersjustering.aldersjusteresForÅr).withMonth(7), null),
                     aldersjusteresManuelt = aldersjustering.behandlingstype == Behandlingstype.MANUELL,
                     aldersjustert = aldersjustering.behandlingstype == Behandlingstype.FATTET_FORSLAG,
                     begrunnelser = aldersjustering.begrunnelse,
