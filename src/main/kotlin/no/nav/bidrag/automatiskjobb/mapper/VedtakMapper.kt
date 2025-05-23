@@ -148,7 +148,7 @@ class VedtakMapper(
                     aldersjusteresManuelt = aldersjustering.behandlingstype == Behandlingstype.MANUELL,
                     aldersjustert = aldersjustering.behandlingstype == Behandlingstype.FATTET_FORSLAG,
                     begrunnelser = aldersjustering.begrunnelse,
-                    grunnlagFraVedtak = aldersjustering.vedtaksidBeregning!!.toLong(),
+                    grunnlagFraVedtak = aldersjustering.vedtaksidBeregning?.toLong(),
                 ),
             ),
     )

@@ -16,7 +16,7 @@ class BatchConfiguration {
     @Bean
     fun batchTaskExecutor(): TaskExecutor? =
         ThreadPoolTaskExecutor().apply {
-            setVirtualThreads(true)
-            maxPoolSize = GRID_SIZE
+            corePoolSize = GRID_SIZE
+            maxPoolSize = 20
         }
 }
