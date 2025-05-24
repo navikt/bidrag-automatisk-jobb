@@ -289,12 +289,17 @@ class AldersjusteringService(
         simuler: Boolean,
     ) {
         if (simuler) {
-            log.info { "Simulering er satt til true. Fatter ikke vedtaksforslag men oppretter forsendelse bestillinger" }
+            log.info {
+                "Simulering er satt til true. Fatter ikke vedtaksforslag men " +
+                    "oppretter forsendelse bestillinger for aldersjustering ${aldersjustering.id} med behandlingstype ${aldersjustering.behandlingstype}"
+            }
         } else {
-            combinedLogger.info { "Fatter vedtak for aldersjustering ${aldersjustering.id} og vedtaksid ${aldersjustering.vedtak}" }
-//        vedtakConsumer.fatteVedtaksforslag(
-//            aldersjustering.vedtak ?: error("Aldersjustering ${aldersjustering.id} mangler vedtak!"),
-//        )
+            combinedLogger.info {
+                "Fatter vedtak for aldersjustering ${aldersjustering.id} og vedtaksid ${aldersjustering.vedtak} med behandlingstype ${aldersjustering.behandlingstype}"
+            }
+            vedtakConsumer.fatteVedtaksforslag(
+                aldersjustering.vedtak ?: error("Aldersjustering ${aldersjustering.id} mangler vedtak!"),
+            )
             aldersjustering.status = Status.FATTET
             aldersjustering.fattetTidspunkt = Timestamp(System.currentTimeMillis())
             alderjusteringRepository.save(aldersjustering)
