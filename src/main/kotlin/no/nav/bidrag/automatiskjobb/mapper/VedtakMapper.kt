@@ -144,6 +144,7 @@ class VedtakMapper(
         ).toReferanse()}",
         type = Grunnlagstype.ALDERSJUSTERING_DETALJER,
         gjelderBarnReferanse = søknadsbarnReferanse,
+        gjelderReferanse = søknadsbarnReferanse,
         innhold =
             POJONode(
                 AldersjusteringDetaljerGrunnlag(
