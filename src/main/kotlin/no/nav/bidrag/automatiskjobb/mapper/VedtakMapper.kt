@@ -8,9 +8,12 @@ import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.entity.Behandlingstype
 import no.nav.bidrag.automatiskjobb.utils.bidragsmottaker
 import no.nav.bidrag.automatiskjobb.utils.bidragspliktig
+import no.nav.bidrag.automatiskjobb.utils.hentBarn
 import no.nav.bidrag.beregn.barnebidrag.service.VedtakService
+import no.nav.bidrag.commons.util.IdentUtils
 import no.nav.bidrag.domene.enums.beregning.Resultatkode
 import no.nav.bidrag.domene.enums.grunnlag.Grunnlagstype
+import no.nav.bidrag.domene.enums.rolle.Rolletype
 import no.nav.bidrag.domene.enums.vedtak.BehandlingsrefKilde
 import no.nav.bidrag.domene.enums.vedtak.Beslutningstype
 import no.nav.bidrag.domene.enums.vedtak.Innkrevingstype
@@ -27,13 +30,14 @@ import no.nav.bidrag.transport.behandling.felles.grunnlag.AldersjusteringDetalje
 import no.nav.bidrag.transport.behandling.felles.grunnlag.Person
 import no.nav.bidrag.transport.behandling.felles.grunnlag.bidragsmottaker
 import no.nav.bidrag.transport.behandling.felles.grunnlag.hentPersonMedIdent
-import no.nav.bidrag.transport.behandling.felles.grunnlag.personIdent
 import no.nav.bidrag.transport.behandling.felles.grunnlag.tilGrunnlagstype
+import no.nav.bidrag.transport.behandling.vedtak.request.FattVedtaksforslagRequestDto
 import no.nav.bidrag.transport.behandling.vedtak.request.OpprettBehandlingsreferanseRequestDto
 import no.nav.bidrag.transport.behandling.vedtak.request.OpprettGrunnlagRequestDto
 import no.nav.bidrag.transport.behandling.vedtak.request.OpprettPeriodeRequestDto
 import no.nav.bidrag.transport.behandling.vedtak.request.OpprettStønadsendringRequestDto
 import no.nav.bidrag.transport.behandling.vedtak.request.OpprettVedtakRequestDto
+import no.nav.bidrag.transport.behandling.vedtak.request.Stønad
 import no.nav.bidrag.transport.sak.RolleDto
 import org.springframework.stereotype.Component
 import java.time.YearMonth
@@ -43,13 +47,34 @@ class VedtakMapper(
     val vedtakService: VedtakService,
     val personConsumer: BidragPersonConsumer,
     val sakConsumer: BidragSakConsumer,
+    private val identUtils: IdentUtils,
 ) {
+    fun tilFatteVedtaksforslagRequest(aldersjustering: Aldersjustering): FattVedtaksforslagRequestDto =
+        FattVedtaksforslagRequestDto(
+            StønadListe =
+                listOf(
+                    Stønad(
+                        type = aldersjustering.stønadstype,
+                        sak = Saksnummer(aldersjustering.barn.saksnummer),
+                        kravhaver = Personident(aldersjustering.barn.kravhaver),
+                        skyldner = Personident(aldersjustering.barn.skyldner!!),
+                        sisteVedtaksid =
+                            vedtakService.finnSisteVedtaksid(
+                                aldersjustering.barn.tilStønadsid(aldersjustering.stønadstype),
+                            ),
+                    ),
+                ),
+        )
+
     fun tilOpprettVedtakRequest(
         resultat: BeregnetBarnebidragResultat,
         stønad: Stønadsid,
         aldersjustering: Aldersjustering,
     ): OpprettVedtakRequestDto {
+        val sak = sakConsumer.hentSak(aldersjustering.barn.saksnummer)
         val grunnlagPerson = resultat.grunnlagListe.hentPersonMedIdent(stønad.kravhaver.verdi)!!
+        val sakrolleBarn = sak.hentBarn(aldersjustering.barn.kravhaver)
+        val mottaker = sak.roller.reelMottakerEllerBidragsmottaker(sakrolleBarn)!!
         val grunnlagAldersjustering =
             opprettAldersjusteringDetaljerGrunnlag(
                 aldersjustering,
@@ -87,7 +112,7 @@ class VedtakMapper(
                             sak = stønad.sak,
                             kravhaver = stønad.kravhaver,
                             skyldner = stønad.skyldner,
-                            mottaker = Personident(resultat.grunnlagListe.bidragsmottaker!!.personIdent!!),
+                            mottaker = mottaker,
                             beslutning = Beslutningstype.ENDRING,
                             grunnlagReferanseListe = listOf(grunnlagAldersjustering.referanse),
                             innkreving = Innkrevingstype.MED_INNKREVING,
@@ -159,8 +184,9 @@ class VedtakMapper(
 
     fun tilOpprettVedtakRequestIngenAldersjustering(aldersjustering: Aldersjustering): OpprettVedtakRequestDto {
         val sak = sakConsumer.hentSak(aldersjustering.barn.saksnummer)
-        val bidragsmottaker = sak.bidragsmottaker!!
         val bidragspliktig = sak.bidragspliktig!!
+        val sakrolleBarn = sak.hentBarn(aldersjustering.barn.kravhaver)
+        val mottaker = sak.roller.reelMottakerEllerBidragsmottaker(sakrolleBarn)!!
         val grunnlagPerson = aldersjustering.barn.tilPersonobjekt(aldersjustering.stønadstype)
         val grunnlagAldersjustering =
             opprettAldersjusteringDetaljerGrunnlag(
@@ -171,10 +197,10 @@ class VedtakMapper(
             .copy(
                 unikReferanse = aldersjustering.unikReferanse,
                 grunnlagListe =
-                    setOf(
+                    setOfNotNull(
                         grunnlagAldersjustering,
                         grunnlagPerson,
-                        bidragsmottaker.tilPersonobjekt(),
+                        sak.bidragsmottaker?.tilPersonobjekt(),
                         bidragspliktig.tilPersonobjekt(),
                     ).toList(),
                 behandlingsreferanseListe =
@@ -195,7 +221,7 @@ class VedtakMapper(
                             sak = Saksnummer(aldersjustering.barn.saksnummer),
                             kravhaver = Personident(aldersjustering.barn.kravhaver),
                             skyldner = Personident(aldersjustering.barn.skyldner!!),
-                            mottaker = bidragsmottaker.fødselsnummer!!,
+                            mottaker = mottaker,
                             beslutning = Beslutningstype.AVVIST,
                             grunnlagReferanseListe = listOf(grunnlagAldersjustering.referanse),
                             innkreving = Innkrevingstype.MED_INNKREVING,
@@ -208,6 +234,13 @@ class VedtakMapper(
                     ),
             )
     }
+
+    fun List<RolleDto>.reelMottakerEllerBidragsmottaker(rolle: RolleDto) =
+        rolle.reellMottaker
+            ?.ident
+            ?.verdi
+            ?.let { Personident(it) }
+            ?: find { it.type == Rolletype.BIDRAGSMOTTAKER }?.fødselsnummer?.let { identUtils.hentNyesteIdent(it) }
 }
 
 private fun byggOpprettVedtakRequestObjekt(): OpprettVedtakRequestDto =

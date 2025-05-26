@@ -9,9 +9,9 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import io.mockk.mockkConstructor
 import io.mockk.verify
+import no.nav.bidrag.automatiskjobb.consumer.BidragBeløpshistorikkConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragPersonConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
-import no.nav.bidrag.automatiskjobb.consumer.BidragStønadConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer
 import no.nav.bidrag.automatiskjobb.service.RevurderForskuddService
 import no.nav.bidrag.automatiskjobb.testdata.opprettBostatatusperiode
@@ -78,7 +78,7 @@ class RevurderForskuddServiceTest {
     lateinit var service: RevurderForskuddService
 
     @MockK
-    lateinit var bidragStønadConsumer: BidragStønadConsumer
+    lateinit var bidragBeløpshistorikkConsumer: BidragBeløpshistorikkConsumer
 
     @MockK
     lateinit var bidragVedtakConsumer: BidragVedtakConsumer
@@ -100,7 +100,7 @@ class RevurderForskuddServiceTest {
         stubSjablonProvider()
         service =
             RevurderForskuddService(
-                bidragStønadConsumer,
+                bidragBeløpshistorikkConsumer,
                 bidragVedtakConsumer,
                 bidragSakConsumer,
                 bidragPersonConsumer,
@@ -111,7 +111,7 @@ class RevurderForskuddServiceTest {
 
     @Test
     fun `skal returnere at forskudd er redusert når beregnet forksudd er lavere enn løpende etter bidrag vedtak`() {
-        every { bidragStønadConsumer.hentHistoriskeStønader(any()) } returns opprettLøpendeForskuddRespons()
+        every { bidragBeløpshistorikkConsumer.hentHistoriskeStønader(any()) } returns opprettLøpendeForskuddRespons()
         every { bidragVedtakConsumer.hentVedtak(eq(vedtaksidForskudd)) } returns opprettForskuddVedtakRespons()
         every { bidragVedtakConsumer.hentVedtak(eq(vedtaksidBidrag)) } returns
             opprettVedtakDto().copy(
@@ -133,7 +133,7 @@ class RevurderForskuddServiceTest {
 
     @Test
     fun `skal beregne forskudd når bostatus barn referanse er gjelderReferanse`() {
-        every { bidragStønadConsumer.hentHistoriskeStønader(any()) } returns opprettLøpendeForskuddRespons()
+        every { bidragBeløpshistorikkConsumer.hentHistoriskeStønader(any()) } returns opprettLøpendeForskuddRespons()
         every { bidragVedtakConsumer.hentVedtak(eq(vedtaksidForskudd)) } returns
             opprettVedtakDto().copy(
                 grunnlagListe =
@@ -177,7 +177,7 @@ class RevurderForskuddServiceTest {
 
     @Test
     fun `skal ignorere forskudd hvis siste periode i forskudd slutter før dagens dato`() {
-        every { bidragStønadConsumer.hentHistoriskeStønader(any()) } returns
+        every { bidragBeløpshistorikkConsumer.hentHistoriskeStønader(any()) } returns
             opprettStønadDto(
                 stønadstype = Stønadstype.FORSKUDD,
                 periodeListe =
@@ -207,7 +207,7 @@ class RevurderForskuddServiceTest {
 
     @Test
     fun `skal returnere at forskudd er redusert når beregnet forksudd er lavere enn løpende etter bidrag 18 år vedtak`() {
-        every { bidragStønadConsumer.hentHistoriskeStønader(any()) } returns opprettLøpendeForskuddRespons()
+        every { bidragBeløpshistorikkConsumer.hentHistoriskeStønader(any()) } returns opprettLøpendeForskuddRespons()
         every { bidragVedtakConsumer.hentVedtak(eq(vedtaksidForskudd)) } returns opprettForskuddVedtakRespons()
 
         every { bidragVedtakConsumer.hentVedtak(eq(vedtaksidBidrag)) } returns
@@ -230,7 +230,7 @@ class RevurderForskuddServiceTest {
 
     @Test
     fun `skal hente siste manuelle vedtak hvis siste periode for forskudd er indeksregulering`() {
-        every { bidragStønadConsumer.hentHistoriskeStønader(any()) } returns opprettLøpendeForskuddRespons()
+        every { bidragBeløpshistorikkConsumer.hentHistoriskeStønader(any()) } returns opprettLøpendeForskuddRespons()
         every { bidragVedtakConsumer.hentVedtak(eq(vedtaksidForskudd)) } returns
             opprettVedtakDto().copy(
                 type = Vedtakstype.INDEKSREGULERING,
@@ -284,7 +284,7 @@ class RevurderForskuddServiceTest {
 
     @Test
     fun `skal returnere tom liste hvis forskudd ikke er redusert`() {
-        every { bidragStønadConsumer.hentHistoriskeStønader(any()) } returns
+        every { bidragBeløpshistorikkConsumer.hentHistoriskeStønader(any()) } returns
             opprettStønadDto(
                 stønadstype = Stønadstype.FORSKUDD,
                 periodeListe =
@@ -352,12 +352,12 @@ class RevurderForskuddServiceTest {
 
         verify(exactly = 1) { bidragVedtakConsumer.hentVedtak(eq(vedtaksidBidrag)) }
         verify(exactly = 1) { bidragVedtakConsumer.hentVedtak(eq(vedtaksidForskudd)) }
-        verify(exactly = 1) { bidragStønadConsumer.hentHistoriskeStønader(any()) }
+        verify(exactly = 1) { bidragBeløpshistorikkConsumer.hentHistoriskeStønader(any()) }
     }
 
     @Test
     fun `skal returnere at forskudd er redusert når beregnet forksudd er lavere enn løpende etter særbidrag vedtak`() {
-        every { bidragStønadConsumer.hentHistoriskeStønader(any()) } returns opprettLøpendeForskuddRespons()
+        every { bidragBeløpshistorikkConsumer.hentHistoriskeStønader(any()) } returns opprettLøpendeForskuddRespons()
         every { bidragVedtakConsumer.hentVedtak(eq(vedtaksidForskudd)) } returns opprettForskuddVedtakRespons()
 
         every { bidragVedtakConsumer.hentVedtak(eq(vedtaksidSærbidrag)) } returns
@@ -389,7 +389,7 @@ class RevurderForskuddServiceTest {
 
         verify(exactly = 1) { bidragVedtakConsumer.hentVedtak(eq(vedtaksidSærbidrag)) }
         verify(exactly = 1) { bidragVedtakConsumer.hentVedtak(eq(vedtaksidForskudd)) }
-        verify(exactly = 1) { bidragStønadConsumer.hentHistoriskeStønader(any()) }
+        verify(exactly = 1) { bidragBeløpshistorikkConsumer.hentHistoriskeStønader(any()) }
     }
 
     @Test
@@ -408,12 +408,12 @@ class RevurderForskuddServiceTest {
         val resultat = service.erForskuddRedusert(opprettVedtakhendelse(vedtaksidBidrag))
         resultat.shouldHaveSize(0)
         verify(exactly = 0) { bidragVedtakConsumer.hentVedtak(eq(vedtaksidForskudd)) }
-        verify(exactly = 0) { bidragStønadConsumer.hentHistoriskeStønader(any()) }
+        verify(exactly = 0) { bidragBeløpshistorikkConsumer.hentHistoriskeStønader(any()) }
     }
 
     @Test
     fun `skal ignorere forksudd vedtak hvis grunnlagslisten er tom`() {
-        every { bidragStønadConsumer.hentHistoriskeStønader(any()) } returns opprettLøpendeForskuddRespons()
+        every { bidragBeløpshistorikkConsumer.hentHistoriskeStønader(any()) } returns opprettLøpendeForskuddRespons()
         every { bidragVedtakConsumer.hentVedtak(eq(vedtaksidForskudd)) } returns
             opprettVedtakDto().copy(
                 grunnlagListe = emptyList(),
@@ -447,13 +447,13 @@ class RevurderForskuddServiceTest {
         resultat.shouldHaveSize(0)
         verify(exactly = 1) { bidragVedtakConsumer.hentVedtak(eq(vedtaksidSærbidrag)) }
         verify(exactly = 1) { bidragVedtakConsumer.hentVedtak(eq(vedtaksidForskudd)) }
-        verify(exactly = 1) { bidragStønadConsumer.hentHistoriskeStønader(any()) }
+        verify(exactly = 1) { bidragBeløpshistorikkConsumer.hentHistoriskeStønader(any()) }
     }
 
     @Test
     fun `skal returnere at forskudd er redusert når beregnet forksudd er lavere enn løpende etter bidrag vedtak for annen barn i saken`() {
         every {
-            bidragStønadConsumer.hentHistoriskeStønader(
+            bidragBeløpshistorikkConsumer.hentHistoriskeStønader(
                 match {
                     it.kravhaver == Personident(personIdentSøknadsbarn1)
                 },
@@ -461,7 +461,7 @@ class RevurderForskuddServiceTest {
         } returns
             opprettLøpendeForskuddRespons(vedtaksidForskudd, BigDecimal("1460"))
         every {
-            bidragStønadConsumer.hentHistoriskeStønader(
+            bidragBeløpshistorikkConsumer.hentHistoriskeStønader(
                 match {
                     it.kravhaver == Personident(personIdentSøknadsbarn2)
                 },
@@ -682,14 +682,14 @@ class RevurderForskuddServiceTest {
         verify(exactly = 1) { bidragVedtakConsumer.hentVedtak(vedtaksidForskudd) }
         verify(exactly = 1) { bidragSakConsumer.hentSak(saksnummer) }
         verify(exactly = 1) {
-            bidragStønadConsumer.hentHistoriskeStønader(
+            bidragBeløpshistorikkConsumer.hentHistoriskeStønader(
                 withArg {
                     it.kravhaver shouldBe Personident(personIdentSøknadsbarn2)
                 },
             )
         }
         verify(exactly = 1) {
-            bidragStønadConsumer.hentHistoriskeStønader(
+            bidragBeløpshistorikkConsumer.hentHistoriskeStønader(
                 withArg {
                     it.kravhaver shouldBe Personident(personIdentSøknadsbarn1)
                 },
@@ -700,14 +700,14 @@ class RevurderForskuddServiceTest {
     @Test
     fun `skal returnere at forskudd er redusert når beregnet forksudd er lavere enn løpende etter bidrag vedtak for flere barn i saken`() {
         every {
-            bidragStønadConsumer.hentHistoriskeStønader(
+            bidragBeløpshistorikkConsumer.hentHistoriskeStønader(
                 match {
                     it.kravhaver == Personident(personIdentSøknadsbarn1)
                 },
             )
         } returns opprettLøpendeForskuddRespons(vedtaksidForskudd)
         every {
-            bidragStønadConsumer.hentHistoriskeStønader(
+            bidragBeløpshistorikkConsumer.hentHistoriskeStønader(
                 match {
                     it.kravhaver == Personident(personIdentSøknadsbarn2)
                 },
@@ -933,14 +933,14 @@ class RevurderForskuddServiceTest {
         verify(exactly = 1) { bidragVedtakConsumer.hentVedtak(vedtaksidForskudd) }
         verify(exactly = 1) { bidragSakConsumer.hentSak(saksnummer) }
         verify(exactly = 1) {
-            bidragStønadConsumer.hentHistoriskeStønader(
+            bidragBeløpshistorikkConsumer.hentHistoriskeStønader(
                 withArg {
                     it.kravhaver shouldBe Personident(personIdentSøknadsbarn2)
                 },
             )
         }
         verify(exactly = 1) {
-            bidragStønadConsumer.hentHistoriskeStønader(
+            bidragBeløpshistorikkConsumer.hentHistoriskeStønader(
                 withArg {
                     it.kravhaver shouldBe Personident(personIdentSøknadsbarn1)
                 },

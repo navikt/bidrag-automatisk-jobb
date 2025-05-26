@@ -1,9 +1,9 @@
 package no.nav.bidrag.automatiskjobb.service
 
 import no.nav.bidrag.automatiskjobb.combinedLogger
+import no.nav.bidrag.automatiskjobb.consumer.BidragBeløpshistorikkConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragPersonConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
-import no.nav.bidrag.automatiskjobb.consumer.BidragStønadConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer
 import no.nav.bidrag.automatiskjobb.mapper.GrunnlagMapper
 import no.nav.bidrag.automatiskjobb.mapper.erBidrag
@@ -51,7 +51,7 @@ private fun VedtakDto.erIndeksreguleringEllerAldersjustering() =
 @Service
 @Import(BeregnForskuddApi::class, Vedtaksfiltrering::class)
 class RevurderForskuddService(
-    private val bidragStønadConsumer: BidragStønadConsumer,
+    private val bidragBeløpshistorikkConsumer: BidragBeløpshistorikkConsumer,
     private val bidragVedtakConsumer: BidragVedtakConsumer,
     private val bidragSakConsumer: BidragSakConsumer,
     private val bidragPersonConsumer: BidragPersonConsumer,
@@ -327,7 +327,7 @@ class RevurderForskuddService(
         saksnummer: String,
         søknadsbarnIdent: String,
     ): StønadDto? =
-        bidragStønadConsumer.hentHistoriskeStønader(
+        bidragBeløpshistorikkConsumer.hentHistoriskeStønader(
             HentStønadHistoriskRequest(
                 type = Stønadstype.FORSKUDD,
                 sak = Saksnummer(saksnummer),

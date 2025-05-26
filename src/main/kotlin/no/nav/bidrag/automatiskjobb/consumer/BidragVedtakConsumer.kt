@@ -3,6 +3,7 @@ package no.nav.bidrag.automatiskjobb.consumer
 import no.nav.bidrag.automatiskjobb.configuration.CacheConfiguration.Companion.VEDTAK_CACHE
 import no.nav.bidrag.beregn.barnebidrag.service.external.BeregningVedtakConsumer
 import no.nav.bidrag.commons.web.client.AbstractRestClient
+import no.nav.bidrag.transport.behandling.vedtak.request.FattVedtaksforslagRequestDto
 import no.nav.bidrag.transport.behandling.vedtak.request.HentVedtakForStønadRequest
 import no.nav.bidrag.transport.behandling.vedtak.request.OpprettVedtakRequestDto
 import no.nav.bidrag.transport.behandling.vedtak.response.HentVedtakForStønadResponse
@@ -45,7 +46,10 @@ class BidragVedtakConsumer(
                 .toUri(),
         )
 
-    fun fatteVedtaksforslag(vedtakId: Int): Int =
+    fun fatteVedtaksforslag(
+        vedtakId: Int,
+        request: FattVedtaksforslagRequestDto,
+    ): Int =
         postForNonNullEntity(
             bidragVedtakUri
                 // TODO: Endre dette til riktig url. Sikre at det ikke fattes vedtak under testing
@@ -53,7 +57,7 @@ class BidragVedtakConsumer(
                 .pathSegment(vedtakId.toString())
                 .build()
                 .toUri(),
-            null,
+            request,
         )
 
     fun oppdaterVedtaksforslag(
