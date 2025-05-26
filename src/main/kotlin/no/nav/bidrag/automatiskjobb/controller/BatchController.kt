@@ -182,7 +182,7 @@ class BatchController(
     @Parameters(
         value = [
             Parameter(
-                name = "barnId",
+                name = "barn",
                 example = "1,2,3",
                 description =
                     "Liste over barn som det skal fattes vedtak for. Om ingen er sendt kjøres alle. Maks lengde på input er 250!",
@@ -232,13 +232,22 @@ class BatchController(
                 description = "Simuleringsmodus for aldersjustering. Default er true.",
                 required = false,
             ),
+            Parameter(
+                name = "barn",
+                example = "1,2,3",
+                description =
+                    "Liste over barn som det skal opprettes oppgaver for. Om ingen er sendt kjøres alle. Maks lengde på input er 250 tegn!",
+                required = false,
+            ),
         ],
     )
     fun startBeregnAldersjusteringBidragBatch(
         @RequestParam simuler: Boolean = true,
+        @RequestParam barn: String? = null,
     ): ResponseEntity<Any> {
         beregnAldersjusteringerBidragBatch.startBeregnAldersjusteringBidragBatch(
             simuler,
+            barn,
         )
         return ResponseEntity.ok().build()
     }
@@ -260,7 +269,7 @@ class BatchController(
     @Parameters(
         value = [
             Parameter(
-                name = "barnId",
+                name = "barn",
                 example = "1,2,3",
                 description =
                     "Liste over barn som det skal opprettes oppgaver for. Om ingen er sendt kjøres alle. Maks lengde på input er 250 tegn!",
@@ -294,7 +303,7 @@ class BatchController(
     @Parameters(
         value = [
             Parameter(
-                name = "barnId",
+                name = "barn",
                 example = "1,2,3",
                 description =
                     "Liste over barn som det skal opprettes oppgaver for. Om ingen er sendt kjøres alle. Maks lengde på input er 250 tegn!",

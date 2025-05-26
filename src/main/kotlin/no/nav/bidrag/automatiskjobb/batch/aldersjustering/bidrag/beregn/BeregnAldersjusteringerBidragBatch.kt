@@ -11,10 +11,14 @@ class BeregnAldersjusteringerBidragBatch(
     private val jobLauncher: JobLauncher,
     private val beregnAldersjusteringerBidragJob: Job,
 ) {
-    fun startBeregnAldersjusteringBidragBatch(simuler: Boolean) {
+    fun startBeregnAldersjusteringBidragBatch(
+        simuler: Boolean,
+        barn: String?,
+    ) {
         jobLauncher.run(
             beregnAldersjusteringerBidragJob,
             JobParametersBuilder()
+                .addString("barn", barn ?: "")
                 .addString("simuler", simuler.toString())
                 .addString("runId", UUID.randomUUID().toString())
                 .toJobParameters(),
