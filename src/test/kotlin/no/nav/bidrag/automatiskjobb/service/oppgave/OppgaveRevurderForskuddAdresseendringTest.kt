@@ -1,11 +1,11 @@
 package no.nav.bidrag.automatiskjobb.service.oppgave
 
-import io.getunleash.FakeUnleash
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
+import io.mockk.mockkObject
 import io.mockk.verify
 import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
 import no.nav.bidrag.automatiskjobb.consumer.OppgaveConsumer
@@ -18,13 +18,14 @@ import no.nav.bidrag.automatiskjobb.domene.Endringsmelding
 import no.nav.bidrag.automatiskjobb.service.OppgaveService
 import no.nav.bidrag.automatiskjobb.service.RevurderForskuddService
 import no.nav.bidrag.automatiskjobb.service.model.AdresseEndretResultat
-import no.nav.bidrag.automatiskjobb.service.opprettRevurderForskuddOppgaveToggleName
 import no.nav.bidrag.automatiskjobb.testdata.saksnummer
 import no.nav.bidrag.automatiskjobb.testdata.stubSaksbehandlernavnProvider
 import no.nav.bidrag.automatiskjobb.testdata.testdataBidragsmottaker
 import no.nav.bidrag.automatiskjobb.testdata.testdataEnhet
 import no.nav.bidrag.automatiskjobb.testdata.testdataSøknadsbarn1
+import no.nav.bidrag.automatiskjobb.utils.UnleashFeatures
 import no.nav.bidrag.automatiskjobb.utils.revurderForskuddBeskrivelseAdresseendring
+import no.nav.bidrag.commons.unleash.UnleashFeaturesProvider
 import no.nav.bidrag.commons.util.VirkedagerProvider
 import no.nav.bidrag.domene.enums.sak.Bidragssakstatus
 import no.nav.bidrag.domene.enums.sak.Sakskategori
@@ -49,11 +50,16 @@ class OppgaveRevurderForskuddAdresseendringTest {
     @MockK
     lateinit var revurderForskuddService: RevurderForskuddService
 
-    val unleash = FakeUnleash()
+    @MockK
+    lateinit var unleashFeaturesProvider: UnleashFeaturesProvider
 
     @BeforeEach
     fun setUp() {
-        unleash.enable(opprettRevurderForskuddOppgaveToggleName)
+        mockkObject(UnleashFeaturesProvider)
+        every {
+            UnleashFeaturesProvider
+                .isEnabled(eq(UnleashFeatures.OPPRETT_REVURDER_FORSKUDD_OPPGAVE.featureName), any())
+        } returns true
         stubSaksbehandlernavnProvider()
         every { revurderForskuddService.skalBMFortsattMottaForskuddForSøknadsbarnEtterAdresseendring(any()) } returns
             listOf(
@@ -74,7 +80,7 @@ class OppgaveRevurderForskuddAdresseendringTest {
                 levdeAdskilt = false,
                 ukjentPart = false,
             )
-        oppgaveService = OppgaveService(oppgaveConsumer, bidragSakConsumer, revurderForskuddService, unleash)
+        oppgaveService = OppgaveService(oppgaveConsumer, bidragSakConsumer, revurderForskuddService)
     }
 
     @Test
@@ -128,7 +134,10 @@ class OppgaveRevurderForskuddAdresseendringTest {
 
     @Test
     fun `skal ikke opprette revurder forskudd oppgave hvis feature toggle er av`() {
-        unleash.disable(opprettRevurderForskuddOppgaveToggleName)
+        every {
+            UnleashFeaturesProvider
+                .isEnabled(eq(UnleashFeatures.OPPRETT_REVURDER_FORSKUDD_OPPGAVE.featureName), any())
+        } returns false
         every { oppgaveConsumer.opprettOppgave(any()) } returns OppgaveDto(1)
         every { oppgaveConsumer.hentOppgave(any()) } returns OppgaveSokResponse()
         oppgaveService.sjekkOgOpprettRevurderForskuddOppgaveEtterBarnFlyttetFraBM(

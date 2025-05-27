@@ -1,6 +1,5 @@
 package no.nav.bidrag.automatiskjobb.service
 
-import io.getunleash.Unleash
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.automatiskjobb.combinedLogger
 import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
@@ -16,6 +15,7 @@ import no.nav.bidrag.automatiskjobb.domene.erAdresseendring
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import no.nav.bidrag.automatiskjobb.service.model.AdresseEndretResultat
 import no.nav.bidrag.automatiskjobb.service.model.ForskuddRedusertResultat
+import no.nav.bidrag.automatiskjobb.utils.UnleashFeatures
 import no.nav.bidrag.automatiskjobb.utils.erForskudd
 import no.nav.bidrag.automatiskjobb.utils.oppgaveAldersjusteringBeskrivelse
 import no.nav.bidrag.automatiskjobb.utils.revurderForskuddBeskrivelseAdresseendring
@@ -35,7 +35,6 @@ class OppgaveService(
     private val oppgaveConsumer: OppgaveConsumer,
     private val bidragSakConsumer: BidragSakConsumer,
     private val revurderForskuddService: RevurderForskuddService,
-    private val unleash: Unleash,
 ) {
     fun sjekkOgOpprettRevurderForskuddOppgaveEtterBarnFlyttetFraBM(hendelse: Endringsmelding) {
         if (hendelse.erAdresseendring) {
@@ -44,7 +43,7 @@ class OppgaveService(
                     "Sjekker for person om barn mottar forskudd og fortsatt bor hos BM etter adresseendring i hendelse $hendelse"
                 }
                 revurderForskuddService.skalBMFortsattMottaForskuddForSøknadsbarnEtterAdresseendring(hendelse.aktørid).forEach {
-                    if (unleash.isEnabled(opprettRevurderForskuddOppgaveToggleName)) {
+                    if (UnleashFeatures.OPPRETT_REVURDER_FORSKUDD_OPPGAVE.isEnabled) {
                         it.opprettRevurderForskuddOppgaveEtterAdresseEndring()
                     } else {
                         log.info { "Feature toggle $opprettRevurderForskuddOppgaveToggleName er skrudd av. Oppretter ikke oppgave" }
