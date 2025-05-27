@@ -33,13 +33,13 @@ import no.nav.bidrag.transport.behandling.felles.grunnlag.GrunnlagDto
 import no.nav.bidrag.transport.behandling.felles.grunnlag.Person
 import no.nav.bidrag.transport.behandling.felles.grunnlag.hentPersonMedIdent
 import no.nav.bidrag.transport.behandling.felles.grunnlag.tilGrunnlagstype
-import no.nav.bidrag.transport.behandling.vedtak.request.FattVedtaksforslagRequestDto
+import no.nav.bidrag.transport.behandling.vedtak.request.FattVedtaksforslagStønadDto
+import no.nav.bidrag.transport.behandling.vedtak.request.FatteVedtaksforslagRequestDto
 import no.nav.bidrag.transport.behandling.vedtak.request.OpprettBehandlingsreferanseRequestDto
 import no.nav.bidrag.transport.behandling.vedtak.request.OpprettGrunnlagRequestDto
 import no.nav.bidrag.transport.behandling.vedtak.request.OpprettPeriodeRequestDto
 import no.nav.bidrag.transport.behandling.vedtak.request.OpprettStønadsendringRequestDto
 import no.nav.bidrag.transport.behandling.vedtak.request.OpprettVedtakRequestDto
-import no.nav.bidrag.transport.behandling.vedtak.request.Stønad
 import no.nav.bidrag.transport.sak.RolleDto
 import org.springframework.stereotype.Component
 import java.time.LocalDate
@@ -53,11 +53,11 @@ class VedtakMapper(
     val samhandlerConsumer: BidragSamhandlerConsumer,
     private val identUtils: IdentUtils,
 ) {
-    fun tilFatteVedtaksforslagRequest(aldersjustering: Aldersjustering): FattVedtaksforslagRequestDto =
-        FattVedtaksforslagRequestDto(
-            StønadListe =
+    fun tilFatteVedtaksforslagRequest(aldersjustering: Aldersjustering): FatteVedtaksforslagRequestDto =
+        FatteVedtaksforslagRequestDto(
+            stønadListe =
                 listOf(
-                    Stønad(
+                    FattVedtaksforslagStønadDto(
                         type = aldersjustering.stønadstype,
                         sak = Saksnummer(aldersjustering.barn.saksnummer),
                         kravhaver = Personident(aldersjustering.barn.kravhaver),
@@ -182,7 +182,7 @@ class VedtakMapper(
                 POJONode(
                     Person(
                         ident = fødselsnummer,
-                        fødselsdato = personConsumer.hentPerson(fødselsnummer!!).fødselsdato!!,
+                        fødselsdato = personConsumer.hentPerson(fødselsnummer!!).fødselsdato ?: LocalDate.MIN,
                         navn = personConsumer.hentPerson(fødselsnummer!!).navn,
                     ),
                 ),
