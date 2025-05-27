@@ -29,6 +29,7 @@ import no.nav.bidrag.domene.tid.ÅrMånedsperiode
 import no.nav.bidrag.transport.behandling.beregning.barnebidrag.BeregnetBarnebidragResultat
 import no.nav.bidrag.transport.behandling.felles.grunnlag.AldersjusteringDetaljerGrunnlag
 import no.nav.bidrag.transport.behandling.felles.grunnlag.BaseGrunnlag
+import no.nav.bidrag.transport.behandling.felles.grunnlag.GrunnlagDto
 import no.nav.bidrag.transport.behandling.felles.grunnlag.Person
 import no.nav.bidrag.transport.behandling.felles.grunnlag.hentPersonMedIdent
 import no.nav.bidrag.transport.behandling.felles.grunnlag.tilGrunnlagstype
@@ -85,16 +86,7 @@ class VedtakMapper(
             )
         val mottakerObjekt = mottaker.tilPersonObjekt(resultat.grunnlagListe, sak.roller)
         val grunnlagsliste =
-            resultat.grunnlagListe.map {
-                OpprettGrunnlagRequestDto(
-                    referanse = it.referanse,
-                    gjelderReferanse = it.gjelderReferanse,
-                    gjelderBarnReferanse = it.gjelderBarnReferanse,
-                    innhold = it.innhold,
-                    grunnlagsreferanseListe = it.grunnlagsreferanseListe,
-                    type = it.type,
-                )
-            } + listOf(grunnlagAldersjustering) + listOf(mottakerObjekt)
+            resultat.grunnlagListe.map { it.tilOpprettGrunnlagRequestDto() } + listOf(grunnlagAldersjustering) + listOf(mottakerObjekt)
 
         return byggOpprettVedtakRequestObjekt()
             .copy(
@@ -144,7 +136,18 @@ class VedtakMapper(
     ): OpprettGrunnlagRequestDto {
         val eksisterende = grunnlagsliste.hentPersonMedIdent(this.verdi)
         if (eksisterende != null) {
-            return eksisterende as OpprettGrunnlagRequestDto
+            return if (eksisterende is GrunnlagDto) {
+                eksisterende.tilOpprettGrunnlagRequestDto()
+            } else {
+                OpprettGrunnlagRequestDto(
+                    referanse = eksisterende.referanse,
+                    type = eksisterende.type,
+                    innhold = eksisterende.innhold,
+                    gjelderReferanse = eksisterende.gjelderReferanse,
+                    gjelderBarnReferanse = eksisterende.gjelderBarnReferanse,
+                    grunnlagsreferanseListe = eksisterende.grunnlagsreferanseListe,
+                )
+            }
         }
         val rolletype = roller.find { it.fødselsnummer == this }?.type ?: Rolletype.REELMOTTAKER
         return OpprettGrunnlagRequestDto(
@@ -283,6 +286,16 @@ class VedtakMapper(
             ?.let { Personident(it) }
             ?: find { it.type == Rolletype.BIDRAGSMOTTAKER }?.fødselsnummer?.let { identUtils.hentNyesteIdent(it) }
 }
+
+private fun GrunnlagDto.tilOpprettGrunnlagRequestDto(): OpprettGrunnlagRequestDto =
+    OpprettGrunnlagRequestDto(
+        referanse = referanse,
+        gjelderReferanse = gjelderReferanse,
+        gjelderBarnReferanse = gjelderBarnReferanse,
+        innhold = innhold,
+        grunnlagsreferanseListe = grunnlagsreferanseListe,
+        type = type,
+    )
 
 private fun byggOpprettVedtakRequestObjekt(): OpprettVedtakRequestDto =
     OpprettVedtakRequestDto(
