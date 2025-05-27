@@ -298,9 +298,9 @@ class AldersjusteringService(
                 "Fatter vedtak for aldersjustering ${aldersjustering.id} og vedtaksid ${aldersjustering.vedtak} med behandlingstype ${aldersjustering.behandlingstype}"
             }
             try {
-                vedtakConsumer.fatteVedtaksforslag(
-                    aldersjustering.vedtak ?: error("Aldersjustering ${aldersjustering.id} mangler vedtak!"),
-                )
+//                vedtakConsumer.fatteVedtaksforslag(
+//                    aldersjustering.vedtak ?: error("Aldersjustering ${aldersjustering.id} mangler vedtak!"),
+//                )
                 aldersjustering.status = Status.FATTET
                 aldersjustering.fattetTidspunkt = Timestamp(System.currentTimeMillis())
                 alderjusteringRepository.save(aldersjustering)

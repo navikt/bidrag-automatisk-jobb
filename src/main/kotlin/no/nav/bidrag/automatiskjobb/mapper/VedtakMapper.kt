@@ -8,7 +8,6 @@ import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.entity.Behandlingstype
 import no.nav.bidrag.automatiskjobb.utils.bidragspliktig
-import no.nav.bidrag.automatiskjobb.utils.hentBarn
 import no.nav.bidrag.beregn.barnebidrag.service.VedtakService
 import no.nav.bidrag.commons.util.IdentUtils
 import no.nav.bidrag.domene.enums.beregning.Resultatkode
@@ -38,6 +37,7 @@ import no.nav.bidrag.transport.behandling.vedtak.request.OpprettGrunnlagRequestD
 import no.nav.bidrag.transport.behandling.vedtak.request.OpprettPeriodeRequestDto
 import no.nav.bidrag.transport.behandling.vedtak.request.OpprettStønadsendringRequestDto
 import no.nav.bidrag.transport.behandling.vedtak.request.OpprettVedtakRequestDto
+import no.nav.bidrag.transport.sak.BidragssakDto
 import no.nav.bidrag.transport.sak.RolleDto
 import org.springframework.stereotype.Component
 import java.time.LocalDate
@@ -51,6 +51,13 @@ class VedtakMapper(
     val samhandlerConsumer: BidragSamhandlerConsumer,
     private val identUtils: IdentUtils,
 ) {
+    fun BidragssakDto.hentBarn(ident: String) =
+        roller.find {
+            it.type == Rolletype.BARN &&
+                identUtils.hentNyesteIdent(it.fødselsnummer!!) == identUtils.hentNyesteIdent(Personident(ident))
+        }
+            ?: error("Fant ikke barn med ident $ident i sak $saksnummer")
+
     fun tilOpprettVedtakRequest(
         resultat: BeregnetBarnebidragResultat,
         stønad: Stønadsid,
