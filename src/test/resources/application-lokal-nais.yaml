@@ -13,8 +13,8 @@ spring:
     activate:
       on-profile: localdev
 
-BIDRAG_STONAD_URL: https://bidrag-stonad-q1.intern.dev.nav.no
-BIDRAG_STONAD_SCOPE: dev-gcp.bidrag.bidrag-stonad-q1
+BIDRAG_BELOPSHISTORIKK_URL: https://bidrag-stonad-q1.intern.dev.nav.no
+BIDRAG_BELOPSHISTORIKK_SCOPE: dev-gcp.bidrag.bidrag-stonad-q1
 BIDRAG_TILGANGSKONTROLL_URL: https://bidrag-tilgangskontroll-feature.intern.dev.nav.no
 BIDRAG_TILGANGGSKONTROLL_SCOPE: dev-gcp.bidrag.bidrag-tilgangskontroll-feature
 BIDRAG_SAK_URL: https://bidrag-sak-q1.dev.intern.nav.no
@@ -33,8 +33,8 @@ spring:
   config:
     activate:
       on-profile: q2
-BIDRAG_STONAD_URL: https://bidrag-stonad-q2.intern.dev.nav.no
-BIDRAG_STONAD_SCOPE: dev-gcp.bidrag.bidrag-stonad-q2
+BIDRAG_BELOPSHISTORIKK_URL: https://bidrag-belopshistorikk-q2.intern.dev.nav.no
+BIDRAG_BELOPSHISTORIKK_SCOPE: dev-gcp.bidrag.bidrag-belopshistorikk-q2
 BIDRAG_TILGANGSKONTROLL_URL: https://bidrag-tilgangskontroll.intern.dev.nav.no
 BIDRAG_TILGANGGSKONTROLL_SCOPE: dev-gcp.bidrag.bidrag-tilgangskontroll
 BIDRAG_SAK_URL: https://bidrag-sak-q2.dev.intern.nav.no
@@ -52,8 +52,8 @@ spring:
   config:
     activate:
       on-profile: q1
-BIDRAG_STONAD_URL: https://bidrag-stonad-q1.intern.dev.nav.no
-BIDRAG_STONAD_SCOPE: dev-gcp.bidrag.bidrag-stonad-q1
+BIDRAG_BELOPSHISTORIKK_URL: https://bidrag-stonad-q1.intern.dev.nav.no
+BIDRAG_BELOPSHISTORIKK_SCOPE: dev-gcp.bidrag.bidrag-stonad-q1
 BIDRAG_TILGANGSKONTROLL_URL: https://bidrag-tilgangskontroll.intern.dev.nav.no
 BIDRAG_TILGANGGSKONTROLL_SCOPE: dev-gcp.bidrag.bidrag-tilgangskontroll
 BIDRAG_SAK_URL: https://bidrag-sak-q1.dev.intern.nav.no
@@ -72,8 +72,8 @@ spring:
   config:
     activate:
       on-profile: q4
-BIDRAG_STONAD_URL: https://bidrag-stonad-q4.intern.dev.nav.no
-BIDRAG_STONAD_SCOPE: dev-gcp.bidrag.bidrag-stonad-q4
+BIDRAG_BELOPSHISTORIKK_URL: https://bidrag-belopshistorikk-q4.intern.dev.nav.no
+BIDRAG_BELOPSHISTORIKK_SCOPE: dev-gcp.bidrag.bidrag-belopshistorikk-q4
 BIDRAG_TILGANGSKONTROLL_URL: https://bidrag-tilgangskontroll.intern.dev.nav.no
 BIDRAG_TILGANGGSKONTROLL_SCOPE: dev-gcp.bidrag.bidrag-tilgangskontroll
 BIDRAG_SAK_URL: https://bidrag-sak-q4.dev.intern.nav.no

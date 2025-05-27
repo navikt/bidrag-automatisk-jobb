@@ -55,6 +55,7 @@ enum class Status {
     SLETTES,
     SLETTET,
     FEILET,
+    FATTE_VEDTAK_FEILET,
     FATTET,
 }
 

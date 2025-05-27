@@ -1,6 +1,5 @@
 package no.nav.bidrag.automatiskjobb.service.oppgave
 
-import io.getunleash.FakeUnleash
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.mockk.every
@@ -63,11 +62,8 @@ class OppgaveRevurderForskuddTest {
     @MockK
     lateinit var revurderForskuddService: RevurderForskuddService
 
-    val unleash = FakeUnleash()
-
     @BeforeEach
     fun setUp() {
-        unleash.enableAll()
         stubSaksbehandlernavnProvider()
         every { revurderForskuddService.erForskuddRedusert(any()) } returns
             listOf(
@@ -87,7 +83,7 @@ class OppgaveRevurderForskuddTest {
                 levdeAdskilt = false,
                 ukjentPart = false,
             )
-        oppgaveService = OppgaveService(oppgaveConsumer, bidragSakConsumer, revurderForskuddService, unleash)
+        oppgaveService = OppgaveService(oppgaveConsumer, bidragSakConsumer, revurderForskuddService)
     }
 
     @Test

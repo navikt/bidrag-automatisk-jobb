@@ -297,12 +297,19 @@ class AldersjusteringService(
             combinedLogger.info {
                 "Fatter vedtak for aldersjustering ${aldersjustering.id} og vedtaksid ${aldersjustering.vedtak} med behandlingstype ${aldersjustering.behandlingstype}"
             }
-//            vedtakConsumer.fatteVedtaksforslag(
-//                aldersjustering.vedtak ?: error("Aldersjustering ${aldersjustering.id} mangler vedtak!"),
-//            )
-            aldersjustering.status = Status.FATTET
-            aldersjustering.fattetTidspunkt = Timestamp(System.currentTimeMillis())
-            alderjusteringRepository.save(aldersjustering)
+            try {
+                vedtakConsumer.fatteVedtaksforslag(
+                    aldersjustering.vedtak ?: error("Aldersjustering ${aldersjustering.id} mangler vedtak!"),
+                )
+                aldersjustering.status = Status.FATTET
+                aldersjustering.fattetTidspunkt = Timestamp(System.currentTimeMillis())
+                alderjusteringRepository.save(aldersjustering)
+            } catch (e: Exception) {
+                log.error(e) { "Det skjedde en feil ved fatting av vedtak for aldersjustering ${aldersjustering.id}" }
+                aldersjustering.status = Status.FATTE_VEDTAK_FEILET
+                alderjusteringRepository.save(aldersjustering)
+                throw e
+            }
         }
 
         if (aldersjustering.behandlingstype == Behandlingstype.FATTET_FORSLAG) {

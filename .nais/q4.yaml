@@ -19,8 +19,8 @@ kafka:
 env:
   PERSON_URL: https://bidrag-person-q4.dev-fss-pub.nais.io/bidrag-person
   PERSON_SCOPE: dev-fss.bidrag.bidrag-person-q4
-  BIDRAG_STONAD_URL: http://bidrag-stonad-q4
-  BIDRAG_STONAD_SCOPE: dev-gcp.bidrag.bidrag-stonad-q4
+  BIDRAG_BELOPSHISTORIKK_URL: http://bidrag-belopshistorikk-q4
+  BIDRAG_BELOPSHISTORIKK_SCOPE: dev-gcp.bidrag.bidrag-belopshistorikk-q4
   BIDRAG_VEDTAK_URL: http://bidrag-vedtak-q4
   BIDRAG_VEDTAK_SCOPE: dev-gcp.bidrag.bidrag-vedtak-q4
   BIDRAG_SAMHANDLER_URL: http://bidrag-samhandler-q4
@@ -42,7 +42,7 @@ env:
   PERSON_HENDELSE_KAFKA_GROUP_ID: bidrag-automatisk-jobb-q4
   JAVA_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -XX:MaxRAMPercentage=80.0
 outbound-access-apps:
-  - bidrag-stonad-q4
+  - bidrag-belopshistorikk-q4
   - bidrag-vedtak-q4
   - bidrag-samhandler-q4
   - bidrag-kodeverk

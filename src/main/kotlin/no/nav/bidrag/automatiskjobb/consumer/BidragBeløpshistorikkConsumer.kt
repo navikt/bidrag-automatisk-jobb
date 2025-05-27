@@ -17,13 +17,13 @@ import org.springframework.web.util.UriComponentsBuilder
 import java.net.URI
 
 @Component
-class BidragStønadConsumer(
-    @Value("\${BIDRAG_STONAD_URL}") private val bidragStønadUrl: URI,
+class BidragBeløpshistorikkConsumer(
+    @Value("\${BIDRAG_BELOPSHISTORIKK_URL}") private val bidragBeløpshistorikkUrl: URI,
     @Qualifier("azure") restTemplate: RestTemplate,
 ) : AbstractRestClient(restTemplate, "bidrag-stønad"),
     BeregningStønadConsumer {
-    private val bidragsStønadUri
-        get() = UriComponentsBuilder.fromUri(bidragStønadUrl)
+    private val bidragBeløpshistorikkUri
+        get() = UriComponentsBuilder.fromUri(bidragBeløpshistorikkUrl)
 
     @Retryable(
         value = [Exception::class],
@@ -32,7 +32,7 @@ class BidragStønadConsumer(
     )
     fun hentAlleStønaderForBidragspliktig(personidentBidragspliktig: Personident): SkyldnerStønaderResponse =
         postForNonNullEntity(
-            bidragsStønadUri.pathSegment("hent-alle-stonader-for-skyldner").build().toUri(),
+            bidragBeløpshistorikkUri.pathSegment("hent-alle-stonader-for-skyldner").build().toUri(),
             SkyldnerStønaderRequest(personidentBidragspliktig),
         )
 
@@ -43,7 +43,7 @@ class BidragStønadConsumer(
     )
     override fun hentHistoriskeStønader(request: HentStønadHistoriskRequest): StønadDto? =
         postForEntity(
-            bidragsStønadUri.pathSegment("hent-stonad-historisk/").build().toUri(),
+            bidragBeløpshistorikkUri.pathSegment("hent-stonad-historisk/").build().toUri(),
             request,
         )
 }
