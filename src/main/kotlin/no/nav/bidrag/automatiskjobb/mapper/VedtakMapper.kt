@@ -148,7 +148,7 @@ class VedtakMapper(
                             if (SamhandlerId(this.verdi).gyldig()) {
                                 LocalDate.of(9999, 12, 1)
                             } else {
-                                personConsumer.hentPerson(this).fødselsdato ?: LocalDate.MIN
+                                personConsumer.hentPerson(this).fødselsdato!!
                             },
                     ),
                 ),
