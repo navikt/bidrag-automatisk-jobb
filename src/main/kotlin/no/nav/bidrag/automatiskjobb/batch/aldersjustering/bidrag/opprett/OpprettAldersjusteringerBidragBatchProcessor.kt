@@ -19,17 +19,17 @@ class OpprettAldersjusteringerBidragBatchProcessor(
     private val aldersjusteringService: AldersjusteringService,
 ) : ItemProcessor<Barn, Aldersjustering?> {
     private var år: Long? = -1
-    private var runId: String? = ""
+    private var batchId: String? = ""
 
     @BeforeStep
     fun beforeStep(stepExecution: StepExecution) {
-        runId = stepExecution.jobParameters.getString("runId")
+        batchId = stepExecution.jobParameters.getString("batchId")
         år = stepExecution.jobParameters.getLong("år")
     }
 
     override fun process(barn: Barn): Aldersjustering? =
         try {
-            aldersjusteringService.opprettAldersjusteringForBarn(barn, år!!.toInt(), runId!!, Stønadstype.BIDRAG)
+            aldersjusteringService.opprettAldersjusteringForBarn(barn, år!!.toInt(), batchId!!, Stønadstype.BIDRAG)
         } catch (e: Exception) {
             log.error(e) { "Det skjedde en feil ved opprettelse av aldersjustering for barn ${barn.id}" }
             null

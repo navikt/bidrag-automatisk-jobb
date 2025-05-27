@@ -33,8 +33,6 @@ import no.nav.bidrag.transport.behandling.felles.grunnlag.GrunnlagDto
 import no.nav.bidrag.transport.behandling.felles.grunnlag.Person
 import no.nav.bidrag.transport.behandling.felles.grunnlag.hentPersonMedIdent
 import no.nav.bidrag.transport.behandling.felles.grunnlag.tilGrunnlagstype
-import no.nav.bidrag.transport.behandling.vedtak.request.FattVedtaksforslagStønadDto
-import no.nav.bidrag.transport.behandling.vedtak.request.FatteVedtaksforslagRequestDto
 import no.nav.bidrag.transport.behandling.vedtak.request.OpprettBehandlingsreferanseRequestDto
 import no.nav.bidrag.transport.behandling.vedtak.request.OpprettGrunnlagRequestDto
 import no.nav.bidrag.transport.behandling.vedtak.request.OpprettPeriodeRequestDto
@@ -53,23 +51,6 @@ class VedtakMapper(
     val samhandlerConsumer: BidragSamhandlerConsumer,
     private val identUtils: IdentUtils,
 ) {
-    fun tilFatteVedtaksforslagRequest(aldersjustering: Aldersjustering): FatteVedtaksforslagRequestDto =
-        FatteVedtaksforslagRequestDto(
-            stønadListe =
-                listOf(
-                    FattVedtaksforslagStønadDto(
-                        type = aldersjustering.stønadstype,
-                        sak = Saksnummer(aldersjustering.barn.saksnummer),
-                        kravhaver = Personident(aldersjustering.barn.kravhaver),
-                        skyldner = Personident(aldersjustering.barn.skyldner!!),
-                        sisteVedtaksid =
-                            vedtakService.finnSisteVedtaksid(
-                                aldersjustering.barn.tilStønadsid(aldersjustering.stønadstype),
-                            ),
-                    ),
-                ),
-        )
-
     fun tilOpprettVedtakRequest(
         resultat: BeregnetBarnebidragResultat,
         stønad: Stønadsid,

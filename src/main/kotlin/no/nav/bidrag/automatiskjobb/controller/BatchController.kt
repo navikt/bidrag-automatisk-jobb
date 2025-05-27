@@ -144,7 +144,7 @@ class BatchController(
             ),
             Parameter(
                 name = "aldersjusteringsdato",
-                example = "2025-06-01",
+                example = "2025-07-01",
                 description =
                     "Kjøretidspunkt for aldersjustering. " +
                         "Default er 1. juli inneværende år. Kan settes for å justere cutoff dato for opphørte bidrag.",
@@ -168,7 +168,7 @@ class BatchController(
         summary = "Start kjøring av batch for å fatte vedtak om aldersjusteringer.",
         description =
             "Operasjon for å starte kjøring av batch som fatter vedtak om aldersjusteringer. " +
-                "Fatter vedtak for alle aldersjusteringer som det er sendt vedtakforslag på. ",
+                "Fatter vedtak for alle aldersjusteringer som det er opprettet vedtakforslag på. ",
         security = [SecurityRequirement(name = "bearer-key")],
     )
     @ApiResponses(
@@ -213,7 +213,8 @@ class BatchController(
     @Operation(
         summary = "Start kjøring av batch for å beregne aldersjusteringer.",
         description =
-            "Operasjon for å starte kjøring av batch som beregner aldersjusteringer og sender vedtaksforslag. ",
+            "Operasjon for å starte kjøring av batch som beregner aldersjusteringer og oppretter vedtaksforslag. " +
+                "Det opprettes også vedtaksforslag for saker som også ikke aldersjusteres med beslutningstype=AVVIST",
         security = [SecurityRequirement(name = "bearer-key")],
     )
     @ApiResponses(
@@ -255,7 +256,7 @@ class BatchController(
     @PostMapping("/aldersjuster/batch/bidrag/oppgave")
     @Operation(
         summary = "Start kjøring av batch for å opprette oppgaver for manuelle aldersjusteringer.",
-        description = "Operasjon for å starte kjøring av batch som oppretter oppgaver for manuelle aldersjusteriner.",
+        description = "Operasjon for å starte kjøring av batch som oppretter oppgaver for aldersjusteringer som skal behandles manuelt.",
         security = [SecurityRequirement(name = "bearer-key")],
     )
     @ApiResponses(
@@ -332,7 +333,7 @@ class BatchController(
     @PostMapping("/aldersjuster/batch/forsendelse/opprett")
     @Operation(
         summary = "Start kjøring av batch for å opprette forsendelse for aldersjusteringer.",
-        description = "Operasjon for å starte kjøring av batch som oppretter forsendelse for aldersjusteriner.",
+        description = "Operasjon for å starte kjøring av batch som oppretter forsendelse for aldersjusteringer.",
         security = [SecurityRequirement(name = "bearer-key")],
     )
     @ApiResponses(
@@ -353,7 +354,9 @@ class BatchController(
     @PostMapping("/batch/forsendelse/slett")
     @Operation(
         summary = "Start kjøring av batch som sletter alle forsendelser som har blitt satt til skalSlettes=true.",
-        description = "Operasjon for å starte kjøring av batch som skal slette alle forsendelser.",
+        description =
+            "Operasjon for å starte kjøring av batch som skal slette alle forsendelser " +
+                "som er satt til skal slettes med kolonnen skal_slettes=true",
         security = [SecurityRequirement(name = "bearer-key")],
     )
     @ApiResponses(
@@ -372,7 +375,7 @@ class BatchController(
     @PostMapping("/aldersjuster/batch/forsendelse/distribuer")
     @Operation(
         summary = "Start kjøring av batch for å distribuere forsendelse for aldersjusteringer.",
-        description = "Operasjon for å starte kjøring av batch som distibuerer forsendelser for aldersjusteriner.",
+        description = "Operasjon for å starte kjøring av batch som distribuerer forsendelser for aldersjusteringer.",
         security = [SecurityRequirement(name = "bearer-key")],
     )
     @ApiResponses(

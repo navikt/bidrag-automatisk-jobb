@@ -27,7 +27,8 @@ class OpprettAldersjusteringerBidragBatch(
                         .withMonth(7)
                         .withDayOfMonth(1),
                 ).addLong("år", år)
-                .addString("runId", "aldersjustering_bidrag_${UUID.randomUUID()}")
+                .addString("batchId", "aldersjustering_bidrag_$år")
+                .addString("runId", UUID.randomUUID().toString())
                 .toJobParameters(),
         )
     }
