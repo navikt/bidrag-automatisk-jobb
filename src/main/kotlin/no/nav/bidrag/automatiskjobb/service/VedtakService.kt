@@ -1,7 +1,5 @@
 package no.nav.bidrag.automatiskjobb.service
 
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import no.nav.bidrag.automatiskjobb.consumer.BidragPersonConsumer
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
@@ -30,17 +28,13 @@ class VedtakService(
     }
 
     @Transactional
-    suspend fun behandleVedtak(vedtakHendelse: VedtakHendelse) {
+    fun behandleVedtak(vedtakHendelse: VedtakHendelse) {
         if (vedtakHendelse.type == Vedtakstype.INDEKSREGULERING) return
         val stønadsendringerFraVedtak = hentStønadsendringerForBidragOgForskudd(vedtakHendelse)
         stønadsendringerFraVedtak?.forEach { (kravhaverSak, stønadsendringer) ->
             val (sak, kravhaver) = kravhaverSak
-            val (kravhaverNyesteIdent, kravhaverAlleIdenter) =
-                coroutineScope {
-                    val nyesteIdentDeferred = async { identUtils.hentNyesteIdent(kravhaver) }
-                    val alleIdenterDeferred = async { identUtils.hentAlleIdenter(kravhaver) }
-                    nyesteIdentDeferred.await() to alleIdenterDeferred.await()
-                }
+            val kravhaverNyesteIdent = identUtils.hentNyesteIdent(kravhaver)
+            val kravhaverAlleIdenter = identUtils.hentAlleIdenter(kravhaver)
             val lagretBarn =
                 barnRepository.finnBarnForKravhaverIdenterOgSaksnummer(
                     kravhaverAlleIdenter,
@@ -135,7 +129,7 @@ class VedtakService(
                 ?.fom
 
         return if (eksisterendePeriodeFra != null && nyPeriodeFra != null) {
-            LocalDate.ofEpochDay(minOf(eksisterendePeriodeFra.toEpochDay(), nyPeriodeFra.toEpochDay()))
+            minOf(eksisterendePeriodeFra, nyPeriodeFra)
         } else {
             nyPeriodeFra ?: eksisterendePeriodeFra
         }
@@ -170,7 +164,7 @@ class VedtakService(
 
         // Velg den som er lengst frem i tid av ny eller eksisterende periode, behold null om det finnes
         return if (eksisterendePeriodeTil != null && nyPeriodeTil != null) {
-            LocalDate.ofEpochDay(maxOf(eksisterendePeriodeTil.toEpochDay(), nyPeriodeTil.toEpochDay()))
+            maxOf(eksisterendePeriodeTil, nyPeriodeTil)
         } else {
             null
         }
