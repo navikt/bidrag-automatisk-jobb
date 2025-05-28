@@ -38,7 +38,7 @@ env:
   KAFKA_VEDTAK_TOPIC: bidrag.vedtak
   KAFKA_PERSON_HENDELSE_TOPIC: bidrag.personhendelse.v1
   VEDTAK_KAFKA_GROUP_ID_SISTE: bidrag-automatisk-jobb-siste
-  VEDTAK_KAFKA_GROUP_ID_START: bidrag-automatisk-jobb-start-5
+  VEDTAK_KAFKA_GROUP_ID_START: bidrag-automatisk-jobb-start-6
   PERSON_HENDELSE_KAFKA_GROUP_ID: bidrag-automatisk-jobb
   JAVA_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -XX:MaxRAMPercentage=80.0
 outbound-access-apps:
