@@ -118,6 +118,12 @@ class ForsendelseBestillingService(
     }
 
     fun distribuerForsendelse(forsendelseBestilling: ForsendelseBestilling) {
+        secureLogger.info {
+            "Bestiller distribusjon av forsendelse ${forsendelseBestilling.forsendelseId} " +
+                "til gjelder ${forsendelseBestilling.gjelder} " +
+                "og mottaker ${forsendelseBestilling.mottaker} med rolle ${forsendelseBestilling.rolletype} " +
+                "for aldersjusteringId ${forsendelseBestilling.aldersjustering.id} og barnId ${forsendelseBestilling.aldersjustering.barn.id}"
+        }
         val distribuerJournalpostResponse =
             bidragDokumentForsendelseConsumer.distribuerForsendelse(
                 forsendelseBestilling.aldersjustering.batchId,
@@ -126,7 +132,7 @@ class ForsendelseBestillingService(
         log.info {
             "Distribuerte forsendelse ${forsendelseBestilling.forsendelseId} " +
                 "med journalpostId ${distribuerJournalpostResponse.journalpostId.numeric} " +
-                "relatert til aldersjustering ${forsendelseBestilling.aldersjustering.id} og sak ${forsendelseBestilling.aldersjustering.barn.saksnummer}"
+                "relatert til aldersjusteringId ${forsendelseBestilling.aldersjustering.id} og sak ${forsendelseBestilling.aldersjustering.barn.saksnummer}"
         }
         forsendelseBestilling.journalpostId = distribuerJournalpostResponse.journalpostId.numeric
         forsendelseBestilling.distribuertTidspunkt = Timestamp(System.currentTimeMillis())
@@ -143,13 +149,13 @@ class ForsendelseBestillingService(
             forsendelseBestilling.feilBegrunnelse = null
             log.info {
                 "Opprettet forsendelse ${forsendelseBestilling.forsendelseId} for rolle ${forsendelseBestilling.rolletype} " +
-                    "relatert til aldersjustering ${forsendelseBestilling.aldersjustering.id} og sak ${forsendelseBestilling.aldersjustering.barn.saksnummer}"
+                    "relatert til aldersjusteringId ${forsendelseBestilling.aldersjustering.id} og sak ${forsendelseBestilling.aldersjustering.barn.saksnummer}"
             }
         } catch (e: Exception) {
             log.error(e) {
                 "Feil ved opprettelse av forsendelse ${forsendelseBestilling.id} " +
                     "for rolle ${forsendelseBestilling.rolletype} " +
-                    "relatert til aldersjustering ${forsendelseBestilling.aldersjustering.id} " +
+                    "relatert til aldersjusteringId ${forsendelseBestilling.aldersjustering.id} " +
                     "og sak ${forsendelseBestilling.aldersjustering.barn.saksnummer}"
             }
             forsendelseBestilling.feilBegrunnelse = e.message
