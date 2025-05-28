@@ -11,10 +11,12 @@ import no.nav.bidrag.transport.dokument.forsendelse.OpprettForsendelseForespørs
 import no.nav.bidrag.transport.dokument.forsendelse.OpprettForsendelseRespons
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.retry.annotation.Backoff
 import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Service
+import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.HttpStatusCodeException
 import org.springframework.web.client.RestOperations
 import java.net.URI
@@ -87,9 +89,14 @@ class BidragDokumentForsendelseConsumer(
     ): DistribuerJournalpostResponse {
         val distribuerJournalpostRequest = DistribuerJournalpostRequest(batchId = batchId)
 
-        return postForNonNullEntity<DistribuerJournalpostResponse>(
-            createUri("api/forsendelse/journal/distribuer/$forsendelseId?batchId=$batchId"),
-            distribuerJournalpostRequest,
-        )
+        try {
+            return postForNonNullEntity<DistribuerJournalpostResponse>(
+                createUri("api/forsendelse/journal/distribuer/$forsendelseId?batchId=$batchId"),
+                distribuerJournalpostRequest,
+            )
+        } catch (e: HttpStatusCodeException) {
+            val begrunnelse = e.responseHeaders?.getOrEmpty(HttpHeaders.WARNING)?.firstOrNull()
+            throw HttpClientErrorException(e.statusCode, begrunnelse ?: e.message ?: "Ukjent feil ved distribusjon av forsendelse")
+        }
     }
 }
