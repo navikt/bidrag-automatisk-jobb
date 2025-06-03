@@ -418,12 +418,12 @@ class AldersjusteringService(
         return result
     }
 
-    fun hentAntallBarnSomSkalAldersjusteresForÅr(år: Int): Int =
+    fun hentAntallBarnSomSkalAldersjusteresForÅr(år: Int): Map<Int, Int> =
         barnRepository
             .finnBarnSomSkalAldersjusteresForÅr(år)
             .filter { it.fødselsdato != null }
             .groupBy { år - it.fødselsdato!!.year }
-            .size
+            .mapValues { it.value.size }
 
     fun hentAldersjustering(id: Int): Aldersjustering? = alderjusteringRepository.findById(id).orElseGet { null }
 
