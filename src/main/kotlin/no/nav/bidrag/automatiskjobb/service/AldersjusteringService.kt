@@ -420,7 +420,7 @@ class AldersjusteringService(
 
     fun hentAntallBarnSomSkalAldersjusteresForÅr(år: Int): Map<Int, Int> =
         barnRepository
-            .finnBarnSomSkalAldersjusteresForÅr(år)
+            .finnBarnSomSkalAldersjusteresForÅr(år, pageable = Pageable.unpaged())
             .filter { it.fødselsdato != null }
             .groupBy { år - it.fødselsdato!!.year }
             .mapValues { it.value.size }
