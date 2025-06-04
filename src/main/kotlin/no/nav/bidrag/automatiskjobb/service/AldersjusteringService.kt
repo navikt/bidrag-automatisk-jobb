@@ -14,6 +14,7 @@ import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
 import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringResponse
 import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringResultatResponse
 import no.nav.bidrag.automatiskjobb.service.model.OpprettVedtakConflictResponse
+import no.nav.bidrag.automatiskjobb.utils.JsonUtil.Companion.tilJson
 import no.nav.bidrag.automatiskjobb.utils.ugyldigForespørsel
 import no.nav.bidrag.beregn.barnebidrag.service.AldersjusteresManueltException
 import no.nav.bidrag.beregn.barnebidrag.service.AldersjusteringOrchestrator
@@ -389,6 +390,7 @@ class AldersjusteringService(
     private fun opprettEllerOppdaterVedtaksforslag(request: OpprettVedtakRequestDto) =
         try {
             slettEksisterendeVedtaksforslag(request.unikReferanse!!)
+            secureLogger.info { "Oppretter vedtaksforslag: ${tilJson(request)}" }
             vedtakConsumer.opprettVedtaksforslag(request)
         } catch (e: HttpStatusCodeException) {
             if (e.statusCode == HttpStatus.CONFLICT) {

@@ -35,6 +35,7 @@ import no.nav.bidrag.transport.behandling.vedtak.request.OpprettVedtakRequestDto
 import no.nav.bidrag.transport.sak.BidragssakDto
 import no.nav.bidrag.transport.sak.RolleDto
 import org.springframework.stereotype.Component
+import java.time.LocalDate
 import java.time.YearMonth
 
 @Component
@@ -124,6 +125,20 @@ class VedtakMapper(
                 ),
         )
 
+    private fun Personident.tilPersonGrunnlag(grunnlagstype: Grunnlagstype): OpprettGrunnlagRequestDto =
+        OpprettGrunnlagRequestDto(
+            referanse = "${grunnlagstype}_${this.verdi}",
+            type = grunnlagstype,
+            innhold =
+                POJONode(
+                    Person(
+                        ident = this,
+                        fødselsdato = personConsumer.hentPerson(this).fødselsdato ?: LocalDate.MIN,
+                        navn = personConsumer.hentPerson(this).navn,
+                    ),
+                ),
+        )
+
     private fun opprettAldersjusteringDetaljerGrunnlag(
         aldersjustering: Aldersjustering,
         søknadsbarnReferanse: String,
@@ -149,7 +164,14 @@ class VedtakMapper(
     fun tilOpprettVedtakRequestIngenAldersjustering(aldersjustering: Aldersjustering): OpprettVedtakRequestDto {
         val sak = sakConsumer.hentSak(aldersjustering.barn.saksnummer)
         val sakrolleBarn = sak.hentBarn(aldersjustering.barn.kravhaver)
-        val mottaker = sak.roller.reellMottakerEllerBidragsmottaker(sakrolleBarn)!!
+        val faktiskMottaker = sak.roller.reellMottakerEllerBidragsmottaker(sakrolleBarn)!!
+        val skyldnerIdent = Personident(aldersjustering.barn.skyldner!!)
+        val mottakerIdent =
+            sak.roller
+                .find { it.type == Rolletype.BIDRAGSMOTTAKER }
+                ?.fødselsnummer
+                ?.let { identUtils.hentNyesteIdent(it) }
+        val reelMottakerIdent = sakrolleBarn.reellMottaker?.ident?.personIdent()
         val grunnlagPerson = aldersjustering.barn.tilPersonobjekt(aldersjustering.stønadstype)
         val grunnlagAldersjustering =
             opprettAldersjusteringDetaljerGrunnlag(
@@ -164,6 +186,9 @@ class VedtakMapper(
                     setOfNotNull(
                         grunnlagAldersjustering,
                         grunnlagPerson,
+                        skyldnerIdent.tilPersonGrunnlag(Grunnlagstype.PERSON_BIDRAGSPLIKTIG),
+                        mottakerIdent?.tilPersonGrunnlag(Grunnlagstype.PERSON_BIDRAGSMOTTAKER),
+                        reelMottakerIdent?.tilPersonGrunnlag(Grunnlagstype.PERSON_REELL_MOTTAKER),
                     ).toList(),
                 behandlingsreferanseListe =
                     listOf(
@@ -182,8 +207,8 @@ class VedtakMapper(
                             type = aldersjustering.stønadstype,
                             sak = Saksnummer(aldersjustering.barn.saksnummer),
                             kravhaver = Personident(aldersjustering.barn.kravhaver),
-                            skyldner = Personident(aldersjustering.barn.skyldner!!),
-                            mottaker = mottaker,
+                            skyldner = skyldnerIdent,
+                            mottaker = faktiskMottaker,
                             beslutning = Beslutningstype.AVVIST,
                             grunnlagReferanseListe = listOf(grunnlagAldersjustering.referanse),
                             innkreving = Innkrevingstype.MED_INNKREVING,
