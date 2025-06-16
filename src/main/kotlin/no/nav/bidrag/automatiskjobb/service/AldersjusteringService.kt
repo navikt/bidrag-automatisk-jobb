@@ -2,6 +2,7 @@ package no.nav.bidrag.automatiskjobb.service
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.automatiskjobb.combinedLogger
+import no.nav.bidrag.automatiskjobb.consumer.BidragPersonConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer
 import no.nav.bidrag.automatiskjobb.mapper.VedtakMapper
@@ -36,6 +37,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpStatusCodeException
 import java.sql.Timestamp
+import java.time.LocalDate
 
 private val log = KotlinLogging.logger {}
 
@@ -48,6 +50,7 @@ class AldersjusteringService(
     private val sakConsumer: BidragSakConsumer,
     private val vedtakMapper: VedtakMapper,
     private val oppgaveService: OppgaveService,
+    private val personConsumer: BidragPersonConsumer,
     private val forsendelseBestillingService: ForsendelseBestillingService,
 ) {
     fun hentAldersjusteringstatusForBarnOgSak(request: HentAldersjusteringStatusRequest): AldersjusteringResultatlisteResponse =
@@ -457,6 +460,7 @@ class AldersjusteringService(
                         kravhaver = it.fødselsnummer!!.verdi,
                         skyldner = bp.fødselsnummer!!.verdi,
                         saksnummer = saksnummer.verdi,
+                        fødselsdato = personConsumer.hentFødselsdatoForPerson(it.fødselsnummer!!) ?: LocalDate.now(),
                     ),
                     år,
                     "aldersjustering-sak-$saksnummer",
