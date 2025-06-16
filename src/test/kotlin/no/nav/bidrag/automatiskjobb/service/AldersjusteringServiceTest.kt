@@ -7,6 +7,7 @@ import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.junit5.MockKExtension
 import io.mockk.verify
+import no.nav.bidrag.automatiskjobb.consumer.BidragPersonConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer
 import no.nav.bidrag.automatiskjobb.mapper.VedtakMapper
@@ -30,6 +31,9 @@ class AldersjusteringServiceTest {
 
     @RelaxedMockK
     lateinit var aldersjusteringRepository: AldersjusteringRepository
+
+    @RelaxedMockK
+    lateinit var personConsumer: BidragPersonConsumer
 
     @RelaxedMockK
     lateinit var vedtakConsumer: BidragVedtakConsumer
