@@ -7,6 +7,7 @@ on:
     branches:
       - 'q1/**'
       - 'Q1/**'
+      - 'main'
 
 jobs:
   build_and_deploy:
