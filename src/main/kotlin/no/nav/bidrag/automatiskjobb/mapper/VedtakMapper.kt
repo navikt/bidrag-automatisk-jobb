@@ -96,6 +96,7 @@ class VedtakMapper(
                             grunnlagReferanseListe = listOf(grunnlagAldersjustering.referanse),
                             innkreving = Innkrevingstype.MED_INNKREVING,
                             sisteVedtaksid = vedtakService.finnSisteVedtaksid(stønad),
+                            førsteIndeksreguleringsår = aldersjustering.aldersjusteresForÅr + 1,
                             periodeListe =
                                 resultat.beregnetBarnebidragPeriodeListe.map {
                                     OpprettPeriodeRequestDto(
