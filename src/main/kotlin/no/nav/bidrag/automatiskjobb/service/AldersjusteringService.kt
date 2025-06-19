@@ -36,6 +36,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpStatusCodeException
+import org.springframework.web.client.RestClientResponseException
 import java.sql.Timestamp
 import java.time.LocalDate
 
@@ -309,7 +310,15 @@ class AldersjusteringService(
                 aldersjustering.fattetTidspunkt = Timestamp(System.currentTimeMillis())
                 alderjusteringRepository.save(aldersjustering)
             } catch (e: Exception) {
-                log.error(e) { "Det skjedde en feil ved fatting av vedtak for aldersjustering ${aldersjustering.id}" }
+                val feilmelding =
+                    if (e is RestClientResponseException) {
+                        "Feil ved fatting av vedtak for aldersjustering ${aldersjustering.id}: ${e.message}. " +
+                            hentFeilmeldingFraWarningHeader(e)
+                    } else {
+                        "Feil ved fatting av vedtak for aldersjustering ${aldersjustering.id}: ${e.message}"
+                    }
+                log.error(e) { feilmelding }
+
                 aldersjustering.status = Status.FATTE_VEDTAK_FEILET
                 alderjusteringRepository.save(aldersjustering)
                 throw e
@@ -320,6 +329,11 @@ class AldersjusteringService(
             forsendelseBestillingService.opprettBestillingForAldersjustering(aldersjustering)
         }
     }
+
+    private fun hentFeilmeldingFraWarningHeader(exception: RestClientResponseException): String =
+        exception.responseHeaders?.get("Warning")?.let {
+            "Detaljer: ${it.joinToString(", ")}"
+        } ?: ""
 
     fun slettOppgaveForAldersjustering(aldersjustering: Aldersjustering): Int? {
         if (aldersjustering.oppgave == null) {
