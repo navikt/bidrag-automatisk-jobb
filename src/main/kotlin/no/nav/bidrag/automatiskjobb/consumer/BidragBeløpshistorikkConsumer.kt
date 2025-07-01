@@ -3,10 +3,10 @@ package no.nav.bidrag.automatiskjobb.consumer
 import no.nav.bidrag.beregn.barnebidrag.service.external.BeregningStønadConsumer
 import no.nav.bidrag.commons.web.client.AbstractRestClient
 import no.nav.bidrag.domene.ident.Personident
-import no.nav.bidrag.transport.behandling.stonad.request.HentStønadHistoriskRequest
-import no.nav.bidrag.transport.behandling.stonad.request.SkyldnerStønaderRequest
-import no.nav.bidrag.transport.behandling.stonad.response.SkyldnerStønaderResponse
-import no.nav.bidrag.transport.behandling.stonad.response.StønadDto
+import no.nav.bidrag.transport.behandling.belopshistorikk.request.HentStønadHistoriskRequest
+import no.nav.bidrag.transport.behandling.belopshistorikk.request.SkyldnerStønaderRequest
+import no.nav.bidrag.transport.behandling.belopshistorikk.response.SkyldnerStønaderResponse
+import no.nav.bidrag.transport.behandling.belopshistorikk.response.StønadDto
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.retry.annotation.Backoff
