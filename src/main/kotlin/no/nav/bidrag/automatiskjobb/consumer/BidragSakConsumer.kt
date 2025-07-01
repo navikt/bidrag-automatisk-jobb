@@ -4,6 +4,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.automatiskjobb.configuration.CacheConfiguration.Companion.SAKER_PERSON_CACHE
 import no.nav.bidrag.automatiskjobb.configuration.CacheConfiguration.Companion.SAK_CACHE
 import no.nav.bidrag.beregn.barnebidrag.service.external.BeregningSakConsumer
+import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.commons.web.client.AbstractRestClient
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.transport.sak.BidragssakDto
