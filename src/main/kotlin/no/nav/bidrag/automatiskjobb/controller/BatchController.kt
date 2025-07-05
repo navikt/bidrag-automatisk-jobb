@@ -429,8 +429,9 @@ class BatchController(
     fun startOppdaterBarnBatch(
         @RequestParam simuler: Boolean = true,
         @RequestParam barn: String? = null,
+        @RequestParam dagerTilbake: Int? = null,
     ): ResponseEntity<Any> {
-        oppdaterBarnBatch.startOppdaterBarnBatch(barn, simuler)
+        oppdaterBarnBatch.startOppdaterBarnBatch(barn, dagerTilbake ?: 1, simuler)
         return ResponseEntity.ok().build()
     }
 }

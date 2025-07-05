@@ -13,6 +13,7 @@ class OppdaterBarnBatch(
 ) {
     fun startOppdaterBarnBatch(
         barnId: String? = "",
+        dagerTilbake: Int = 1,
         simuler: Boolean,
     ) {
         jobLauncher.run(
@@ -20,6 +21,7 @@ class OppdaterBarnBatch(
             JobParametersBuilder()
                 .addString("simuler", simuler.toString())
                 .addString("barn", barnId ?: "")
+                .addString("dager", dagerTilbake.toString())
                 .addString("runId", UUID.randomUUID().toString())
                 .toJobParameters(),
         )
