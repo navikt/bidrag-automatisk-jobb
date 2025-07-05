@@ -30,6 +30,7 @@ data class Barn(
     var bidragTil: LocalDate? = null,
     @Version
     var opprettet: LocalDateTime? = null,
+    var oppdatert: LocalDateTime? = null,
 ) : EntityObject {
     fun tilStønadsid(stønadstype: Stønadstype) =
         Stønadsid(

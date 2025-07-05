@@ -35,6 +35,7 @@ class BarnService(
             }
             return
         }
+        barn.oppdatert = LocalDateTime.now()
         barnRepository.save(barn)
     }
 
