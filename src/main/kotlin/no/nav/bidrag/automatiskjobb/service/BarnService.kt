@@ -43,16 +43,16 @@ class BarnService(
             bidragBeløpshistorikkConsumer.hentHistoriskeStønader(
                 barn.tilHentStønadHistoriskRequest(Stønadstype.FORSKUDD),
             ) ?: run {
-                secureLogger.info { "Fant ingen historiske stønader for barn $barn" }
+                secureLogger.info { "Fant ingen forskudd stønader for barn ${barn.infoMedPerioder()}" }
                 return
             }
 
         if (historiskeForskudd.periodeListe.isEmpty()) {
-            secureLogger.info { "Ingen perioder funnet for barn $barn" }
+            secureLogger.info { "Ingen forskudd perioder funnet for barn ${barn.infoMedPerioder()}" }
             return
         }
         secureLogger.info {
-            "Fant forskudd periode fra ${historiskeForskudd.periodeFom()} - til ${historiskeForskudd.periodeTil()} for barn $barn"
+            "Fant forskudd periode fra ${historiskeForskudd.periodeFom()} - til ${historiskeForskudd.periodeTil()} for barn ${barn.infoMedPerioder()}"
         }
 
         barn.forskuddFra = historiskeForskudd.periodeFom()
@@ -64,17 +64,17 @@ class BarnService(
             bidragBeløpshistorikkConsumer.hentHistoriskeStønader(
                 barn.tilHentStønadHistoriskRequest(Stønadstype.BIDRAG),
             ) ?: run {
-                secureLogger.info { "Fant ingen historiske stønader for barn $barn" }
+                secureLogger.info { "Fant ingen bidrag stønader for barn ${barn.infoMedPerioder()}" }
                 return
             }
 
         if (historiskeBidrag.periodeListe.isEmpty()) {
-            secureLogger.info { "Ingen perioder funnet for barn $barn" }
+            secureLogger.info { "Ingen bidrag perioder funnet for barn ${barn.infoMedPerioder()}" }
             return
         }
 
         secureLogger.info {
-            "Fant bidrag periode fra ${historiskeBidrag.periodeFom()} - til ${historiskeBidrag.periodeTil()} for barn $barn"
+            "Fant bidrag periode fra ${historiskeBidrag.periodeFom()} - til ${historiskeBidrag.periodeTil()} for barn ${barn.infoMedPerioder()}"
         }
 
         barn.bidragFra = historiskeBidrag.periodeFom()

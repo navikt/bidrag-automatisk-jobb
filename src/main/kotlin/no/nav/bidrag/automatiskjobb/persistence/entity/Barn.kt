@@ -39,6 +39,9 @@ data class Barn(
             Saksnummer(saksnummer),
         )
 
+    fun infoMedPerioder(): String =
+        "Barn(id=$id, saksnummer='$saksnummer', fødselsdato=$fødselsdato, forskuddFra=$forskuddFra, forskuddTil=$forskuddTil, bidragFra=$bidragFra, bidragTil=$bidragTil)"
+
     fun infoUtenPerioder(): String =
         "Barn(id=$id, saksnummer='$saksnummer', kravhaver='$kravhaver', fødselsdato=$fødselsdato, skyldner=$skyldner)"
 
