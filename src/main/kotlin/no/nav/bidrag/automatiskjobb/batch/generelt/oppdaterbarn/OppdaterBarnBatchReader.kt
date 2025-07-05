@@ -38,7 +38,7 @@ class OppdaterBarnBatchReader(
         whereClause.append(" AND (oppdatert IS NULL OR oppdatert < (NOW() - MAKE_INTERVAL(days => :dager)))")
         parameterValues["dager"] = dager
 
-        whereClause.append(" AND fodselsdato >= NOW() - INTERVAL '22 year'")
+        whereClause.append(" AND fodselsdato >= NOW() - INTERVAL '18 year'")
 
         val sqlPagingQuaryPoviderFactoryBean =
             SqlPagingQueryProviderFactoryBean().apply {
