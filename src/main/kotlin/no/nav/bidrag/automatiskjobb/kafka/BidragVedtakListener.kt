@@ -1,6 +1,5 @@
 package no.nav.bidrag.automatiskjobb.kafka
 
-import kotlinx.coroutines.runBlocking
 import no.nav.bidrag.automatiskjobb.SECURE_LOGGER
 import no.nav.bidrag.automatiskjobb.service.OppgaveService
 import no.nav.bidrag.automatiskjobb.service.VedtakService
@@ -13,7 +12,6 @@ import org.springframework.kafka.listener.ConsumerSeekAware
 import org.springframework.kafka.support.KafkaHeaders
 import org.springframework.messaging.handler.annotation.Header
 import org.springframework.stereotype.Component
-import kotlin.reflect.KSuspendFunction1
 
 @Component
 class BidragVedtakListener(
@@ -59,29 +57,15 @@ class BidragVedtakListener(
         hendelse: String,
         metode: (vedtakHendelse: VedtakHendelse) -> Unit,
     ) {
-        runBlocking {
-            handleInternal(offset, groupId, topic, hendelse) { metode(it) }
-        }
+        handleInternal(offset, groupId, topic, hendelse) { metode(it) }
     }
 
-    private fun behandleHendelse(
+    private fun handleInternal(
         offset: Long,
         groupId: String,
         topic: String,
         hendelse: String,
-        metode: KSuspendFunction1<VedtakHendelse, Unit>,
-    ) {
-        runBlocking {
-            handleInternal(offset, groupId, topic, hendelse) { metode(it) }
-        }
-    }
-
-    private suspend fun handleInternal(
-        offset: Long,
-        groupId: String,
-        topic: String,
-        hendelse: String,
-        handler: suspend (VedtakHendelse) -> Unit,
+        handler: (VedtakHendelse) -> Unit,
     ) {
         LOGGER.info("Behandler vedtakhendelse med offset: $offset i consumergroup: $groupId for topic: $topic")
         secureLogger.debug { "Behandler vedtakhendelse: $hendelse" }
