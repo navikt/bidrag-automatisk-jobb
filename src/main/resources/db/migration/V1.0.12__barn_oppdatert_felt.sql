@@ -1,2 +1,2 @@
-alter table public.barn add column if not exists oppdatert timestamp;
+alter table barn add column if not exists oppdatert timestamp;
 
