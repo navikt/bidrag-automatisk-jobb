@@ -38,4 +38,10 @@ data class Barn(
             Personident(skyldner!!),
             Saksnummer(saksnummer),
         )
+
+    fun infoUtenPerioder(): String =
+        "Barn(id=$id, saksnummer='$saksnummer', kravhaver='$kravhaver', fødselsdato=$fødselsdato, skyldner=$skyldner)"
+
+    override fun toString(): String =
+        "Barn(id=$id, saksnummer='$saksnummer', kravhaver='$kravhaver', fødselsdato=$fødselsdato, skyldner=$skyldner, forskuddFra=$forskuddFra, forskuddTil=$forskuddTil, bidragFra=$bidragFra, bidragTil=$bidragTil, opprettet=$opprettet)"
 }
