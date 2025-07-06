@@ -40,7 +40,7 @@ class BarnService(
     }
 
     private fun oppdaterForskudd(barn: Barn) {
-        val historiskeForskudd =
+        val forskuddStønad =
             bidragBeløpshistorikkConsumer.hentHistoriskeStønader(
                 barn.tilHentStønadHistoriskRequest(Stønadstype.FORSKUDD),
             ) ?: run {
@@ -48,16 +48,16 @@ class BarnService(
                 return
             }
 
-        if (historiskeForskudd.periodeListe.isEmpty()) {
+        if (forskuddStønad.periodeListe.isEmpty()) {
             secureLogger.info { "Ingen forskudd perioder funnet for barn ${barn.infoMedPerioder()}" }
             return
         }
         secureLogger.info {
-            "Fant forskudd periode fra ${historiskeForskudd.periodeFom()} - til ${historiskeForskudd.periodeTil()} for barn ${barn.infoMedPerioder()}"
+            "Fant forskudd periode ${forskuddStønad.periodeFom()} - ${forskuddStønad.periodeTil()} " +
+                "for barn med lagret forskudd periode ${barn.forskuddFra} - ${barn.forskuddTil} - ${barn.infoUtenPerioder()}"
         }
-
-        barn.forskuddFra = historiskeForskudd.periodeFom()
-        barn.forskuddTil = historiskeForskudd.periodeTil()
+        barn.forskuddFra = forskuddStønad.periodeFom()
+        barn.forskuddTil = forskuddStønad.periodeTil()
     }
 
     private fun oppdaterBidrag(barn: Barn) {
@@ -75,7 +75,8 @@ class BarnService(
         }
 
         secureLogger.info {
-            "Fant bidrag periode fra ${historiskeBidrag.periodeFom()} - til ${historiskeBidrag.periodeTil()} for barn ${barn.infoMedPerioder()}"
+            "Fant bidrag periode ${historiskeBidrag.periodeFom()} - ${historiskeBidrag.periodeTil()} " +
+                "for barn med lagret bidrag periode ${barn.bidragFra} - ${barn.bidragTil} - ${barn.infoUtenPerioder()}"
         }
 
         barn.bidragFra = historiskeBidrag.periodeFom()
