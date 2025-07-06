@@ -59,6 +59,10 @@ class BarnService(
     }
 
     private fun oppdaterBidrag(barn: Barn) {
+        if (barn.skyldner == null) {
+            secureLogger.info { "Barn ${barn.infoUtenPerioder()} har ingen skyldner, hopper over oppdatering av bidrag" }
+            return
+        }
         val historiskeBidrag =
             bidragBeløpshistorikkConsumer.hentHistoriskeStønader(
                 barn.tilHentStønadHistoriskRequest(Stønadstype.BIDRAG),
