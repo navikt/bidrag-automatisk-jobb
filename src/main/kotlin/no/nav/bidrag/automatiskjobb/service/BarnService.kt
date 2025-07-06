@@ -54,6 +54,12 @@ class BarnService(
             "Fant forskudd periode ${forskuddStønad.periodeFom()} - ${forskuddStønad.periodeTil()} " +
                 "for barn med lagret forskudd periode ${barn.forskuddFra} - ${barn.forskuddTil} - ${barn.infoUtenPerioder()}"
         }
+        if (forskuddStønad.periodeFom() != barn.forskuddFra || forskuddStønad.periodeTil() != barn.forskuddTil) {
+            secureLogger.info {
+                "Feil forskudd periode lagret for barn ${barn.infoUtenPerioder()}. Oppdaterer " +
+                    "fra ${barn.forskuddFra} - ${barn.forskuddTil} til ${forskuddStønad.periodeFom()} - ${forskuddStønad.periodeTil()}"
+            }
+        }
         barn.forskuddFra = forskuddStønad.periodeFom()
         barn.forskuddTil = forskuddStønad.periodeTil()
     }
@@ -81,6 +87,12 @@ class BarnService(
                 "for barn med lagret bidrag periode ${barn.bidragFra} - ${barn.bidragTil} - ${barn.infoUtenPerioder()}"
         }
 
+        if (historiskeBidrag.periodeFom() != barn.bidragFra || historiskeBidrag.periodeTil() != barn.bidragTil) {
+            secureLogger.info {
+                "Feil bidrag periode lagret for barn ${barn.infoUtenPerioder()}. Oppdaterer " +
+                    "fra ${barn.bidragFra} - ${barn.bidragTil} til ${historiskeBidrag.periodeFom()} - ${historiskeBidrag.periodeTil()}"
+            }
+        }
         barn.bidragFra = historiskeBidrag.periodeFom()
         barn.bidragTil = historiskeBidrag.periodeTil()
     }
