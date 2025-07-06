@@ -12,7 +12,6 @@ import no.nav.bidrag.domene.sak.Saksnummer
 import no.nav.bidrag.transport.behandling.belopshistorikk.request.HentStønadHistoriskRequest
 import no.nav.bidrag.transport.behandling.belopshistorikk.response.StønadDto
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 
 private val log = KotlinLogging.logger {}
@@ -22,7 +21,6 @@ class BarnService(
     private val bidragBeløpshistorikkConsumer: BidragBeløpshistorikkConsumer,
     private val barnRepository: BarnRepository,
 ) {
-    @Transactional
     fun oppdaterBarnForskuddOgBidragPerioder(
         barn: Barn,
         simuler: Boolean,
