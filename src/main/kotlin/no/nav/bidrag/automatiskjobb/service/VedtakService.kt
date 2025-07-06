@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Service
 class VedtakService(
@@ -73,6 +74,7 @@ class VedtakService(
                 forskuddTil = finnPeriodeTil(stønadsendringer, Stønadstype.FORSKUDD, forskuddTil)
             }
         }
+        lagretBarn.oppdatert = LocalDateTime.now()
     }
 
     /**
@@ -100,6 +102,7 @@ class VedtakService(
                 forskuddTil = finnPeriodeTil(stønadsendringer, Stønadstype.FORSKUDD),
                 bidragFra = finnPeriodeFra(stønadsendringer, Stønadstype.BIDRAG),
                 bidragTil = finnPeriodeTil(stønadsendringer, Stønadstype.BIDRAG),
+                oppdatert = LocalDateTime.now(),
             )
         val lagretBarn = barnRepository.save(barn)
         LOGGER.info("Opprettet nytt barn ${lagretBarn.id} for sak $saksnummer")

@@ -16,6 +16,7 @@ import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.oppgave.slettop
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.opprett.OpprettAldersjusteringerBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.slettallevedtaksforslag.SlettAlleVedtaksforslagBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.slettvedtaksforslag.SlettVedtaksforslagBatch
+import no.nav.bidrag.automatiskjobb.batch.generelt.oppdaterbarn.OppdaterBarnBatch
 import no.nav.security.token.support.core.api.Protected
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
@@ -37,6 +38,7 @@ class BatchController(
     private val opprettForsendelseAldersjusteringerBidragBatch: OpprettForsendelseAldersjusteringerBidragBatch,
     private val distribuerForsendelseAldersjusteringerBidragBatch: DistribuerForsendelseAldersjusteringerBidragBatch,
     private val slettForsendelsrSomSkalSlettesBidragBatch: SlettForsendelsrSomSkalSlettesBidragBatch,
+    private val oppdaterBarnBatch: OppdaterBarnBatch,
 ) {
     @PostMapping("/aldersjuster/batch/slettvedtaksforslag")
     @Operation(
@@ -388,6 +390,48 @@ class BatchController(
     )
     fun startDistribuerForsendelseAldersjusteringBidragBatch(): ResponseEntity<Any> {
         distribuerForsendelseAldersjusteringerBidragBatch.startDistribuerForsendelseAldersjusteringBidragBatch()
+        return ResponseEntity.ok().build()
+    }
+
+    @PostMapping("/barn/oppdater")
+    @Operation(
+        summary = "Start kjøring av batch for å oppdatere barn med perioder for forskudd og bidrag",
+        description =
+            "Operasjon for å starte kjøring av batch som oppdaterer " +
+                "barn med perioder for forskudd og bidrag ved å hente data fra bidrag-beløpshistorikk",
+        security = [SecurityRequirement(name = "bearer-key")],
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Batch for oppdatering av barn perioder startet",
+            ),
+        ],
+    )
+    @Parameters(
+        value = [
+            Parameter(
+                name = "simuler",
+                example = "true",
+                description = "Simuleringsmodus. Default er true.",
+                required = false,
+            ),
+            Parameter(
+                name = "barn",
+                example = "1,2,3",
+                description =
+                    "Liste over barn som det skal oppdateres for",
+                required = false,
+            ),
+        ],
+    )
+    fun startOppdaterBarnBatch(
+        @RequestParam simuler: Boolean = true,
+        @RequestParam barn: String? = null,
+        @RequestParam dagerTilbake: Int? = null,
+    ): ResponseEntity<Any> {
+        oppdaterBarnBatch.startOppdaterBarnBatch(barn, dagerTilbake ?: 1, simuler)
         return ResponseEntity.ok().build()
     }
 }

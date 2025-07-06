@@ -1,0 +1,1 @@
+alter table barn add column if not exists oppdatert timestamp;
