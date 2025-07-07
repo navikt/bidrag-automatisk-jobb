@@ -12,7 +12,6 @@ import no.nav.bidrag.domene.sak.Saksnummer
 import no.nav.bidrag.transport.behandling.belopshistorikk.request.HentStønadHistoriskRequest
 import no.nav.bidrag.transport.behandling.belopshistorikk.response.StønadDto
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 
 private val log = KotlinLogging.logger {}
@@ -22,7 +21,6 @@ class BarnService(
     private val bidragBeløpshistorikkConsumer: BidragBeløpshistorikkConsumer,
     private val barnRepository: BarnRepository,
 ) {
-    @Transactional
     fun oppdaterBarnForskuddOgBidragPerioder(
         barn: Barn,
         simuler: Boolean,
@@ -56,11 +54,21 @@ class BarnService(
             "Fant forskudd periode ${forskuddStønad.periodeFom()} - ${forskuddStønad.periodeTil()} " +
                 "for barn med lagret forskudd periode ${barn.forskuddFra} - ${barn.forskuddTil} - ${barn.infoUtenPerioder()}"
         }
+        if (forskuddStønad.periodeFom() != barn.forskuddFra || forskuddStønad.periodeTil() != barn.forskuddTil) {
+            secureLogger.info {
+                "Feil forskudd periode lagret for barn ${barn.infoUtenPerioder()}. Oppdaterer " +
+                    "fra ${barn.forskuddFra} - ${barn.forskuddTil} til ${forskuddStønad.periodeFom()} - ${forskuddStønad.periodeTil()}"
+            }
+        }
         barn.forskuddFra = forskuddStønad.periodeFom()
         barn.forskuddTil = forskuddStønad.periodeTil()
     }
 
     private fun oppdaterBidrag(barn: Barn) {
+        if (barn.skyldner == null) {
+            secureLogger.info { "Barn ${barn.infoUtenPerioder()} har ingen skyldner, hopper over oppdatering av bidrag" }
+            return
+        }
         val historiskeBidrag =
             bidragBeløpshistorikkConsumer.hentHistoriskeStønader(
                 barn.tilHentStønadHistoriskRequest(Stønadstype.BIDRAG),
@@ -79,6 +87,12 @@ class BarnService(
                 "for barn med lagret bidrag periode ${barn.bidragFra} - ${barn.bidragTil} - ${barn.infoUtenPerioder()}"
         }
 
+        if (historiskeBidrag.periodeFom() != barn.bidragFra || historiskeBidrag.periodeTil() != barn.bidragTil) {
+            secureLogger.info {
+                "Feil bidrag periode lagret for barn ${barn.infoUtenPerioder()}. Oppdaterer " +
+                    "fra ${barn.bidragFra} - ${barn.bidragTil} til ${historiskeBidrag.periodeFom()} - ${historiskeBidrag.periodeTil()}"
+            }
+        }
         barn.bidragFra = historiskeBidrag.periodeFom()
         barn.bidragTil = historiskeBidrag.periodeTil()
     }
