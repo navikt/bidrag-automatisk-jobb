@@ -1,9 +1,11 @@
 package no.nav.bidrag.automatiskjobb.consumer
 
-import no.nav.bidrag.beregn.barnebidrag.service.external.BeregningStønadConsumer
+import no.nav.bidrag.beregn.barnebidrag.service.external.BeregningBeløpshistorikkConsumer
+import no.nav.bidrag.commons.cache.BrukerCacheable
 import no.nav.bidrag.commons.web.client.AbstractRestClient
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.transport.behandling.belopshistorikk.request.HentStønadHistoriskRequest
+import no.nav.bidrag.transport.behandling.belopshistorikk.request.HentStønadRequest
 import no.nav.bidrag.transport.behandling.belopshistorikk.request.SkyldnerStønaderRequest
 import no.nav.bidrag.transport.behandling.belopshistorikk.response.SkyldnerStønaderResponse
 import no.nav.bidrag.transport.behandling.belopshistorikk.response.StønadDto
@@ -21,7 +23,7 @@ class BidragBeløpshistorikkConsumer(
     @Value("\${BIDRAG_BELOPSHISTORIKK_URL}") private val bidragBeløpshistorikkUrl: URI,
     @Qualifier("azure") restTemplate: RestTemplate,
 ) : AbstractRestClient(restTemplate, "bidrag-stønad"),
-    BeregningStønadConsumer {
+    BeregningBeløpshistorikkConsumer {
     private val bidragBeløpshistorikkUri
         get() = UriComponentsBuilder.fromUri(bidragBeløpshistorikkUrl)
 
@@ -45,5 +47,11 @@ class BidragBeløpshistorikkConsumer(
         postForEntity(
             bidragBeløpshistorikkUri.pathSegment("hent-stonad-historisk/").build().toUri(),
             request,
+        )
+
+    override fun hentLøpendeStønad(hentStønadRequest: HentStønadRequest): StønadDto? =
+        postForEntity(
+            bidragBeløpshistorikkUri.pathSegment("hent-stonad-historisk/").build().toUri(),
+            hentStønadRequest,
         )
 }

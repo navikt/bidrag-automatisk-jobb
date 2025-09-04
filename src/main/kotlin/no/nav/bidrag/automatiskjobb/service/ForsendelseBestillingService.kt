@@ -14,12 +14,12 @@ import no.nav.bidrag.automatiskjobb.utils.bidragspliktig
 import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.domene.enums.diverse.Språk
 import no.nav.bidrag.domene.enums.rolle.Rolletype
+import no.nav.bidrag.domene.enums.samhandler.Områdekode
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.domene.ident.SamhandlerId
 import no.nav.bidrag.transport.dokument.numeric
 import no.nav.bidrag.transport.sak.BidragssakDto
 import no.nav.bidrag.transport.sak.RolleDto
-import no.nav.bidrag.transport.samhandler.Områdekode
 import org.springframework.stereotype.Service
 import java.sql.Timestamp
 import java.time.LocalDate

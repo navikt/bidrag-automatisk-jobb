@@ -248,7 +248,7 @@ class RevurderForskuddServiceTest {
                             kilde = Vedtakskilde.AUTOMATISK,
                         ),
                         opprettVedtakForStønad(personIdentBidragspliktig, stønadstype = Stønadstype.FORSKUDD).copy(
-                            vedtaksid = vedtaksidForskudd2.toLong(),
+                            vedtaksid = vedtaksidForskudd2,
                             type = Vedtakstype.ENDRING,
                         ),
                     ),

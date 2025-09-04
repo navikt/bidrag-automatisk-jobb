@@ -38,6 +38,10 @@ import no.nav.bidrag.transport.behandling.felles.grunnlag.søknadsbarn
 import no.nav.bidrag.transport.behandling.vedtak.VedtakHendelse
 import no.nav.bidrag.transport.behandling.vedtak.request.HentVedtakForStønadRequest
 import no.nav.bidrag.transport.behandling.vedtak.response.VedtakDto
+import no.nav.bidrag.transport.behandling.vedtak.response.erDelvedtak
+import no.nav.bidrag.transport.behandling.vedtak.response.erOrkestrertVedtak
+import no.nav.bidrag.transport.behandling.vedtak.response.harResultatFraAnnenVedtak
+import no.nav.bidrag.transport.behandling.vedtak.response.referertVedtaksid
 import no.nav.bidrag.transport.behandling.vedtak.saksnummer
 import no.nav.bidrag.transport.felles.ifTrue
 import org.springframework.context.annotation.Import
@@ -234,13 +238,20 @@ class RevurderForskuddService(
 
     private fun hentVedtak(vedtakId: Int): VedtakDto? {
         val vedtak = bidragVedtakConsumer.hentVedtak(vedtakId) ?: return null
-        if (vedtak.grunnlagListe.isEmpty()) {
+        if (vedtak.erDelvedtak || vedtak.erOrkestrertVedtak && vedtak.type == Vedtakstype.INNKREVING) return null
+        val faktiskVedtak =
+            if (vedtak.erOrkestrertVedtak) {
+                bidragVedtakConsumer.hentVedtak(vedtak.referertVedtaksid!!)
+            } else {
+                vedtak
+            } ?: return null
+        if (faktiskVedtak.grunnlagListe.isEmpty()) {
             combinedLogger.info {
                 "Vedtak $vedtakId fattet av system ${vedtak.kildeapplikasjon} mangler grunnlag. Gjør ingen vurdering"
             }
             return null
         }
-        return vedtak
+        return faktiskVedtak
     }
 
     private fun hentSisteManuelleForskuddVedtak(
