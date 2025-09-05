@@ -56,6 +56,7 @@ data class Endringsmelding(
         BOSTEDSADRESSE,
         DOEDSFALL,
         FOEDSEL,
+        FOEDSELSDATO,
         FOLKEREGISTERIDENTIFIKATOR,
         INNFLYTTING_TIL_NORGE,
         KONTAKTADRESSE,
