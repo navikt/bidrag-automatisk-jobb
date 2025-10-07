@@ -131,6 +131,11 @@
         </dependency>
         <dependency>
             <groupId>no.nav.bidrag</groupId>
+            <artifactId>bidrag-inntekt</artifactId>
+            <version>${bidrag-beregn-felles.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>no.nav.bidrag</groupId>
             <artifactId>bidrag-beregn-barnebidrag</artifactId>
             <version>${bidrag-beregn-felles.version}</version>
             <exclusions>
