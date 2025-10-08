@@ -9,6 +9,8 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
+import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
+import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import java.math.BigDecimal
 import java.sql.Timestamp
@@ -45,23 +47,4 @@ data class Aldersjustering(
     val unikReferanse get() = "aldersjustering_${batchId}_${barn.tilStønadsid(stønadstype).toReferanse()}"
     val begrunnelseVisningsnavn get() =
         begrunnelse.map { it.lowercase().replaceFirstChar { it.uppercase() }.replace("_", " ") }
-}
-
-enum class Status {
-    UBEHANDLET,
-    TRUKKET,
-    BEHANDLET,
-    SIMULERT,
-    SLETTES,
-    SLETTET,
-    FEILET,
-    FATTE_VEDTAK_FEILET,
-    FATTET,
-}
-
-enum class Behandlingstype {
-    FATTET_FORSLAG,
-    INGEN,
-    FEILET,
-    MANUELL,
 }
