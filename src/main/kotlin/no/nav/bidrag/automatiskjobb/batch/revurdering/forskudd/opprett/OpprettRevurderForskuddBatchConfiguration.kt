@@ -8,8 +8,10 @@ import org.springframework.batch.core.Step
 import org.springframework.batch.core.job.builder.JobBuilder
 import org.springframework.batch.core.repository.JobRepository
 import org.springframework.batch.core.step.builder.StepBuilder
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.task.TaskExecutor
 import org.springframework.transaction.PlatformTransactionManager
 
 @Configuration
@@ -27,6 +29,7 @@ class OpprettRevurderForskuddBatchConfiguration {
 
     @Bean
     fun opprettRevurderForskuddStep(
+        @Qualifier("batchTaskExecutor") taskExecutor: TaskExecutor,
         jobRepository: JobRepository,
         transactionManager: PlatformTransactionManager,
         opprettRevurderForskuddBatchReader: OpprettRevurderForskuddBatchReader,
@@ -38,5 +41,6 @@ class OpprettRevurderForskuddBatchConfiguration {
             .reader(opprettRevurderForskuddBatchReader)
             .processor(opprettRevurderForskuddBatchProcessor)
             .writer(dummmyWriter)
+            .taskExecutor(taskExecutor)
             .build()
 }
