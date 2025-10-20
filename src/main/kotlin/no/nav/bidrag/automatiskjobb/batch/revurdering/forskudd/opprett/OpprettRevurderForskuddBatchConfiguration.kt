@@ -5,11 +5,14 @@ import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.CHUNK_SIZ
 import no.nav.bidrag.automatiskjobb.batch.DummyItemWriter
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
+import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.Step
 import org.springframework.batch.core.job.builder.JobBuilder
 import org.springframework.batch.core.repository.JobRepository
 import org.springframework.batch.core.step.builder.StepBuilder
+import org.springframework.batch.item.data.RepositoryItemReader
+import org.springframework.batch.item.data.builder.RepositoryItemReaderBuilder
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -34,7 +37,7 @@ class OpprettRevurderForskuddBatchConfiguration {
         @Qualifier("batchTaskExecutor") taskExecutor: TaskExecutor,
         jobRepository: JobRepository,
         transactionManager: PlatformTransactionManager,
-        opprettRevurderForskuddBatchReader: OpprettRevurderForskuddBatchReader,
+        opprettRevurderForskuddBatchReader: RepositoryItemReader<Barn>,
         opprettRevurderForskuddBatchProcessor: OpprettRevurderForskuddBatchProcessor,
         dummmyWriter: DummyItemWriter,
     ): Step =
@@ -44,5 +47,14 @@ class OpprettRevurderForskuddBatchConfiguration {
             .processor(opprettRevurderForskuddBatchProcessor)
             .writer(dummmyWriter)
             .taskExecutor(taskExecutor)
+            .build()
+
+    @Bean
+    fun opprettRevurderForskuddBatchReader(barnRepository: BarnRepository): RepositoryItemReader<Barn> =
+        RepositoryItemReaderBuilder<Barn>()
+            .name("opprettRevurderForskuddBatchReader")
+            .repository(barnRepository)
+            .methodName("findBarnSomSkalRevurdereForskudd")
+            .saveState(false) // Savestate må være false for å unngå feil ved parallell kjøring
             .build()
 }
