@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.task.TaskExecutor
+import org.springframework.data.domain.Sort
 import org.springframework.transaction.PlatformTransactionManager
 
 @Configuration
@@ -56,5 +57,6 @@ class OpprettRevurderForskuddBatchConfiguration {
             .repository(barnRepository)
             .methodName("findBarnSomSkalRevurdereForskudd")
             .saveState(false) // Savestate må være false for å unngå feil ved parallell kjøring
+            .sorts(mapOf("id" to Sort.Direction.ASC))
             .build()
 }
