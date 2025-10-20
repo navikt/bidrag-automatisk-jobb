@@ -20,7 +20,7 @@ class ForsendelseRevurderForskuddBatch(
             JobParametersBuilder()
                 .addString("simuler", simuler.toString())
                 .addString("barn", barn ?: "")
-                .addString("runId", UUID.randomUUID().toString())
+                .addString("batchId", UUID.randomUUID().toString())
                 .toJobParameters(),
         )
     }

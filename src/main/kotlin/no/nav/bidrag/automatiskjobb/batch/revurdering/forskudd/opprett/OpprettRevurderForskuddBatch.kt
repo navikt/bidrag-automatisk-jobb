@@ -11,16 +11,11 @@ class OpprettRevurderForskuddBatch(
     private val jobLauncher: JobLauncher,
     private val opprettRevurderForskuddJob: Job,
 ) {
-    fun startRevurderForskuddBatch(
-        simuler: Boolean,
-        barn: String?,
-    ) {
+    fun start() {
         jobLauncher.run(
             opprettRevurderForskuddJob,
             JobParametersBuilder()
-                .addString("simuler", simuler.toString())
-                .addString("barn", barn ?: "")
-                .addString("runId", UUID.randomUUID().toString())
+                .addString("batchId", UUID.randomUUID().toString())
                 .toJobParameters(),
         )
     }

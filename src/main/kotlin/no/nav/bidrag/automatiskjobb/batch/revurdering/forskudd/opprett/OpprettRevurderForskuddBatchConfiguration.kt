@@ -3,6 +3,8 @@ package no.nav.bidrag.automatiskjobb.batch.revurdering.forskudd.opprett
 import no.nav.bidrag.automatiskjobb.batch.BatchCompletionNotificationListener
 import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.CHUNK_SIZE
 import no.nav.bidrag.automatiskjobb.batch.DummyItemWriter
+import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
+import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.Step
 import org.springframework.batch.core.job.builder.JobBuilder
@@ -37,7 +39,7 @@ class OpprettRevurderForskuddBatchConfiguration {
         dummmyWriter: DummyItemWriter,
     ): Step =
         StepBuilder("opprettRevurderForskuddStep", jobRepository)
-            .chunk<Any, Unit>(CHUNK_SIZE, transactionManager)
+            .chunk<Barn, RevurderingForskudd>(CHUNK_SIZE, transactionManager)
             .reader(opprettRevurderForskuddBatchReader)
             .processor(opprettRevurderForskuddBatchProcessor)
             .writer(dummmyWriter)

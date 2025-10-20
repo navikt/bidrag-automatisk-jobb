@@ -34,4 +34,14 @@ interface BarnRepository : JpaRepository<Barn, Int> {
     fun findAllByKravhaver(kravhaver: String): List<Barn>
 
     fun findAllBySkyldner(skyldner: String): List<Barn>
+
+    @Query(
+        "SELECT b FROM barn b WHERE b.forskuddFra IS NOT NULL " +
+            "AND (b.forskuddTil IS NULL OR b.forskuddTil < :forskuddDato) " +
+            "AND (b.oppdatert IS NULL OR b.oppdatert >= :cuttoffDato) ",
+    )
+    fun findBarnSomSkalRevurdereForskudd(
+        @Param("forskuddDato") forskuddDato: LocalDate = LocalDate.now().withDayOfMonth(1),
+        @Param("cuttoffDato") cuttoffDato: LocalDate = LocalDate.now().minusYears(1),
+    )
 }
