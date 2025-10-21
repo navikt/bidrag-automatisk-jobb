@@ -19,9 +19,16 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.core.task.TaskExecutor
 import org.springframework.data.domain.Sort
 import org.springframework.transaction.PlatformTransactionManager
+import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Configuration
 class OpprettRevurderForskuddBatchConfiguration {
+    companion object {
+        val FORSKUDD_FREM_TIL_DATO = LocalDate.now().withDayOfMonth(1)
+        val REVURDER_FORSKUDD_UTEN_VEDTAK_ETTER_DATO = LocalDateTime.now().minusYears(1)
+    }
+
     @Bean
     fun opprettRevurderForskuddJob(
         jobRepository: JobRepository,
@@ -56,6 +63,7 @@ class OpprettRevurderForskuddBatchConfiguration {
             .name("opprettRevurderForskuddBatchReader")
             .repository(barnRepository)
             .methodName("findBarnSomSkalRevurdereForskudd")
+            .arguments(listOf(FORSKUDD_FREM_TIL_DATO, REVURDER_FORSKUDD_UTEN_VEDTAK_ETTER_DATO))
             .saveState(false) // Savestate må være false for å unngå feil ved parallell kjøring
             .sorts(mapOf("id" to Sort.Direction.ASC))
             .build()

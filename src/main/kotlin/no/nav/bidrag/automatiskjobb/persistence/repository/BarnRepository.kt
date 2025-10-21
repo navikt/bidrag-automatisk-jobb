@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 interface BarnRepository : JpaRepository<Barn, Int> {
     @Query(
@@ -41,7 +42,8 @@ interface BarnRepository : JpaRepository<Barn, Int> {
             "AND (b.oppdatert IS NULL OR b.oppdatert >= :cuttoffDato) ",
     )
     fun findBarnSomSkalRevurdereForskudd(
-        @Param("forskuddDato") forskuddDato: LocalDate = LocalDate.now().withDayOfMonth(1),
-        @Param("cuttoffDato") cuttoffDato: LocalDate = LocalDate.now().minusYears(1),
-    )
+        @Param("forskuddDato") forskuddDato: LocalDate,
+        @Param("cuttoffDato") cuttoffDato: LocalDateTime,
+        pageable: Pageable,
+    ): Page<Barn>
 }
