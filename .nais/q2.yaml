@@ -29,6 +29,8 @@ env:
   BIDRAG_DOKUMENT_FORSENDELSE_SCOPE: dev-gcp.bidrag.bidrag-dokument-forsendelse
   BIDRAG_SAK_URL: https://bidrag-sak-q2.dev-fss-pub.nais.io
   BIDRAG_SAK_SCOPE: dev-fss.bidrag.bidrag-sak-q2
+  BIDRAG_BEHANDLING_URL: https://bidrag-behandling-q2.intern.dev.nav.no
+  BIDRAG_BEHANDLING_SCOPE: dev-gcp.bidrag.bidrag-behandling-q2
   OPPGAVE_URL: https://oppgave.dev-fss-pub.nais.io
   OPPGAVE_SCOPE: dev-fss.oppgavehandtering.oppgave
   KODEVERK_URL: http://bidrag-kodeverk

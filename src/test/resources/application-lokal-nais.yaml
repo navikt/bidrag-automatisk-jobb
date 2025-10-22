@@ -19,6 +19,8 @@ BIDRAG_TILGANGSKONTROLL_URL: https://bidrag-tilgangskontroll-feature.intern.dev.
 BIDRAG_TILGANGGSKONTROLL_SCOPE: dev-gcp.bidrag.bidrag-tilgangskontroll-feature
 BIDRAG_SAK_URL: https://bidrag-sak-q1.dev.intern.nav.no
 BIDRAG_SAK_SCOPE: dev-fss.bidrag.bidrag-sak-q1
+BIDRAG_BEHANDLING_URL: https://bidrag-behandling-q1.intern.dev.nav.no
+BIDRAG_BEHANDLING_SCOPE: dev-gcp.bidrag.bidrag-behandling-q1
 BIDRAG_VEDTAK_SCOPE: dev-gcp.bidrag.bidrag-vedtak-q1
 BIDRAG_SAMHANDLER_SCOPE: dev-gcp.bidrag.bidrag-samhandler-q1
 BIDRAG_SAMHANDLER_URL: https://bidrag-samhandler-q1.intern.dev.nav.no
@@ -39,6 +41,8 @@ BIDRAG_TILGANGSKONTROLL_URL: https://bidrag-tilgangskontroll.intern.dev.nav.no
 BIDRAG_TILGANGGSKONTROLL_SCOPE: dev-gcp.bidrag.bidrag-tilgangskontroll
 BIDRAG_SAK_URL: https://bidrag-sak-q2.dev.intern.nav.no
 BIDRAG_SAK_SCOPE: dev-fss.bidrag.bidrag-sak-q2
+BIDRAG_BEHANDLING_URL: https://bidrag-behandling-q2.intern.dev.nav.no
+BIDRAG_BEHANDLING_SCOPE: dev-gcp.bidrag.bidrag-behandling-q2
 BIDRAG_VEDTAK_SCOPE: dev-gcp.bidrag.bidrag-vedtak-q2
 BIDRAG_VEDTAK_URL: https://bidrag-vedtak-q2.intern.dev.nav.no
 BIDRAG_SAMHANDLER_SCOPE: dev-gcp.bidrag.bidrag-samhandler-q2
@@ -58,6 +62,8 @@ BIDRAG_TILGANGSKONTROLL_URL: https://bidrag-tilgangskontroll.intern.dev.nav.no
 BIDRAG_TILGANGGSKONTROLL_SCOPE: dev-gcp.bidrag.bidrag-tilgangskontroll
 BIDRAG_SAK_URL: https://bidrag-sak-q1.dev.intern.nav.no
 BIDRAG_SAK_SCOPE: dev-fss.bidrag.bidrag-sak-q1
+BIDRAG_BEHANDLING_URL: https://bidrag-behandling-q1.intern.dev.nav.no
+BIDRAG_BEHANDLING_SCOPE: dev-gcp.bidrag.bidrag-behandling-q1
 BIDRAG_VEDTAK_SCOPE: dev-gcp.bidrag.bidrag-vedtak-q1
 BIDRAG_VEDTAK_URL: https://bidrag-vedtak-q1.intern.dev.nav.no
 BIDRAG_SAMHANDLER_SCOPE: dev-gcp.bidrag.bidrag-samhandler-q1
@@ -67,20 +73,3 @@ OPPGAVE_SCOPE: dev-fss.oppgavehandtering.oppgave-q1
 DB_DATABASE: bidrag-automatisk-jobb
 BIDRAG_DOKUMENT_FORSENDELSE_SCOPE: dev-gcp.bidrag.bidrag-dokument-forsendelse-feature
 BIDRAG_DOKUMENT_FORSENDELSE_URL: https://bidrag-dokument-forsendelse-feature.intern.dev.nav.no
----
-spring:
-  config:
-    activate:
-      on-profile: q4
-BIDRAG_BELOPSHISTORIKK_URL: https://bidrag-belopshistorikk-q4.intern.dev.nav.no
-BIDRAG_BELOPSHISTORIKK_SCOPE: dev-gcp.bidrag.bidrag-belopshistorikk-q4
-BIDRAG_TILGANGSKONTROLL_URL: https://bidrag-tilgangskontroll.intern.dev.nav.no
-BIDRAG_TILGANGGSKONTROLL_SCOPE: dev-gcp.bidrag.bidrag-tilgangskontroll
-BIDRAG_SAK_URL: https://bidrag-sak-q4.dev.intern.nav.no
-BIDRAG_SAK_SCOPE: dev-fss.bidrag.bidrag-sak-q4
-BIDRAG_VEDTAK_SCOPE: dev-gcp.bidrag.bidrag-vedtak-q4
-BIDRAG_VEDTAK_URL: https://bidrag-vedtak-q4.intern.dev.nav.no
-BIDRAG_SAMHANDLER_SCOPE: dev-gcp.bidrag.bidrag-samhandler-q4
-BIDRAG_SAMHANDLER_URL: https://bidrag-samhandler-q4.intern.dev.nav.no
-OPPGAVE_URL: https://oppgave.dev-fss-pub.nais.io
-OPPGAVE_SCOPE: dev-fss.oppgavehandtering.oppgave
