@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import io.swagger.v3.oas.annotations.tags.Tag
 import no.nav.bidrag.automatiskjobb.service.VedtakService
 import no.nav.bidrag.transport.behandling.vedtak.VedtakHendelse
 import no.nav.security.token.support.core.api.Protected
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @Protected
 @RestController
+@Tag(name = "Vedtak")
 class VedtakController(
     private val vedtakService: VedtakService,
 ) {

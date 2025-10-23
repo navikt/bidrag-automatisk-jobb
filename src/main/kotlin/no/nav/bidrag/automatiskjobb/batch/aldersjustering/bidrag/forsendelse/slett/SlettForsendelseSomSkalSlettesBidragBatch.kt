@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component
 import java.util.UUID
 
 @Component
-class SlettForsendelsrSomSkalSlettesBidragBatch(
+class SlettForsendelseSomSkalSlettesBidragBatch(
     private val jobLauncher: JobLauncher,
     private val slettForsendelserSomSkalSlettesJob: Job,
 ) {
