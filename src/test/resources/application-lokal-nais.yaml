@@ -21,6 +21,8 @@ BIDRAG_SAK_URL: https://bidrag-sak-q1.dev.intern.nav.no
 BIDRAG_SAK_SCOPE: dev-fss.bidrag.bidrag-sak-q1
 BIDRAG_BEHANDLING_URL: https://bidrag-behandling-q1.intern.dev.nav.no
 BIDRAG_BEHANDLING_SCOPE: dev-gcp.bidrag.bidrag-behandling-q1
+BIDRAG_GRUNNLAG_URL: https://bidrag-grunnlag-q1.intern.dev.nav.no
+BIDRAG_GRUNNLAG_SCOPE: dev-gcp.bidrag.bidrag-grunnlag-q1
 BIDRAG_VEDTAK_SCOPE: dev-gcp.bidrag.bidrag-vedtak-q1
 BIDRAG_SAMHANDLER_SCOPE: dev-gcp.bidrag.bidrag-samhandler-q1
 BIDRAG_SAMHANDLER_URL: https://bidrag-samhandler-q1.intern.dev.nav.no
@@ -43,6 +45,8 @@ BIDRAG_SAK_URL: https://bidrag-sak-q2.dev.intern.nav.no
 BIDRAG_SAK_SCOPE: dev-fss.bidrag.bidrag-sak-q2
 BIDRAG_BEHANDLING_URL: https://bidrag-behandling-q2.intern.dev.nav.no
 BIDRAG_BEHANDLING_SCOPE: dev-gcp.bidrag.bidrag-behandling-q2
+BIDRAG_GRUNNLAG_URL: https://bidrag-grunnlag-q2.intern.dev.nav.no
+BIDRAG_GRUNNLAG_SCOPE: dev-gcp.bidrag.bidrag-grunnlag-q2
 BIDRAG_VEDTAK_SCOPE: dev-gcp.bidrag.bidrag-vedtak-q2
 BIDRAG_VEDTAK_URL: https://bidrag-vedtak-q2.intern.dev.nav.no
 BIDRAG_SAMHANDLER_SCOPE: dev-gcp.bidrag.bidrag-samhandler-q2
@@ -64,6 +68,8 @@ BIDRAG_SAK_URL: https://bidrag-sak-q1.dev.intern.nav.no
 BIDRAG_SAK_SCOPE: dev-fss.bidrag.bidrag-sak-q1
 BIDRAG_BEHANDLING_URL: https://bidrag-behandling-q1.intern.dev.nav.no
 BIDRAG_BEHANDLING_SCOPE: dev-gcp.bidrag.bidrag-behandling-q1
+BIDRAG_GRUNNLAG_URL: https://bidrag-grunnlag-q1.intern.dev.nav.no
+BIDRAG_GRUNNLAG_SCOPE: dev-gcp.bidrag.bidrag-grunnlag-q1
 BIDRAG_VEDTAK_SCOPE: dev-gcp.bidrag.bidrag-vedtak-q1
 BIDRAG_VEDTAK_URL: https://bidrag-vedtak-q1.intern.dev.nav.no
 BIDRAG_SAMHANDLER_SCOPE: dev-gcp.bidrag.bidrag-samhandler-q1
