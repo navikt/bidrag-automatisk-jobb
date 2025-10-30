@@ -11,11 +11,12 @@ class OpprettRevurderForskuddBatch(
     private val jobLauncher: JobLauncher,
     private val opprettRevurderForskuddJob: Job,
 ) {
-    fun start() {
+    fun start(antallMånederTilbake: Int = 12) {
         jobLauncher.run(
             opprettRevurderForskuddJob,
             JobParametersBuilder()
                 .addString("batchId", UUID.randomUUID().toString())
+                .addString("antallManederTilbake", antallMånederTilbake.toString())
                 .toJobParameters(),
         )
     }
