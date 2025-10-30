@@ -11,16 +11,16 @@ class BeregnRevurderForskuddBatch(
     private val jobLauncher: JobLauncher,
     private val beregnRevurderForskuddJob: Job,
 ) {
-    fun startBeregnRevurderForskuddBatch(
+    fun start(
         simuler: Boolean,
-        barn: String?,
+        antallMånederForBeregning: Long,
     ) {
         jobLauncher.run(
             beregnRevurderForskuddJob,
             JobParametersBuilder()
                 .addString("simuler", simuler.toString())
-                .addString("barn", barn ?: "")
                 .addString("batchId", UUID.randomUUID().toString())
+                .addString("antallManederForBeregning", antallMånederForBeregning.toString())
                 .toJobParameters(),
         )
     }
