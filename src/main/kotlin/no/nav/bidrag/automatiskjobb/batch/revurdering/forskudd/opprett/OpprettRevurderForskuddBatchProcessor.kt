@@ -9,7 +9,6 @@ import org.springframework.batch.core.annotation.BeforeStep
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
-import java.time.YearMonth
 
 private val LOGGER = KotlinLogging.logger { }
 
@@ -18,18 +17,18 @@ class OpprettRevurderForskuddBatchProcessor(
     private val revurderForskuddService: RevurderForskuddService,
 ) : ItemProcessor<Barn, RevurderingForskudd> {
     private lateinit var batchId: String
-    private lateinit var cutoffTidspunktForManueltVedtak: LocalDateTime
+    private lateinit var månederTilbakeForManueltVedtak: LocalDateTime
 
     @BeforeStep
     fun beforeStep(stepExecution: StepExecution) {
         batchId = stepExecution.jobParameters.getString("batchId")!!
-        cutoffTidspunktForManueltVedtak =
+        månederTilbakeForManueltVedtak =
             stepExecution.jobParameters
-                .getString("antallManederTilbake")
+                .getString("manederTilbakeForManueltVedtak")
                 ?.toLong()
                 .let { LocalDateTime.now().minusMonths(it!!) }
     }
 
     override fun process(barn: Barn): RevurderingForskudd? =
-        revurderForskuddService.opprettRevurdereForskudd(barn, batchId, cutoffTidspunktForManueltVedtak)
+        revurderForskuddService.opprettRevurdereForskudd(barn, batchId, månederTilbakeForManueltVedtak)
 }
