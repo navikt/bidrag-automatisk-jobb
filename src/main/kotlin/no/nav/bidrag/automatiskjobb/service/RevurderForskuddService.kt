@@ -254,7 +254,8 @@ class RevurderForskuddService(
                             skyldner = Personident(IdentUtils.NAV_TSS_IDENT),
                             mottaker = mottaker,
                             beslutning = Beslutningstype.ENDRING,
-                            grunnlagReferanseListe = emptyList(), // TODO(Skal det opprettes en egen behandlingsreferanse for revurdering av forskudd her?)
+                            // TODO(Skal det opprettes en egen behandlingsreferanse for revurdering av forskudd her?)
+                            grunnlagReferanseListe = emptyList(),
                             innkreving = Innkrevingstype.MED_INNKREVING,
                             sisteVedtaksid =
                                 vedtakService.finnSisteVedtaksid(
