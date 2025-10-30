@@ -14,8 +14,6 @@ import no.nav.bidrag.automatiskjobb.persistence.repository.AldersjusteringReposi
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
 import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringResponse
 import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringResultatResponse
-import no.nav.bidrag.automatiskjobb.service.model.OpprettVedtakConflictResponse
-import no.nav.bidrag.automatiskjobb.utils.JsonUtil.Companion.tilJson
 import no.nav.bidrag.automatiskjobb.utils.ugyldigForespørsel
 import no.nav.bidrag.beregn.barnebidrag.service.AldersjusteresManueltException
 import no.nav.bidrag.beregn.barnebidrag.service.AldersjusteringOrchestrator
@@ -31,11 +29,8 @@ import no.nav.bidrag.transport.automatiskjobb.AldersjusteringIkkeAldersjustertRe
 import no.nav.bidrag.transport.automatiskjobb.AldersjusteringResultat
 import no.nav.bidrag.transport.automatiskjobb.AldersjusteringResultatlisteResponse
 import no.nav.bidrag.transport.automatiskjobb.HentAldersjusteringStatusRequest
-import no.nav.bidrag.transport.behandling.vedtak.request.OpprettVedtakRequestDto
 import org.springframework.data.domain.Pageable
-import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
-import org.springframework.web.client.HttpStatusCodeException
 import org.springframework.web.client.RestClientResponseException
 import java.sql.Timestamp
 import java.time.LocalDate
@@ -238,7 +233,8 @@ class AldersjusteringService(
             val vedtaksforslagRequest =
                 vedtakMapper.tilOpprettVedtakRequest(resultatBeregning, stønadsid, aldersjustering)
 
-            val vedtaksid = if (simuler) null else opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
+            val vedtaksid =
+                if (simuler) null else vedtakConsumer.opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
             aldersjustering.vedtak = vedtaksid
 
             alderjusteringRepository.save(aldersjustering)
@@ -253,7 +249,8 @@ class AldersjusteringService(
 
             val vedtaksforslagRequest =
                 vedtakMapper.tilOpprettVedtakRequestIngenAldersjustering(aldersjustering)
-            val vedtaksid = if (simuler) null else opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
+            val vedtaksid =
+                if (simuler) null else vedtakConsumer.opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
             aldersjustering.vedtak = vedtaksid
 
             alderjusteringRepository.save(aldersjustering)
@@ -271,7 +268,8 @@ class AldersjusteringService(
 
             val vedtaksforslagRequest =
                 vedtakMapper.tilOpprettVedtakRequestIngenAldersjustering(aldersjustering)
-            val vedtaksid = if (simuler) null else opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
+            val vedtaksid =
+                if (simuler) null else vedtakConsumer.opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
             aldersjustering.vedtak = vedtaksid
 
             alderjusteringRepository.save(aldersjustering)
@@ -404,31 +402,6 @@ class AldersjusteringService(
         return alderjusteringRepository.save(aldersjustering)
     }
 
-    private fun opprettEllerOppdaterVedtaksforslag(request: OpprettVedtakRequestDto) =
-        try {
-            slettEksisterendeVedtaksforslag(request.unikReferanse!!)
-            secureLogger.info { "Oppretter vedtaksforslag: ${tilJson(request)}" }
-            vedtakConsumer.opprettVedtaksforslag(request)
-        } catch (e: HttpStatusCodeException) {
-            if (e.statusCode == HttpStatus.CONFLICT) {
-                secureLogger.info { "Vedtaksforslag med referanse ${request.unikReferanse} finnes allerede. Oppdaterer vedtaksforslaget" }
-                val resultat = e.getResponseBodyAs(OpprettVedtakConflictResponse::class.java)!!
-                vedtakConsumer.oppdaterVedtaksforslag(resultat.vedtaksid, request)
-            } else {
-                secureLogger.error(e) { "Feil ved oppretting av vedtaksforslag med referanse ${request.unikReferanse}" }
-                throw e
-            }
-        }
-
-    private fun slettEksisterendeVedtaksforslag(referanse: String) {
-        vedtakConsumer.hentVedtaksforslagBasertPåReferanase(referanse)?.let {
-            secureLogger.info {
-                "Fant eksisterende vedtaksforslag med referanse $referanse og id ${it.vedtaksid}. Sletter eksisterende vedtaksforslag "
-            }
-            vedtakConsumer.slettVedtaksforslag(it.vedtaksid.toInt())
-        }
-    }
-
     fun hentAlleBarnSomSkalAldersjusteresForÅr(
         år: Int,
         paging: Pageable = Pageable.unpaged(),
@@ -535,7 +508,7 @@ class AldersjusteringService(
                 return AldersjusteringAldersjustertResultat(-1, stønadsid, vedtaksforslagRequest)
             }
 
-            val vedtaksid = opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
+            val vedtaksid = vedtakConsumer.opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
             return AldersjusteringAldersjustertResultat(vedtaksid, stønadsid, vedtaksforslagRequest)
         } catch (e: SkalIkkeAldersjusteresException) {
             combinedLogger.warn(e) {

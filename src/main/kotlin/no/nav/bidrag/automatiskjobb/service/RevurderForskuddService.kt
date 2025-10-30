@@ -1,12 +1,22 @@
 package no.nav.bidrag.automatiskjobb.service
 
+import com.fasterxml.jackson.databind.node.POJONode
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.automatiskjobb.combinedLogger
+import no.nav.bidrag.automatiskjobb.consumer.BidragBehandlingConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragBeløpshistorikkConsumer
+import no.nav.bidrag.automatiskjobb.consumer.BidragGrunnlagConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragPersonConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer
 import no.nav.bidrag.automatiskjobb.mapper.GrunnlagMapper
+import no.nav.bidrag.automatiskjobb.mapper.VedtakMapper
 import no.nav.bidrag.automatiskjobb.mapper.erBidrag
+import no.nav.bidrag.automatiskjobb.mapper.tilOpprettGrunnlagRequestDto
+import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
+import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
+import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
+import no.nav.bidrag.automatiskjobb.persistence.repository.RevurderingForskuddRepository
 import no.nav.bidrag.automatiskjobb.service.model.AdresseEndretResultat
 import no.nav.bidrag.automatiskjobb.service.model.ForskuddRedusertResultat
 import no.nav.bidrag.automatiskjobb.service.model.StønadEngangsbeløpId
@@ -15,45 +25,76 @@ import no.nav.bidrag.automatiskjobb.utils.erDirekteAvslag
 import no.nav.bidrag.automatiskjobb.utils.erHusstandsmedlem
 import no.nav.bidrag.automatiskjobb.utils.tilResultatkode
 import no.nav.bidrag.beregn.barnebidrag.service.SisteManuelleVedtak
+import no.nav.bidrag.beregn.barnebidrag.service.VedtakService
 import no.nav.bidrag.beregn.forskudd.BeregnForskuddApi
 import no.nav.bidrag.beregn.vedtak.Vedtaksfiltrering
+import no.nav.bidrag.commons.util.IdentUtils
 import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.domene.enums.beregning.Resultatkode.Companion.erDirekteAvslag
+import no.nav.bidrag.domene.enums.grunnlag.GrunnlagRequestType
+import no.nav.bidrag.domene.enums.grunnlag.Grunnlagstype
+import no.nav.bidrag.domene.enums.inntekt.Inntektsrapportering
 import no.nav.bidrag.domene.enums.rolle.Rolletype
+import no.nav.bidrag.domene.enums.vedtak.Beslutningstype
 import no.nav.bidrag.domene.enums.vedtak.Engangsbeløptype
+import no.nav.bidrag.domene.enums.vedtak.Formål
+import no.nav.bidrag.domene.enums.vedtak.Innkrevingstype
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
+import no.nav.bidrag.domene.enums.vedtak.Vedtakskilde
 import no.nav.bidrag.domene.enums.vedtak.Vedtakstype
 import no.nav.bidrag.domene.felles.personidentNav
 import no.nav.bidrag.domene.ident.Personident
+import no.nav.bidrag.domene.organisasjon.Enhetsnummer
 import no.nav.bidrag.domene.sak.Saksnummer
+import no.nav.bidrag.domene.sak.Stønadsid
 import no.nav.bidrag.domene.tid.ÅrMånedsperiode
+import no.nav.bidrag.inntekt.InntektApi
 import no.nav.bidrag.transport.behandling.belopshistorikk.request.HentStønadHistoriskRequest
 import no.nav.bidrag.transport.behandling.belopshistorikk.response.StønadDto
 import no.nav.bidrag.transport.behandling.belopshistorikk.response.StønadPeriodeDto
 import no.nav.bidrag.transport.behandling.beregning.felles.BeregnGrunnlag
+import no.nav.bidrag.transport.behandling.beregning.forskudd.BeregnetForskuddResultat
 import no.nav.bidrag.transport.behandling.beregning.forskudd.ResultatPeriode
 import no.nav.bidrag.transport.behandling.felles.grunnlag.GrunnlagDto
+import no.nav.bidrag.transport.behandling.felles.grunnlag.InntektsrapporteringPeriode
+import no.nav.bidrag.transport.behandling.felles.grunnlag.bidragsmottaker
+import no.nav.bidrag.transport.behandling.felles.grunnlag.hentPersonMedIdent
 import no.nav.bidrag.transport.behandling.felles.grunnlag.personIdent
 import no.nav.bidrag.transport.behandling.felles.grunnlag.søknadsbarn
+import no.nav.bidrag.transport.behandling.grunnlag.request.GrunnlagRequestDto
+import no.nav.bidrag.transport.behandling.grunnlag.request.HentGrunnlagRequestDto
+import no.nav.bidrag.transport.behandling.grunnlag.response.AinntektGrunnlagDto
+import no.nav.bidrag.transport.behandling.grunnlag.response.HentGrunnlagDto
+import no.nav.bidrag.transport.behandling.grunnlag.response.SkattegrunnlagGrunnlagDto
+import no.nav.bidrag.transport.behandling.inntekt.request.Ainntektspost
+import no.nav.bidrag.transport.behandling.inntekt.request.SkattegrunnlagForLigningsår
+import no.nav.bidrag.transport.behandling.inntekt.request.TransformerInntekterRequest
+import no.nav.bidrag.transport.behandling.inntekt.response.TransformerInntekterResponse
 import no.nav.bidrag.transport.behandling.vedtak.VedtakHendelse
 import no.nav.bidrag.transport.behandling.vedtak.request.HentVedtakForStønadRequest
+import no.nav.bidrag.transport.behandling.vedtak.request.OpprettPeriodeRequestDto
+import no.nav.bidrag.transport.behandling.vedtak.request.OpprettStønadsendringRequestDto
+import no.nav.bidrag.transport.behandling.vedtak.request.OpprettVedtakRequestDto
 import no.nav.bidrag.transport.behandling.vedtak.response.VedtakDto
 import no.nav.bidrag.transport.behandling.vedtak.response.erDelvedtak
 import no.nav.bidrag.transport.behandling.vedtak.response.erOrkestrertVedtak
-import no.nav.bidrag.transport.behandling.vedtak.response.harResultatFraAnnenVedtak
 import no.nav.bidrag.transport.behandling.vedtak.response.referertVedtaksid
 import no.nav.bidrag.transport.behandling.vedtak.saksnummer
 import no.nav.bidrag.transport.felles.ifTrue
 import org.springframework.context.annotation.Import
 import org.springframework.stereotype.Service
+import java.math.BigDecimal
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
 
 private fun VedtakDto.erIndeksreguleringEllerAldersjustering() =
     listOf(Vedtakstype.ALDERSJUSTERING, Vedtakstype.INDEKSREGULERING).contains(type)
 
+private val LOGGER = KotlinLogging.logger { }
+
 @Service
-@Import(BeregnForskuddApi::class, Vedtaksfiltrering::class)
+@Import(BeregnForskuddApi::class, Vedtaksfiltrering::class, InntektApi::class)
 class RevurderForskuddService(
     private val bidragBeløpshistorikkConsumer: BidragBeløpshistorikkConsumer,
     private val bidragVedtakConsumer: BidragVedtakConsumer,
@@ -61,7 +102,304 @@ class RevurderForskuddService(
     private val bidragPersonConsumer: BidragPersonConsumer,
     private val beregning: BeregnForskuddApi,
     private val vedtaksFilter: Vedtaksfiltrering,
+    private val vedtakService: VedtakService,
+    private val bidragBehandlingConsumer: BidragBehandlingConsumer,
+    private val bidragGrunnlagConsumer: BidragGrunnlagConsumer,
+    private val vedtakServiceBeregn: VedtakService,
+    private val vedtakMapper: VedtakMapper,
+    private val revurderingForskuddRepository: RevurderingForskuddRepository,
+    private val inntektApi: InntektApi,
 ) {
+    fun beregnRevurderForskudd(
+        revurderingForskudd: RevurderingForskudd,
+        simuler: Boolean,
+        antallMånederForBeregning: Long,
+    ) {
+        val sisteManuelleVedtak = finnSisteManuelleVedtak(revurderingForskudd)
+        if (sisteManuelleVedtak == null) {
+            LOGGER.info {
+                "Fant ingen manuelle vedtak for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer}. Beregner ikke revurdering av forskudd."
+            }
+            return
+        }
+
+        val forskudd = hentForskuddForSak(revurderingForskudd.barn.saksnummer, revurderingForskudd.barn.kravhaver)
+        if (forskudd == null || !erForskuddLøpende(forskudd)) {
+            LOGGER.info { "Forskudd $forskudd er ikke løpende! Beregner ikke revurdering av forskudd." }
+            return
+        }
+
+        val barnGrunnlagReferanse =
+            sisteManuelleVedtak.vedtak.grunnlagListe
+                .hentPersonMedIdent(
+                    revurderingForskudd.barn.kravhaver,
+                )!!
+                .referanse
+
+        val bmGrunnlagReferanse =
+            sisteManuelleVedtak.vedtak.grunnlagListe.bidragsmottaker!!
+                .referanse
+
+        // Filterer ut grunnlag som gjelder andre barn enn det som revurderes
+        val filtrertGrunnlagForBarn =
+            sisteManuelleVedtak.vedtak.grunnlagListe
+                .filter {
+                    it.gjelderBarnReferanse == null ||
+                        it.gjelderBarnReferanse == barnGrunnlagReferanse
+                }.toMutableList()
+
+        // Finner inntekter for forskuddsmottaker fra grunnlaget
+        val transformerteInntekter = finnInntekterForForskuddFraGrunnlaget(forskudd)
+
+        var skalSetteNedForskudd = true
+        var beregnetForskuddResultat: BeregnetForskuddResultat? = null
+        for (i in antallMånederForBeregning downTo 1) {
+            val måned = YearMonth.now().minusMonths(i)
+            // Fjern inntekter fra grunnlag
+            filtrertGrunnlagForBarn.removeIf { it.type == Grunnlagstype.INNTEKT_RAPPORTERING_PERIODE }
+
+            val summertMånedsinntekt =
+                transformerteInntekter.summertMånedsinntektListe
+                    .find {
+                        måned.equals(it.gjelderÅrMåned)
+                    }!!
+                    .sumInntekt
+                    .multiply(BigDecimal(12))
+
+            filtrertGrunnlagForBarn.add(
+                GrunnlagDto(
+                    type = Grunnlagstype.INNTEKT_RAPPORTERING_PERIODE,
+                    innhold =
+                        POJONode(
+                            InntektsrapporteringPeriode(
+                                periode = ÅrMånedsperiode(måned, måned.plusMonths(1)),
+                                manueltRegistrert = true,
+                                inntektsrapportering = Inntektsrapportering.AINNTEKT_BEREGNET_12MND,
+                                beløp = summertMånedsinntekt,
+                                gjelderBarn = barnGrunnlagReferanse,
+                                valgt = true,
+                            ),
+                        ),
+                    referanse = "${Grunnlagstype.INNTEKT_RAPPORTERING_PERIODE}_${this.javaClass.simpleName}_$måned",
+                    gjelderReferanse = bmGrunnlagReferanse,
+                    gjelderBarnReferanse = barnGrunnlagReferanse,
+                ),
+            )
+
+            beregnetForskuddResultat =
+                beregning.beregn(
+                    BeregnGrunnlag(
+                        periode =
+                            ÅrMånedsperiode(
+                                YearMonth.now(),
+                                YearMonth.now().plusMonths(1),
+                            ),
+                        stønadstype = Stønadstype.FORSKUDD,
+                        søknadsbarnReferanse = barnGrunnlagReferanse,
+                        grunnlagListe = filtrertGrunnlagForBarn,
+                    ),
+                )
+
+            val løpendeBeløp = forskudd.periodeListe.hentSisteLøpendePeriode()!!.beløp!!
+            val beregnetBeløp =
+                beregnetForskuddResultat.beregnetForskuddPeriodeListe
+                    .last()
+                    .resultat.belop
+            if (løpendeBeløp <= beregnetBeløp) {
+                skalSetteNedForskudd = false
+            }
+        }
+
+        if (simuler) {
+            if (skalSetteNedForskudd) {
+                LOGGER.info {
+                    "Simulering: Forskudd for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer} skal settes ned etter revurdering."
+                }
+            } else {
+                LOGGER.info {
+                    "Simulering: Forskudd for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer} skal ikke settes ned etter revurdering."
+                }
+            }
+            revurderingForskudd.status = Status.SIMULERT
+            revurderingForskuddRepository.save(revurderingForskudd)
+            return
+        }
+
+        if (!skalSetteNedForskudd) {
+            LOGGER.info {
+                "Forskudd for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer} skal ikke settes ned etter revurdering."
+            }
+            revurderingForskudd.status = Status.BEHANDLET
+            revurderingForskuddRepository.save(revurderingForskudd)
+            return
+        }
+
+        val sak = bidragSakConsumer.hentSak(revurderingForskudd.barn.saksnummer)
+        val barn = revurderingForskudd.barn.kravhaver
+        val sakrolleBarn = vedtakMapper.hentBarn(sak, barn)
+        val mottaker = vedtakMapper.reellMottakerEllerBidragsmottaker(sakrolleBarn, sak.roller)!!
+
+        val opprettVedtakRequestDto =
+            OpprettVedtakRequestDto(
+                type = Vedtakstype.REVURDERING,
+                vedtakstidspunkt = null,
+                unikReferanse = revurderingForskudd.unikReferanse,
+                enhetsnummer = Enhetsnummer("9999"),
+                stønadsendringListe =
+                    listOf(
+                        OpprettStønadsendringRequestDto(
+                            type = Stønadstype.FORSKUDD,
+                            sak = Saksnummer(revurderingForskudd.barn.saksnummer),
+                            kravhaver = Personident(revurderingForskudd.barn.kravhaver),
+                            skyldner = Personident(IdentUtils.NAV_TSS_IDENT),
+                            mottaker = mottaker,
+                            beslutning = Beslutningstype.ENDRING,
+                            grunnlagReferanseListe = emptyList(), // TODO(Skal det opprettes en egen behandlingsreferanse for revurdering av forskudd her?)
+                            innkreving = Innkrevingstype.MED_INNKREVING,
+                            sisteVedtaksid =
+                                vedtakService.finnSisteVedtaksid(
+                                    revurderingForskudd.barn.tilStønadsid(
+                                        Stønadstype.FORSKUDD,
+                                    ),
+                                ),
+                            førsteIndeksreguleringsår = YearMonth.now().plusYears(1).year,
+                            periodeListe =
+                                beregnetForskuddResultat!!.beregnetForskuddPeriodeListe.map {
+                                    OpprettPeriodeRequestDto(
+                                        periode = it.periode,
+                                        beløp = it.resultat.belop,
+                                        valutakode = "NOK",
+                                        resultatkode = it.resultat.kode.name,
+                                        grunnlagReferanseListe = it.grunnlagsreferanseListe,
+                                    )
+                                },
+                        ),
+                    ),
+                engangsbeløpListe = emptyList(),
+                behandlingsreferanseListe = emptyList(),
+                grunnlagListe = beregnetForskuddResultat.grunnlagListe.map { it.tilOpprettGrunnlagRequestDto() },
+                kilde = Vedtakskilde.AUTOMATISK,
+            )
+        val vedtakId = bidragVedtakConsumer.opprettEllerOppdaterVedtaksforslag(opprettVedtakRequestDto)
+
+        revurderingForskudd.vedtaksidBeregning = sisteManuelleVedtak.vedtaksId
+        revurderingForskudd.vedtak = vedtakId
+        revurderingForskudd.status = Status.BEHANDLET
+
+        revurderingForskuddRepository.save(revurderingForskudd)
+    }
+
+    private fun finnInntekterForForskuddFraGrunnlaget(forskudd: StønadDto): TransformerInntekterResponse {
+        val grunnlag = hentInntektsGrunnlagForForskudd(forskudd)
+        val transformerInntekterRequest = transformerInntekter(grunnlag)
+        val transformerInntekterResponse = inntektApi.transformerInntekter(transformerInntekterRequest)
+        return transformerInntekterResponse
+    }
+
+    private fun transformerInntekter(grunnlag: HentGrunnlagDto): TransformerInntekterRequest =
+        TransformerInntekterRequest(
+            ainntektHentetDato = LocalDate.now(),
+            ainntektsposter = grunnlag.ainntektListe.tilAInntektsPost(),
+            skattegrunnlagsliste = grunnlag.skattegrunnlagListe.tilSkattegrunnlagForLigningsår(),
+        )
+
+    private fun hentInntektsGrunnlagForForskudd(forskudd: StønadDto): HentGrunnlagDto =
+        bidragGrunnlagConsumer.hentGrunnlag(
+            HentGrunnlagRequestDto(
+                Formål.FORSKUDD,
+                listOf(
+                    GrunnlagRequestDto(
+                        GrunnlagRequestType.AINNTEKT,
+                        forskudd.mottaker.verdi,
+                        LocalDate.now().minusYears(1),
+                        LocalDate.now(),
+                    ),
+                    GrunnlagRequestDto(
+                        GrunnlagRequestType.SKATTEGRUNNLAG,
+                        forskudd.mottaker.verdi,
+                        LocalDate.now().minusYears(3),
+                        LocalDate.now(),
+                    ),
+                ),
+            ),
+        )
+
+    private fun finnSisteManuelleVedtak(revurderingForskudd: RevurderingForskudd): SisteManuelleVedtak? =
+        vedtakServiceBeregn.finnSisteManuelleVedtak(
+            Stønadsid(
+                Stønadstype.FORSKUDD,
+                Personident(revurderingForskudd.barn.kravhaver),
+                Personident(IdentUtils.NAV_TSS_IDENT),
+                Saksnummer(revurderingForskudd.barn.saksnummer),
+            ),
+        )
+
+    private fun List<AinntektGrunnlagDto>.tilAInntektsPost(): List<Ainntektspost> =
+        this.flatMap { it.ainntektspostListe }.map {
+            Ainntektspost(
+                utbetalingsperiode = it.utbetalingsperiode,
+                opptjeningsperiodeFra = it.opptjeningsperiodeFra,
+                opptjeningsperiodeTil = it.opptjeningsperiodeTil,
+                etterbetalingsperiodeFra = it.etterbetalingsperiodeFra,
+                etterbetalingsperiodeTil = it.etterbetalingsperiodeTil,
+                beskrivelse = it.beskrivelse,
+                beløp = it.beløp,
+            )
+        }
+
+    fun List<SkattegrunnlagGrunnlagDto>.tilSkattegrunnlagForLigningsår(): List<SkattegrunnlagForLigningsår> =
+        this.map {
+            SkattegrunnlagForLigningsår(
+                ligningsår = it.periodeFra.year,
+                skattegrunnlagsposter = it.skattegrunnlagspostListe,
+            )
+        }
+
+    fun opprettRevurdereForskudd(
+        barn: Barn,
+        batchId: String,
+        cutoffTidspunktForManueltVedtak: LocalDateTime,
+    ): RevurderingForskudd? {
+        if (harÅpentForskuddssak(barn)) {
+            LOGGER.info { "Barn ${barn.kravhaver} har åpent forskuddssak. Oppretter ikke revurdering av forskudd." }
+            return null
+        }
+        val sisteManuelleVedtakTidspunkt = hentSisteManuelleVedtakTidspunkt(barn)
+        if (sisteManuelleVedtakTidspunkt != null && sisteManuelleVedtakTidspunkt.isAfter(cutoffTidspunktForManueltVedtak)) {
+            LOGGER.info {
+                "Barn ${barn.kravhaver} har manuelt vedtak opprettet $sisteManuelleVedtakTidspunkt etter cutoff tidspunkt $cutoffTidspunktForManueltVedtak. Oppretter ikke revurdering av forskudd."
+            }
+            return null
+        }
+        return RevurderingForskudd(
+            forMåned = YearMonth.now().toString(),
+            batchId = batchId,
+            barn = barn,
+            status = Status.UBEHANDLET,
+        ).also {
+            LOGGER.info {
+                "Opprettet revurdering forskudd for barn med id ${barn.id}. $it"
+            }
+        }
+    }
+
+    private fun hentSisteManuelleVedtakTidspunkt(barn: Barn): LocalDateTime? =
+        vedtakService
+            .finnSisteManuelleVedtak(
+                Stønadsid(
+                    Stønadstype.FORSKUDD,
+                    Personident(barn.kravhaver),
+                    Personident(barn.skyldner ?: ""),
+                    Saksnummer(barn.saksnummer),
+                ),
+            )?.vedtak
+            ?.opprettetTidspunkt
+
+    private fun harÅpentForskuddssak(barn: Barn): Boolean {
+        val hentÅpneBehandlingerRespons = bidragBehandlingConsumer.hentÅpneBehandlingerForBarn(barn.kravhaver)
+        return hentÅpneBehandlingerRespons.åpneBehandling.any { åpneBehandling -> åpneBehandling.stønadstype == Stønadstype.FORSKUDD }
+    }
+
     fun skalBMFortsattMottaForskuddForSøknadsbarnEtterAdresseendring(aktørId: String): List<AdresseEndretResultat> {
         val person = bidragPersonConsumer.hentPerson(Personident(aktørId))
         val barnIdent = person.ident
@@ -96,7 +434,8 @@ class RevurderForskuddService(
                     return@mapNotNull null
                 }
 
-            val husstandsmedlemmerBM = bidragPersonConsumer.hentPersonHusstandsmedlemmer(bidragsmottaker.fødselsnummer!!)
+            val husstandsmedlemmerBM =
+                bidragPersonConsumer.hentPersonHusstandsmedlemmer(bidragsmottaker.fødselsnummer!!)
             if (husstandsmedlemmerBM.erHusstandsmedlem(barnIdent)) {
                 secureLogger.info {
                     "Barn ${barnIdent.verdi} er husstandsmedlem til bidragsmottaker ${bidragsmottaker.fødselsnummer!!.verdi}. Ingen endringer kreves."
@@ -123,8 +462,12 @@ class RevurderForskuddService(
             "Sjekker om forskuddet er redusert etter fattet vedtak ${vedtakHendelse.id} i sak ${vedtakHendelse.saksnummer}"
         }
         val vedtak = hentVedtak(vedtakHendelse.id) ?: return listOf()
-        return erForskuddRedusertEtterFattetBidrag(SisteManuelleVedtak(vedtakHendelse.id, vedtak)) +
-            erForskuddRedusertEtterSærbidrag(SisteManuelleVedtak(vedtakHendelse.id, vedtak))
+        return erForskuddRedusertEtterFattetBidrag(
+            SisteManuelleVedtak(
+                vedtakHendelse.id,
+                vedtak,
+            ),
+        ) + erForskuddRedusertEtterSærbidrag(SisteManuelleVedtak(vedtakHendelse.id, vedtak))
     }
 
     private fun erForskuddRedusertEtterSærbidrag(vedtakInfo: SisteManuelleVedtak): List<ForskuddRedusertResultat> {
@@ -145,7 +488,13 @@ class RevurderForskuddService(
                 val stønad = stønader.first()
                 val sak = bidragSakConsumer.hentSak(sak.verdi)
                 sak.roller.filter { it.type == Rolletype.BARN }.mapNotNull { rolle ->
-                    val stønadsid = StønadEngangsbeløpId(rolle.fødselsnummer!!, stønad.skyldner, stønad.sak, engangsbeløptype = stønad.type)
+                    val stønadsid =
+                        StønadEngangsbeløpId(
+                            rolle.fødselsnummer!!,
+                            stønad.skyldner,
+                            stønad.sak,
+                            engangsbeløptype = stønad.type,
+                        )
                     erForskuddetRedusert(vedtakInfo, stønadsid, stønad.mottaker)
                 }
             }
@@ -169,7 +518,13 @@ class RevurderForskuddService(
                 val sak = bidragSakConsumer.hentSak(sak.verdi)
                 val bidragsmottaker = sak.roller.find { it.type == Rolletype.BIDRAGSMOTTAKER }!!
                 sak.roller.filter { it.type == Rolletype.BARN }.mapNotNull { rolle ->
-                    val stønadsid = StønadEngangsbeløpId(rolle.fødselsnummer!!, stønad.skyldner, stønad.sak, stønadstype = stønad.type)
+                    val stønadsid =
+                        StønadEngangsbeløpId(
+                            rolle.fødselsnummer!!,
+                            stønad.skyldner,
+                            stønad.sak,
+                            stønadstype = stønad.type,
+                        )
                     erForskuddetRedusert(vedtakInfo, stønadsid, bidragsmottaker.fødselsnummer!!)
                 }
             }
@@ -182,7 +537,9 @@ class RevurderForskuddService(
         val gjelderBarn = stønadEngangsbeløpId.kravhaver
         val sistePeriode = hentLøpendeForskudd(stønadEngangsbeløpId.sak.verdi, gjelderBarn.verdi) ?: return null
 
-        val vedtakForskudd = hentSisteManuelleForskuddVedtak(sistePeriode.vedtaksid, stønadEngangsbeløpId.sak, gjelderBarn) ?: return null
+        val vedtakForskudd =
+            hentSisteManuelleForskuddVedtak(sistePeriode.vedtaksid, stønadEngangsbeløpId.sak, gjelderBarn)
+                ?: return null
         val (beregnetForskudd, grunnlagsliste) = beregnForskudd(vedtakFattet.vedtak, vedtakForskudd.vedtak, gjelderBarn)
 
         val beregnetResultat = beregnetForskudd.resultat
@@ -275,8 +632,8 @@ class RevurderForskuddService(
                         vedtaksFilter.finneSisteManuelleVedtak(
                             forskuddVedtakISak.vedtakListe,
                         ) ?: return null
-                    bidragVedtakConsumer.hentVedtak(sisteManuelleVedtak.vedtaksid.toInt())?.let {
-                        SisteManuelleVedtak(sisteManuelleVedtak.vedtaksid.toInt(), it)
+                    bidragVedtakConsumer.hentVedtak(sisteManuelleVedtak.vedtaksid)?.let {
+                        SisteManuelleVedtak(sisteManuelleVedtak.vedtaksid, it)
                     }
                 } else {
                     SisteManuelleVedtak(vedtakId, it)
@@ -322,7 +679,7 @@ class RevurderForskuddService(
         gjelderBarn: String,
     ): StønadPeriodeDto? {
         val forskuddStønad =
-            hentLøpendeForskuddForSak(saksnummer, gjelderBarn) ?: run {
+            hentForskuddForSak(saksnummer, gjelderBarn) ?: run {
                 combinedLogger.info { "Fant ingen løpende forskudd i sak $saksnummer for barn $gjelderBarn" }
                 return null
             }
@@ -334,7 +691,18 @@ class RevurderForskuddService(
         }
     }
 
-    private fun hentLøpendeForskuddForSak(
+    private fun erForskuddLøpende(stønadDto: StønadDto): Boolean =
+        if (stønadDto.periodeListe.hentSisteLøpendePeriode() != null) {
+            true
+        } else {
+            false.also {
+                LOGGER.info {
+                    "Forskudd i sak ${stønadDto.sak.verdi} og barn ${stønadDto.kravhaver.verdi} har opphørt før dagens dato. Det finnes ingen løpende forskudd"
+                }
+            }
+        }
+
+    private fun hentForskuddForSak(
         saksnummer: String,
         søknadsbarnIdent: String,
     ): StønadDto? =
@@ -349,6 +717,5 @@ class RevurderForskuddService(
         )
 
     private fun List<StønadPeriodeDto>.hentSisteLøpendePeriode() =
-        maxByOrNull { it.periode.fom }
-            ?.takeIf { it.periode.til == null || it.periode.til!!.isAfter(YearMonth.now()) }
+        maxByOrNull { it.periode.fom }?.takeIf { it.periode.til == null || it.periode.til!!.isAfter(YearMonth.now()) }
 }

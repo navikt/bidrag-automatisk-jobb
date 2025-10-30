@@ -9,10 +9,14 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import io.mockk.mockkConstructor
 import io.mockk.verify
+import no.nav.bidrag.automatiskjobb.consumer.BidragBehandlingConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragBeløpshistorikkConsumer
+import no.nav.bidrag.automatiskjobb.consumer.BidragGrunnlagConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragPersonConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer
+import no.nav.bidrag.automatiskjobb.mapper.VedtakMapper
+import no.nav.bidrag.automatiskjobb.persistence.repository.RevurderingForskuddRepository
 import no.nav.bidrag.automatiskjobb.service.RevurderForskuddService
 import no.nav.bidrag.automatiskjobb.testdata.opprettBostatatusperiode
 import no.nav.bidrag.automatiskjobb.testdata.opprettDelberegningBarnIHusstand
@@ -42,6 +46,7 @@ import no.nav.bidrag.automatiskjobb.testdata.persongrunnlagBA2
 import no.nav.bidrag.automatiskjobb.testdata.persongrunnlagBP
 import no.nav.bidrag.automatiskjobb.testdata.saksnummer
 import no.nav.bidrag.automatiskjobb.testdata.testdataBidragsmottaker
+import no.nav.bidrag.beregn.barnebidrag.service.VedtakService
 import no.nav.bidrag.beregn.forskudd.BeregnForskuddApi
 import no.nav.bidrag.beregn.vedtak.Vedtaksfiltrering
 import no.nav.bidrag.commons.web.mock.stubSjablonProvider
@@ -55,6 +60,7 @@ import no.nav.bidrag.domene.felles.personidentNav
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.domene.sak.Saksnummer
 import no.nav.bidrag.domene.tid.ÅrMånedsperiode
+import no.nav.bidrag.inntekt.InntektApi
 import no.nav.bidrag.transport.behandling.beregning.felles.BeregnGrunnlag
 import no.nav.bidrag.transport.behandling.felles.grunnlag.DelberegningSumInntekt
 import no.nav.bidrag.transport.behandling.felles.grunnlag.GrunnlagDto
@@ -89,6 +95,27 @@ class RevurderForskuddServiceTest {
     @MockK
     lateinit var bidragPersonConsumer: BidragPersonConsumer
 
+    @MockK
+    lateinit var vedtakService: VedtakService
+
+    @MockK
+    lateinit var bidragBehandlingConsumer: BidragBehandlingConsumer
+
+    @MockK
+    lateinit var bidragGrunnlagConsumer: BidragGrunnlagConsumer
+
+    @MockK
+    lateinit var vedtakServiceBeregn: VedtakService
+
+    @MockK
+    lateinit var vedtakMapper: VedtakMapper
+
+    @MockK
+    lateinit var revurderingForskuddRepository: RevurderingForskuddRepository
+
+    @MockK
+    lateinit var inntektApi: InntektApi
+
     val unleash = FakeUnleash()
 
     @BeforeEach
@@ -106,6 +133,13 @@ class RevurderForskuddServiceTest {
                 bidragPersonConsumer,
                 BeregnForskuddApi(),
                 Vedtaksfiltrering(),
+                vedtakService,
+                bidragBehandlingConsumer,
+                bidragGrunnlagConsumer,
+                vedtakServiceBeregn,
+                vedtakMapper,
+                revurderingForskuddRepository,
+                inntektApi,
             )
     }
 
