@@ -3,15 +3,21 @@ package no.nav.bidrag.automatiskjobb.batch.revurdering.forskudd.fattvedtak
 import no.nav.bidrag.automatiskjobb.batch.BatchCompletionNotificationListener
 import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.CHUNK_SIZE
 import no.nav.bidrag.automatiskjobb.batch.DummyItemWriter
+import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
+import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
+import no.nav.bidrag.automatiskjobb.persistence.repository.RevurderingForskuddRepository
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.Step
 import org.springframework.batch.core.job.builder.JobBuilder
 import org.springframework.batch.core.repository.JobRepository
 import org.springframework.batch.core.step.builder.StepBuilder
+import org.springframework.batch.item.data.RepositoryItemReader
+import org.springframework.batch.item.data.builder.RepositoryItemReaderBuilder
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.task.TaskExecutor
+import org.springframework.data.domain.Sort
 import org.springframework.transaction.PlatformTransactionManager
 
 @Configuration
@@ -32,7 +38,7 @@ class FatteVedtakRevurderForskuddBatchConfiguration {
         @Qualifier("batchTaskExecutor") taskExecutor: TaskExecutor,
         jobRepository: JobRepository,
         transactionManager: PlatformTransactionManager,
-        fatteVedtakRevurderForskuddBatchReader: FatteVedtakRevurderForskuddBatchReader,
+        fatteVedtakRevurderForskuddBatchReader: RepositoryItemReader<RevurderingForskudd>,
         fatteVedtakRevurderForskuddBatchProcessor: FatteVedtakRevurderForskuddBatchProcessor,
         dummmyWriter: DummyItemWriter,
     ): Step =
@@ -42,5 +48,19 @@ class FatteVedtakRevurderForskuddBatchConfiguration {
             .processor(fatteVedtakRevurderForskuddBatchProcessor)
             .writer(dummmyWriter)
             .taskExecutor(taskExecutor)
+            .build()
+
+    @Bean
+    fun beregnRevurderForskuddBatchReader(
+        revurderingForskuddRepository: RevurderingForskuddRepository,
+    ): RepositoryItemReader<RevurderingForskudd> =
+        RepositoryItemReaderBuilder<RevurderingForskudd>()
+            .name("fatteVedtakRevurderForskuddBatchReader")
+            .repository(revurderingForskuddRepository)
+            .methodName("findAllByStatusIsAndVedtakIsNotNull")
+            .arguments(listOf(Status.BEHANDLET))
+            .saveState(false)
+            .pageSize(CHUNK_SIZE)
+            .sorts(mapOf("id" to Sort.Direction.ASC))
             .build()
 }

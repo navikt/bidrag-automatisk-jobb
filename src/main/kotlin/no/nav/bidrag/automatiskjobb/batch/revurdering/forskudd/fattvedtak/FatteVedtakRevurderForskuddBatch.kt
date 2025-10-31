@@ -11,15 +11,11 @@ class FatteVedtakRevurderForskuddBatch(
     private val jobLauncher: JobLauncher,
     private val fatteVedtakRevurderForskuddJob: Job,
 ) {
-    fun startFatteVedtakRevurderForskuddBatch(
-        simuler: Boolean,
-        barn: String?,
-    ) {
+    fun startFatteVedtakRevurderForskuddBatch(simuler: Boolean) {
         jobLauncher.run(
             fatteVedtakRevurderForskuddJob,
             JobParametersBuilder()
                 .addString("simuler", simuler.toString())
-                .addString("barn", barn ?: "")
                 .addString("batchId", UUID.randomUUID().toString())
                 .toJobParameters(),
         )

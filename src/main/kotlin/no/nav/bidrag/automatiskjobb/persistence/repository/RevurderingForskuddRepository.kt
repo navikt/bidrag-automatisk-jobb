@@ -11,4 +11,9 @@ interface RevurderingForskuddRepository : JpaRepository<RevurderingForskudd, Int
         status: Status,
         pageable: Pageable,
     ): Page<RevurderingForskudd>
+
+    fun findAllByStatusIsAndVedtakIsNotNull(
+        status: Status,
+        pageable: Pageable,
+    ): Page<RevurderingForskudd>
 }
