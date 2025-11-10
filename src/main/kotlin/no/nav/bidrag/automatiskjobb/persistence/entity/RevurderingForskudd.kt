@@ -9,6 +9,7 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
+import jakarta.persistence.OneToMany
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
@@ -22,24 +23,30 @@ data class RevurderingForskudd(
     @Column(name = "for_maned", nullable = false)
     val forMåned: String,
     @Column(name = "batch_id", nullable = false)
-    val batchId: String,
+    override val batchId: String,
     @ManyToOne
     @JoinColumn(name = "barn_id")
-    val barn: Barn,
+    override val barn: Barn,
     var begrunnelse: List<String> = emptyList(),
     @Enumerated(EnumType.STRING)
     var status: Status,
     @Enumerated(EnumType.STRING)
     var behandlingstype: Behandlingstype? = null,
     var vedtaksidBeregning: Int? = null,
-    var vedtak: Int? = null,
+    override var vedtak: Int? = null,
     var oppgave: Int? = null,
     @Column(name = "opprettet_tidspunkt", nullable = false, updatable = false)
     val opprettetTidspunkt: Timestamp = Timestamp(System.currentTimeMillis()),
     var fattetTidspunkt: Timestamp? = null,
     var resultatSisteVedtak: String? = null,
-) : EntityObject {
-    val unikReferanse get() = "revurdering_forskudd_${batchId}_${barn.tilStønadsid(Stønadstype.FORSKUDD).toReferanse()}"
+    @Column(name = "stonadstype")
+    @Enumerated(EnumType.STRING)
+    override val stønadstype: Stønadstype = Stønadstype.FORSKUDD,
+    @OneToMany
+    @JoinColumn(name = "forsendelse_bestilling_id")
+    override val forsendelseBestilling: MutableList<ForsendelseBestilling> = mutableListOf(),
+) : ForsendelseEntity {
+    override val unikReferanse get() = "revurdering_forskudd_${batchId}_${barn.tilStønadsid(Stønadstype.FORSKUDD).toReferanse()}"
     val begrunnelseVisningsnavn
         get() =
             begrunnelse.map { begrunnelse ->

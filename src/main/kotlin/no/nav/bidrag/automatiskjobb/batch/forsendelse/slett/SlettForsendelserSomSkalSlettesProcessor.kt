@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.forsendelse.slett
+package no.nav.bidrag.automatiskjobb.batch.forsendelse.slett
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.automatiskjobb.persistence.entity.ForsendelseBestilling

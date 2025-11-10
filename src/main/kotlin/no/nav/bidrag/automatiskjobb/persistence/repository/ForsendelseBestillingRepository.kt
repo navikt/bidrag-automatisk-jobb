@@ -41,7 +41,4 @@ interface ForsendelseBestillingRepository : JpaRepository<ForsendelseBestilling,
                 100,
             ),
     ): Page<ForsendelseBestilling>
-
-    @Suppress("unused")
-    fun findByAldersjustering(aldersjustering: Aldersjustering): List<ForsendelseBestilling>
 }

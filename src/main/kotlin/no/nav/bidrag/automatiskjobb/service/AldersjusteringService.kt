@@ -9,6 +9,7 @@ import no.nav.bidrag.automatiskjobb.mapper.VedtakMapper
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
+import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Forsendelsestype
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import no.nav.bidrag.automatiskjobb.persistence.repository.AldersjusteringRepository
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
@@ -306,7 +307,6 @@ class AldersjusteringService(
                 )
                 aldersjustering.status = Status.FATTET
                 aldersjustering.fattetTidspunkt = Timestamp(System.currentTimeMillis())
-                alderjusteringRepository.save(aldersjustering)
             } catch (e: Exception) {
                 val feilmelding =
                     if (e is RestClientResponseException) {
@@ -324,8 +324,14 @@ class AldersjusteringService(
         }
 
         if (aldersjustering.behandlingstype == Behandlingstype.FATTET_FORSLAG) {
-            forsendelseBestillingService.opprettBestillingForAldersjustering(aldersjustering)
+            val forsendelseBestillinger =
+                forsendelseBestillingService.opprettBestilling(
+                    aldersjustering,
+                    Forsendelsestype.ALDERSJUSTERING_BIDRAG,
+                )
+            aldersjustering.forsendelseBestilling.addAll(forsendelseBestillinger)
         }
+        alderjusteringRepository.save(aldersjustering)
     }
 
     private fun hentFeilmeldingFraWarningHeader(exception: RestClientResponseException): String =

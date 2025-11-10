@@ -24,10 +24,7 @@ class ForsendelseMapper(
     private val samhandlerConsumer: BidragSamhandlerConsumer,
 ) {
     fun tilOpprettForsendelseRequest(forsendelseBestilling: ForsendelseBestilling): OpprettForsendelseForespørsel? {
-        val aldersjustering = forsendelseBestilling.aldersjustering
         val mottakerErSamhandler = forsendelseBestilling.mottaker?.let { SamhandlerId(it).gyldig() } == true
-        val saksnummer = forsendelseBestilling.aldersjustering.barn.saksnummer
-        val enhet = finnEierfogd(forsendelseBestilling.aldersjustering.barn.saksnummer)
         val navn = if (mottakerErSamhandler) samhandlerConsumer.hentSamhandler(forsendelseBestilling.mottaker!!)?.navn else null
         val mottaker =
             MottakerTo(
@@ -47,19 +44,28 @@ class ForsendelseMapper(
             forsendelseBestilling.feilBegrunnelse = "ForsendelseBestilling mangler gjelder eller/og mottaker"
             return null
         }
+
+        val unikReferanse = forsendelseBestilling.unikReferanse
+        val vedtak = forsendelseBestilling.vedtak
+        val stonadType = forsendelseBestilling.stønadstype
+        val kravhaver = forsendelseBestilling.barn.kravhaver
+        val batchId = forsendelseBestilling.batchId
+        val saksnummer = forsendelseBestilling.barn.saksnummer
+        val enhet = finnEierfogd(forsendelseBestilling.barn.saksnummer)
+
         return OpprettForsendelseForespørsel(
-            unikReferanse = "${aldersjustering.unikReferanse}_${mottaker.ident}",
+            unikReferanse = unikReferanse,
             gjelderIdent = forsendelseBestilling.gjelder,
             mottaker = mottaker,
             saksnummer = saksnummer,
             enhet = enhet,
-            batchId = aldersjustering.batchId,
+            batchId = batchId,
             tema = JournalTema.BID,
             behandlingInfo =
                 BehandlingInfoDto(
-                    vedtakId = aldersjustering.vedtak.toString(),
-                    stonadType = aldersjustering.stønadstype,
-                    barnIBehandling = listOf(aldersjustering.barn.kravhaver),
+                    vedtakId = vedtak.toString(),
+                    stonadType = stonadType,
+                    barnIBehandling = listOf(kravhaver),
                     erFattetBeregnet = true,
                     soknadType = "EGET_TILTAK",
                     soknadFra = SøktAvType.NAV_BIDRAG,
@@ -68,7 +74,7 @@ class ForsendelseMapper(
             dokumenter =
                 listOf(
                     OpprettDokumentForespørsel(
-                        dokumentmalId = dokumentMaler[aldersjustering.stønadstype],
+                        dokumentmalId = dokumentMaler[stonadType],
                         bestillDokument = true,
                     ),
                 ),

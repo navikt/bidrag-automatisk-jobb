@@ -1,8 +1,9 @@
-package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.forsendelse.distribuer
+package no.nav.bidrag.automatiskjobb.batch.forsendelse.distribuer
 
 import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.PAGE_SIZE
 import no.nav.bidrag.automatiskjobb.persistence.entity.ForsendelseBestilling
 import no.nav.bidrag.automatiskjobb.persistence.repository.AldersjusteringRepository
+import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
 import no.nav.bidrag.automatiskjobb.persistence.rowmapper.ForsendelseBestillingRowMapper
 import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.batch.item.database.JdbcPagingItemReader
@@ -15,7 +16,7 @@ import javax.sql.DataSource
 @StepScope
 class DistribuerForsendelseAldersjusteringerBidragBatchReader(
     private val dataSource: DataSource,
-    aldersjusteringRepository: AldersjusteringRepository,
+    barnRepository: BarnRepository,
 ) : JdbcPagingItemReader<ForsendelseBestilling>() {
     init {
         val sqlPagingQuaryPoviderFactoryBean =
@@ -36,7 +37,7 @@ class DistribuerForsendelseAldersjusteringerBidragBatchReader(
             this.pageSize = PAGE_SIZE
             this.setFetchSize(PAGE_SIZE)
             this.setDataSource(dataSource)
-            this.setRowMapper(ForsendelseBestillingRowMapper(aldersjusteringRepository))
+            this.setRowMapper(ForsendelseBestillingRowMapper(barnRepository))
         } catch (e: Exception) {
             throw RuntimeException("Failed to create JdbcPagingItemReader", e)
         }

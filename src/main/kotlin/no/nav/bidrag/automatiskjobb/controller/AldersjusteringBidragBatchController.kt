@@ -9,14 +9,13 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.beregn.BeregnAldersjusteringerBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.fattvedtak.FattVedtakOmAldersjusteringerBidragBatch
-import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.forsendelse.distribuer.DistribuerForsendelseAldersjusteringerBidragBatch
-import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.forsendelse.opprett.OpprettForsendelseAldersjusteringerBidragBatch
-import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.forsendelse.slett.SlettForsendelseSomSkalSlettesBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.oppgave.opprettoppgave.OppgaveAldersjusteringBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.oppgave.slettoppgave.SlettOppgaveAldersjusteringBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.opprett.OpprettAldersjusteringerBidragBatch
-import no.nav.bidrag.automatiskjobb.batch.aldersjustering.slettallevedtaksforslag.SlettAlleVedtaksforslagBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.slettvedtaksforslag.SlettVedtaksforslagBatch
+import no.nav.bidrag.automatiskjobb.batch.forsendelse.distribuer.DistribuerForsendelseAldersjusteringerBidragBatch
+import no.nav.bidrag.automatiskjobb.batch.forsendelse.opprett.OpprettForsendelseAldersjusteringerBidragBatch
+import no.nav.bidrag.automatiskjobb.batch.slettallevedtaksforslag.SlettAlleVedtaksforslagBatch
 import no.nav.security.token.support.core.api.Protected
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping

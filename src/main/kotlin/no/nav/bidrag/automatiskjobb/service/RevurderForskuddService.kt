@@ -15,6 +15,7 @@ import no.nav.bidrag.automatiskjobb.mapper.erBidrag
 import no.nav.bidrag.automatiskjobb.mapper.tilOpprettGrunnlagRequestDto
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
+import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Forsendelsestype
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import no.nav.bidrag.automatiskjobb.persistence.repository.RevurderingForskuddRepository
 import no.nav.bidrag.automatiskjobb.service.model.AdresseEndretResultat
@@ -84,6 +85,7 @@ import no.nav.bidrag.transport.felles.ifTrue
 import org.springframework.context.annotation.Import
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
+import java.sql.Timestamp
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
@@ -109,7 +111,36 @@ class RevurderForskuddService(
     private val vedtakMapper: VedtakMapper,
     private val revurderingForskuddRepository: RevurderingForskuddRepository,
     private val inntektApi: InntektApi,
+    private val forsendelseBestillingService: ForsendelseBestillingService,
 ) {
+    fun opprettRevurdereForskudd(
+        barn: Barn,
+        batchId: String,
+        cutoffTidspunktForManueltVedtak: LocalDateTime,
+    ): RevurderingForskudd? {
+        if (harÅpentForskuddssak(barn)) {
+            LOGGER.info { "Barn ${barn.kravhaver} har åpent forskuddssak. Oppretter ikke revurdering av forskudd." }
+            return null
+        }
+        val sisteManuelleVedtakTidspunkt = hentSisteManuelleVedtakTidspunkt(barn)
+        if (sisteManuelleVedtakTidspunkt != null && sisteManuelleVedtakTidspunkt.isAfter(cutoffTidspunktForManueltVedtak)) {
+            LOGGER.info {
+                "Barn ${barn.kravhaver} har manuelt vedtak opprettet $sisteManuelleVedtakTidspunkt etter cutoff tidspunkt $cutoffTidspunktForManueltVedtak. Oppretter ikke revurdering av forskudd."
+            }
+            return null
+        }
+        return RevurderingForskudd(
+            forMåned = YearMonth.now().toString(),
+            batchId = batchId,
+            barn = barn,
+            status = Status.UBEHANDLET,
+        ).also {
+            LOGGER.info {
+                "Opprettet revurdering forskudd for barn med id ${barn.id}. $it"
+            }
+        }
+    }
+
     fun beregnRevurderForskudd(
         revurderingForskudd: RevurderingForskudd,
         simuler: Boolean,
@@ -153,6 +184,8 @@ class RevurderForskuddService(
 
         var skalSetteNedForskudd = true
         var beregnetForskuddResultat: BeregnetForskuddResultat? = null
+
+        // TODO (Endre til å kun bruke mnd med lavest innekt)
         for (i in antallMånederForBeregning downTo 1) {
             val måned = YearMonth.now().minusMonths(i)
             // Fjern inntekter fra grunnlag
@@ -234,6 +267,8 @@ class RevurderForskuddService(
             return
         }
 
+        // TODO (Sjekke regnskap etter A4, altså at det faktisk utbetales forskudd)
+
         val sak = bidragSakConsumer.hentSak(revurderingForskudd.barn.saksnummer)
         val barn = revurderingForskudd.barn.kravhaver
         val sakrolleBarn = vedtakMapper.hentBarn(sak, barn)
@@ -288,6 +323,45 @@ class RevurderForskuddService(
         revurderingForskudd.status = Status.BEHANDLET
 
         revurderingForskuddRepository.save(revurderingForskudd)
+    }
+
+    fun fattVedtakOmRevurderingForskudd(
+        revurderingForskudd: RevurderingForskudd,
+        simuler: Boolean,
+    ) {
+        if (simuler) {
+            LOGGER.info {
+                "Simulering: Fatter vedtak om revurdering av forskudd for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer}."
+            }
+        } else {
+            LOGGER.info {
+                "Fatter vedtak om revurdering av forskudd for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer}."
+            }
+            try {
+                bidragVedtakConsumer.fatteVedtaksforslag(
+                    revurderingForskudd.vedtak ?: error("Aldersjustering ${revurderingForskudd.id} mangler vedtak!"),
+                )
+                revurderingForskudd.status = Status.FATTET
+                revurderingForskudd.fattetTidspunkt = Timestamp(System.currentTimeMillis())
+            } catch (e: Exception) {
+                LOGGER.error(e) {
+                    "Feil ved fatting av vedtak om revurdering av forskudd for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer}."
+                }
+                revurderingForskudd.status = Status.FATTE_VEDTAK_FEILET
+                revurderingForskuddRepository.save(revurderingForskudd)
+                throw e
+            }
+
+            if (revurderingForskudd.status == Status.FATTET) {
+                val forsendelseBestillinger =
+                    forsendelseBestillingService.opprettBestilling(
+                        revurderingForskudd,
+                        Forsendelsestype.REVURDERING_FORSKUDD,
+                    )
+                revurderingForskudd.forsendelseBestilling.addAll(forsendelseBestillinger)
+            }
+            revurderingForskuddRepository.save(revurderingForskudd)
+        }
     }
 
     private fun finnInntekterForForskuddFraGrunnlaget(forskudd: StønadDto): TransformerInntekterResponse {
@@ -355,34 +429,6 @@ class RevurderForskuddService(
                 skattegrunnlagsposter = it.skattegrunnlagspostListe,
             )
         }
-
-    fun opprettRevurdereForskudd(
-        barn: Barn,
-        batchId: String,
-        cutoffTidspunktForManueltVedtak: LocalDateTime,
-    ): RevurderingForskudd? {
-        if (harÅpentForskuddssak(barn)) {
-            LOGGER.info { "Barn ${barn.kravhaver} har åpent forskuddssak. Oppretter ikke revurdering av forskudd." }
-            return null
-        }
-        val sisteManuelleVedtakTidspunkt = hentSisteManuelleVedtakTidspunkt(barn)
-        if (sisteManuelleVedtakTidspunkt != null && sisteManuelleVedtakTidspunkt.isAfter(cutoffTidspunktForManueltVedtak)) {
-            LOGGER.info {
-                "Barn ${barn.kravhaver} har manuelt vedtak opprettet $sisteManuelleVedtakTidspunkt etter cutoff tidspunkt $cutoffTidspunktForManueltVedtak. Oppretter ikke revurdering av forskudd."
-            }
-            return null
-        }
-        return RevurderingForskudd(
-            forMåned = YearMonth.now().toString(),
-            batchId = batchId,
-            barn = barn,
-            status = Status.UBEHANDLET,
-        ).also {
-            LOGGER.info {
-                "Opprettet revurdering forskudd for barn med id ${barn.id}. $it"
-            }
-        }
-    }
 
     private fun hentSisteManuelleVedtakTidspunkt(barn: Barn): LocalDateTime? =
         vedtakService

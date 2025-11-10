@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.forsendelse.slett
+package no.nav.bidrag.automatiskjobb.batch.slettallevedtaksforslag
 
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.JobParametersBuilder
@@ -7,13 +7,13 @@ import org.springframework.stereotype.Component
 import java.util.UUID
 
 @Component
-class SlettForsendelseSomSkalSlettesBidragBatch(
+class SlettAlleVedtaksforslagBatch(
     private val jobLauncher: JobLauncher,
-    private val slettForsendelserSomSkalSlettesJob: Job,
+    private val slettAlleVedtaksforslagJob: Job,
 ) {
-    fun startSlettForsendelserSomSkalSlettesBatch() {
+    fun startAlleSlettVedtaksforslagBatch() {
         jobLauncher.run(
-            slettForsendelserSomSkalSlettesJob,
+            slettAlleVedtaksforslagJob,
             JobParametersBuilder()
                 .addString("runId", UUID.randomUUID().toString())
                 .toJobParameters(),

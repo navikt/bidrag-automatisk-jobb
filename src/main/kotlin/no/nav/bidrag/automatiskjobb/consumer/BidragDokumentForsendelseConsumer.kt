@@ -28,7 +28,7 @@ val dokumentMaler =
 
 @Service
 class BidragDokumentForsendelseConsumer(
-    @Value("\${BIDRAG_DOKUMENT_FORSENDELSE_URL}") private val url: URI,
+    @param:Value($$"${BIDRAG_DOKUMENT_FORSENDELSE_URL}") private val url: URI,
     @Qualifier("azure") restTemplate: RestOperations,
 ) : AbstractRestClient(restTemplate, "bidrag-dokument-forsendelse") {
     private fun createUri(path: String = "") = URI.create("$url/$path")

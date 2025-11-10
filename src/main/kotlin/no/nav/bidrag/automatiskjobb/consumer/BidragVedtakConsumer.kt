@@ -121,11 +121,11 @@ class BidragVedtakConsumer(
         maxAttempts = 3,
         backoff = Backoff(delay = 200, maxDelay = 1000, multiplier = 2.0),
     )
-    override fun hentVedtak(vedtakId: Int): VedtakDto? =
+    override fun hentVedtak(vedtaksid: Int): VedtakDto? =
         getForEntity(
             bidragVedtakUri
                 .pathSegment("vedtak")
-                .pathSegment(vedtakId.toString())
+                .pathSegment(vedtaksid.toString())
                 .build()
                 .toUri(),
         )
@@ -135,13 +135,13 @@ class BidragVedtakConsumer(
         maxAttempts = 3,
         backoff = Backoff(delay = 200, maxDelay = 1000, multiplier = 2.0),
     )
-    override fun hentVedtakForStønad(request: HentVedtakForStønadRequest): HentVedtakForStønadResponse =
+    override fun hentVedtakForStønad(hentVedtakForStønadRequest: HentVedtakForStønadRequest): HentVedtakForStønadResponse =
         postForNonNullEntity(
             bidragVedtakUri
                 .pathSegment("vedtak")
                 .pathSegment("hent-vedtak")
                 .build()
                 .toUri(),
-            request,
+            hentVedtakForStønadRequest,
         )
 }

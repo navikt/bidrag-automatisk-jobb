@@ -43,7 +43,7 @@ class FatteVedtakRevurderForskuddBatchConfiguration {
         dummmyWriter: DummyItemWriter,
     ): Step =
         StepBuilder("fatteVedtakRevurderForskuddStep", jobRepository)
-            .chunk<Any, Unit>(CHUNK_SIZE, transactionManager)
+            .chunk<RevurderingForskudd, Unit>(CHUNK_SIZE, transactionManager)
             .reader(fatteVedtakRevurderForskuddBatchReader)
             .processor(fatteVedtakRevurderForskuddBatchProcessor)
             .writer(dummmyWriter)
@@ -51,7 +51,7 @@ class FatteVedtakRevurderForskuddBatchConfiguration {
             .build()
 
     @Bean
-    fun beregnRevurderForskuddBatchReader(
+    fun fatteVedtakRevurderForskuddBatchReader(
         revurderingForskuddRepository: RevurderingForskuddRepository,
     ): RepositoryItemReader<RevurderingForskudd> =
         RepositoryItemReaderBuilder<RevurderingForskudd>()
