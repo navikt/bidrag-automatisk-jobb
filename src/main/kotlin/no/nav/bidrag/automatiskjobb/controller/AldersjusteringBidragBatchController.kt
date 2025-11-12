@@ -13,8 +13,6 @@ import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.oppgave.opprett
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.oppgave.slettoppgave.SlettOppgaveAldersjusteringBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.opprett.OpprettAldersjusteringerBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.slettvedtaksforslag.SlettVedtaksforslagBatch
-import no.nav.bidrag.automatiskjobb.batch.forsendelse.distribuer.DistribuerForsendelseAldersjusteringerBidragBatch
-import no.nav.bidrag.automatiskjobb.batch.forsendelse.opprett.OpprettForsendelseAldersjusteringerBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.slettallevedtaksforslag.SlettAlleVedtaksforslagBatch
 import no.nav.security.token.support.core.api.Protected
 import org.springframework.http.ResponseEntity
@@ -34,8 +32,6 @@ class AldersjusteringBidragBatchController(
     private val oppgaveAldersjusteringBidragBatch: OppgaveAldersjusteringBidragBatch,
     private val slettOppgaveAldersjusteringBidragBatch: SlettOppgaveAldersjusteringBidragBatch,
     private val beregnAldersjusteringerBidragBatch: BeregnAldersjusteringerBidragBatch,
-    private val opprettForsendelseAldersjusteringerBidragBatch: OpprettForsendelseAldersjusteringerBidragBatch,
-    private val distribuerForsendelseAldersjusteringerBidragBatch: DistribuerForsendelseAldersjusteringerBidragBatch,
 ) {
     @PostMapping("/aldersjustering/batch/slettvedtaksforslag")
     @Operation(
@@ -286,46 +282,6 @@ class AldersjusteringBidragBatchController(
             barn,
             batchId,
         )
-        return ResponseEntity.ok().build()
-    }
-
-    @PostMapping("/aldersjustering/batch/forsendelse/opprett")
-    @Operation(
-        summary = "Start kjøring av batch for å opprette forsendelse for aldersjusteringer.",
-        description = "Operasjon for å starte kjøring av batch som oppretter forsendelse for aldersjusteringer.",
-        security = [SecurityRequirement(name = "bearer-key")],
-    )
-    @ApiResponses(
-        value = [
-            ApiResponse(
-                responseCode = "200",
-                description = "Batch for oppretting av forsendelser for aldersjusteringer ble startet.",
-            ),
-        ],
-    )
-    fun startOpprettForsendelseAldersjusteringBidragBatch(
-        @RequestParam prosesserFeilet: Boolean = false,
-    ): ResponseEntity<Any> {
-        opprettForsendelseAldersjusteringerBidragBatch.startOpprettForsendelseAldersjusteringBidragBatch(prosesserFeilet)
-        return ResponseEntity.ok().build()
-    }
-
-    @PostMapping("/aldersjustering/batch/forsendelse/distribuer")
-    @Operation(
-        summary = "Start kjøring av batch for å distribuere forsendelse for aldersjusteringer.",
-        description = "Operasjon for å starte kjøring av batch som distribuerer forsendelser for aldersjusteringer.",
-        security = [SecurityRequirement(name = "bearer-key")],
-    )
-    @ApiResponses(
-        value = [
-            ApiResponse(
-                responseCode = "200",
-                description = "Batch for distrubisjon av forsendelser for aldersjusteringer ble startet.",
-            ),
-        ],
-    )
-    fun startDistribuerForsendelseAldersjusteringBidragBatch(): ResponseEntity<Any> {
-        distribuerForsendelseAldersjusteringerBidragBatch.startDistribuerForsendelseAldersjusteringBidragBatch()
         return ResponseEntity.ok().build()
     }
 }

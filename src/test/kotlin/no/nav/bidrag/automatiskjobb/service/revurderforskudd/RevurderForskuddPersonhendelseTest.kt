@@ -16,6 +16,7 @@ import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer
 import no.nav.bidrag.automatiskjobb.mapper.VedtakMapper
 import no.nav.bidrag.automatiskjobb.persistence.repository.RevurderingForskuddRepository
 import no.nav.bidrag.automatiskjobb.service.ForsendelseBestillingService
+import no.nav.bidrag.automatiskjobb.service.OppgaveService
 import no.nav.bidrag.automatiskjobb.service.RevurderForskuddService
 import no.nav.bidrag.automatiskjobb.testdata.opprettSakRespons
 import no.nav.bidrag.automatiskjobb.testdata.opprettStønadDto
@@ -88,6 +89,9 @@ class RevurderForskuddPersonhendelseTest {
     @MockK
     lateinit var forsendelseBestillingService: ForsendelseBestillingService
 
+    @MockK
+    lateinit var oppgaveService: OppgaveService
+
     val unleash = FakeUnleash()
 
     @BeforeEach
@@ -139,6 +143,7 @@ class RevurderForskuddPersonhendelseTest {
                 revurderingForskuddRepository,
                 inntektApi,
                 forsendelseBestillingService,
+                oppgaveService,
             )
     }
 

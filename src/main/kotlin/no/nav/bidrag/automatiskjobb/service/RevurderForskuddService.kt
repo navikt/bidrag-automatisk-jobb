@@ -112,6 +112,7 @@ class RevurderForskuddService(
     private val revurderingForskuddRepository: RevurderingForskuddRepository,
     private val inntektApi: InntektApi,
     private val forsendelseBestillingService: ForsendelseBestillingService,
+    private val oppgaveService: OppgaveService,
 ) {
     fun opprettRevurdereForskudd(
         barn: Barn,
@@ -765,4 +766,12 @@ class RevurderForskuddService(
 
     private fun List<StønadPeriodeDto>.hentSisteLøpendePeriode() =
         maxByOrNull { it.periode.fom }?.takeIf { it.periode.til == null || it.periode.til!!.isAfter(YearMonth.now()) }
+
+    fun opprettOppgave(revurderingForskudd: RevurderingForskudd): Int {
+        val oppgaveId = oppgaveService.opprettOppgaveForTilbakekrevingAvForskudd(revurderingForskudd) //
+
+        revurderingForskudd.oppgave = oppgaveId
+        revurderingForskuddRepository.save(revurderingForskudd)
+        return oppgaveId
+    }
 }

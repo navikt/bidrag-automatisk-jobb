@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.batch.forsendelse.slett
+package no.nav.bidrag.automatiskjobb.batch.forsendelse.opprett
 
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.JobParametersBuilder
@@ -7,14 +7,15 @@ import org.springframework.stereotype.Component
 import java.util.UUID
 
 @Component
-class SlettForsendelseSomSkalSlettesBidragBatch(
+class OpprettForsendelseBatch(
     private val jobLauncher: JobLauncher,
-    private val slettForsendelserSomSkalSlettesJob: Job,
+    private val opprettForsendelseJob: Job,
 ) {
-    fun start() {
+    fun start(prosesserFeilet: Boolean = false) {
         jobLauncher.run(
-            slettForsendelserSomSkalSlettesJob,
+            opprettForsendelseJob,
             JobParametersBuilder()
+                .addString("prosesserFeilet", prosesserFeilet.toString())
                 .addString("runId", UUID.randomUUID().toString())
                 .toJobParameters(),
         )
