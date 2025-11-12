@@ -1,10 +1,10 @@
 package no.nav.bidrag.automatiskjobb.consumer
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.automatiskjobb.configuration.CacheConfiguration.Companion.VEDTAK_CACHE
 import no.nav.bidrag.automatiskjobb.service.model.OpprettVedtakConflictResponse
 import no.nav.bidrag.automatiskjobb.utils.JsonUtil.Companion.tilJson
 import no.nav.bidrag.beregn.barnebidrag.service.external.BeregningVedtakConsumer
-import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.commons.web.client.AbstractRestClient
 import no.nav.bidrag.transport.behandling.vedtak.request.HentVedtakForStønadRequest
 import no.nav.bidrag.transport.behandling.vedtak.request.OpprettVedtakRequestDto
@@ -21,6 +21,8 @@ import org.springframework.web.client.HttpStatusCodeException
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.util.UriComponentsBuilder
 import java.net.URI
+
+private val LOGGER = KotlinLogging.logger { }
 
 @Component
 class BidragVedtakConsumer(
@@ -64,25 +66,25 @@ class BidragVedtakConsumer(
     fun opprettEllerOppdaterVedtaksforslag(request: OpprettVedtakRequestDto) =
         try {
             slettEksisterendeVedtaksforslag(request.unikReferanse!!)
-            secureLogger.info { "Oppretter vedtaksforslag: ${tilJson(request)}" }
+            LOGGER.info { "Oppretter vedtaksforslag: ${tilJson(request)}" }
             opprettVedtaksforslag(request)
         } catch (e: HttpStatusCodeException) {
             if (e.statusCode == HttpStatus.CONFLICT) {
-                secureLogger.info { "Vedtaksforslag med referanse ${request.unikReferanse} finnes allerede. Oppdaterer vedtaksforslaget" }
+                LOGGER.info { "Vedtaksforslag med referanse ${request.unikReferanse} finnes allerede. Oppdaterer vedtaksforslaget" }
                 val resultat = e.getResponseBodyAs(OpprettVedtakConflictResponse::class.java)!!
                 oppdaterVedtaksforslag(resultat.vedtaksid, request)
             } else {
-                secureLogger.error(e) { "Feil ved oppretting av vedtaksforslag med referanse ${request.unikReferanse}" }
+                LOGGER.error(e) { "Feil ved oppretting av vedtaksforslag med referanse ${request.unikReferanse}" }
                 throw e
             }
         }
 
     private fun slettEksisterendeVedtaksforslag(referanse: String) {
         hentVedtaksforslagBasertPåReferanase(referanse)?.let {
-            secureLogger.info {
+            LOGGER.info {
                 "Fant eksisterende vedtaksforslag med referanse $referanse og id ${it.vedtaksid}. Sletter eksisterende vedtaksforslag "
             }
-            slettVedtaksforslag(it.vedtaksid.toInt())
+            slettVedtaksforslag(it.vedtaksid)
         }
     }
 

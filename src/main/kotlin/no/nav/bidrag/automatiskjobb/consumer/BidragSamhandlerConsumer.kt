@@ -1,7 +1,6 @@
 package no.nav.bidrag.automatiskjobb.consumer
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import no.nav.bidrag.automatiskjobb.SECURE_LOGGER
 import no.nav.bidrag.automatiskjobb.configuration.CacheConfiguration.Companion.SAMHANDLER_CACHE
 import no.nav.bidrag.commons.web.client.AbstractRestClient
 import no.nav.bidrag.domene.ident.Ident
@@ -36,7 +35,7 @@ class BidragSamhandlerConsumer(
     @Cacheable(SAMHANDLER_CACHE)
     fun hentSamhandler(samhandlerId: String): SamhandlerDto? {
         try {
-            SECURE_LOGGER.info { "Henter samhandler $samhandlerId" }
+            LOGGER.info { "Henter samhandler $samhandlerId" }
             return postForNonNullEntity(createUri("/samhandler"), Ident(samhandlerId))
         } catch (e: HttpStatusCodeException) {
             if (e.statusCode.value() == HttpStatus.NOT_FOUND.value() || e.statusCode.value() == HttpStatus.NO_CONTENT.value()) {

@@ -1,7 +1,6 @@
 package no.nav.bidrag.automatiskjobb.service
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import no.nav.bidrag.automatiskjobb.combinedLogger
 import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
 import no.nav.bidrag.automatiskjobb.consumer.OppgaveConsumer
 import no.nav.bidrag.automatiskjobb.consumer.dto.OppgaveDto
@@ -68,7 +67,7 @@ class OppgaveService(
             revurderForskuddService
                 .erForskuddRedusert(vedtakHendelse)
                 .forEach { resultat ->
-                    combinedLogger.info {
+                    LOGGER.info {
                         "Forskuddet skal reduseres i sak ${resultat.saksnummer} for mottaker ${resultat.bidragsmottaker} og kravhaver ${resultat.gjelderBarn}. Opprett revurder forskudd oppgave"
                     }
                     vedtakHendelse.opprettRevurderForskuddOppgave(resultat)
@@ -131,7 +130,7 @@ class OppgaveService(
     fun opprettOppgaveForTilbakekrevingAvForskudd(revurderingForskudd: RevurderingForskudd): Int {
         val eksisterendeOppgave = finnEksisterendeOppgaveForTilbakekrevingForskudd(revurderingForskudd)
         if (eksisterendeOppgave != null) {
-            combinedLogger.info {
+            LOGGER.info {
                 "Fant eksisterende oppgave $eksisterendeOppgave for " +
                     "tilbakekreving av forskudd ${revurderingForskudd.id} i sak ${revurderingForskudd.barn.saksnummer} " +
                     "og barn ${revurderingForskudd.barn.saksnummer}. " +
@@ -162,7 +161,7 @@ class OppgaveService(
     fun opprettOppgaveForManuellAldersjustering(aldersjustering: Aldersjustering): Int {
         val eksisterendeOppgave = finnEksisterendeOppgaveForManuellAldersjusteringISak(aldersjustering)
         if (eksisterendeOppgave != null) {
-            combinedLogger.info {
+            LOGGER.info {
                 "Fant eksisterende oppgave $eksisterendeOppgave for " +
                     "manuell aldersjustering ${aldersjustering.id} i sak ${aldersjustering.barn.saksnummer} " +
                     "og barn ${aldersjustering.barn.saksnummer}. " +
@@ -235,7 +234,7 @@ class OppgaveService(
             )
         val revurderForskuddOppgave = oppgaver.oppgaver.find { it.beskrivelse!!.contains(revurderForskuddBeskrivelseAdresseendring) }
         if (revurderForskuddOppgave != null) {
-            combinedLogger.info {
+            LOGGER.info {
                 "Fant revurder forskudd etter adresseendring oppgave $revurderForskuddOppgave for sak $saksnummer og barn $gjelderBarn. Oppretter ikke ny oppgave"
             }
             return true
@@ -252,7 +251,7 @@ class OppgaveService(
             )
         val revurderForskuddOppgave = oppgaver.oppgaver.find { it.beskrivelse!!.contains(forskuddRedusertResultat.tilOppgaveBeskrivelse()) }
         if (revurderForskuddOppgave != null) {
-            combinedLogger.info {
+            LOGGER.info {
                 "Fant revurder forskudd oppgave $revurderForskuddOppgave for sak ${forskuddRedusertResultat.saksnummer} og bidragsmottaker ${forskuddRedusertResultat.bidragsmottaker}. Oppretter ikke ny oppgave"
             }
             return true

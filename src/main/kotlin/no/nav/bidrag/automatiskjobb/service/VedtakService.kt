@@ -1,10 +1,10 @@
 package no.nav.bidrag.automatiskjobb.service
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.automatiskjobb.consumer.BidragPersonConsumer
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
 import no.nav.bidrag.commons.util.IdentUtils
-import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.domene.enums.vedtak.Beslutningstype
 import no.nav.bidrag.domene.enums.vedtak.Innkrevingstype
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
@@ -12,11 +12,12 @@ import no.nav.bidrag.domene.enums.vedtak.Vedtakstype
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.transport.behandling.vedtak.Stønadsendring
 import no.nav.bidrag.transport.behandling.vedtak.VedtakHendelse
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
 import java.time.LocalDateTime
+
+private val LOGGER = KotlinLogging.logger { }
 
 @Service
 class VedtakService(
@@ -24,10 +25,6 @@ class VedtakService(
     private val identUtils: IdentUtils,
     private val bidragPersonConsumer: BidragPersonConsumer,
 ) {
-    companion object {
-        private val LOGGER = LoggerFactory.getLogger(VedtakService::class.java)
-    }
-
     @Transactional
     fun behandleVedtak(vedtakHendelse: VedtakHendelse) {
         if (vedtakHendelse.type == Vedtakstype.INDEKSREGULERING) return
@@ -53,7 +50,7 @@ class VedtakService(
         lagretBarn: Barn,
         stønadsendringer: List<Stønadsendring>,
     ) {
-        LOGGER.info("Oppdaterer barn ${lagretBarn.id} for sak ${stønadsendringer.first().sak.verdi}")
+        LOGGER.info { "Oppdaterer barn ${lagretBarn.id} for sak ${stønadsendringer.first().sak.verdi}" }
         val oppdatertSkyldner = finnSkyldner(stønadsendringer)
 
         // Skylder kan oppdateres om det finnes en ny skyldner som ikke er null
@@ -105,14 +102,14 @@ class VedtakService(
                 oppdatert = LocalDateTime.now(),
             )
         val lagretBarn = barnRepository.save(barn)
-        LOGGER.info("Opprettet nytt barn ${lagretBarn.id} for sak $saksnummer")
+        LOGGER.info { "Opprettet nytt barn ${lagretBarn.id} for sak $saksnummer" }
     }
 
     private fun hentFødselsdatoForPerson(kravhaver: Personident): LocalDate? {
         try {
             return bidragPersonConsumer.hentFødselsdatoForPerson(kravhaver)
         } catch (e: Exception) {
-            secureLogger.error(e) { "Det skjedde en feil ved henting av fødselsdato for person $kravhaver" }
+            LOGGER.error(e) { "Det skjedde en feil ved henting av fødselsdato for person $kravhaver" }
             throw e
         }
     }

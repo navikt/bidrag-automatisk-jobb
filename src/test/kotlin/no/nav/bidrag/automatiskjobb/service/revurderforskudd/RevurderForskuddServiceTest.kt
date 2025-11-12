@@ -1,11 +1,13 @@
 package no.nav.bidrag.automatiskjobb.service.revurderforskudd
 
 import com.fasterxml.jackson.databind.node.POJONode
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
+import io.mockk.mockk
 import io.mockk.mockkConstructor
 import io.mockk.verify
 import no.nav.bidrag.automatiskjobb.consumer.BidragBehandlingConsumer
@@ -15,6 +17,7 @@ import no.nav.bidrag.automatiskjobb.consumer.BidragPersonConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer
 import no.nav.bidrag.automatiskjobb.mapper.VedtakMapper
+import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
 import no.nav.bidrag.automatiskjobb.persistence.repository.RevurderingForskuddRepository
 import no.nav.bidrag.automatiskjobb.service.ForsendelseBestillingService
 import no.nav.bidrag.automatiskjobb.service.OppgaveService
@@ -987,6 +990,33 @@ class RevurderForskuddServiceTest {
                 },
             )
         }
+    }
+
+    @Test
+    fun `skal lagre oppgave ID til revurderingForskudd og returnere den`() {
+        every { oppgaveService.opprettOppgaveForTilbakekrevingAvForskudd(any()) } returns 12345
+        every { revurderingForskuddRepository.save(any()) } returnsArgument 0
+
+        val revurderingForskudd = mockk<RevurderingForskudd>(relaxed = true)
+        val resultat = service.opprettOppgave(revurderingForskudd)
+
+        resultat shouldBe 12345
+        verify(exactly = 1) { oppgaveService.opprettOppgaveForTilbakekrevingAvForskudd(revurderingForskudd) }
+        verify(exactly = 1) { revurderingForskuddRepository.save(revurderingForskudd) }
+    }
+
+    @Test
+    fun `skal kaste exception hvis oppgaveopprettelse feiler`() {
+        every { oppgaveService.opprettOppgaveForTilbakekrevingAvForskudd(any()) } throws RuntimeException("Feil ved opprettelse av oppgave")
+
+        val revurderingForskudd = mockk<RevurderingForskudd>(relaxed = true)
+
+        shouldThrow<RuntimeException> {
+            service.opprettOppgave(revurderingForskudd)
+        }.message shouldBe "Feil ved opprettelse av oppgave"
+
+        verify(exactly = 1) { oppgaveService.opprettOppgaveForTilbakekrevingAvForskudd(revurderingForskudd) }
+        verify(exactly = 0) { revurderingForskuddRepository.save(any()) }
     }
 }
 

@@ -5,7 +5,6 @@ import no.nav.bidrag.automatiskjobb.domene.Endringsmelding
 import no.nav.bidrag.automatiskjobb.domene.erIdentendring
 import no.nav.bidrag.automatiskjobb.service.OppgaveService
 import no.nav.bidrag.automatiskjobb.service.PersonHendelseService
-import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.transport.felles.commonObjectmapper
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.kafka.support.KafkaHeaders
@@ -34,7 +33,7 @@ class BidragPersonHendelseListener(
         LOGGER.debug { "Leser hendelse fra topic: $topic, offset: $offset, partition: $partition, groupId: $groupId" }
         try {
             val personHendelse = commonObjectmapper.readValue(hendelse, Endringsmelding::class.java)
-            secureLogger.info { "Behandler person hendelse $personHendelse" }
+            LOGGER.info { "Behandler person hendelse $personHendelse" }
             if (personHendelse.erIdentendring) {
                 personHendelseService.behandlePersonHendelse(personHendelse)
             }

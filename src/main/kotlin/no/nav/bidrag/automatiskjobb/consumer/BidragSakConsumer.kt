@@ -4,7 +4,6 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.automatiskjobb.configuration.CacheConfiguration.Companion.SAKER_PERSON_CACHE
 import no.nav.bidrag.automatiskjobb.configuration.CacheConfiguration.Companion.SAK_CACHE
 import no.nav.bidrag.beregn.barnebidrag.service.external.BeregningSakConsumer
-import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.commons.web.client.AbstractRestClient
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.transport.sak.BidragssakDto
@@ -54,7 +53,6 @@ class BidragSakConsumer(
         } catch (e: HttpStatusCodeException) {
             if (e.statusCode == HttpStatus.NOT_FOUND) {
                 LOGGER.warn(e) { "Fant ingen saker for ${personIdent.verdi}" }
-                secureLogger.warn { "Fant ingen saker for ${personIdent.verdi}" }
                 return emptyList()
             }
             LOGGER.warn(e) { "Det skjedde en feil ved henting av saker for $personIdent" }

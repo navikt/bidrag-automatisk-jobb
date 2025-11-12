@@ -1,27 +1,23 @@
 package no.nav.bidrag.automatiskjobb.kafka
 
-import no.nav.bidrag.automatiskjobb.SECURE_LOGGER
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.automatiskjobb.service.OppgaveService
 import no.nav.bidrag.automatiskjobb.service.VedtakService
-import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.transport.behandling.vedtak.VedtakHendelse
 import no.nav.bidrag.transport.felles.commonObjectmapper
-import org.slf4j.LoggerFactory
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.kafka.listener.ConsumerSeekAware
 import org.springframework.kafka.support.KafkaHeaders
 import org.springframework.messaging.handler.annotation.Header
 import org.springframework.stereotype.Component
 
+private val LOGGER = KotlinLogging.logger { }
+
 @Component
 class BidragVedtakListener(
     private val vedtakService: VedtakService,
     private val oppgaveService: OppgaveService,
 ) : ConsumerSeekAware {
-    companion object {
-        private val LOGGER = LoggerFactory.getLogger(BidragVedtakListener::class.java)
-    }
-
     @KafkaListener(
         groupId = "\${VEDTAK_KAFKA_GROUP_ID_START:bidrag-automatisk-jobb-start}",
         topics = ["\${KAFKA_VEDTAK_TOPIC}"],
@@ -67,13 +63,12 @@ class BidragVedtakListener(
         hendelse: String,
         handler: (VedtakHendelse) -> Unit,
     ) {
-        LOGGER.info("Behandler vedtakhendelse med offset: $offset i consumergroup: $groupId for topic: $topic")
-        secureLogger.debug { "Behandler vedtakhendelse: $hendelse" }
+        LOGGER.info { "Behandler vedtakhendelse $hendelse med offset: $offset i consumergroup: $groupId for topic: $topic" }
         try {
             val vedtakHendelse = mapVedtakHendelse(hendelse)
             handler(vedtakHendelse)
         } catch (e: Exception) {
-            LOGGER.error("Det skjedde en feil ved prosessering av vedtak hendelse", e)
+            LOGGER.error(e) { "Det skjedde en feil ved prosessering av vedtak hendelse" }
             throw e
         }
     }
@@ -82,6 +77,6 @@ class BidragVedtakListener(
         try {
             commonObjectmapper.readValue(hendelse, VedtakHendelse::class.java)
         } finally {
-            SECURE_LOGGER.debug { "${"Leser hendelse: {}"} $hendelse" }
+            LOGGER.debug { "${"Leser hendelse: {}"} $hendelse" }
         }
 }

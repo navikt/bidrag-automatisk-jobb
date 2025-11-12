@@ -2,7 +2,6 @@ package no.nav.bidrag.automatiskjobb.service
 
 import com.fasterxml.jackson.databind.node.POJONode
 import io.github.oshai.kotlinlogging.KotlinLogging
-import no.nav.bidrag.automatiskjobb.combinedLogger
 import no.nav.bidrag.automatiskjobb.consumer.BidragBehandlingConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragBeløpshistorikkConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragGrunnlagConsumer
@@ -30,7 +29,6 @@ import no.nav.bidrag.beregn.barnebidrag.service.VedtakService
 import no.nav.bidrag.beregn.forskudd.BeregnForskuddApi
 import no.nav.bidrag.beregn.vedtak.Vedtaksfiltrering
 import no.nav.bidrag.commons.util.IdentUtils
-import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.domene.enums.beregning.Resultatkode.Companion.erDirekteAvslag
 import no.nav.bidrag.domene.enums.grunnlag.GrunnlagRequestType
 import no.nav.bidrag.domene.enums.grunnlag.Grunnlagstype
@@ -454,29 +452,29 @@ class RevurderForskuddService(
         val saker = bidragSakConsumer.hentSakerForPerson(barnIdent)
         return saker.mapNotNull { sak ->
             val personRolle = sak.roller.find { it.fødselsnummer == barnIdent } ?: return@mapNotNull null
-            secureLogger.info {
+            LOGGER.info {
                 "Sjekker om person ${barnIdent.verdi} er barn i saken ${sak.saksnummer}, mottar forskudd og fortsatt bor hos BM etter adresseendring"
             }
             if (personRolle.type != Rolletype.BARN) {
-                combinedLogger.info {
+                LOGGER.info {
                     "Person ${barnIdent.verdi} har rolle ${personRolle.type} i sak ${sak.saksnummer}. Behandler bare når barnets adresse endres. Avslutter behandling"
                 }
                 return@mapNotNull null
             }
             val bidragsmottaker =
                 sak.roller.find { it.type == Rolletype.BIDRAGSMOTTAKER } ?: run {
-                    secureLogger.info {
+                    LOGGER.info {
                         "Sak ${sak.saksnummer} har ingen bidragsmottaker. Avslutter behandling"
                     }
                     return@mapNotNull null
                 }
 
-            secureLogger.info {
+            LOGGER.info {
                 "Sjekker om barnet ${barnIdent.verdi} i sak ${sak.saksnummer} mottar forskudd og fortsatt bor hos BM etter adresseendring"
             }
             val løpendeForskudd =
                 hentLøpendeForskudd(sak.saksnummer.verdi, barnIdent.verdi) ?: run {
-                    secureLogger.info {
+                    LOGGER.info {
                         "Fant ingen løpende forskudd i sak ${sak.saksnummer} for barn ${barnIdent.verdi}. Avslutter behandling"
                     }
                     return@mapNotNull null
@@ -485,13 +483,13 @@ class RevurderForskuddService(
             val husstandsmedlemmerBM =
                 bidragPersonConsumer.hentPersonHusstandsmedlemmer(bidragsmottaker.fødselsnummer!!)
             if (husstandsmedlemmerBM.erHusstandsmedlem(barnIdent)) {
-                secureLogger.info {
+                LOGGER.info {
                     "Barn ${barnIdent.verdi} er husstandsmedlem til bidragsmottaker ${bidragsmottaker.fødselsnummer!!.verdi}. Ingen endringer kreves."
                 }
                 return@mapNotNull null
             }
 
-            secureLogger.info {
+            LOGGER.info {
                 "Bidragsmottaker ${bidragsmottaker.fødselsnummer?.verdi} mottar forskudd for barn ${barnIdent.verdi} " +
                     "i sak ${sak.saksnummer} med beløp ${løpendeForskudd.beløp} ${løpendeForskudd.valutakode}. " +
                     "Barnet bor ikke lenger hos bidragsmottaker og skal derfor ikke motta forskudd lenger"
@@ -506,7 +504,7 @@ class RevurderForskuddService(
     }
 
     fun erForskuddRedusert(vedtakHendelse: VedtakHendelse): List<ForskuddRedusertResultat> {
-        combinedLogger.info {
+        LOGGER.info {
             "Sjekker om forskuddet er redusert etter fattet vedtak ${vedtakHendelse.id} i sak ${vedtakHendelse.saksnummer}"
         }
         val vedtak = hentVedtak(vedtakHendelse.id) ?: return listOf()
@@ -524,7 +522,7 @@ class RevurderForskuddService(
             .filter { it.type == Engangsbeløptype.SÆRBIDRAG }
             .filter {
                 if (it.resultatkode.tilResultatkode()?.erDirekteAvslag() == true) {
-                    combinedLogger.info {
+                    LOGGER.info {
                         "Særbidrag vedtaket $vedtaksid er direkte avslag med resultat ${it.resultatkode} og har derfor ingen inntekter."
                     }
                     false
@@ -553,7 +551,7 @@ class RevurderForskuddService(
             .filter { it.erBidrag }
             .filter {
                 if (it.erDirekteAvslag()) {
-                    combinedLogger.info {
+                    LOGGER.info {
                         "Bidrag vedtaket ${vedtakInfo.vedtaksId} med type ${it.type} for kravhaver ${it.kravhaver} er direkte avslag med resultat ${it.enesteResultatkode()} og har derfor ingen inntekter."
                     }
                     false
@@ -604,7 +602,7 @@ class RevurderForskuddService(
                 grunnlagsliste,
             )
         return erForskuddRedusert.ifTrue { _ ->
-            secureLogger.info {
+            LOGGER.info {
                 """Forskudd er redusert i sak ${stønadEngangsbeløpId.sak.verdi} for bidragsmottaker ${mottaker.verdi} og barn ${gjelderBarn.verdi}. 
                    Løpende forskudd er $beløpLøpende og forskudd ble beregnet til ${beregnetResultat.belop} basert på siste vurdert inntekt fra bidrag vedtak ${vedtakFattet.vedtaksId} og grunnlag fra forskudd vedtak ${vedtakForskudd.vedtaksId}.
                    Siste løpende inntekt for BM i fattet vedtak er ${sisteInntektFattetVedtak?.totalinntekt} og siste inntekt for BM i forskudd vedtaket er ${sisteInntektForskudd?.totalinntekt}.
@@ -624,7 +622,7 @@ class RevurderForskuddService(
                 engangsbeløptype = stønadEngangsbeløpId.engangsbeløptype,
             )
         } ?: run {
-            secureLogger.info {
+            LOGGER.info {
                 """Forskudd er IKKE redusert i sak ${stønadEngangsbeløpId.sak.verdi} for bidragsmottaker ${mottaker.verdi} og barn ${gjelderBarn.verdi}. 
                    Løpende forskudd er $beløpLøpende og forskudd ble beregnet til ${beregnetResultat.belop} basert på siste vurdert inntekt fra bidrag vedtak ${vedtakFattet.vedtaksId} og grunnlag fra forskudd vedtak ${vedtakForskudd.vedtaksId}.
                    Siste løpende inntekt for BM i fattet vedtak er $sisteInntektFattetVedtak og siste inntekt for BM i forskudd vedtaket er $sisteInntektForskudd.
@@ -651,7 +649,7 @@ class RevurderForskuddService(
                 vedtak
             } ?: return null
         if (faktiskVedtak.grunnlagListe.isEmpty()) {
-            combinedLogger.info {
+            LOGGER.info {
                 "Vedtak $vedtakId fattet av system ${vedtak.kildeapplikasjon} mangler grunnlag. Gjør ingen vurdering"
             }
             return null
@@ -689,12 +687,12 @@ class RevurderForskuddService(
             } ?: return null
 
         if (vedtak.vedtak.grunnlagListe.isEmpty()) {
-            combinedLogger.info {
+            LOGGER.info {
                 "Forskudd vedtak $vedtakId fattet av system ${vedtak.vedtak.kildeapplikasjon} mangler grunnlag. Gjør ingen vurdering"
             }
             return null
         }
-        secureLogger.info { "Fant siste manuelle forskudd vedtak ${vedtak.vedtaksId}" }
+        LOGGER.info { "Fant siste manuelle forskudd vedtak ${vedtak.vedtaksId}" }
         return vedtak
     }
 
@@ -728,11 +726,11 @@ class RevurderForskuddService(
     ): StønadPeriodeDto? {
         val forskuddStønad =
             hentForskuddForSak(saksnummer, gjelderBarn) ?: run {
-                combinedLogger.info { "Fant ingen løpende forskudd i sak $saksnummer for barn $gjelderBarn" }
+                LOGGER.info { "Fant ingen løpende forskudd i sak $saksnummer for barn $gjelderBarn" }
                 return null
             }
         return forskuddStønad.periodeListe.hentSisteLøpendePeriode() ?: run {
-            combinedLogger.info {
+            LOGGER.info {
                 "Forskudd i sak $saksnummer og barn $gjelderBarn har opphørt før dagens dato. Det finnes ingen løpende forskudd"
             }
             null
