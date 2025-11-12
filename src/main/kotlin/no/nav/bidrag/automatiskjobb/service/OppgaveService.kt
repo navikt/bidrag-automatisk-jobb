@@ -4,7 +4,13 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.automatiskjobb.combinedLogger
 import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
 import no.nav.bidrag.automatiskjobb.consumer.OppgaveConsumer
-import no.nav.bidrag.automatiskjobb.consumer.dto.*
+import no.nav.bidrag.automatiskjobb.consumer.dto.OppgaveDto
+import no.nav.bidrag.automatiskjobb.consumer.dto.OppgaveSokRequest
+import no.nav.bidrag.automatiskjobb.consumer.dto.OppgaveSokResponse
+import no.nav.bidrag.automatiskjobb.consumer.dto.OppgaveType
+import no.nav.bidrag.automatiskjobb.consumer.dto.OpprettOppgaveRequest
+import no.nav.bidrag.automatiskjobb.consumer.dto.lagBeskrivelseHeader
+import no.nav.bidrag.automatiskjobb.consumer.dto.lagBeskrivelseHeaderAutomatiskJobb
 import no.nav.bidrag.automatiskjobb.domene.Endringsmelding
 import no.nav.bidrag.automatiskjobb.domene.erAdresseendring
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
@@ -12,7 +18,12 @@ import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
 import no.nav.bidrag.automatiskjobb.service.model.AdresseEndretResultat
 import no.nav.bidrag.automatiskjobb.service.model.ForskuddRedusertResultat
-import no.nav.bidrag.automatiskjobb.utils.*
+import no.nav.bidrag.automatiskjobb.utils.UnleashFeatures
+import no.nav.bidrag.automatiskjobb.utils.erForskudd
+import no.nav.bidrag.automatiskjobb.utils.oppgaveAldersjusteringBeskrivelse
+import no.nav.bidrag.automatiskjobb.utils.oppgaveTilbakekrevingForskudd
+import no.nav.bidrag.automatiskjobb.utils.revurderForskuddBeskrivelseAdresseendring
+import no.nav.bidrag.automatiskjobb.utils.tilOppgaveBeskrivelse
 import no.nav.bidrag.domene.enums.vedtak.Vedtakskilde
 import no.nav.bidrag.domene.felles.enhet_farskap
 import no.nav.bidrag.transport.behandling.vedtak.VedtakHendelse
@@ -38,7 +49,9 @@ class OppgaveService(
                     if (UnleashFeatures.OPPRETT_REVURDER_FORSKUDD_OPPGAVE.isEnabled) {
                         it.opprettRevurderForskuddOppgaveEtterAdresseEndring()
                     } else {
-                        LOGGER.info { "Feature toggle $opprettRevurderForskuddOppgaveToggleName er skrudd av. Oppretter ikke oppgave for $it" }
+                        LOGGER.info {
+                            "Feature toggle $opprettRevurderForskuddOppgaveToggleName er skrudd av. Oppretter ikke oppgave for $it"
+                        }
                     }
                 }
             } catch (e: Exception) {
@@ -87,7 +100,7 @@ class OppgaveService(
 
     private fun finnEksisterendeOppgaveForTilbakekrevingForskudd(revurderingForskudd: RevurderingForskudd): OppgaveDto? {
         val oppgaver = hentOppgave(revurderingForskudd.barn)
-        return oppgaver.oppgaver.find { it.beskrivelse!!.contains(oppgaveTilbakekrevingForskudd)}
+        return oppgaver.oppgaver.find { it.beskrivelse!!.contains(oppgaveTilbakekrevingForskudd) }
     }
 
     private fun finnEksisterendeOppgaveForManuellAldersjusteringISak(aldersjustering: Aldersjustering): OppgaveDto? {
@@ -96,12 +109,13 @@ class OppgaveService(
         return oppgaver.oppgaver.find { it.beskrivelse!!.contains(aldersjustering.tilManuellOppgaveBeskrivelse()) }
     }
 
-    private fun hentOppgave(barn: Barn): OppgaveSokResponse = oppgaveConsumer.hentOppgave(
-        OppgaveSokRequest()
-            .søkForGenerellOppgave()
-            .leggTilAktoerId(barn.kravhaver)
-            .leggTilSaksreferanse(barn.saksnummer),
-    )
+    private fun hentOppgave(barn: Barn): OppgaveSokResponse =
+        oppgaveConsumer.hentOppgave(
+            OppgaveSokRequest()
+                .søkForGenerellOppgave()
+                .leggTilAktoerId(barn.kravhaver)
+                .leggTilSaksreferanse(barn.saksnummer),
+        )
 
     fun slettOppgave(oppgaveId: Int): Long {
         val oppgave = oppgaveConsumer.hentOppgaveForId(oppgaveId)
@@ -140,7 +154,7 @@ class OppgaveService(
                     personident = barn.kravhaver,
                 ),
             )
-        LOGGER.info {  "Opprettet oppgave $oppgaveResponse for barn $barn, enhet $enhet." }
+        LOGGER.info { "Opprettet oppgave $oppgaveResponse for barn $barn, enhet $enhet." }
 
         return oppgaveResponse.id.toInt()
     }

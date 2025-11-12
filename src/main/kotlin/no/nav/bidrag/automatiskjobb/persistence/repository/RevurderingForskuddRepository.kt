@@ -8,16 +8,19 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 
 interface RevurderingForskuddRepository : JpaRepository<RevurderingForskudd, Int> {
+    @Suppress("Unused")
     fun findAllByStatusIs(
         status: Status,
         pageable: Pageable,
     ): Page<RevurderingForskudd>
 
+    @Suppress("Unused")
     fun findAllByStatusIsAndVedtakIsNotNull(
         status: Status,
         pageable: Pageable,
     ): Page<RevurderingForskudd>
 
+    @Suppress("Unused")
     fun findAllByStatusIsAndBehandlingstypeIsAndOppgaveIsNull(
         status: Status,
         behandlingstype: Behandlingstype,

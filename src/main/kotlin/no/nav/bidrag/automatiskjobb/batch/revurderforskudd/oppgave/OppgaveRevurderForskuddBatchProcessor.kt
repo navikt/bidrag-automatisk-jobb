@@ -6,19 +6,17 @@ import no.nav.bidrag.automatiskjobb.service.RevurderForskuddService
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.stereotype.Component
 
-
 private val LOGGER = KotlinLogging.logger { }
 
 @Component
 class OppgaveRevurderForskuddBatchProcessor(
-    private val revurderingForskuddService: RevurderForskuddService
+    private val revurderingForskuddService: RevurderForskuddService,
 ) : ItemProcessor<RevurderingForskudd, Int> {
-    override fun process(revurderingForskudd: RevurderingForskudd): Int? {
-        return try {
+    override fun process(revurderingForskudd: RevurderingForskudd): Int? =
+        try {
             revurderingForskuddService.opprettOppgave(revurderingForskudd)
         } catch (e: Exception) {
             LOGGER.error(e) { "Det skjedde en feil ved opprettelse av oppgave for aldersjustering ${revurderingForskudd.id}" }
             null
         }
-    }
 }

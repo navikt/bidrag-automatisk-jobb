@@ -16,7 +16,7 @@ import javax.sql.DataSource
 class OppdaterBarnBatchReader(
     private val dataSource: DataSource,
     @Value("#{jobParameters['barn']}") barn: String? = "",
-    @Value("#{jobParameters['dager'] ?: 1}") private val dager: Int,
+    @param:Value("#{jobParameters['dager'] ?: 1}") private val dager: Int,
 ) : JdbcPagingItemReader<Barn>() {
     init {
         val barnListe =

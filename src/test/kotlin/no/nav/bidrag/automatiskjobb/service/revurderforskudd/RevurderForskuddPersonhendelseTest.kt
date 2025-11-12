@@ -1,6 +1,5 @@
 package no.nav.bidrag.automatiskjobb.service.revurderforskudd
 
-import io.getunleash.FakeUnleash
 import io.kotest.assertions.assertSoftly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
@@ -91,8 +90,6 @@ class RevurderForskuddPersonhendelseTest {
 
     @MockK
     lateinit var oppgaveService: OppgaveService
-
-    val unleash = FakeUnleash()
 
     @BeforeEach
     fun initMocks() {

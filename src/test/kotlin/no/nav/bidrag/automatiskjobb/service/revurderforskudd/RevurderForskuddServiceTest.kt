@@ -1,7 +1,6 @@
 package no.nav.bidrag.automatiskjobb.service.revurderforskudd
 
 import com.fasterxml.jackson.databind.node.POJONode
-import io.getunleash.FakeUnleash
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.mockk.every
@@ -124,8 +123,6 @@ class RevurderForskuddServiceTest {
     @MockK
     lateinit var oppgaveService: OppgaveService
 
-    val unleash = FakeUnleash()
-
     @BeforeEach
     fun initMocks() {
         // commonObjectmapper.readValue(hentFil("/__files/vedtak_forskudd.json"))
@@ -149,7 +146,7 @@ class RevurderForskuddServiceTest {
                 revurderingForskuddRepository,
                 inntektApi,
                 forsendelseBestillingService,
-                oppgaveService
+                oppgaveService,
             )
     }
 

@@ -12,7 +12,9 @@ val revurderForskuddBeskrivelseAdresseendring =
 val oppgaveAldersjusteringBeskrivelse =
     "Automatisk aldersjustering av bidrag ble ikke foretatt. " +
         "Det må kontrolleres om saken skal aldersjusteres manuelt. Årsak til at saken ikke ble aldersjustert: {}"
-val oppgaveTilbakekrevingForskudd = "Det er behov for manuell behandling av tilbakekreving av forskudd etter atomatisk revurdering av forskuddet har satt ned forskuddet."
+val oppgaveTilbakekrevingForskudd =
+    "Det er behov for manuell behandling av tilbakekreving av forskudd etter " +
+        "atomatisk revurdering av forskuddet har satt ned forskuddet."
 
 fun VedtakHendelse.erForskudd() = stønadsendringListe?.any { it.type == Stønadstype.FORSKUDD } == true
 
