@@ -144,6 +144,7 @@ class RevurderForskuddService(
         revurderingForskudd: RevurderingForskudd,
         simuler: Boolean,
         antallMånederForBeregning: Long,
+        beregnFraMåned: YearMonth,
     ) {
         val sisteManuelleVedtak = finnSisteManuelleVedtak(revurderingForskudd)
         if (sisteManuelleVedtak == null) {
@@ -155,7 +156,7 @@ class RevurderForskuddService(
 
         val forskudd = hentForskuddForSak(revurderingForskudd.barn.saksnummer, revurderingForskudd.barn.kravhaver)
         if (forskudd == null || !erForskuddLøpende(forskudd)) {
-            LOGGER.info { "Forskudd $forskudd er ikke løpende! Beregner ikke revurdering av forskudd." }
+            LOGGER.info { "Forskudd $forskudd er ikke løpende for revurderingForskudd $revurderingForskudd! Beregner ikke revurdering av forskudd." }
             return
         }
 
@@ -175,75 +176,42 @@ class RevurderForskuddService(
             sisteManuelleVedtak.vedtak.grunnlagListe
                 .filter {
                     it.gjelderBarnReferanse == null ||
-                        it.gjelderBarnReferanse == barnGrunnlagReferanse
+                            it.gjelderBarnReferanse == barnGrunnlagReferanse
                 }.toMutableList()
 
         // Finner inntekter for forskuddsmottaker fra grunnlaget
         val transformerteInntekter = finnInntekterForForskuddFraGrunnlaget(forskudd)
 
-        var skalSetteNedForskudd = true
-        var beregnetForskuddResultat: BeregnetForskuddResultat? = null
 
-        // TODO (Endre til å kun bruke mnd med lavest innekt)
-        for (i in antallMånederForBeregning downTo 1) {
-            val måned = YearMonth.now().minusMonths(i)
-            // Fjern inntekter fra grunnlag
-            filtrertGrunnlagForBarn.removeIf { it.type == Grunnlagstype.INNTEKT_RAPPORTERING_PERIODE }
-
-            val summertMånedsinntekt =
-                transformerteInntekter.summertMånedsinntektListe
-                    .find {
-                        måned.equals(it.gjelderÅrMåned)
-                    }!!
-                    .sumInntekt
-                    .multiply(BigDecimal(12))
-
-            filtrertGrunnlagForBarn.add(
-                GrunnlagDto(
-                    type = Grunnlagstype.INNTEKT_RAPPORTERING_PERIODE,
-                    innhold =
-                        POJONode(
-                            InntektsrapporteringPeriode(
-                                periode = ÅrMånedsperiode(måned, måned.plusMonths(1)),
-                                manueltRegistrert = true,
-                                inntektsrapportering = Inntektsrapportering.AINNTEKT_BEREGNET_12MND,
-                                beløp = summertMånedsinntekt,
-                                gjelderBarn = barnGrunnlagReferanse,
-                                valgt = true,
-                            ),
-                        ),
-                    referanse = "${Grunnlagstype.INNTEKT_RAPPORTERING_PERIODE}_${this.javaClass.simpleName}_$måned",
-                    gjelderReferanse = bmGrunnlagReferanse,
-                    gjelderBarnReferanse = barnGrunnlagReferanse,
-                ),
-            )
-
-            beregnetForskuddResultat =
-                beregning.beregn(
-                    BeregnGrunnlag(
-                        periode =
-                            ÅrMånedsperiode(
-                                YearMonth.now(),
-                                YearMonth.now().plusMonths(1),
-                            ),
-                        stønadstype = Stønadstype.FORSKUDD,
-                        søknadsbarnReferanse = barnGrunnlagReferanse,
-                        grunnlagListe = filtrertGrunnlagForBarn,
-                    ),
-                )
-
-            val løpendeBeløp = forskudd.periodeListe.hentSisteLøpendePeriode()!!.beløp!!
-            val beregnetBeløp =
-                beregnetForskuddResultat.beregnetForskuddPeriodeListe
-                    .last()
-                    .resultat.belop
-            if (løpendeBeløp <= beregnetBeløp) {
-                skalSetteNedForskudd = false
+        // Finn laveste summert månedsinntekt for måneder i perioden ganget med 12
+        val lavesteMånedsinntekt = (antallMånederForBeregning downTo 1)
+            .mapNotNull { i ->
+                val måned = YearMonth.now().minusMonths(i)
+                transformerteInntekter.summertMånedsinntektListe.find { måned.equals(it.gjelderÅrMåned) }
+                    ?.sumInntekt
             }
-        }
+            .minOrNull()
+            ?.multiply(BigDecimal(12))
+
+        val årsinntekt = (12L downTo 1)
+            .mapNotNull { i ->
+                val måned = YearMonth.now().minusMonths(i)
+                transformerteInntekter.summertMånedsinntektListe.find { måned.equals(it.gjelderÅrMåned) }
+                    ?.sumInntekt ?: BigDecimal.ZERO
+            }
+            .reduce { årsinntekt, månedsinntekt -> årsinntekt.add(månedsinntekt) }
+
+
+        val beregnetForskuddLavesteMånedsinntekt = lavesteMånedsinntekt?.let { beregnNyttForskudd(filtrertGrunnlagForBarn, beregnFraMåned, barnGrunnlagReferanse, bmGrunnlagReferanse, it) }
+        val beregnetForskuddÅrsinntekt = beregnNyttForskudd(filtrertGrunnlagForBarn, beregnFraMåned, barnGrunnlagReferanse, bmGrunnlagReferanse, årsinntekt)
+
+        val løpendeBeløp = forskudd.periodeListe.hentSisteLøpendePeriode()!!.beløp!!
+
+        val skalSetteNedForskuddÅrsinntekt = skalForskuddSettesNed(løpendeBeløp, beregnetForskuddÅrsinntekt)
+        val skalSetteNedForskuddMånedsinntekt = skalForskuddSettesNed(løpendeBeløp, beregnetForskuddLavesteMånedsinntekt)
 
         if (simuler) {
-            if (skalSetteNedForskudd) {
+            if (skalSetteNedForskuddÅrsinntekt || skalSetteNedForskuddMånedsinntekt) {
                 LOGGER.info {
                     "Simulering: Forskudd for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer} skal settes ned etter revurdering."
                 }
@@ -257,7 +225,7 @@ class RevurderForskuddService(
             return
         }
 
-        if (!skalSetteNedForskudd) {
+        if (!skalSetteNedForskuddMånedsinntekt && !skalSetteNedForskuddÅrsinntekt) {
             LOGGER.info {
                 "Forskudd for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer} skal ikke settes ned etter revurdering."
             }
@@ -272,6 +240,7 @@ class RevurderForskuddService(
         val barn = revurderingForskudd.barn.kravhaver
         val sakrolleBarn = vedtakMapper.hentBarn(sak, barn)
         val mottaker = vedtakMapper.reellMottakerEllerBidragsmottaker(sakrolleBarn, sak.roller)!!
+        val beregnetForskuddResultat = if(skalSetteNedForskuddÅrsinntekt) beregnetForskuddÅrsinntekt else beregnetForskuddLavesteMånedsinntekt!!
 
         val opprettVedtakRequestDto =
             OpprettVedtakRequestDto(
@@ -299,7 +268,7 @@ class RevurderForskuddService(
                                 ),
                             førsteIndeksreguleringsår = YearMonth.now().plusYears(1).year,
                             periodeListe =
-                                beregnetForskuddResultat!!.beregnetForskuddPeriodeListe.map {
+                                beregnetForskuddResultat.beregnetForskuddPeriodeListe.map {
                                     OpprettPeriodeRequestDto(
                                         periode = it.periode,
                                         beløp = it.resultat.belop,
@@ -322,6 +291,58 @@ class RevurderForskuddService(
         revurderingForskudd.status = Status.BEHANDLET
 
         revurderingForskuddRepository.save(revurderingForskudd)
+    }
+
+    private fun skalForskuddSettesNed(
+        løpendeBeløp: BigDecimal,
+        beregnetForskuddResultat: BeregnetForskuddResultat?
+    ): Boolean {
+        if (beregnetForskuddResultat == null) {
+            return false
+        }
+        return løpendeBeløp > beregnetForskuddResultat.beregnetForskuddPeriodeListe.last().resultat.belop
+    }
+
+    private fun beregnNyttForskudd(
+        filtrertGrunnlagForBarn: MutableList<GrunnlagDto>,
+        beregnFraMåned: YearMonth,
+        barnGrunnlagReferanse: String,
+        bmGrunnlagReferanse: String,
+        inntekt: BigDecimal,
+    ): BeregnetForskuddResultat {
+        filtrertGrunnlagForBarn.removeIf { it.type == Grunnlagstype.INNTEKT_RAPPORTERING_PERIODE }
+        filtrertGrunnlagForBarn.add(
+            GrunnlagDto(
+                type = Grunnlagstype.INNTEKT_RAPPORTERING_PERIODE,
+                innhold =
+                    POJONode(
+                        InntektsrapporteringPeriode(
+                            periode = ÅrMånedsperiode(beregnFraMåned, null),
+                            manueltRegistrert = true,
+                            inntektsrapportering = Inntektsrapportering.AINNTEKT_BEREGNET_12MND,
+                            beløp = inntekt,
+                            gjelderBarn = barnGrunnlagReferanse,
+                            valgt = true,
+                        ),
+                    ),
+                referanse = "${Grunnlagstype.INNTEKT_RAPPORTERING_PERIODE}_${bmGrunnlagReferanse}",
+                gjelderReferanse = bmGrunnlagReferanse,
+                gjelderBarnReferanse = barnGrunnlagReferanse,
+            ),
+        )
+
+        return beregning.beregn(
+                BeregnGrunnlag(
+                    periode =
+                        ÅrMånedsperiode(
+                            YearMonth.now(),
+                            YearMonth.now().plusMonths(1),
+                        ),
+                    stønadstype = Stønadstype.FORSKUDD,
+                    søknadsbarnReferanse = barnGrunnlagReferanse,
+                    grunnlagListe = filtrertGrunnlagForBarn,
+                ),
+            )
     }
 
     fun fattVedtakOmRevurderingForskudd(
@@ -491,8 +512,8 @@ class RevurderForskuddService(
 
             LOGGER.info {
                 "Bidragsmottaker ${bidragsmottaker.fødselsnummer?.verdi} mottar forskudd for barn ${barnIdent.verdi} " +
-                    "i sak ${sak.saksnummer} med beløp ${løpendeForskudd.beløp} ${løpendeForskudd.valutakode}. " +
-                    "Barnet bor ikke lenger hos bidragsmottaker og skal derfor ikke motta forskudd lenger"
+                        "i sak ${sak.saksnummer} med beløp ${løpendeForskudd.beløp} ${løpendeForskudd.valutakode}. " +
+                        "Barnet bor ikke lenger hos bidragsmottaker og skal derfor ikke motta forskudd lenger"
             }
             AdresseEndretResultat(
                 saksnummer = sak.saksnummer.verdi,
