@@ -11,6 +11,7 @@ import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.opprett.OpprettRevurd
 import no.nav.security.token.support.core.api.Protected
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RestController
+import java.time.YearMonth
 
 @Protected
 @RestController
@@ -42,8 +43,9 @@ class RevurderForskuddBatchController(
     fun beregnRevurderForskudd(
         @Parameter(required = true, example = "true") simuler: Boolean = true,
         @Parameter(required = true, example = "3") antallMånederForBeregning: Long = 3,
+        @Parameter(required = false, example = "2025-01") beregnFraMåned: YearMonth = YearMonth.now().minusYears(1),
     ) {
-        beregnRevurderForskuddBatch.start(simuler, antallMånederForBeregning)
+        beregnRevurderForskuddBatch.start(simuler, antallMånederForBeregning, beregnFraMåned)
     }
 
     @PostMapping("/revurderforskudd/batch/fattevedtak")

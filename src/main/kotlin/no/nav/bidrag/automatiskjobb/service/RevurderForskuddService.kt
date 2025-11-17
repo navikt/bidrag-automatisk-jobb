@@ -14,6 +14,7 @@ import no.nav.bidrag.automatiskjobb.mapper.erBidrag
 import no.nav.bidrag.automatiskjobb.mapper.tilOpprettGrunnlagRequestDto
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
+import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Forsendelsestype
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import no.nav.bidrag.automatiskjobb.persistence.repository.RevurderingForskuddRepository
@@ -111,6 +112,7 @@ class RevurderForskuddService(
     private val inntektApi: InntektApi,
     private val forsendelseBestillingService: ForsendelseBestillingService,
     private val oppgaveService: OppgaveService,
+    private val bidragReskontroService: ReskontroService,
 ) {
     fun opprettRevurdereForskudd(
         barn: Barn,
@@ -234,7 +236,12 @@ class RevurderForskuddService(
             return
         }
 
-        // TODO (Sjekke regnskap etter A4, altså at det faktisk utbetales forskudd)
+
+        // Gjør en sjekk mot reskontro for å se om det eksisterer A4 transaksjoner (forskudd) for de siste 3 månedene. Dette gjøres for å kunne opprette oppgaver for tilbakekreving det er utbetalt forskudd
+        if (bidragReskontroService.finnesForskuddForSakPeriode(Saksnummer(revurderingForskudd.barn.saksnummer), listOf(LocalDate.now().minusMonths(3), LocalDate.now().minusMonths(2),
+                LocalDate.now().minusMonths(1)))) {
+            revurderingForskudd.behandlingstype = Behandlingstype.MANUELL
+        }
 
         val sak = bidragSakConsumer.hentSak(revurderingForskudd.barn.saksnummer)
         val barn = revurderingForskudd.barn.kravhaver
