@@ -32,6 +32,7 @@ data class RevurderingForskudd(
     var status: Status,
     @Enumerated(EnumType.STRING)
     var behandlingstype: Behandlingstype? = null,
+    var vurdereTilbakekreving: Boolean = false,
     var vedtaksidBeregning: Int? = null,
     override var vedtak: Int? = null,
     var oppgave: Int? = null,

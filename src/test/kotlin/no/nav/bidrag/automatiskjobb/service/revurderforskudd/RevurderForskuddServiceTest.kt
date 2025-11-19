@@ -154,7 +154,7 @@ class RevurderForskuddServiceTest {
                 inntektApi,
                 forsendelseBestillingService,
                 oppgaveService,
-                bidragReskontroService
+                bidragReskontroService,
             )
     }
 

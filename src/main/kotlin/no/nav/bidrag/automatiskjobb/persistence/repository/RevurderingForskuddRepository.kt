@@ -21,7 +21,7 @@ interface RevurderingForskuddRepository : JpaRepository<RevurderingForskudd, Int
     ): Page<RevurderingForskudd>
 
     @Suppress("Unused")
-    fun findAllByStatusIsAndBehandlingstypeIsAndOppgaveIsNull(
+    fun findAllByStatusIsAndVurdereTilbakekrevingIsTrueAndOppgaveIsNull(
         status: Status,
         behandlingstype: Behandlingstype,
         pageable: Pageable,

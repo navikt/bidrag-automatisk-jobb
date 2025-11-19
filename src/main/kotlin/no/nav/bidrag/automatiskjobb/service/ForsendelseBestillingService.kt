@@ -170,8 +170,8 @@ class ForsendelseBestillingService(
         val eksisterende = forsendelseEntity.forsendelseBestilling
 
         fun skalSlettes(bestilling: ForsendelseBestilling): Boolean =
-            bestilling.skalSlettes && bestilling.slettetTidspunkt == null ||
-                bestilling.forsendelseId == null && bestilling.distribuertTidspunkt == null
+            (bestilling.skalSlettes && bestilling.slettetTidspunkt == null) ||
+                (bestilling.forsendelseId == null && bestilling.distribuertTidspunkt == null)
 
         eksisterende
             .filter { skalSlettes(it) }

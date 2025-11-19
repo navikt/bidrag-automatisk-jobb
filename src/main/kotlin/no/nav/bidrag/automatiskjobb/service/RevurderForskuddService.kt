@@ -14,7 +14,6 @@ import no.nav.bidrag.automatiskjobb.mapper.erBidrag
 import no.nav.bidrag.automatiskjobb.mapper.tilOpprettGrunnlagRequestDto
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
-import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Forsendelsestype
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import no.nav.bidrag.automatiskjobb.persistence.repository.RevurderingForskuddRepository
@@ -158,7 +157,9 @@ class RevurderForskuddService(
 
         val forskudd = hentForskuddForSak(revurderingForskudd.barn.saksnummer, revurderingForskudd.barn.kravhaver)
         if (forskudd == null || !erForskuddLøpende(forskudd)) {
-            LOGGER.info { "Forskudd $forskudd er ikke løpende for revurderingForskudd $revurderingForskudd! Beregner ikke revurdering av forskudd." }
+            LOGGER.info {
+                "Forskudd $forskudd er ikke løpende for revurderingForskudd $revurderingForskudd! Beregner ikke revurdering av forskudd."
+            }
             return
         }
 
@@ -178,39 +179,56 @@ class RevurderForskuddService(
             sisteManuelleVedtak.vedtak.grunnlagListe
                 .filter {
                     it.gjelderBarnReferanse == null ||
-                            it.gjelderBarnReferanse == barnGrunnlagReferanse
+                        it.gjelderBarnReferanse == barnGrunnlagReferanse
                 }.toMutableList()
 
         // Finner inntekter for forskuddsmottaker fra grunnlaget
         val transformerteInntekter = finnInntekterForForskuddFraGrunnlaget(forskudd)
 
-
         // Finn laveste summert månedsinntekt for måneder i perioden ganget med 12
-        val lavesteMånedsinntekt = (antallMånederForBeregning downTo 1)
-            .mapNotNull { i ->
-                val måned = YearMonth.now().minusMonths(i)
-                transformerteInntekter.summertMånedsinntektListe.find { måned.equals(it.gjelderÅrMåned) }
-                    ?.sumInntekt
+        val lavesteMånedsinntekt =
+            (antallMånederForBeregning downTo 1)
+                .mapNotNull { i ->
+                    val måned = YearMonth.now().minusMonths(i)
+                    transformerteInntekter.summertMånedsinntektListe
+                        .find { måned.equals(it.gjelderÅrMåned) }
+                        ?.sumInntekt
+                }.minOrNull()
+                ?.multiply(BigDecimal(12))
+
+        val årsinntekt =
+            (12L downTo 1)
+                .mapNotNull { i ->
+                    val måned = YearMonth.now().minusMonths(i)
+                    transformerteInntekter.summertMånedsinntektListe
+                        .find { måned.equals(it.gjelderÅrMåned) }
+                        ?.sumInntekt ?: BigDecimal.ZERO
+                }.reduce { årsinntekt, månedsinntekt -> årsinntekt.add(månedsinntekt) }
+
+        val beregnetForskuddLavesteMånedsinntekt =
+            lavesteMånedsinntekt?.let {
+                beregnNyttForskudd(
+                    filtrertGrunnlagForBarn,
+                    beregnFraMåned,
+                    barnGrunnlagReferanse,
+                    bmGrunnlagReferanse,
+                    it,
+                )
             }
-            .minOrNull()
-            ?.multiply(BigDecimal(12))
-
-        val årsinntekt = (12L downTo 1)
-            .mapNotNull { i ->
-                val måned = YearMonth.now().minusMonths(i)
-                transformerteInntekter.summertMånedsinntektListe.find { måned.equals(it.gjelderÅrMåned) }
-                    ?.sumInntekt ?: BigDecimal.ZERO
-            }
-            .reduce { årsinntekt, månedsinntekt -> årsinntekt.add(månedsinntekt) }
-
-
-        val beregnetForskuddLavesteMånedsinntekt = lavesteMånedsinntekt?.let { beregnNyttForskudd(filtrertGrunnlagForBarn, beregnFraMåned, barnGrunnlagReferanse, bmGrunnlagReferanse, it) }
-        val beregnetForskuddÅrsinntekt = beregnNyttForskudd(filtrertGrunnlagForBarn, beregnFraMåned, barnGrunnlagReferanse, bmGrunnlagReferanse, årsinntekt)
+        val beregnetForskuddÅrsinntekt =
+            beregnNyttForskudd(
+                filtrertGrunnlagForBarn,
+                beregnFraMåned,
+                barnGrunnlagReferanse,
+                bmGrunnlagReferanse,
+                årsinntekt,
+            )
 
         val løpendeBeløp = forskudd.periodeListe.hentSisteLøpendePeriode()!!.beløp!!
 
         val skalSetteNedForskuddÅrsinntekt = skalForskuddSettesNed(løpendeBeløp, beregnetForskuddÅrsinntekt)
-        val skalSetteNedForskuddMånedsinntekt = skalForskuddSettesNed(løpendeBeløp, beregnetForskuddLavesteMånedsinntekt)
+        val skalSetteNedForskuddMånedsinntekt =
+            skalForskuddSettesNed(løpendeBeløp, beregnetForskuddLavesteMånedsinntekt)
 
         if (simuler) {
             if (skalSetteNedForskuddÅrsinntekt || skalSetteNedForskuddMånedsinntekt) {
@@ -236,18 +254,29 @@ class RevurderForskuddService(
             return
         }
 
-
         // Gjør en sjekk mot reskontro for å se om det eksisterer A4 transaksjoner (forskudd) for de siste 3 månedene. Dette gjøres for å kunne opprette oppgaver for tilbakekreving det er utbetalt forskudd
-        if (bidragReskontroService.finnesForskuddForSakPeriode(Saksnummer(revurderingForskudd.barn.saksnummer), listOf(LocalDate.now().minusMonths(3), LocalDate.now().minusMonths(2),
-                LocalDate.now().minusMonths(1)))) {
-            revurderingForskudd.behandlingstype = Behandlingstype.MANUELL
+        if (bidragReskontroService.finnesForskuddForSakPeriode(
+                Saksnummer(revurderingForskudd.barn.saksnummer),
+                listOf(
+                    LocalDate.now().minusMonths(3),
+                    LocalDate.now().minusMonths(2),
+                    LocalDate.now().minusMonths(1),
+                ),
+            )
+        ) {
+            revurderingForskudd.vurdereTilbakekreving = true
         }
 
         val sak = bidragSakConsumer.hentSak(revurderingForskudd.barn.saksnummer)
         val barn = revurderingForskudd.barn.kravhaver
         val sakrolleBarn = vedtakMapper.hentBarn(sak, barn)
         val mottaker = vedtakMapper.reellMottakerEllerBidragsmottaker(sakrolleBarn, sak.roller)!!
-        val beregnetForskuddResultat = if(skalSetteNedForskuddÅrsinntekt) beregnetForskuddÅrsinntekt else beregnetForskuddLavesteMånedsinntekt!!
+        val beregnetForskuddResultat =
+            if (skalSetteNedForskuddÅrsinntekt) {
+                beregnetForskuddÅrsinntekt
+            } else {
+                beregnetForskuddLavesteMånedsinntekt!!
+            }
 
         val opprettVedtakRequestDto =
             OpprettVedtakRequestDto(
@@ -302,12 +331,15 @@ class RevurderForskuddService(
 
     private fun skalForskuddSettesNed(
         løpendeBeløp: BigDecimal,
-        beregnetForskuddResultat: BeregnetForskuddResultat?
+        beregnetForskuddResultat: BeregnetForskuddResultat?,
     ): Boolean {
         if (beregnetForskuddResultat == null) {
             return false
         }
-        return løpendeBeløp > beregnetForskuddResultat.beregnetForskuddPeriodeListe.last().resultat.belop
+        return løpendeBeløp >
+            beregnetForskuddResultat.beregnetForskuddPeriodeListe
+                .last()
+                .resultat.belop
     }
 
     private fun beregnNyttForskudd(
@@ -332,24 +364,24 @@ class RevurderForskuddService(
                             valgt = true,
                         ),
                     ),
-                referanse = "${Grunnlagstype.INNTEKT_RAPPORTERING_PERIODE}_${bmGrunnlagReferanse}",
+                referanse = "${Grunnlagstype.INNTEKT_RAPPORTERING_PERIODE}_$bmGrunnlagReferanse",
                 gjelderReferanse = bmGrunnlagReferanse,
                 gjelderBarnReferanse = barnGrunnlagReferanse,
             ),
         )
 
         return beregning.beregn(
-                BeregnGrunnlag(
-                    periode =
-                        ÅrMånedsperiode(
-                            YearMonth.now(),
-                            YearMonth.now().plusMonths(1),
-                        ),
-                    stønadstype = Stønadstype.FORSKUDD,
-                    søknadsbarnReferanse = barnGrunnlagReferanse,
-                    grunnlagListe = filtrertGrunnlagForBarn,
-                ),
-            )
+            BeregnGrunnlag(
+                periode =
+                    ÅrMånedsperiode(
+                        YearMonth.now(),
+                        YearMonth.now().plusMonths(1),
+                    ),
+                stønadstype = Stønadstype.FORSKUDD,
+                søknadsbarnReferanse = barnGrunnlagReferanse,
+                grunnlagListe = filtrertGrunnlagForBarn,
+            ),
+        )
     }
 
     fun fattVedtakOmRevurderingForskudd(
@@ -519,8 +551,8 @@ class RevurderForskuddService(
 
             LOGGER.info {
                 "Bidragsmottaker ${bidragsmottaker.fødselsnummer?.verdi} mottar forskudd for barn ${barnIdent.verdi} " +
-                        "i sak ${sak.saksnummer} med beløp ${løpendeForskudd.beløp} ${løpendeForskudd.valutakode}. " +
-                        "Barnet bor ikke lenger hos bidragsmottaker og skal derfor ikke motta forskudd lenger"
+                    "i sak ${sak.saksnummer} med beløp ${løpendeForskudd.beløp} ${løpendeForskudd.valutakode}. " +
+                    "Barnet bor ikke lenger hos bidragsmottaker og skal derfor ikke motta forskudd lenger"
             }
             AdresseEndretResultat(
                 saksnummer = sak.saksnummer.verdi,
@@ -669,7 +701,7 @@ class RevurderForskuddService(
 
     private fun hentVedtak(vedtakId: Int): VedtakDto? {
         val vedtak = bidragVedtakConsumer.hentVedtak(vedtakId) ?: return null
-        if (vedtak.erDelvedtak || vedtak.erOrkestrertVedtak && vedtak.type == Vedtakstype.INNKREVING) return null
+        if (vedtak.erDelvedtak || (vedtak.erOrkestrertVedtak && vedtak.type == Vedtakstype.INNKREVING)) return null
         val faktiskVedtak =
             if (vedtak.erOrkestrertVedtak) {
                 bidragVedtakConsumer.hentVedtak(vedtak.referertVedtaksid!!)
@@ -794,7 +826,7 @@ class RevurderForskuddService(
         maxByOrNull { it.periode.fom }?.takeIf { it.periode.til == null || it.periode.til!!.isAfter(YearMonth.now()) }
 
     fun opprettOppgave(revurderingForskudd: RevurderingForskudd): Int {
-        val oppgaveId = oppgaveService.opprettOppgaveForTilbakekrevingAvForskudd(revurderingForskudd) //
+        val oppgaveId = oppgaveService.opprettOppgaveForTilbakekrevingAvForskudd(revurderingForskudd)
 
         revurderingForskudd.oppgave = oppgaveId
         revurderingForskuddRepository.save(revurderingForskudd)

@@ -10,13 +10,15 @@ import java.time.LocalDate
 class ReskontroService(
     private val bidragReskontroConsumer: BidragReskontroConsumer,
 ) {
-
-    fun finnesForskuddForSakPeriode(saksnummer: Saksnummer, perioder: List<LocalDate>): Boolean {
+    fun finnesForskuddForSakPeriode(
+        saksnummer: Saksnummer,
+        perioder: List<LocalDate>,
+    ): Boolean {
         val transaksjoner = bidragReskontroConsumer.hentTransaksjonerForBidragssak(saksnummer)
         return transaksjoner.transaksjoner.any {
-            it.transaksjonskode == "A4"
-                    && perioder.any { periode -> periode.equals(it.periode?.fom) }
-                    && it.beløp != null && it.beløp!! > BigDecimal.ZERO
+            it.transaksjonskode == "A4" &&
+                perioder.any { periode -> periode.equals(it.periode?.fom) } &&
+                it.beløp != null && it.beløp!! > BigDecimal.ZERO
         }
     }
 }

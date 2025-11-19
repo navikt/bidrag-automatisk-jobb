@@ -166,10 +166,14 @@ object GrunnlagMapper {
                             sluttberegning.grunnlagsreferanseListe,
                         ).isEmpty()
             }
+
             Grunnlagstype.SLUTTBEREGNING_FORSKUDD -> {
                 periode.resultatkode.tilResultatkode()?.erAvslag() == true
             }
-            else -> false
+
+            else -> {
+                false
+            }
         }
     }
 
