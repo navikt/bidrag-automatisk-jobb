@@ -13,8 +13,8 @@ spring:
     activate:
       on-profile: localdev
 
-BIDRAG_BELOPSHISTORIKK_URL: https://bidrag-stonad-q1.intern.dev.nav.no
-BIDRAG_BELOPSHISTORIKK_SCOPE: dev-gcp.bidrag.bidrag-stonad-q1
+BIDRAG_BELOPSHISTORIKK_URL: https://bidrag-belopshistorikk-q1.intern.dev.nav.no
+BIDRAG_BELOPSHISTORIKK_SCOPE: dev-gcp.bidrag.bidrag-belopshistorikk-q1
 BIDRAG_TILGANGSKONTROLL_URL: https://bidrag-tilgangskontroll-feature.intern.dev.nav.no
 BIDRAG_TILGANGGSKONTROLL_SCOPE: dev-gcp.bidrag.bidrag-tilgangskontroll-feature
 BIDRAG_SAK_URL: https://bidrag-sak-q1.dev.intern.nav.no
@@ -60,8 +60,8 @@ spring:
   config:
     activate:
       on-profile: q1
-BIDRAG_BELOPSHISTORIKK_URL: https://bidrag-stonad-q1.intern.dev.nav.no
-BIDRAG_BELOPSHISTORIKK_SCOPE: dev-gcp.bidrag.bidrag-stonad-q1
+BIDRAG_BELOPSHISTORIKK_URL: https://bidrag-belopshistorikk-q1.intern.dev.nav.no
+BIDRAG_BELOPSHISTORIKK_SCOPE: dev-gcp.bidrag.bidrag-belopshistorikk-q1
 BIDRAG_TILGANGSKONTROLL_URL: https://bidrag-tilgangskontroll.intern.dev.nav.no
 BIDRAG_TILGANGGSKONTROLL_SCOPE: dev-gcp.bidrag.bidrag-tilgangskontroll
 BIDRAG_SAK_URL: https://bidrag-sak-q1.dev.intern.nav.no
