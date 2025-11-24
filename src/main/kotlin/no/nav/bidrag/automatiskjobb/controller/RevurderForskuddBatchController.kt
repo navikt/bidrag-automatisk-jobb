@@ -8,6 +8,7 @@ import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.beregn.BeregnRevurder
 import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.fattvedtak.FatteVedtakRevurderForskuddBatch
 import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.oppgave.OppgaveRevurderForskuddBatch
 import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.opprett.OpprettRevurderForskuddBatch
+import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.revurderingslenke.RevurderingslenkeRevurderForskuddBatch
 import no.nav.security.token.support.core.api.Protected
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RestController
@@ -21,6 +22,7 @@ class RevurderForskuddBatchController(
     private val beregnRevurderForskuddBatch: BeregnRevurderForskuddBatch,
     private val fatteVedtakRevurderForskuddBatch: FatteVedtakRevurderForskuddBatch,
     private val opprettOppgaveRevurderForskuddBatch: OppgaveRevurderForskuddBatch,
+    private val revurderingslenkeRevurderForskuddBatch: RevurderingslenkeRevurderForskuddBatch,
 ) {
     @PostMapping("/revurderforskudd/batch/opprett")
     @Operation(
@@ -68,5 +70,15 @@ class RevurderForskuddBatchController(
     )
     fun opprettOppgaverForRevurderForskudd() {
         opprettOppgaveRevurderForskuddBatch.start()
+    }
+
+    @PostMapping("/revurderforskudd/batch/revurderingslenke")
+    @Operation(
+        summary = "Starter batch: Opprett revurderingslenke for revurder forskudd i tilfeller hvor det skal tilbakekreves forskudd.",
+        description = "Oppretter revurderingslenke for saksbehandling i de tilfeller hvor revurdering av forskudd medfører tilbakekreving.",
+        security = [SecurityRequirement(name = "bearer-key")],
+    )
+    fun opprettRevurderingslengeForRevurderForskudd() {
+        revurderingslenkeRevurderForskuddBatch.start()
     }
 }

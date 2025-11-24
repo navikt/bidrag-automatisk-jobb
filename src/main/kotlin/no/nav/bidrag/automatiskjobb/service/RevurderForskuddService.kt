@@ -832,4 +832,17 @@ class RevurderForskuddService(
         revurderingForskuddRepository.save(revurderingForskudd)
         return oppgaveId
     }
+
+    fun opprettRevurderingslenke(revurderingForskudd: RevurderingForskudd): Int? {
+        val sak = bidragSakConsumer.hentSak(revurderingForskudd.barn.saksnummer)
+        val bidragsmottaker = sak.roller.find { it.type == Rolletype.BIDRAGSMOTTAKER }
+        val opprettBehandlingResponse =
+            bidragBehandlingConsumer.opprettBehandlingForRevurderingAvForskudd(
+                revurderingForskudd,
+                bidragsmottaker?.fødselsnummer,
+            )
+        revurderingForskudd.oppgave = opprettBehandlingResponse.id
+        revurderingForskuddRepository.save(revurderingForskudd)
+        return opprettBehandlingResponse.id
+    }
 }
