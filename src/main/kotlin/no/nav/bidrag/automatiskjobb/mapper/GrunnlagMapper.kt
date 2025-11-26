@@ -19,12 +19,14 @@ import no.nav.bidrag.transport.behandling.felles.grunnlag.Grunnlagsreferanse
 import no.nav.bidrag.transport.behandling.felles.grunnlag.InntektsrapporteringPeriode
 import no.nav.bidrag.transport.behandling.felles.grunnlag.SluttberegningBarnebidrag
 import no.nav.bidrag.transport.behandling.felles.grunnlag.bidragsmottaker
+import no.nav.bidrag.transport.behandling.felles.grunnlag.byggSluttberegningBarnebidragDetaljer
 import no.nav.bidrag.transport.behandling.felles.grunnlag.filtrerBasertPåEgenReferanse
 import no.nav.bidrag.transport.behandling.felles.grunnlag.finnGrunnlagSomErReferertFraGrunnlagsreferanseListe
 import no.nav.bidrag.transport.behandling.felles.grunnlag.finnSluttberegningIReferanser
 import no.nav.bidrag.transport.behandling.felles.grunnlag.hentAllePersoner
 import no.nav.bidrag.transport.behandling.felles.grunnlag.hentPersonMedIdent
 import no.nav.bidrag.transport.behandling.felles.grunnlag.innholdTilObjekt
+import no.nav.bidrag.transport.behandling.felles.grunnlag.sluttberegningPeriode
 import no.nav.bidrag.transport.behandling.vedtak.response.EngangsbeløpDto
 import no.nav.bidrag.transport.behandling.vedtak.response.StønadsendringDto
 import no.nav.bidrag.transport.behandling.vedtak.response.VedtakDto
@@ -158,8 +160,8 @@ object GrunnlagMapper {
 
         return when (sluttberegning.type) {
             Grunnlagstype.SLUTTBEREGNING_BARNEBIDRAG -> {
-                val innhold = sluttberegning.innholdTilObjekt<SluttberegningBarnebidrag>()
-                innhold.erResultatAvslag ||
+                val innhold = vedtak.grunnlagListe.byggSluttberegningBarnebidragDetaljer(periode.grunnlagReferanseListe)
+                innhold == null || innhold.erResultatAvslag ||
                     vedtak.grunnlagListe
                         .finnGrunnlagSomErReferertFraGrunnlagsreferanseListe(
                             Grunnlagstype.DELBEREGNING_BIDRAGSPLIKTIGES_ANDEL,
