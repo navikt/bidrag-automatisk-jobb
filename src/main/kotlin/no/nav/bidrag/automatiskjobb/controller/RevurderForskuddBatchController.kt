@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
-import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.beregn.BeregnRevurderForskuddBatch
+import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.beregn.EvaluerRevurderForskuddBatch
 import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.fattvedtak.FatteVedtakRevurderForskuddBatch
 import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.oppgave.OppgaveRevurderForskuddBatch
 import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.opprett.OpprettRevurderForskuddBatch
@@ -19,7 +19,7 @@ import java.time.YearMonth
 @Tag(name = "Revurder forskudd batch")
 class RevurderForskuddBatchController(
     private val opprettRevurderForskuddBatch: OpprettRevurderForskuddBatch,
-    private val beregnRevurderForskuddBatch: BeregnRevurderForskuddBatch,
+    private val evaluerRevurderForskuddBatch: EvaluerRevurderForskuddBatch,
     private val fatteVedtakRevurderForskuddBatch: FatteVedtakRevurderForskuddBatch,
     private val opprettOppgaveRevurderForskuddBatch: OppgaveRevurderForskuddBatch,
     private val revurderingslenkeRevurderForskuddBatch: RevurderingslenkeRevurderForskuddBatch,
@@ -36,18 +36,20 @@ class RevurderForskuddBatchController(
         opprettRevurderForskuddBatch.start(månederTilbakeForManueltVedtak)
     }
 
-    @PostMapping("/revurderforskudd/batch/beregn")
+    @PostMapping("/revurderforskudd/batch/evaluer")
     @Operation(
-        summary = "Starter batch: Beregner revurder forskudd.",
-        description = "Beregner revurder av forskudd for alle ubehandlede opprettede revurdering av forskudd og oppretter vedtaksforslag.",
+        summary = "Starter batch: Evaluering for revurdering av forskudd.",
+        description =
+            "Evaluerer om forskudd skal revurderes for alle ubehandlede opprettede revurdering av forskudd " +
+                "og oppretter vedtaksforslag.",
         security = [SecurityRequirement(name = "bearer-key")],
     )
-    fun beregnRevurderForskudd(
+    fun evaluerRevurderForskudd(
         @Parameter(required = true, example = "true") simuler: Boolean = true,
         @Parameter(required = true, example = "3") antallMånederForBeregning: Long = 3,
         @Parameter(required = false, example = "2025-01") beregnFraMåned: YearMonth = YearMonth.now().minusYears(1),
     ) {
-        beregnRevurderForskuddBatch.start(simuler, antallMånederForBeregning, beregnFraMåned)
+        evaluerRevurderForskuddBatch.start(simuler, antallMånederForBeregning, beregnFraMåned)
     }
 
     @PostMapping("/revurderforskudd/batch/fattevedtak")

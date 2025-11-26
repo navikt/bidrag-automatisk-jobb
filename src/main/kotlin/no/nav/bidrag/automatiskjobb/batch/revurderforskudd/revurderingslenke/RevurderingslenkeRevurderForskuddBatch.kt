@@ -9,11 +9,11 @@ import java.util.UUID
 @Component
 class RevurderingslenkeRevurderForskuddBatch(
     private val jobLauncher: JobLauncher,
-    private val beregnRevurderForskuddJob: Job,
+    private val revurderingslenkeRevurderForskuddJob: Job,
 ) {
     fun start() {
         jobLauncher.run(
-            beregnRevurderForskuddJob,
+            revurderingslenkeRevurderForskuddJob,
             JobParametersBuilder()
                 .addString("batchId", UUID.randomUUID().toString())
                 .toJobParameters(),

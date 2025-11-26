@@ -5,7 +5,7 @@ import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.CHUNK_SIZ
 import no.nav.bidrag.automatiskjobb.batch.DummyItemWriter
 import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
-import no.nav.bidrag.automatiskjobb.persistence.repository.RevurderingForskuddRepository
+import no.nav.bidrag.automatiskjobb.persistence.repository.RevurderForskuddRepository
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.Step
 import org.springframework.batch.core.job.builder.JobBuilder
@@ -52,11 +52,11 @@ class FatteVedtakRevurderForskuddBatchConfiguration {
 
     @Bean
     fun fatteVedtakRevurderForskuddBatchReader(
-        revurderingForskuddRepository: RevurderingForskuddRepository,
+        revurderForskuddRepository: RevurderForskuddRepository,
     ): RepositoryItemReader<RevurderingForskudd> =
         RepositoryItemReaderBuilder<RevurderingForskudd>()
             .name("fatteVedtakRevurderForskuddBatchReader")
-            .repository(revurderingForskuddRepository)
+            .repository(revurderForskuddRepository)
             .methodName("findAllByStatusIsAndVedtakIsNotNull")
             .arguments(listOf(Status.BEHANDLET))
             .saveState(false)

@@ -5,7 +5,7 @@ import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.CHUNK_SIZ
 import no.nav.bidrag.automatiskjobb.batch.DummyItemWriter
 import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
-import no.nav.bidrag.automatiskjobb.persistence.repository.RevurderingForskuddRepository
+import no.nav.bidrag.automatiskjobb.persistence.repository.RevurderForskuddRepository
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.Step
 import org.springframework.batch.core.job.builder.JobBuilder
@@ -25,12 +25,12 @@ class RevurderingslenkeRevurderForskuddBatchConfiguration {
     @Bean
     fun revurderingslenkeRevurderForskuddJob(
         jobRepository: JobRepository,
-        beregnRevurderForskuddStep: Step,
+        evaluerRevurderForskuddStep: Step,
         listener: BatchCompletionNotificationListener,
     ): Job =
         JobBuilder("revurderingslenkeRevurderForskuddJob", jobRepository)
             .listener(listener)
-            .start(beregnRevurderForskuddStep)
+            .start(evaluerRevurderForskuddStep)
             .build()
 
     @Bean
@@ -38,13 +38,13 @@ class RevurderingslenkeRevurderForskuddBatchConfiguration {
         @Qualifier("batchTaskExecutor") taskExecutor: TaskExecutor,
         jobRepository: JobRepository,
         transactionManager: PlatformTransactionManager,
-        beregnRevurderForskuddBatchReader: RepositoryItemReader<RevurderingForskudd>,
+        evaluerRevurderForskuddBatchReader: RepositoryItemReader<RevurderingForskudd>,
         revurderingslenkeRevurderForskuddBatchProcessor: RevurderingslenkeRevurderForskuddBatchProcessor,
         dummmyWriter: DummyItemWriter,
     ): Step =
         StepBuilder("revurderingslenkeRevurderForskuddStep", jobRepository)
             .chunk<RevurderingForskudd, Int?>(CHUNK_SIZE, transactionManager)
-            .reader(beregnRevurderForskuddBatchReader)
+            .reader(evaluerRevurderForskuddBatchReader)
             .processor(revurderingslenkeRevurderForskuddBatchProcessor)
             .writer(dummmyWriter)
             .taskExecutor(taskExecutor)
@@ -52,11 +52,11 @@ class RevurderingslenkeRevurderForskuddBatchConfiguration {
 
     @Bean
     fun revurderingslenkeRevurderForskuddBatchReader(
-        revurderingForskuddRepository: RevurderingForskuddRepository,
+        revurderForskuddRepository: RevurderForskuddRepository,
     ): RepositoryItemReader<RevurderingForskudd> =
         RepositoryItemReaderBuilder<RevurderingForskudd>()
             .name("revurderingslenkeRevurderForskuddBatchReader")
-            .repository(revurderingForskuddRepository)
+            .repository(revurderForskuddRepository)
             .methodName("findAllByStatusIsAndVurdereTilbakekrevingIsTrueAndOppgaveIsNull")
             .arguments(listOf(Status.FATTET))
             .saveState(false)

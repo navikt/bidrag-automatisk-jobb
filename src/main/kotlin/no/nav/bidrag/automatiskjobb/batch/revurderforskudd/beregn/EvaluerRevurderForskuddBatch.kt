@@ -8,9 +8,9 @@ import java.time.YearMonth
 import java.util.UUID
 
 @Component
-class BeregnRevurderForskuddBatch(
+class EvaluerRevurderForskuddBatch(
     private val jobLauncher: JobLauncher,
-    private val beregnRevurderForskuddJob: Job,
+    private val evaluerRevurderForskuddJob: Job,
 ) {
     fun start(
         simuler: Boolean,
@@ -18,7 +18,7 @@ class BeregnRevurderForskuddBatch(
         beregnFraMåned: YearMonth,
     ) {
         jobLauncher.run(
-            beregnRevurderForskuddJob,
+            evaluerRevurderForskuddJob,
             JobParametersBuilder()
                 .addString("simuler", simuler.toString())
                 .addString("batchId", UUID.randomUUID().toString())

@@ -1,7 +1,7 @@
 package no.nav.bidrag.automatiskjobb.batch.revurderforskudd.fattvedtak
 
 import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
-import no.nav.bidrag.automatiskjobb.service.RevurderForskuddService
+import no.nav.bidrag.automatiskjobb.service.batch.revurderforskudd.FattVedtakRevurderForskuddService
 import org.springframework.batch.core.StepExecution
 import org.springframework.batch.core.annotation.BeforeStep
 import org.springframework.batch.item.ItemProcessor
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class FatteVedtakRevurderForskuddBatchProcessor(
-    val revurderForskuddService: RevurderForskuddService,
+    val fattVedtakRevurderForskuddService: FattVedtakRevurderForskuddService,
 ) : ItemProcessor<RevurderingForskudd, Unit> {
     private var simuler: Boolean = true
 
@@ -19,6 +19,6 @@ class FatteVedtakRevurderForskuddBatchProcessor(
     }
 
     override fun process(revurderingForskudd: RevurderingForskudd) {
-        revurderForskuddService.fattVedtakOmRevurderingForskudd(revurderingForskudd, simuler)
+        fattVedtakRevurderForskuddService.fattVedtak(revurderingForskudd, simuler)
     }
 }

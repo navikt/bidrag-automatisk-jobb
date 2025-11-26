@@ -5,7 +5,7 @@ import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.CHUNK_SIZ
 import no.nav.bidrag.automatiskjobb.batch.DummyItemWriter
 import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
-import no.nav.bidrag.automatiskjobb.persistence.repository.RevurderingForskuddRepository
+import no.nav.bidrag.automatiskjobb.persistence.repository.RevurderForskuddRepository
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.Step
 import org.springframework.batch.core.job.builder.JobBuilder
@@ -21,42 +21,42 @@ import org.springframework.data.domain.Sort
 import org.springframework.transaction.PlatformTransactionManager
 
 @Configuration
-class BeregnRevurderForskuddBatchConfiguration {
+class EvaluerRevurderForskuddBatchConfiguration {
     @Bean
-    fun beregnRevurderForskuddJob(
+    fun evaluerRevurderForskuddJob(
         jobRepository: JobRepository,
-        beregnRevurderForskuddStep: Step,
+        evaluerRevurderForskuddStep: Step,
         listener: BatchCompletionNotificationListener,
     ): Job =
-        JobBuilder("beregnRevurderForskuddJob", jobRepository)
+        JobBuilder("evaluerRevurderForskuddJob", jobRepository)
             .listener(listener)
-            .start(beregnRevurderForskuddStep)
+            .start(evaluerRevurderForskuddStep)
             .build()
 
     @Bean
-    fun beregnRevurderForskuddStep(
+    fun evaluerRevurderForskuddStep(
         @Qualifier("batchTaskExecutor") taskExecutor: TaskExecutor,
         jobRepository: JobRepository,
         transactionManager: PlatformTransactionManager,
-        beregnRevurderForskuddBatchReader: RepositoryItemReader<RevurderingForskudd>,
-        beregnRevurderForskuddBatchProcessor: BeregnRevurderForskuddBatchProcessor,
+        evaluerRevurderForskuddBatchReader: RepositoryItemReader<RevurderingForskudd>,
+        evaluerRevurderForskuddBatchProcessor: EvaluerRevurderForskuddBatchProcessor,
         dummmyWriter: DummyItemWriter,
     ): Step =
-        StepBuilder("beregnRevurderForskuddStep", jobRepository)
+        StepBuilder("evaluerRevurderForskuddStep", jobRepository)
             .chunk<RevurderingForskudd, Unit>(CHUNK_SIZE, transactionManager)
-            .reader(beregnRevurderForskuddBatchReader)
-            .processor(beregnRevurderForskuddBatchProcessor)
+            .reader(evaluerRevurderForskuddBatchReader)
+            .processor(evaluerRevurderForskuddBatchProcessor)
             .writer(dummmyWriter)
             .taskExecutor(taskExecutor)
             .build()
 
     @Bean
-    fun beregnRevurderForskuddBatchReader(
-        revurderingForskuddRepository: RevurderingForskuddRepository,
+    fun evaluerRevurderForskuddBatchReader(
+        revurderForskuddRepository: RevurderForskuddRepository,
     ): RepositoryItemReader<RevurderingForskudd> =
         RepositoryItemReaderBuilder<RevurderingForskudd>()
-            .name("beregnRevurderForskuddBatchReader")
-            .repository(revurderingForskuddRepository)
+            .name("evaluerRevurderForskuddBatchReader")
+            .repository(revurderForskuddRepository)
             .methodName("findAllByStatusIs")
             .arguments(listOf(Status.UBEHANDLET))
             .saveState(false)

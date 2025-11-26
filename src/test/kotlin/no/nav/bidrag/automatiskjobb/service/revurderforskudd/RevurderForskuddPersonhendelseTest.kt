@@ -13,7 +13,7 @@ import no.nav.bidrag.automatiskjobb.consumer.BidragPersonConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer
 import no.nav.bidrag.automatiskjobb.mapper.VedtakMapper
-import no.nav.bidrag.automatiskjobb.persistence.repository.RevurderingForskuddRepository
+import no.nav.bidrag.automatiskjobb.persistence.repository.RevurderForskuddRepository
 import no.nav.bidrag.automatiskjobb.service.ForsendelseBestillingService
 import no.nav.bidrag.automatiskjobb.service.OppgaveService
 import no.nav.bidrag.automatiskjobb.service.ReskontroService
@@ -65,36 +65,6 @@ class RevurderForskuddPersonhendelseTest {
     @MockK
     lateinit var bidragPersonConsumer: BidragPersonConsumer
 
-    @MockK
-    lateinit var vedtakService: VedtakService
-
-    @MockK
-    lateinit var bidragBehandlingConsumer: BidragBehandlingConsumer
-
-    @MockK
-    lateinit var bidragGrunnlagConsumer: BidragGrunnlagConsumer
-
-    @MockK
-    lateinit var vedtakServiceBeregn: VedtakService
-
-    @MockK
-    lateinit var vedtakMapper: VedtakMapper
-
-    @MockK
-    lateinit var revurderingForskuddRepository: RevurderingForskuddRepository
-
-    @MockK
-    lateinit var inntektApi: InntektApi
-
-    @MockK
-    lateinit var forsendelseBestillingService: ForsendelseBestillingService
-
-    @MockK
-    lateinit var oppgaveService: OppgaveService
-
-    @MockK
-    lateinit var bidragReskontroService: ReskontroService
-
     @BeforeEach
     fun initMocks() {
         // commonObjectmapper.readValue(hentFil("/__files/vedtak_forskudd.json"))
@@ -136,16 +106,6 @@ class RevurderForskuddPersonhendelseTest {
                 bidragPersonConsumer,
                 BeregnForskuddApi(),
                 Vedtaksfiltrering(),
-                vedtakService,
-                bidragBehandlingConsumer,
-                bidragGrunnlagConsumer,
-                vedtakServiceBeregn,
-                vedtakMapper,
-                revurderingForskuddRepository,
-                inntektApi,
-                forsendelseBestillingService,
-                oppgaveService,
-                bidragReskontroService,
             )
     }
 

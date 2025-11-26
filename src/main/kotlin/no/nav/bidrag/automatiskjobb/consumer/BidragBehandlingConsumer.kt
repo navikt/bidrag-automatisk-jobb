@@ -12,6 +12,7 @@ import no.nav.bidrag.domene.enums.rolle.SøktAvType
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.enums.vedtak.Vedtakstype
 import no.nav.bidrag.domene.ident.Personident
+import no.nav.bidrag.domene.organisasjon.Enhetsnummer
 import no.nav.bidrag.transport.behandling.behandling.HentÅpneBehandlingerRequest
 import no.nav.bidrag.transport.behandling.behandling.HentÅpneBehandlingerRespons
 import org.springframework.beans.factory.annotation.Qualifier
@@ -56,29 +57,28 @@ class BidragBehandlingConsumer(
     fun opprettBehandlingForRevurderingAvForskudd(
         revurderingForskudd: RevurderingForskudd,
         bm: Personident?,
+        enhetsnummer: Enhetsnummer,
     ): OpprettBehandlingResponse {
         val opprettBehandlingRequest =
             OpprettBehandlingRequest(
                 behandlingstema = Behandlingstema.FORSKUDD,
                 vedtakstype = Vedtakstype.REVURDERING,
-                søktFomDato = LocalDate.now(), // TODO(Hva skal denne være?)
-                mottattdato = LocalDate.now(), // TODO(Hva skal denne være?)
+                søktFomDato = LocalDate.now().minusMonths(6).withDayOfMonth(1),
+                mottattdato = LocalDate.now(),
                 søknadFra = SøktAvType.NAV_BIDRAG,
                 saksnummer = revurderingForskudd.barn.saksnummer,
-                behandlerenhet = "0001", // TODO(Hvilken enhet skal settes her?)
+                behandlerenhet = enhetsnummer.verdi,
                 roller =
                     setOf(
                         OpprettRolleDto(
                             rolletype = Rolletype.BIDRAGSMOTTAKER,
                             ident = bm,
                             fødselsdato = null,
-                            harGebyrsøknad = false, // TODO(Hva skal det være her?)
                         ),
                         OpprettRolleDto(
                             rolletype = Rolletype.BARN,
                             ident = Personident(revurderingForskudd.barn.kravhaver),
                             fødselsdato = null,
-                            harGebyrsøknad = false, // TODO(Hva skal det være her?)
                         ),
                     ),
                 stønadstype = Stønadstype.FORSKUDD,

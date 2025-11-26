@@ -2,7 +2,7 @@ package no.nav.bidrag.automatiskjobb.batch.revurderforskudd.opprett
 
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
-import no.nav.bidrag.automatiskjobb.service.RevurderForskuddService
+import no.nav.bidrag.automatiskjobb.service.batch.revurderforskudd.OpprettRevurderForskuddService
 import org.springframework.batch.core.StepExecution
 import org.springframework.batch.core.annotation.BeforeStep
 import org.springframework.batch.item.ItemProcessor
@@ -11,7 +11,7 @@ import java.time.LocalDateTime
 
 @Component
 class OpprettRevurderForskuddBatchProcessor(
-    private val revurderForskuddService: RevurderForskuddService,
+    private val opprettRevurderForskuddService: OpprettRevurderForskuddService,
 ) : ItemProcessor<Barn, RevurderingForskudd> {
     private lateinit var batchId: String
     private lateinit var månederTilbakeForManueltVedtak: LocalDateTime
@@ -27,5 +27,5 @@ class OpprettRevurderForskuddBatchProcessor(
     }
 
     override fun process(barn: Barn): RevurderingForskudd? =
-        revurderForskuddService.opprettRevurdereForskudd(barn, batchId, månederTilbakeForManueltVedtak)
+        opprettRevurderForskuddService.opprettRevurdereForskudd(barn, batchId, månederTilbakeForManueltVedtak)
 }

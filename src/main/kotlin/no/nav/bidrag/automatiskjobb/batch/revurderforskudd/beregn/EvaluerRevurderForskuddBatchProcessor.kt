@@ -1,7 +1,7 @@
 package no.nav.bidrag.automatiskjobb.batch.revurderforskudd.beregn
 
 import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
-import no.nav.bidrag.automatiskjobb.service.RevurderForskuddService
+import no.nav.bidrag.automatiskjobb.service.batch.revurderforskudd.EvaluerRevurderForskuddService
 import org.springframework.batch.core.StepExecution
 import org.springframework.batch.core.annotation.BeforeStep
 import org.springframework.batch.item.ItemProcessor
@@ -9,8 +9,8 @@ import org.springframework.stereotype.Component
 import java.time.YearMonth
 
 @Component
-class BeregnRevurderForskuddBatchProcessor(
-    private val revurderForskuddService: RevurderForskuddService,
+class EvaluerRevurderForskuddBatchProcessor(
+    private val evaluerRevurderForskuddService: EvaluerRevurderForskuddService,
 ) : ItemProcessor<RevurderingForskudd, Unit> {
     private var simuler: Boolean = true
     private var antallMånederForBeregning: Long = 3
@@ -24,6 +24,6 @@ class BeregnRevurderForskuddBatchProcessor(
     }
 
     override fun process(item: RevurderingForskudd) {
-        revurderForskuddService.beregnRevurderForskudd(item, simuler, antallMånederForBeregning, beregnFraMåned)
+        evaluerRevurderForskuddService.evaluerRevurderForskudd(item, simuler, antallMånederForBeregning, beregnFraMåned)
     }
 }

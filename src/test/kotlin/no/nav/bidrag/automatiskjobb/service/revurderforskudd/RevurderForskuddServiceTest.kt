@@ -1,27 +1,17 @@
 package no.nav.bidrag.automatiskjobb.service.revurderforskudd
 
 import com.fasterxml.jackson.databind.node.POJONode
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
-import io.mockk.mockk
 import io.mockk.mockkConstructor
 import io.mockk.verify
-import no.nav.bidrag.automatiskjobb.consumer.BidragBehandlingConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragBeløpshistorikkConsumer
-import no.nav.bidrag.automatiskjobb.consumer.BidragGrunnlagConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragPersonConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer
-import no.nav.bidrag.automatiskjobb.mapper.VedtakMapper
-import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
-import no.nav.bidrag.automatiskjobb.persistence.repository.RevurderingForskuddRepository
-import no.nav.bidrag.automatiskjobb.service.ForsendelseBestillingService
-import no.nav.bidrag.automatiskjobb.service.OppgaveService
-import no.nav.bidrag.automatiskjobb.service.ReskontroService
 import no.nav.bidrag.automatiskjobb.service.RevurderForskuddService
 import no.nav.bidrag.automatiskjobb.testdata.opprettBostatatusperiode
 import no.nav.bidrag.automatiskjobb.testdata.opprettDelberegningBarnIHusstand
@@ -51,7 +41,6 @@ import no.nav.bidrag.automatiskjobb.testdata.persongrunnlagBA2
 import no.nav.bidrag.automatiskjobb.testdata.persongrunnlagBP
 import no.nav.bidrag.automatiskjobb.testdata.saksnummer
 import no.nav.bidrag.automatiskjobb.testdata.testdataBidragsmottaker
-import no.nav.bidrag.beregn.barnebidrag.service.VedtakService
 import no.nav.bidrag.beregn.forskudd.BeregnForskuddApi
 import no.nav.bidrag.beregn.vedtak.Vedtaksfiltrering
 import no.nav.bidrag.commons.web.mock.stubSjablonProvider
@@ -65,7 +54,6 @@ import no.nav.bidrag.domene.felles.personidentNav
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.domene.sak.Saksnummer
 import no.nav.bidrag.domene.tid.ÅrMånedsperiode
-import no.nav.bidrag.inntekt.InntektApi
 import no.nav.bidrag.transport.behandling.beregning.felles.BeregnGrunnlag
 import no.nav.bidrag.transport.behandling.felles.grunnlag.DelberegningSumInntekt
 import no.nav.bidrag.transport.behandling.felles.grunnlag.GrunnlagDto
@@ -100,36 +88,6 @@ class RevurderForskuddServiceTest {
     @MockK
     lateinit var bidragPersonConsumer: BidragPersonConsumer
 
-    @MockK
-    lateinit var vedtakService: VedtakService
-
-    @MockK
-    lateinit var bidragBehandlingConsumer: BidragBehandlingConsumer
-
-    @MockK
-    lateinit var bidragGrunnlagConsumer: BidragGrunnlagConsumer
-
-    @MockK
-    lateinit var vedtakServiceBeregn: VedtakService
-
-    @MockK
-    lateinit var vedtakMapper: VedtakMapper
-
-    @MockK
-    lateinit var revurderingForskuddRepository: RevurderingForskuddRepository
-
-    @MockK
-    lateinit var inntektApi: InntektApi
-
-    @MockK
-    lateinit var forsendelseBestillingService: ForsendelseBestillingService
-
-    @MockK
-    lateinit var oppgaveService: OppgaveService
-
-    @MockK
-    lateinit var bidragReskontroService: ReskontroService
-
     @BeforeEach
     fun initMocks() {
         // commonObjectmapper.readValue(hentFil("/__files/vedtak_forskudd.json"))
@@ -145,16 +103,6 @@ class RevurderForskuddServiceTest {
                 bidragPersonConsumer,
                 BeregnForskuddApi(),
                 Vedtaksfiltrering(),
-                vedtakService,
-                bidragBehandlingConsumer,
-                bidragGrunnlagConsumer,
-                vedtakServiceBeregn,
-                vedtakMapper,
-                revurderingForskuddRepository,
-                inntektApi,
-                forsendelseBestillingService,
-                oppgaveService,
-                bidragReskontroService,
             )
     }
 
@@ -270,7 +218,8 @@ class RevurderForskuddServiceTest {
         val beregnCapture = mutableListOf<BeregnGrunnlag>()
         mockkConstructor(BeregnForskuddApi::class)
         every { BeregnForskuddApi().beregn(capture(beregnCapture)) } answers { callOriginal() }
-        val resultat = service.erForskuddRedusert(opprettVedtakhendelse(vedtaksidBidrag, stonadType = Stønadstype.BIDRAG18AAR))
+        val resultat =
+            service.erForskuddRedusert(opprettVedtakhendelse(vedtaksidBidrag, stonadType = Stønadstype.BIDRAG18AAR))
         resultat.shouldHaveSize(1)
         resultat.first().gjelderBarn shouldBe personIdentSøknadsbarn1
         resultat.first().bidragsmottaker shouldBe personIdentBidragsmottaker
@@ -544,7 +493,12 @@ class RevurderForskuddServiceTest {
                 søknadsbarn = persongrunnlagBA,
                 listOf(
                     opprettDelberegningSumInntekt().copy(
-                        grunnlagsreferanseListe = listOf("INNTEKT_MANUEL", "INNTEKT_BARNETILLEGG", "INNTEKT_KONTANTSTØTTE"),
+                        grunnlagsreferanseListe =
+                            listOf(
+                                "INNTEKT_MANUEL",
+                                "INNTEKT_BARNETILLEGG",
+                                "INNTEKT_KONTANTSTØTTE",
+                            ),
                         innhold =
                             POJONode(
                                 DelberegningSumInntekt(
@@ -601,7 +555,12 @@ class RevurderForskuddServiceTest {
                 søknadsbarn = persongrunnlagBA2,
                 listOf(
                     opprettDelberegningSumInntekt().copy(
-                        grunnlagsreferanseListe = listOf("INNTEKT_MANUEL", "INNTEKT_BARNETILLEGG", "INNTEKT_KONTANTSTØTTE"),
+                        grunnlagsreferanseListe =
+                            listOf(
+                                "INNTEKT_MANUEL",
+                                "INNTEKT_BARNETILLEGG",
+                                "INNTEKT_KONTANTSTØTTE",
+                            ),
                         innhold =
                             POJONode(
                                 DelberegningSumInntekt(
@@ -660,7 +619,12 @@ class RevurderForskuddServiceTest {
                     opprettGrunnlagslisteBidrag(
                         listOf(
                             opprettDelberegningSumInntekt().copy(
-                                grunnlagsreferanseListe = listOf("INNTEKT_MANUEL", "INNTEKT_BARNETILLEGG", "INNTEKT_KONTANTSTØTTE"),
+                                grunnlagsreferanseListe =
+                                    listOf(
+                                        "INNTEKT_MANUEL",
+                                        "INNTEKT_BARNETILLEGG",
+                                        "INNTEKT_KONTANTSTØTTE",
+                                    ),
                                 innhold =
                                     POJONode(
                                         DelberegningSumInntekt(
@@ -790,7 +754,12 @@ class RevurderForskuddServiceTest {
                 søknadsbarn = persongrunnlagBA,
                 listOf(
                     opprettDelberegningSumInntekt().copy(
-                        grunnlagsreferanseListe = listOf("INNTEKT_MANUEL", "INNTEKT_BARNETILLEGG", "INNTEKT_KONTANTSTØTTE"),
+                        grunnlagsreferanseListe =
+                            listOf(
+                                "INNTEKT_MANUEL",
+                                "INNTEKT_BARNETILLEGG",
+                                "INNTEKT_KONTANTSTØTTE",
+                            ),
                         innhold =
                             POJONode(
                                 DelberegningSumInntekt(
@@ -847,7 +816,12 @@ class RevurderForskuddServiceTest {
                 søknadsbarn = persongrunnlagBA2,
                 listOf(
                     opprettDelberegningSumInntekt().copy(
-                        grunnlagsreferanseListe = listOf("INNTEKT_MANUEL", "INNTEKT_BARNETILLEGG", "INNTEKT_KONTANTSTØTTE"),
+                        grunnlagsreferanseListe =
+                            listOf(
+                                "INNTEKT_MANUEL",
+                                "INNTEKT_BARNETILLEGG",
+                                "INNTEKT_KONTANTSTØTTE",
+                            ),
                         innhold =
                             POJONode(
                                 DelberegningSumInntekt(
@@ -906,7 +880,12 @@ class RevurderForskuddServiceTest {
                     opprettGrunnlagslisteBidrag(
                         listOf(
                             opprettDelberegningSumInntekt().copy(
-                                grunnlagsreferanseListe = listOf("INNTEKT_MANUEL", "INNTEKT_BARNETILLEGG", "INNTEKT_KONTANTSTØTTE"),
+                                grunnlagsreferanseListe =
+                                    listOf(
+                                        "INNTEKT_MANUEL",
+                                        "INNTEKT_BARNETILLEGG",
+                                        "INNTEKT_KONTANTSTØTTE",
+                                    ),
                                 innhold =
                                     POJONode(
                                         DelberegningSumInntekt(
@@ -995,33 +974,6 @@ class RevurderForskuddServiceTest {
                 },
             )
         }
-    }
-
-    @Test
-    fun `skal lagre oppgave ID til revurderingForskudd og returnere den`() {
-        every { oppgaveService.opprettOppgaveForTilbakekrevingAvForskudd(any()) } returns 12345
-        every { revurderingForskuddRepository.save(any()) } returnsArgument 0
-
-        val revurderingForskudd = mockk<RevurderingForskudd>(relaxed = true)
-        val resultat = service.opprettOppgave(revurderingForskudd)
-
-        resultat shouldBe 12345
-        verify(exactly = 1) { oppgaveService.opprettOppgaveForTilbakekrevingAvForskudd(revurderingForskudd) }
-        verify(exactly = 1) { revurderingForskuddRepository.save(revurderingForskudd) }
-    }
-
-    @Test
-    fun `skal kaste exception hvis oppgaveopprettelse feiler`() {
-        every { oppgaveService.opprettOppgaveForTilbakekrevingAvForskudd(any()) } throws RuntimeException("Feil ved opprettelse av oppgave")
-
-        val revurderingForskudd = mockk<RevurderingForskudd>(relaxed = true)
-
-        shouldThrow<RuntimeException> {
-            service.opprettOppgave(revurderingForskudd)
-        }.message shouldBe "Feil ved opprettelse av oppgave"
-
-        verify(exactly = 1) { oppgaveService.opprettOppgaveForTilbakekrevingAvForskudd(revurderingForskudd) }
-        verify(exactly = 0) { revurderingForskuddRepository.save(any()) }
     }
 }
 
