@@ -13,7 +13,7 @@ database:
   navn: bidrag-automatisk-jobb-q1-v2
   tier: db-custom-1-3840
   size: 25
-  auditlog: "on"
+  auditlog: "off"
 kafka:
   pool: nav-dev
 env:
