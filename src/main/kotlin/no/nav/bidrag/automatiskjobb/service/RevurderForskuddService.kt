@@ -129,7 +129,7 @@ class RevurderForskuddService(
                 vedtakHendelse.id,
                 vedtak,
             ),
-           ) + erForskuddRedusertEtterSærbidrag(SisteManuelleVedtak(vedtakHendelse.id, vedtak))
+        ) + erForskuddRedusertEtterSærbidrag(SisteManuelleVedtak(vedtakHendelse.id, vedtak))
     }
 
     private fun erForskuddRedusertEtterSærbidrag(vedtakInfo: SisteManuelleVedtak): List<ForskuddRedusertResultat> {

@@ -40,7 +40,7 @@ object GrunnlagMapper {
     ): List<GrunnlagDto> {
         val fattetVedtakInneholderBarn =
             vedtakFattet.stønadsendringListe.any { it.kravhaver == gjelderBarn } ||
-                    vedtakFattet.engangsbeløpListe.any { it.kravhaver == gjelderBarn }
+                vedtakFattet.engangsbeløpListe.any { it.kravhaver == gjelderBarn }
         val grunnlagFattetVedtak = byggGrunnlagFattetVedtak(vedtakFattet, gjelderBarn, fattetVedtakInneholderBarn)
 
         val forskuddStønadBarn = vedtakLøpendeForskudd.stønadsendringListe.find { it.kravhaver == gjelderBarn }!!
@@ -86,13 +86,14 @@ object GrunnlagMapper {
         fattetVedtakInneholderBarn: Boolean,
     ): List<GrunnlagDto> =
         vedtakBidrag.stønadsendringListe
-            .find { (!fattetVedtakInneholderBarn || it.kravhaver == gjelderBarn) && it.erBidrag }?.let {
+            .find { (!fattetVedtakInneholderBarn || it.kravhaver == gjelderBarn) && it.erBidrag }
+            ?.let {
                 hentGrunnlagFraBidrag(vedtakBidrag, it)
             }
             ?: vedtakBidrag.engangsbeløpListe
                 .find {
                     (!fattetVedtakInneholderBarn || it.kravhaver == gjelderBarn) &&
-                            it.type == Engangsbeløptype.SÆRBIDRAG
+                        it.type == Engangsbeløptype.SÆRBIDRAG
                 }?.let {
                     hentGrunnlagFraSærbidrag(vedtakBidrag, gjelderBarn, it)
                 } ?: emptyList()
@@ -164,11 +165,11 @@ object GrunnlagMapper {
             Grunnlagstype.SLUTTBEREGNING_BARNEBIDRAG -> {
                 val innhold = vedtak.grunnlagListe.byggSluttberegningBarnebidragDetaljer(periode.grunnlagReferanseListe)
                 innhold == null || innhold.erResultatAvslag ||
-                        vedtak.grunnlagListe
-                            .finnGrunnlagSomErReferertFraGrunnlagsreferanseListe(
-                                Grunnlagstype.DELBEREGNING_BIDRAGSPLIKTIGES_ANDEL,
-                                sluttberegning.grunnlagsreferanseListe,
-                            ).isEmpty()
+                    vedtak.grunnlagListe
+                        .finnGrunnlagSomErReferertFraGrunnlagsreferanseListe(
+                            Grunnlagstype.DELBEREGNING_BIDRAGSPLIKTIGES_ANDEL,
+                            sluttberegning.grunnlagsreferanseListe,
+                        ).isEmpty()
             }
 
             Grunnlagstype.SLUTTBEREGNING_FORSKUDD -> {
