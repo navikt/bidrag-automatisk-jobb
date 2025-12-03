@@ -5,7 +5,7 @@ import no.nav.bidrag.automatiskjobb.consumer.BidragPersonConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
-import no.nav.bidrag.automatiskjobb.persistence.entity.Behandlingstype
+import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
 import no.nav.bidrag.beregn.barnebidrag.service.VedtakService
 import no.nav.bidrag.commons.util.IdentUtils
 import no.nav.bidrag.domene.enums.beregning.Resultatkode
@@ -45,12 +45,14 @@ class VedtakMapper(
     val sakConsumer: BidragSakConsumer,
     private val identUtils: IdentUtils,
 ) {
-    fun BidragssakDto.hentBarn(ident: String) =
-        roller.find {
-            it.type == Rolletype.BARN &&
-                identUtils.hentNyesteIdent(it.fødselsnummer!!) == identUtils.hentNyesteIdent(Personident(ident))
-        }
-            ?: error("Fant ikke barn med ident $ident i sak $saksnummer")
+    fun hentBarn(
+        sak: BidragssakDto,
+        ident: String,
+    ) = sak.roller.find {
+        it.type == Rolletype.BARN &&
+            identUtils.hentNyesteIdent(it.fødselsnummer!!) == identUtils.hentNyesteIdent(Personident(ident))
+    }
+        ?: error("Fant ikke barn med ident $ident i sak ${sak.saksnummer}")
 
     fun tilOpprettVedtakRequest(
         resultat: BeregnetBarnebidragResultat,
@@ -59,8 +61,8 @@ class VedtakMapper(
     ): OpprettVedtakRequestDto {
         val sak = sakConsumer.hentSak(aldersjustering.barn.saksnummer)
         val grunnlagPerson = resultat.grunnlagListe.hentPersonMedIdent(stønad.kravhaver.verdi)!!
-        val sakrolleBarn = sak.hentBarn(aldersjustering.barn.kravhaver)
-        val mottaker = sak.roller.reellMottakerEllerBidragsmottaker(sakrolleBarn)!!
+        val sakrolleBarn = hentBarn(sak, aldersjustering.barn.kravhaver)
+        val mottaker = reellMottakerEllerBidragsmottaker(sakrolleBarn, sak.roller)!!
         val grunnlagAldersjustering =
             opprettAldersjusteringDetaljerGrunnlag(
                 aldersjustering,
@@ -168,8 +170,8 @@ class VedtakMapper(
 
     fun tilOpprettVedtakRequestIngenAldersjustering(aldersjustering: Aldersjustering): OpprettVedtakRequestDto {
         val sak = sakConsumer.hentSak(aldersjustering.barn.saksnummer)
-        val sakrolleBarn = sak.hentBarn(aldersjustering.barn.kravhaver)
-        val faktiskMottaker = sak.roller.reellMottakerEllerBidragsmottaker(sakrolleBarn)!!
+        val sakrolleBarn = hentBarn(sak, aldersjustering.barn.kravhaver)
+        val faktiskMottaker = reellMottakerEllerBidragsmottaker(sakrolleBarn, sak.roller)!!
         val skyldnerIdent = Personident(aldersjustering.barn.skyldner!!)
         val mottakerIdent =
             sak.roller
@@ -227,15 +229,17 @@ class VedtakMapper(
             )
     }
 
-    fun List<RolleDto>.reellMottakerEllerBidragsmottaker(rolle: RolleDto) =
-        rolle.reellMottaker
-            ?.ident
-            ?.verdi
-            ?.let { Personident(it) }
-            ?: find { it.type == Rolletype.BIDRAGSMOTTAKER }?.fødselsnummer?.let { identUtils.hentNyesteIdent(it) }
+    fun reellMottakerEllerBidragsmottaker(
+        rolle: RolleDto,
+        rollerliste: List<RolleDto>,
+    ) = rolle.reellMottaker
+        ?.ident
+        ?.verdi
+        ?.let { Personident(it) }
+        ?: rollerliste.find { it.type == Rolletype.BIDRAGSMOTTAKER }?.fødselsnummer?.let { identUtils.hentNyesteIdent(it) }
 }
 
-private fun GrunnlagDto.tilOpprettGrunnlagRequestDto(): OpprettGrunnlagRequestDto =
+fun GrunnlagDto.tilOpprettGrunnlagRequestDto(): OpprettGrunnlagRequestDto =
     OpprettGrunnlagRequestDto(
         referanse = referanse,
         gjelderReferanse = gjelderReferanse,

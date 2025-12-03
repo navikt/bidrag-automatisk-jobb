@@ -34,4 +34,13 @@ interface BarnRepository : JpaRepository<Barn, Int> {
     fun findAllByKravhaver(kravhaver: String): List<Barn>
 
     fun findAllBySkyldner(skyldner: String): List<Barn>
+
+    @Query(
+        "SELECT b FROM barn b WHERE b.forskuddFra IS NOT NULL " +
+            "AND (b.forskuddTil IS NULL OR b.forskuddTil < :forskuddDato) ",
+    )
+    fun findBarnSomSkalRevurdereForskudd(
+        @Param("forskuddDato") forskuddDato: LocalDate,
+        pageable: Pageable,
+    ): Page<Barn>
 }

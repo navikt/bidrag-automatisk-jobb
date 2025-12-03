@@ -32,8 +32,8 @@ data class HusstandsmedlemmerRequest(
 
 @Service
 class BidragPersonConsumer(
-    @Value("\${PERSON_URL}") private val bidragPersonUrl: URI,
-    @Qualifier("azure") private val restTemplate: RestTemplate,
+    @param:Value("\${PERSON_URL}") private val bidragPersonUrl: URI,
+    @param:Qualifier("azure") private val restTemplate: RestTemplate,
 ) : AbstractRestClient(restTemplate, "bidrag-automatisk-jobb"),
     BeregningPersonConsumer {
     private val hentFødselsnummerUri =
@@ -56,9 +56,9 @@ class BidragPersonConsumer(
         maxAttempts = 3,
         backoff = Backoff(delay = 200, maxDelay = 1000, multiplier = 2.0),
     )
-    override fun hentFødselsdatoForPerson(personident: Personident): LocalDate? {
+    override fun hentFødselsdatoForPerson(kravhaver: Personident): LocalDate? {
         try {
-            val response = postForNonNullEntity<NavnFødselDødDto>(hentFødselsnummerUri, PersonRequest(personident))
+            val response = postForNonNullEntity<NavnFødselDødDto>(hentFødselsnummerUri, PersonRequest(kravhaver))
             return response.fødselsdato ?: response.fødselsår?.let { opprettFødselsdatoFraFødselsår(it) }
         } catch (e: HttpStatusCodeException) {
             if (e.statusCode.value() == HttpStatus.NOT_FOUND.value()) {

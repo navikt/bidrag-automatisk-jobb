@@ -17,7 +17,6 @@ import no.nav.bidrag.transport.behandling.felles.grunnlag.DelberegningSumInntekt
 import no.nav.bidrag.transport.behandling.felles.grunnlag.GrunnlagDto
 import no.nav.bidrag.transport.behandling.felles.grunnlag.Grunnlagsreferanse
 import no.nav.bidrag.transport.behandling.felles.grunnlag.InntektsrapporteringPeriode
-import no.nav.bidrag.transport.behandling.felles.grunnlag.SluttberegningBarnebidrag
 import no.nav.bidrag.transport.behandling.felles.grunnlag.bidragsmottaker
 import no.nav.bidrag.transport.behandling.felles.grunnlag.byggSluttberegningBarnebidragDetaljer
 import no.nav.bidrag.transport.behandling.felles.grunnlag.filtrerBasertPåEgenReferanse
@@ -26,7 +25,6 @@ import no.nav.bidrag.transport.behandling.felles.grunnlag.finnSluttberegningIRef
 import no.nav.bidrag.transport.behandling.felles.grunnlag.hentAllePersoner
 import no.nav.bidrag.transport.behandling.felles.grunnlag.hentPersonMedIdent
 import no.nav.bidrag.transport.behandling.felles.grunnlag.innholdTilObjekt
-import no.nav.bidrag.transport.behandling.felles.grunnlag.sluttberegningPeriode
 import no.nav.bidrag.transport.behandling.vedtak.response.EngangsbeløpDto
 import no.nav.bidrag.transport.behandling.vedtak.response.StønadsendringDto
 import no.nav.bidrag.transport.behandling.vedtak.response.VedtakDto
@@ -55,7 +53,10 @@ object GrunnlagMapper {
 
         val personobjekter = vedtakLøpendeForskudd.grunnlagListe.hentAllePersoner() as List<GrunnlagDto>
 
-        val søknad = vedtakLøpendeForskudd.grunnlagListe.filtrerBasertPåEgenReferanse(Grunnlagstype.SØKNAD).first() as GrunnlagDto
+        val søknad =
+            vedtakLøpendeForskudd.grunnlagListe
+                .filtrerBasertPåEgenReferanse(Grunnlagstype.SØKNAD)
+                .first() as GrunnlagDto
         val bidragsmottaker = personobjekter.bidragsmottaker!!
         val søknadsbarn = vedtakLøpendeForskudd.grunnlagListe.hentPersonMedIdent(gjelderBarn.verdi)!!
         val grunnlagBidragJustert =
@@ -84,9 +85,11 @@ object GrunnlagMapper {
         gjelderBarn: Personident,
         fattetVedtakInneholderBarn: Boolean,
     ): List<GrunnlagDto> =
-        vedtakBidrag.stønadsendringListe.find { (!fattetVedtakInneholderBarn || it.kravhaver == gjelderBarn) && it.erBidrag }?.let {
-            hentGrunnlagFraBidrag(vedtakBidrag, it)
-        }
+        vedtakBidrag.stønadsendringListe
+            .find { (!fattetVedtakInneholderBarn || it.kravhaver == gjelderBarn) && it.erBidrag }
+            ?.let {
+                hentGrunnlagFraBidrag(vedtakBidrag, it)
+            }
             ?: vedtakBidrag.engangsbeløpListe
                 .find {
                     (!fattetVedtakInneholderBarn || it.kravhaver == gjelderBarn) &&
@@ -168,10 +171,14 @@ object GrunnlagMapper {
                             sluttberegning.grunnlagsreferanseListe,
                         ).isEmpty()
             }
+
             Grunnlagstype.SLUTTBEREGNING_FORSKUDD -> {
                 periode.resultatkode.tilResultatkode()?.erAvslag() == true
             }
-            else -> false
+
+            else -> {
+                false
+            }
         }
     }
 

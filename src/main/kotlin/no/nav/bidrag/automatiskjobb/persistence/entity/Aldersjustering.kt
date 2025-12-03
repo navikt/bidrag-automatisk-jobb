@@ -9,6 +9,9 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
+import jakarta.persistence.OneToMany
+import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
+import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import java.math.BigDecimal
 import java.sql.Timestamp
@@ -19,11 +22,11 @@ data class Aldersjustering(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     override val id: Int? = null,
     @Column(name = "batch_id", nullable = false)
-    val batchId: String,
+    override val batchId: String,
     var vedtaksidBeregning: Int? = null,
     @ManyToOne
     @JoinColumn(name = "barn_id")
-    val barn: Barn,
+    override val barn: Barn,
     val aldersgruppe: Int,
     var lopendeBelop: BigDecimal? = null,
     var begrunnelse: List<String> = emptyList(),
@@ -31,37 +34,21 @@ data class Aldersjustering(
     var status: Status,
     @Enumerated(EnumType.STRING)
     var behandlingstype: Behandlingstype? = null,
-    var vedtak: Int? = null,
+    override var vedtak: Int? = null,
     var oppgave: Int? = null,
     @Column(name = "opprettet_tidspunkt", nullable = false, updatable = false)
     val opprettetTidspunkt: Timestamp = Timestamp(System.currentTimeMillis()),
     var fattetTidspunkt: Timestamp? = null,
     @Column(name = "stonadstype")
     @Enumerated(EnumType.STRING)
-    val stønadstype: Stønadstype = Stønadstype.BIDRAG,
+    override val stønadstype: Stønadstype = Stønadstype.BIDRAG,
     var resultatSisteVedtak: String? = null,
-) : EntityObject {
+    @OneToMany
+    @JoinColumn(name = "forsendelse_bestilling_id")
+    override val forsendelseBestilling: MutableList<ForsendelseBestilling> = mutableListOf(),
+) : ForsendelseEntity {
     val aldersjusteresForÅr get() = barn.fødselsdato!!.year + aldersgruppe
-    val unikReferanse get() = "aldersjustering_${batchId}_${barn.tilStønadsid(stønadstype).toReferanse()}"
+    override val unikReferanse get() = "aldersjustering_${batchId}_${barn.tilStønadsid(stønadstype).toReferanse()}"
     val begrunnelseVisningsnavn get() =
         begrunnelse.map { it.lowercase().replaceFirstChar { it.uppercase() }.replace("_", " ") }
-}
-
-enum class Status {
-    UBEHANDLET,
-    TRUKKET,
-    BEHANDLET,
-    SIMULERT,
-    SLETTES,
-    SLETTET,
-    FEILET,
-    FATTE_VEDTAK_FEILET,
-    FATTET,
-}
-
-enum class Behandlingstype {
-    FATTET_FORSLAG,
-    INGEN,
-    FEILET,
-    MANUELL,
 }

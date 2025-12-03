@@ -1,6 +1,6 @@
 package no.nav.bidrag.automatiskjobb.service
 
-import no.nav.bidrag.automatiskjobb.combinedLogger
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.automatiskjobb.consumer.BidragBeløpshistorikkConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragPersonConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
@@ -17,7 +17,6 @@ import no.nav.bidrag.automatiskjobb.utils.tilResultatkode
 import no.nav.bidrag.beregn.barnebidrag.service.SisteManuelleVedtak
 import no.nav.bidrag.beregn.forskudd.BeregnForskuddApi
 import no.nav.bidrag.beregn.vedtak.Vedtaksfiltrering
-import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.domene.enums.beregning.Resultatkode.Companion.erDirekteAvslag
 import no.nav.bidrag.domene.enums.rolle.Rolletype
 import no.nav.bidrag.domene.enums.vedtak.Engangsbeløptype
@@ -40,7 +39,6 @@ import no.nav.bidrag.transport.behandling.vedtak.request.HentVedtakForStønadReq
 import no.nav.bidrag.transport.behandling.vedtak.response.VedtakDto
 import no.nav.bidrag.transport.behandling.vedtak.response.erDelvedtak
 import no.nav.bidrag.transport.behandling.vedtak.response.erOrkestrertVedtak
-import no.nav.bidrag.transport.behandling.vedtak.response.harResultatFraAnnenVedtak
 import no.nav.bidrag.transport.behandling.vedtak.response.referertVedtaksid
 import no.nav.bidrag.transport.behandling.vedtak.saksnummer
 import no.nav.bidrag.transport.felles.ifTrue
@@ -51,6 +49,8 @@ import java.time.YearMonth
 
 private fun VedtakDto.erIndeksreguleringEllerAldersjustering() =
     listOf(Vedtakstype.ALDERSJUSTERING, Vedtakstype.INDEKSREGULERING).contains(type)
+
+private val LOGGER = KotlinLogging.logger { }
 
 @Service
 @Import(BeregnForskuddApi::class, Vedtaksfiltrering::class)
@@ -68,43 +68,44 @@ class RevurderForskuddService(
         val saker = bidragSakConsumer.hentSakerForPerson(barnIdent)
         return saker.mapNotNull { sak ->
             val personRolle = sak.roller.find { it.fødselsnummer == barnIdent } ?: return@mapNotNull null
-            secureLogger.info {
+            LOGGER.info {
                 "Sjekker om person ${barnIdent.verdi} er barn i saken ${sak.saksnummer}, mottar forskudd og fortsatt bor hos BM etter adresseendring"
             }
             if (personRolle.type != Rolletype.BARN) {
-                combinedLogger.info {
+                LOGGER.info {
                     "Person ${barnIdent.verdi} har rolle ${personRolle.type} i sak ${sak.saksnummer}. Behandler bare når barnets adresse endres. Avslutter behandling"
                 }
                 return@mapNotNull null
             }
             val bidragsmottaker =
                 sak.roller.find { it.type == Rolletype.BIDRAGSMOTTAKER } ?: run {
-                    secureLogger.info {
+                    LOGGER.info {
                         "Sak ${sak.saksnummer} har ingen bidragsmottaker. Avslutter behandling"
                     }
                     return@mapNotNull null
                 }
 
-            secureLogger.info {
+            LOGGER.info {
                 "Sjekker om barnet ${barnIdent.verdi} i sak ${sak.saksnummer} mottar forskudd og fortsatt bor hos BM etter adresseendring"
             }
             val løpendeForskudd =
                 hentLøpendeForskudd(sak.saksnummer.verdi, barnIdent.verdi) ?: run {
-                    secureLogger.info {
+                    LOGGER.info {
                         "Fant ingen løpende forskudd i sak ${sak.saksnummer} for barn ${barnIdent.verdi}. Avslutter behandling"
                     }
                     return@mapNotNull null
                 }
 
-            val husstandsmedlemmerBM = bidragPersonConsumer.hentPersonHusstandsmedlemmer(bidragsmottaker.fødselsnummer!!)
+            val husstandsmedlemmerBM =
+                bidragPersonConsumer.hentPersonHusstandsmedlemmer(bidragsmottaker.fødselsnummer!!)
             if (husstandsmedlemmerBM.erHusstandsmedlem(barnIdent)) {
-                secureLogger.info {
+                LOGGER.info {
                     "Barn ${barnIdent.verdi} er husstandsmedlem til bidragsmottaker ${bidragsmottaker.fødselsnummer!!.verdi}. Ingen endringer kreves."
                 }
                 return@mapNotNull null
             }
 
-            secureLogger.info {
+            LOGGER.info {
                 "Bidragsmottaker ${bidragsmottaker.fødselsnummer?.verdi} mottar forskudd for barn ${barnIdent.verdi} " +
                     "i sak ${sak.saksnummer} med beløp ${løpendeForskudd.beløp} ${løpendeForskudd.valutakode}. " +
                     "Barnet bor ikke lenger hos bidragsmottaker og skal derfor ikke motta forskudd lenger"
@@ -119,12 +120,16 @@ class RevurderForskuddService(
     }
 
     fun erForskuddRedusert(vedtakHendelse: VedtakHendelse): List<ForskuddRedusertResultat> {
-        combinedLogger.info {
+        LOGGER.info {
             "Sjekker om forskuddet er redusert etter fattet vedtak ${vedtakHendelse.id} i sak ${vedtakHendelse.saksnummer}"
         }
         val vedtak = hentVedtak(vedtakHendelse.id) ?: return listOf()
-        return erForskuddRedusertEtterFattetBidrag(SisteManuelleVedtak(vedtakHendelse.id, vedtak)) +
-            erForskuddRedusertEtterSærbidrag(SisteManuelleVedtak(vedtakHendelse.id, vedtak))
+        return erForskuddRedusertEtterFattetBidrag(
+            SisteManuelleVedtak(
+                vedtakHendelse.id,
+                vedtak,
+            ),
+        ) + erForskuddRedusertEtterSærbidrag(SisteManuelleVedtak(vedtakHendelse.id, vedtak))
     }
 
     private fun erForskuddRedusertEtterSærbidrag(vedtakInfo: SisteManuelleVedtak): List<ForskuddRedusertResultat> {
@@ -133,7 +138,7 @@ class RevurderForskuddService(
             .filter { it.type == Engangsbeløptype.SÆRBIDRAG }
             .filter {
                 if (it.resultatkode.tilResultatkode()?.erDirekteAvslag() == true) {
-                    combinedLogger.info {
+                    LOGGER.info {
                         "Særbidrag vedtaket $vedtaksid er direkte avslag med resultat ${it.resultatkode} og har derfor ingen inntekter."
                     }
                     false
@@ -145,7 +150,13 @@ class RevurderForskuddService(
                 val stønad = stønader.first()
                 val sak = bidragSakConsumer.hentSak(sak.verdi)
                 sak.roller.filter { it.type == Rolletype.BARN }.mapNotNull { rolle ->
-                    val stønadsid = StønadEngangsbeløpId(rolle.fødselsnummer!!, stønad.skyldner, stønad.sak, engangsbeløptype = stønad.type)
+                    val stønadsid =
+                        StønadEngangsbeløpId(
+                            rolle.fødselsnummer!!,
+                            stønad.skyldner,
+                            stønad.sak,
+                            engangsbeløptype = stønad.type,
+                        )
                     erForskuddetRedusert(vedtakInfo, stønadsid, stønad.mottaker)
                 }
             }
@@ -156,7 +167,7 @@ class RevurderForskuddService(
             .filter { it.erBidrag }
             .filter {
                 if (it.erDirekteAvslag()) {
-                    combinedLogger.info {
+                    LOGGER.info {
                         "Bidrag vedtaket ${vedtakInfo.vedtaksId} med type ${it.type} for kravhaver ${it.kravhaver} er direkte avslag med resultat ${it.enesteResultatkode()} og har derfor ingen inntekter."
                     }
                     false
@@ -169,7 +180,13 @@ class RevurderForskuddService(
                 val sak = bidragSakConsumer.hentSak(sak.verdi)
                 val bidragsmottaker = sak.roller.find { it.type == Rolletype.BIDRAGSMOTTAKER }!!
                 sak.roller.filter { it.type == Rolletype.BARN }.mapNotNull { rolle ->
-                    val stønadsid = StønadEngangsbeløpId(rolle.fødselsnummer!!, stønad.skyldner, stønad.sak, stønadstype = stønad.type)
+                    val stønadsid =
+                        StønadEngangsbeløpId(
+                            rolle.fødselsnummer!!,
+                            stønad.skyldner,
+                            stønad.sak,
+                            stønadstype = stønad.type,
+                        )
                     erForskuddetRedusert(vedtakInfo, stønadsid, bidragsmottaker.fødselsnummer!!)
                 }
             }
@@ -182,7 +199,9 @@ class RevurderForskuddService(
         val gjelderBarn = stønadEngangsbeløpId.kravhaver
         val sistePeriode = hentLøpendeForskudd(stønadEngangsbeløpId.sak.verdi, gjelderBarn.verdi) ?: return null
 
-        val vedtakForskudd = hentSisteManuelleForskuddVedtak(sistePeriode.vedtaksid, stønadEngangsbeløpId.sak, gjelderBarn) ?: return null
+        val vedtakForskudd =
+            hentSisteManuelleForskuddVedtak(sistePeriode.vedtaksid, stønadEngangsbeløpId.sak, gjelderBarn)
+                ?: return null
         val (beregnetForskudd, grunnlagsliste) = beregnForskudd(vedtakFattet.vedtak, vedtakForskudd.vedtak, gjelderBarn)
 
         val beregnetResultat = beregnetForskudd.resultat
@@ -199,7 +218,7 @@ class RevurderForskuddService(
                 grunnlagsliste,
             )
         return erForskuddRedusert.ifTrue { _ ->
-            secureLogger.info {
+            LOGGER.info {
                 """Forskudd er redusert i sak ${stønadEngangsbeløpId.sak.verdi} for bidragsmottaker ${mottaker.verdi} og barn ${gjelderBarn.verdi}. 
                    Løpende forskudd er $beløpLøpende og forskudd ble beregnet til ${beregnetResultat.belop} basert på siste vurdert inntekt fra bidrag vedtak ${vedtakFattet.vedtaksId} og grunnlag fra forskudd vedtak ${vedtakForskudd.vedtaksId}.
                    Siste løpende inntekt for BM i fattet vedtak er ${sisteInntektFattetVedtak?.totalinntekt} og siste inntekt for BM i forskudd vedtaket er ${sisteInntektForskudd?.totalinntekt}.
@@ -219,7 +238,7 @@ class RevurderForskuddService(
                 engangsbeløptype = stønadEngangsbeløpId.engangsbeløptype,
             )
         } ?: run {
-            secureLogger.info {
+            LOGGER.info {
                 """Forskudd er IKKE redusert i sak ${stønadEngangsbeløpId.sak.verdi} for bidragsmottaker ${mottaker.verdi} og barn ${gjelderBarn.verdi}. 
                    Løpende forskudd er $beløpLøpende og forskudd ble beregnet til ${beregnetResultat.belop} basert på siste vurdert inntekt fra bidrag vedtak ${vedtakFattet.vedtaksId} og grunnlag fra forskudd vedtak ${vedtakForskudd.vedtaksId}.
                    Siste løpende inntekt for BM i fattet vedtak er $sisteInntektFattetVedtak og siste inntekt for BM i forskudd vedtaket er $sisteInntektForskudd.
@@ -238,7 +257,7 @@ class RevurderForskuddService(
 
     private fun hentVedtak(vedtakId: Int): VedtakDto? {
         val vedtak = bidragVedtakConsumer.hentVedtak(vedtakId) ?: return null
-        if (vedtak.erDelvedtak || vedtak.erOrkestrertVedtak && vedtak.type == Vedtakstype.INNKREVING) return null
+        if (vedtak.erDelvedtak || (vedtak.erOrkestrertVedtak && vedtak.type == Vedtakstype.INNKREVING)) return null
         val faktiskVedtak =
             if (vedtak.erOrkestrertVedtak) {
                 bidragVedtakConsumer.hentVedtak(vedtak.referertVedtaksid!!)
@@ -246,7 +265,7 @@ class RevurderForskuddService(
                 vedtak
             } ?: return null
         if (faktiskVedtak.grunnlagListe.isEmpty()) {
-            combinedLogger.info {
+            LOGGER.info {
                 "Vedtak $vedtakId fattet av system ${vedtak.kildeapplikasjon} mangler grunnlag. Gjør ingen vurdering"
             }
             return null
@@ -275,8 +294,8 @@ class RevurderForskuddService(
                         vedtaksFilter.finneSisteManuelleVedtak(
                             forskuddVedtakISak.vedtakListe,
                         ) ?: return null
-                    bidragVedtakConsumer.hentVedtak(sisteManuelleVedtak.vedtaksid.toInt())?.let {
-                        SisteManuelleVedtak(sisteManuelleVedtak.vedtaksid.toInt(), it)
+                    bidragVedtakConsumer.hentVedtak(sisteManuelleVedtak.vedtaksid)?.let {
+                        SisteManuelleVedtak(sisteManuelleVedtak.vedtaksid, it)
                     }
                 } else {
                     SisteManuelleVedtak(vedtakId, it)
@@ -284,12 +303,12 @@ class RevurderForskuddService(
             } ?: return null
 
         if (vedtak.vedtak.grunnlagListe.isEmpty()) {
-            combinedLogger.info {
+            LOGGER.info {
                 "Forskudd vedtak $vedtakId fattet av system ${vedtak.vedtak.kildeapplikasjon} mangler grunnlag. Gjør ingen vurdering"
             }
             return null
         }
-        secureLogger.info { "Fant siste manuelle forskudd vedtak ${vedtak.vedtaksId}" }
+        LOGGER.info { "Fant siste manuelle forskudd vedtak ${vedtak.vedtaksId}" }
         return vedtak
     }
 
@@ -322,19 +341,19 @@ class RevurderForskuddService(
         gjelderBarn: String,
     ): StønadPeriodeDto? {
         val forskuddStønad =
-            hentLøpendeForskuddForSak(saksnummer, gjelderBarn) ?: run {
-                combinedLogger.info { "Fant ingen løpende forskudd i sak $saksnummer for barn $gjelderBarn" }
+            hentForskuddForSak(saksnummer, gjelderBarn) ?: run {
+                LOGGER.info { "Fant ingen løpende forskudd i sak $saksnummer for barn $gjelderBarn" }
                 return null
             }
         return forskuddStønad.periodeListe.hentSisteLøpendePeriode() ?: run {
-            combinedLogger.info {
+            LOGGER.info {
                 "Forskudd i sak $saksnummer og barn $gjelderBarn har opphørt før dagens dato. Det finnes ingen løpende forskudd"
             }
             null
         }
     }
 
-    private fun hentLøpendeForskuddForSak(
+    private fun hentForskuddForSak(
         saksnummer: String,
         søknadsbarnIdent: String,
     ): StønadDto? =
@@ -349,6 +368,5 @@ class RevurderForskuddService(
         )
 
     private fun List<StønadPeriodeDto>.hentSisteLøpendePeriode() =
-        maxByOrNull { it.periode.fom }
-            ?.takeIf { it.periode.til == null || it.periode.til!!.isAfter(YearMonth.now()) }
+        maxByOrNull { it.periode.fom }?.takeIf { it.periode.til == null || it.periode.til!!.isAfter(YearMonth.now()) }
 }

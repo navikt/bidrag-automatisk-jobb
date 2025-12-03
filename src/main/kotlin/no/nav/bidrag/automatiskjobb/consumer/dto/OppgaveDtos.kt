@@ -1,6 +1,6 @@
 package no.nav.bidrag.automatiskjobb.consumer.dto
 
-import no.nav.bidrag.commons.service.organisasjon.SaksbehandlernavnProvider
+import no.nav.bidrag.commons.service.organisasjon.EnhetProvider
 import no.nav.bidrag.commons.util.VirkedagerProvider
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -25,11 +25,11 @@ data class OpprettOppgaveRequest(
     var tema: String = "BID",
     var aktivDato: String = formatterDatoForOppgave(LocalDate.now()),
     var fristFerdigstillelse: String = formatterDatoForOppgave(VirkedagerProvider.nesteVirkedag()),
-    open var tildeltEnhetsnr: String? = null,
-    open val saksreferanse: String? = null,
-    open val journalpostId: String? = null,
-    open val tilordnetRessurs: String? = null,
-    open val personident: String? = null,
+    var tildeltEnhetsnr: String? = null,
+    val saksreferanse: String? = null,
+    val journalpostId: String? = null,
+    val tilordnetRessurs: String? = null,
+    val personident: String? = null,
     var bnr: String? = null,
     val behandlingstype: String? = if (tildeltEnhetsnr == "4865") behandlingstypeUtland else behandlingstypeNasjonal,
 )
@@ -153,7 +153,7 @@ internal fun lagBeskrivelseHeader(
     enhet: String,
 ): String {
     val dateFormatted = LocalDateTime.now().format(NORSK_TIDSSTEMPEL_FORMAT)
-    val saksbehandlerNavn = SaksbehandlernavnProvider.hentSaksbehandlernavn(saksbehandlerIdent)
+    val saksbehandlerNavn = EnhetProvider.hentSaksbehandlernavn(saksbehandlerIdent)
     val saksbehandlersInfo = "${saksbehandlerNavn ?: saksbehandlerIdent} ($saksbehandlerIdent, $enhet)"
     return "--- $dateFormatted $saksbehandlersInfo ---\r\n"
 }

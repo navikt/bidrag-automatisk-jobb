@@ -17,7 +17,7 @@ import java.net.URI
 
 @Component
 class OppgaveConsumer(
-    @Value("\${OPPGAVE_URL}") private val oppgaveUrl: URI,
+    @param:Value($$"${OPPGAVE_URL}") private val oppgaveUrl: URI,
     @Qualifier("azure") restTemplate: RestTemplate,
 ) : AbstractRestClient(restTemplate, "oppgave") {
     private val oppgaveURI

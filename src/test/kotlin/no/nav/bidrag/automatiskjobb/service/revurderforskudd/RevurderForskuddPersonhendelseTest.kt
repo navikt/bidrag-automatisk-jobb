@@ -1,16 +1,22 @@
 package no.nav.bidrag.automatiskjobb.service.revurderforskudd
 
-import io.getunleash.FakeUnleash
 import io.kotest.assertions.assertSoftly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
+import no.nav.bidrag.automatiskjobb.consumer.BidragBehandlingConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragBeløpshistorikkConsumer
+import no.nav.bidrag.automatiskjobb.consumer.BidragGrunnlagConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragPersonConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer
+import no.nav.bidrag.automatiskjobb.mapper.VedtakMapper
+import no.nav.bidrag.automatiskjobb.persistence.repository.RevurderForskuddRepository
+import no.nav.bidrag.automatiskjobb.service.ForsendelseBestillingService
+import no.nav.bidrag.automatiskjobb.service.OppgaveService
+import no.nav.bidrag.automatiskjobb.service.ReskontroService
 import no.nav.bidrag.automatiskjobb.service.RevurderForskuddService
 import no.nav.bidrag.automatiskjobb.testdata.opprettSakRespons
 import no.nav.bidrag.automatiskjobb.testdata.opprettStønadDto
@@ -22,6 +28,7 @@ import no.nav.bidrag.automatiskjobb.testdata.testdataBidragspliktig
 import no.nav.bidrag.automatiskjobb.testdata.testdataEnhet
 import no.nav.bidrag.automatiskjobb.testdata.testdataSøknadsbarn1
 import no.nav.bidrag.automatiskjobb.testdata.testdataSøknadsbarn2
+import no.nav.bidrag.beregn.barnebidrag.service.VedtakService
 import no.nav.bidrag.beregn.forskudd.BeregnForskuddApi
 import no.nav.bidrag.beregn.vedtak.Vedtaksfiltrering
 import no.nav.bidrag.commons.web.mock.stubSjablonProvider
@@ -31,6 +38,7 @@ import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.domene.sak.Saksnummer
 import no.nav.bidrag.domene.tid.ÅrMånedsperiode
+import no.nav.bidrag.inntekt.InntektApi
 import no.nav.bidrag.transport.person.Husstand
 import no.nav.bidrag.transport.person.Husstandsmedlem
 import no.nav.bidrag.transport.person.HusstandsmedlemmerDto
@@ -56,8 +64,6 @@ class RevurderForskuddPersonhendelseTest {
 
     @MockK
     lateinit var bidragPersonConsumer: BidragPersonConsumer
-
-    val unleash = FakeUnleash()
 
     @BeforeEach
     fun initMocks() {

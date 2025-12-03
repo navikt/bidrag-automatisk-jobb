@@ -9,8 +9,10 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
+import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Forsendelsestype
 import no.nav.bidrag.domene.enums.diverse.Språk
 import no.nav.bidrag.domene.enums.rolle.Rolletype
+import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import org.hibernate.annotations.SQLRestriction
 import java.sql.Timestamp
 
@@ -20,9 +22,7 @@ data class ForsendelseBestilling(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     override val id: Int? = null,
-    @ManyToOne
-    @JoinColumn(name = "aldersjustering_id")
-    val aldersjustering: Aldersjustering,
+    val forsendelsestype: Forsendelsestype,
     var forsendelseId: Long? = null,
     var journalpostId: Long? = null,
     @Enumerated(EnumType.STRING)
@@ -40,4 +40,13 @@ data class ForsendelseBestilling(
     var slettetTidspunkt: Timestamp? = null,
     val skalSlettes: Boolean = false,
     var feilBegrunnelse: String? = null,
+    val unikReferanse: String,
+    val vedtak: Int,
+    @Column(name = "stonadstype")
+    @Enumerated(EnumType.STRING)
+    val stønadstype: Stønadstype,
+    @ManyToOne
+    @JoinColumn(name = "barn_id")
+    val barn: Barn,
+    val batchId: String,
 ) : EntityObject

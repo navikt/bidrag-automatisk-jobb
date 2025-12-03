@@ -1,26 +1,23 @@
 package no.nav.bidrag.automatiskjobb.service
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import no.nav.bidrag.automatiskjobb.combinedLogger
 import no.nav.bidrag.automatiskjobb.consumer.BidragPersonConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer
 import no.nav.bidrag.automatiskjobb.mapper.VedtakMapper
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
-import no.nav.bidrag.automatiskjobb.persistence.entity.Behandlingstype
-import no.nav.bidrag.automatiskjobb.persistence.entity.Status
+import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
+import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Forsendelsestype
+import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import no.nav.bidrag.automatiskjobb.persistence.repository.AldersjusteringRepository
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
 import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringResponse
 import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringResultatResponse
-import no.nav.bidrag.automatiskjobb.service.model.OpprettVedtakConflictResponse
-import no.nav.bidrag.automatiskjobb.utils.JsonUtil.Companion.tilJson
 import no.nav.bidrag.automatiskjobb.utils.ugyldigForespørsel
 import no.nav.bidrag.beregn.barnebidrag.service.AldersjusteresManueltException
 import no.nav.bidrag.beregn.barnebidrag.service.AldersjusteringOrchestrator
 import no.nav.bidrag.beregn.barnebidrag.service.SkalIkkeAldersjusteresException
-import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.domene.enums.rolle.Rolletype
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.ident.Personident
@@ -31,16 +28,13 @@ import no.nav.bidrag.transport.automatiskjobb.AldersjusteringIkkeAldersjustertRe
 import no.nav.bidrag.transport.automatiskjobb.AldersjusteringResultat
 import no.nav.bidrag.transport.automatiskjobb.AldersjusteringResultatlisteResponse
 import no.nav.bidrag.transport.automatiskjobb.HentAldersjusteringStatusRequest
-import no.nav.bidrag.transport.behandling.vedtak.request.OpprettVedtakRequestDto
 import org.springframework.data.domain.Pageable
-import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
-import org.springframework.web.client.HttpStatusCodeException
 import org.springframework.web.client.RestClientResponseException
 import java.sql.Timestamp
 import java.time.LocalDate
 
-private val log = KotlinLogging.logger {}
+private val LOGGER = KotlinLogging.logger {}
 
 @Service
 class AldersjusteringService(
@@ -171,7 +165,7 @@ class AldersjusteringService(
         val aldersgruppe = barn.fødselsdato?.year?.let { år - it }
 
         if (aldersgruppe == null) {
-            log.error {
+            LOGGER.error {
                 "Aldersjustering for barn ${barn.id} kan ikke opprettes. Barnet har ingen fødselsdato og aldersgruppe kan derfor ikke settes."
             }
             return null
@@ -188,10 +182,10 @@ class AldersjusteringService(
                         stønadstype = stønadstype,
                     ),
                 )
-            log.info { "Opprettet aldersjustering ${aldersjustering.id} for barn ${barn.id}." }
+            LOGGER.info { "Opprettet aldersjustering ${aldersjustering.id} for barn ${barn.id}." }
             return aldersjustering
         } else {
-            log.info { "Aldersjustering for barn ${barn.id} er allerede opprettet." }
+            LOGGER.info { "Aldersjustering for barn ${barn.id} er allerede opprettet." }
             return null
         }
     }
@@ -238,7 +232,8 @@ class AldersjusteringService(
             val vedtaksforslagRequest =
                 vedtakMapper.tilOpprettVedtakRequest(resultatBeregning, stønadsid, aldersjustering)
 
-            val vedtaksid = if (simuler) null else opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
+            val vedtaksid =
+                if (simuler) null else vedtakConsumer.opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
             aldersjustering.vedtak = vedtaksid
 
             alderjusteringRepository.save(aldersjustering)
@@ -253,12 +248,13 @@ class AldersjusteringService(
 
             val vedtaksforslagRequest =
                 vedtakMapper.tilOpprettVedtakRequestIngenAldersjustering(aldersjustering)
-            val vedtaksid = if (simuler) null else opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
+            val vedtaksid =
+                if (simuler) null else vedtakConsumer.opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
             aldersjustering.vedtak = vedtaksid
 
             alderjusteringRepository.save(aldersjustering)
 
-            combinedLogger.warn(e) {
+            LOGGER.warn(e) {
                 "Stønad $stønadsid skal ikke aldersjusteres med begrunnelse ${e.begrunnelser.joinToString(", ")}"
             }
             return AldersjusteringIkkeAldersjustertResultat(stønadsid, e.begrunnelser.joinToString(", "))
@@ -271,12 +267,13 @@ class AldersjusteringService(
 
             val vedtaksforslagRequest =
                 vedtakMapper.tilOpprettVedtakRequestIngenAldersjustering(aldersjustering)
-            val vedtaksid = if (simuler) null else opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
+            val vedtaksid =
+                if (simuler) null else vedtakConsumer.opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
             aldersjustering.vedtak = vedtaksid
 
             alderjusteringRepository.save(aldersjustering)
 
-            combinedLogger.warn(e) { "Stønad $stønadsid skal aldersjusteres manuelt med begrunnelse ${e.begrunnelse}" }
+            LOGGER.warn(e) { "Stønad $stønadsid skal aldersjusteres manuelt med begrunnelse ${e.begrunnelse}" }
             return AldersjusteringIkkeAldersjustertResultat(stønadsid, e.begrunnelse.name)
         } catch (e: Exception) {
             aldersjustering.status = Status.FEILET
@@ -284,7 +281,7 @@ class AldersjusteringService(
             aldersjustering.begrunnelse = listOf(e.message ?: "Ukjent feil")
             alderjusteringRepository.save(aldersjustering)
 
-            combinedLogger.error(e) { "Det skjedde en feil ved aldersjustering for stønad $stønadsid" }
+            LOGGER.error(e) { "Det skjedde en feil ved aldersjustering for stønad $stønadsid" }
             return AldersjusteringIkkeAldersjustertResultat(stønadsid, "Teknisk feil: ${e.message}")
         }
     }
@@ -294,12 +291,12 @@ class AldersjusteringService(
         simuler: Boolean,
     ) {
         if (simuler) {
-            log.info {
+            LOGGER.info {
                 "Simulering er satt til true. Fatter ikke vedtaksforslag men " +
                     "oppretter forsendelse bestillinger for aldersjustering ${aldersjustering.id} med behandlingstype ${aldersjustering.behandlingstype}"
             }
         } else {
-            combinedLogger.info {
+            LOGGER.info {
                 "Fatter vedtak for aldersjustering ${aldersjustering.id} og vedtaksid ${aldersjustering.vedtak} med behandlingstype ${aldersjustering.behandlingstype}"
             }
             try {
@@ -308,7 +305,6 @@ class AldersjusteringService(
                 )
                 aldersjustering.status = Status.FATTET
                 aldersjustering.fattetTidspunkt = Timestamp(System.currentTimeMillis())
-                alderjusteringRepository.save(aldersjustering)
             } catch (e: Exception) {
                 val feilmelding =
                     if (e is RestClientResponseException) {
@@ -317,7 +313,7 @@ class AldersjusteringService(
                     } else {
                         "Feil ved fatting av vedtak for aldersjustering ${aldersjustering.id}: ${e.message}"
                     }
-                log.error(e) { feilmelding }
+                LOGGER.error(e) { feilmelding }
 
                 aldersjustering.status = Status.FATTE_VEDTAK_FEILET
                 alderjusteringRepository.save(aldersjustering)
@@ -326,8 +322,14 @@ class AldersjusteringService(
         }
 
         if (aldersjustering.behandlingstype == Behandlingstype.FATTET_FORSLAG) {
-            forsendelseBestillingService.opprettBestillingForAldersjustering(aldersjustering)
+            val forsendelseBestillinger =
+                forsendelseBestillingService.opprettBestilling(
+                    aldersjustering,
+                    Forsendelsestype.ALDERSJUSTERING_BIDRAG,
+                )
+            aldersjustering.forsendelseBestilling.addAll(forsendelseBestillinger)
         }
+        alderjusteringRepository.save(aldersjustering)
     }
 
     private fun hentFeilmeldingFraWarningHeader(exception: RestClientResponseException): String =
@@ -337,7 +339,7 @@ class AldersjusteringService(
 
     fun slettOppgaveForAldersjustering(aldersjustering: Aldersjustering): Int? {
         if (aldersjustering.oppgave == null) {
-            log.info { "Ingen oppgave å slette for aldersjustering ${aldersjustering.id}" }
+            LOGGER.info { "Ingen oppgave å slette for aldersjustering ${aldersjustering.id}" }
             return null
         }
         try {
@@ -346,7 +348,7 @@ class AldersjusteringService(
             alderjusteringRepository.save(aldersjustering)
             return oppgaveId.toInt()
         } catch (e: Exception) {
-            log.error(e) { "Feil ved sletting av oppgave for aldersjustering ${aldersjustering.id}" }
+            LOGGER.error(e) { "Feil ved sletting av oppgave for aldersjustering ${aldersjustering.id}" }
             throw e
         }
     }
@@ -379,21 +381,18 @@ class AldersjusteringService(
                 },
         )
 
-    fun slettVedtaksforslag(
-        stønadstype: Stønadstype,
-        aldersjustering: Aldersjustering,
-    ): Aldersjustering? {
+    fun slettVedtaksforslag(aldersjustering: Aldersjustering): Aldersjustering? {
         val barn = aldersjustering.barn
 
-        secureLogger.info { "Aldersjustering for barn ${barn.id} med stønadsid: $aldersjustering. skal slettes. Sletter.." }
+        LOGGER.info { "Aldersjustering for barn ${barn.id} med stønadsid: $aldersjustering. skal slettes. Sletter.." }
 
         vedtakConsumer.hentVedtaksforslagBasertPåReferanase(aldersjustering.unikReferanse)?.let {
-            secureLogger.info {
+            LOGGER.info {
                 "Fant eksisterende vedtaksforslag med referanse ${aldersjustering.unikReferanse} og id ${it.vedtaksid}. Sletter eksisterende vedtaksforslag "
             }
-            vedtakConsumer.slettVedtaksforslag(it.vedtaksid.toInt())
+            vedtakConsumer.slettVedtaksforslag(it.vedtaksid)
         } ?: run {
-            log.error { "Fant ikke eksisterende vedtaksforslag med referanse ${aldersjustering.unikReferanse}" }
+            LOGGER.error { "Fant ikke eksisterende vedtaksforslag med referanse ${aldersjustering.unikReferanse}" }
             aldersjustering.vedtak = null
             aldersjustering.status = Status.SLETTET
             alderjusteringRepository.save(aldersjustering)
@@ -402,31 +401,6 @@ class AldersjusteringService(
         aldersjustering.vedtak = null
         aldersjustering.status = Status.SLETTET
         return alderjusteringRepository.save(aldersjustering)
-    }
-
-    private fun opprettEllerOppdaterVedtaksforslag(request: OpprettVedtakRequestDto) =
-        try {
-            slettEksisterendeVedtaksforslag(request.unikReferanse!!)
-            secureLogger.info { "Oppretter vedtaksforslag: ${tilJson(request)}" }
-            vedtakConsumer.opprettVedtaksforslag(request)
-        } catch (e: HttpStatusCodeException) {
-            if (e.statusCode == HttpStatus.CONFLICT) {
-                secureLogger.info { "Vedtaksforslag med referanse ${request.unikReferanse} finnes allerede. Oppdaterer vedtaksforslaget" }
-                val resultat = e.getResponseBodyAs(OpprettVedtakConflictResponse::class.java)!!
-                vedtakConsumer.oppdaterVedtaksforslag(resultat.vedtaksid, request)
-            } else {
-                secureLogger.error(e) { "Feil ved oppretting av vedtaksforslag med referanse ${request.unikReferanse}" }
-                throw e
-            }
-        }
-
-    private fun slettEksisterendeVedtaksforslag(referanse: String) {
-        vedtakConsumer.hentVedtaksforslagBasertPåReferanase(referanse)?.let {
-            secureLogger.info {
-                "Fant eksisterende vedtaksforslag med referanse $referanse og id ${it.vedtaksid}. Sletter eksisterende vedtaksforslag "
-            }
-            vedtakConsumer.slettVedtaksforslag(it.vedtaksid.toInt())
-        }
     }
 
     fun hentAlleBarnSomSkalAldersjusteresForÅr(
@@ -440,7 +414,7 @@ class AldersjusteringService(
                 .groupBy { år - it.fødselsdato!!.year }
                 .mapValues { it.value.sortedBy { barn -> barn.fødselsdato } }
 
-        log.info { "Antall barn ${result.getLengths()}" }
+        LOGGER.info { "Antall barn ${result.getLengths()}" }
         return result
     }
 
@@ -531,14 +505,14 @@ class AldersjusteringService(
                     ),
                 )
             if (simuler) {
-                log.info { "Kjører aldersjustering i simuleringsmodus. Oppretter ikke vedtaksforslag" }
+                LOGGER.info { "Kjører aldersjustering i simuleringsmodus. Oppretter ikke vedtaksforslag" }
                 return AldersjusteringAldersjustertResultat(-1, stønadsid, vedtaksforslagRequest)
             }
 
-            val vedtaksid = opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
+            val vedtaksid = vedtakConsumer.opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
             return AldersjusteringAldersjustertResultat(vedtaksid, stønadsid, vedtaksforslagRequest)
         } catch (e: SkalIkkeAldersjusteresException) {
-            combinedLogger.warn(e) {
+            LOGGER.warn(e) {
                 "Stønad $stønadsid skal ikke aldersjusteres med begrunnelse ${
                     e.begrunnelser.joinToString(
                         ", ",
@@ -547,10 +521,10 @@ class AldersjusteringService(
             }
             return AldersjusteringIkkeAldersjustertResultat(stønadsid, e.begrunnelser.joinToString(", "))
         } catch (e: AldersjusteresManueltException) {
-            combinedLogger.warn(e) { "Stønad $stønadsid skal aldersjusteres manuelt med begrunnelse ${e.begrunnelse}" }
+            LOGGER.warn(e) { "Stønad $stønadsid skal aldersjusteres manuelt med begrunnelse ${e.begrunnelse}" }
             return AldersjusteringIkkeAldersjustertResultat(stønadsid, e.begrunnelse.name, aldersjusteresManuelt = true)
         } catch (e: Exception) {
-            combinedLogger.error(e) { "Det skjedde en feil ved aldersjustering for stønad $stønadsid" }
+            LOGGER.error(e) { "Det skjedde en feil ved aldersjustering for stønad $stønadsid" }
             return AldersjusteringIkkeAldersjustertResultat(stønadsid, "Teknisk feil: ${e.message}")
         }
     }

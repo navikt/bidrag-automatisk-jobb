@@ -17,7 +17,6 @@ class SlettVedtaksforslagBatchProcessor(
     override fun process(item: Aldersjustering) =
         try {
             aldersjusteringService.slettVedtaksforslag(
-                stønadstype = item.stønadstype,
                 aldersjustering = item,
             )
         } catch (e: Exception) {

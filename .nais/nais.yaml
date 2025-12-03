@@ -48,8 +48,6 @@ spec:
               namespace: nais-system
   kafka:
     pool: {{ kafka.pool }}
-  secureLogs:
-    enabled: true
   image: {{ image }}
   liveness:
     path: /actuator/health

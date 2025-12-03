@@ -1,0 +1,22 @@
+package no.nav.bidrag.automatiskjobb.batch.forsendelse.slett
+
+import org.springframework.batch.core.Job
+import org.springframework.batch.core.JobParametersBuilder
+import org.springframework.batch.core.launch.JobLauncher
+import org.springframework.stereotype.Component
+import java.util.UUID
+
+@Component
+class SlettForsendelseSomSkalSlettesBidragBatch(
+    private val jobLauncher: JobLauncher,
+    private val slettForsendelserSomSkalSlettesJob: Job,
+) {
+    fun start() {
+        jobLauncher.run(
+            slettForsendelserSomSkalSlettesJob,
+            JobParametersBuilder()
+                .addString("runId", UUID.randomUUID().toString())
+                .toJobParameters(),
+        )
+    }
+}
