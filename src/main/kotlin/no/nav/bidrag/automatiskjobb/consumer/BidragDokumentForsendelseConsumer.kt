@@ -1,6 +1,6 @@
 package no.nav.bidrag.automatiskjobb.consumer
 
-import no.nav.bidrag.automatiskjobb.SECURE_LOGGER
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.commons.web.client.AbstractRestClient
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.transport.dokument.Avvikshendelse
@@ -26,9 +26,11 @@ val dokumentMaler =
         Stønadstype.BIDRAG to "BI01B05",
     )
 
+private val LOGGER = KotlinLogging.logger {}
+
 @Service
 class BidragDokumentForsendelseConsumer(
-    @Value("\${BIDRAG_DOKUMENT_FORSENDELSE_URL}") private val url: URI,
+    @param:Value($$"${BIDRAG_DOKUMENT_FORSENDELSE_URL}") private val url: URI,
     @Qualifier("azure") restTemplate: RestOperations,
 ) : AbstractRestClient(restTemplate, "bidrag-dokument-forsendelse") {
     private fun createUri(path: String = "") = URI.create("$url/$path")
@@ -48,11 +50,11 @@ class BidragDokumentForsendelseConsumer(
             return forsendelseResponse.forsendelseId
         } catch (e: HttpStatusCodeException) {
             if (e.statusCode == HttpStatus.CONFLICT) {
-                SECURE_LOGGER.info { "Forsendelse med referanse ${opprettForsendelseForespørsel.unikReferanse} finnes allerede. " }
+                LOGGER.info { "Forsendelse med referanse ${opprettForsendelseForespørsel.unikReferanse} finnes allerede. " }
                 val resultat = e.getResponseBodyAs(ForsendelseConflictResponse::class.java)!!
                 return resultat.forsendelseId
             } else {
-                SECURE_LOGGER.error(e) { "Feil ved oppretting av forsendelse med referanse ${opprettForsendelseForespørsel.unikReferanse}" }
+                LOGGER.error(e) { "Feil ved oppretting av forsendelse med referanse ${opprettForsendelseForespørsel.unikReferanse}" }
                 throw e
             }
         }

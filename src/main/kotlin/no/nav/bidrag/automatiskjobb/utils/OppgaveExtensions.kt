@@ -12,6 +12,10 @@ val revurderForskuddBeskrivelseAdresseendring =
 val oppgaveAldersjusteringBeskrivelse =
     "Automatisk aldersjustering av bidrag ble ikke foretatt. " +
         "Det må kontrolleres om saken skal aldersjusteres manuelt. Årsak til at saken ikke ble aldersjustert: {}"
+val oppgaveTilbakekrevingForskudd =
+    "Forskudd har blitt automatisk revurdert og satt ned. " +
+        "Det har blitt utbetalt forskudd i løpet av siste 3 måneder. " +
+        "Vurder feilutbetaling og eventuell tilbakekreving."
 
 fun VedtakHendelse.erForskudd() = stønadsendringListe?.any { it.type == Stønadstype.FORSKUDD } == true
 

@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.6</version>
+        <version>3.5.7</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>no.nav</groupId>
@@ -14,17 +14,17 @@
     <name>bidrag-automatisk-jobb</name>
     <properties>
         <java.version>21</java.version>
-        <kotlin.version>2.2.0</kotlin.version>
+        <kotlin.version>2.2.20</kotlin.version>
         <bidrag-felles.version>2025.12.03.134944</bidrag-felles.version>
-        <logback-encoder.version>8.1</logback-encoder.version>
+        <logback-encoder.version>9.0</logback-encoder.version>
         <springdoc-openapi-ui.version>2.8.13</springdoc-openapi-ui.version>
         <springframework-cloud.version>4.3.0</springframework-cloud.version>
-        <token-support.version>5.0.29</token-support.version>
+        <token-support.version>5.0.37</token-support.version>
         <kotest.version>5.9.1</kotest.version>
         <mockk.version>1.14.2</mockk.version>
-        <ktlint.version>1.7.1</ktlint.version>
+        <ktlint.version>1.8.0</ktlint.version>
         <shedlock.version>6.9.0</shedlock.version>
-        <bidrag-beregn-felles.version>2025.09.04.091126</bidrag-beregn-felles.version>
+        <bidrag-beregn-felles.version>2025.10.06.173219</bidrag-beregn-felles.version>
     </properties>
 
     <repositories>
@@ -128,6 +128,11 @@
                     <artifactId>kotlin-logging-jvm</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>no.nav.bidrag</groupId>
+            <artifactId>bidrag-inntekt</artifactId>
+            <version>${bidrag-beregn-felles.version}</version>
         </dependency>
         <dependency>
             <groupId>no.nav.bidrag</groupId>

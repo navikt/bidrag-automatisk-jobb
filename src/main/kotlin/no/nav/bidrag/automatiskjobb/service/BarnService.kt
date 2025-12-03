@@ -4,7 +4,6 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.automatiskjobb.consumer.BidragBeløpshistorikkConsumer
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
-import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.felles.personidentNav
 import no.nav.bidrag.domene.ident.Personident
@@ -14,7 +13,7 @@ import no.nav.bidrag.transport.behandling.belopshistorikk.response.StønadDto
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
-private val log = KotlinLogging.logger {}
+private val LOGGER = KotlinLogging.logger {}
 
 @Service
 class BarnService(
@@ -28,7 +27,7 @@ class BarnService(
         oppdaterForskudd(barn)
         oppdaterBidrag(barn)
         if (simuler) {
-            secureLogger.info {
+            LOGGER.info {
                 "Simuleringmodus er på. Gjør ingen endring på periodene for forskudd/bidrag for barn ${barn.infoUtenPerioder()}"
             }
             return
@@ -42,20 +41,20 @@ class BarnService(
             bidragBeløpshistorikkConsumer.hentHistoriskeStønader(
                 barn.tilHentStønadHistoriskRequest(Stønadstype.FORSKUDD),
             ) ?: run {
-                secureLogger.info { "Fant ingen forskudd stønader for barn ${barn.infoMedPerioder()}" }
+                LOGGER.info { "Fant ingen forskudd stønader for barn ${barn.infoMedPerioder()}" }
                 return
             }
 
         if (forskuddStønad.periodeListe.isEmpty()) {
-            secureLogger.info { "Ingen forskudd perioder funnet for barn ${barn.infoMedPerioder()}" }
+            LOGGER.info { "Ingen forskudd perioder funnet for barn ${barn.infoMedPerioder()}" }
             return
         }
-        secureLogger.info {
+        LOGGER.info {
             "Fant forskudd periode ${forskuddStønad.periodeFom()} - ${forskuddStønad.periodeTil()} " +
                 "for barn med lagret forskudd periode ${barn.forskuddFra} - ${barn.forskuddTil} - ${barn.infoUtenPerioder()}"
         }
         if (forskuddStønad.periodeFom() != barn.forskuddFra || forskuddStønad.periodeTil() != barn.forskuddTil) {
-            secureLogger.info {
+            LOGGER.info {
                 "Feil forskudd periode lagret for barn ${barn.infoUtenPerioder()}. Oppdaterer " +
                     "fra ${barn.forskuddFra} - ${barn.forskuddTil} til ${forskuddStønad.periodeFom()} - ${forskuddStønad.periodeTil()}"
             }
@@ -66,29 +65,29 @@ class BarnService(
 
     private fun oppdaterBidrag(barn: Barn) {
         if (barn.skyldner == null) {
-            secureLogger.info { "Barn ${barn.infoUtenPerioder()} har ingen skyldner, hopper over oppdatering av bidrag" }
+            LOGGER.info { "Barn ${barn.infoUtenPerioder()} har ingen skyldner, hopper over oppdatering av bidrag" }
             return
         }
         val historiskeBidrag =
             bidragBeløpshistorikkConsumer.hentHistoriskeStønader(
                 barn.tilHentStønadHistoriskRequest(Stønadstype.BIDRAG),
             ) ?: run {
-                secureLogger.info { "Fant ingen bidrag stønader for barn ${barn.infoMedPerioder()}" }
+                LOGGER.info { "Fant ingen bidrag stønader for barn ${barn.infoMedPerioder()}" }
                 return
             }
 
         if (historiskeBidrag.periodeListe.isEmpty()) {
-            secureLogger.info { "Ingen bidrag perioder funnet for barn ${barn.infoMedPerioder()}" }
+            LOGGER.info { "Ingen bidrag perioder funnet for barn ${barn.infoMedPerioder()}" }
             return
         }
 
-        secureLogger.info {
+        LOGGER.info {
             "Fant bidrag periode ${historiskeBidrag.periodeFom()} - ${historiskeBidrag.periodeTil()} " +
                 "for barn med lagret bidrag periode ${barn.bidragFra} - ${barn.bidragTil} - ${barn.infoUtenPerioder()}"
         }
 
         if (historiskeBidrag.periodeFom() != barn.bidragFra || historiskeBidrag.periodeTil() != barn.bidragTil) {
-            secureLogger.info {
+            LOGGER.info {
                 "Feil bidrag periode lagret for barn ${barn.infoUtenPerioder()}. Oppdaterer " +
                     "fra ${barn.bidragFra} - ${barn.bidragTil} til ${historiskeBidrag.periodeFom()} - ${historiskeBidrag.periodeTil()}"
             }

@@ -1,8 +1,8 @@
 package no.nav.bidrag.automatiskjobb.persistence.rowmapper
 
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
-import no.nav.bidrag.automatiskjobb.persistence.entity.Behandlingstype
-import no.nav.bidrag.automatiskjobb.persistence.entity.Status
+import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
+import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import org.springframework.jdbc.core.RowMapper

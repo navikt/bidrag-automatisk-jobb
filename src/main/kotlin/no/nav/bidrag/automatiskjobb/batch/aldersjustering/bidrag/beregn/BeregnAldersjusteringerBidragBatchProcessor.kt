@@ -1,10 +1,9 @@
 package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.beregn
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import no.nav.bidrag.automatiskjobb.combinedLogger
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
-import no.nav.bidrag.automatiskjobb.persistence.entity.Behandlingstype
-import no.nav.bidrag.automatiskjobb.persistence.entity.Status
+import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
+import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import no.nav.bidrag.automatiskjobb.persistence.repository.AldersjusteringRepository
 import no.nav.bidrag.automatiskjobb.service.AldersjusteringService
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
@@ -15,7 +14,7 @@ import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.stereotype.Component
 
-private val log = KotlinLogging.logger {}
+private val LOGGER = KotlinLogging.logger {}
 
 @Component
 @StepScope
@@ -44,7 +43,7 @@ class BeregnAldersjusteringerBidragBatchProcessor(
             aldersjustering.begrunnelse = listOf(e.message ?: "Ukjent feil")
             aldersjusteringRepository.save(aldersjustering)
 
-            combinedLogger.warn(e) {
+            LOGGER.warn(e) {
                 "Det skjedde en feil ved beregning av aldersjustering ${aldersjustering.id} " +
                     "for barn ${aldersjustering.barn.tilStønadsid(aldersjustering.stønadstype)}"
             }

@@ -1,7 +1,6 @@
 package no.nav.bidrag.automatiskjobb.service.revurderforskudd
 
 import com.fasterxml.jackson.databind.node.POJONode
-import io.getunleash.FakeUnleash
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.mockk.every
@@ -88,8 +87,6 @@ class RevurderForskuddServiceTest {
 
     @MockK
     lateinit var bidragPersonConsumer: BidragPersonConsumer
-
-    val unleash = FakeUnleash()
 
     @BeforeEach
     fun initMocks() {
@@ -221,7 +218,8 @@ class RevurderForskuddServiceTest {
         val beregnCapture = mutableListOf<BeregnGrunnlag>()
         mockkConstructor(BeregnForskuddApi::class)
         every { BeregnForskuddApi().beregn(capture(beregnCapture)) } answers { callOriginal() }
-        val resultat = service.erForskuddRedusert(opprettVedtakhendelse(vedtaksidBidrag, stonadType = Stønadstype.BIDRAG18AAR))
+        val resultat =
+            service.erForskuddRedusert(opprettVedtakhendelse(vedtaksidBidrag, stonadType = Stønadstype.BIDRAG18AAR))
         resultat.shouldHaveSize(1)
         resultat.first().gjelderBarn shouldBe personIdentSøknadsbarn1
         resultat.first().bidragsmottaker shouldBe personIdentBidragsmottaker
@@ -495,7 +493,12 @@ class RevurderForskuddServiceTest {
                 søknadsbarn = persongrunnlagBA,
                 listOf(
                     opprettDelberegningSumInntekt().copy(
-                        grunnlagsreferanseListe = listOf("INNTEKT_MANUEL", "INNTEKT_BARNETILLEGG", "INNTEKT_KONTANTSTØTTE"),
+                        grunnlagsreferanseListe =
+                            listOf(
+                                "INNTEKT_MANUEL",
+                                "INNTEKT_BARNETILLEGG",
+                                "INNTEKT_KONTANTSTØTTE",
+                            ),
                         innhold =
                             POJONode(
                                 DelberegningSumInntekt(
@@ -552,7 +555,12 @@ class RevurderForskuddServiceTest {
                 søknadsbarn = persongrunnlagBA2,
                 listOf(
                     opprettDelberegningSumInntekt().copy(
-                        grunnlagsreferanseListe = listOf("INNTEKT_MANUEL", "INNTEKT_BARNETILLEGG", "INNTEKT_KONTANTSTØTTE"),
+                        grunnlagsreferanseListe =
+                            listOf(
+                                "INNTEKT_MANUEL",
+                                "INNTEKT_BARNETILLEGG",
+                                "INNTEKT_KONTANTSTØTTE",
+                            ),
                         innhold =
                             POJONode(
                                 DelberegningSumInntekt(
@@ -611,7 +619,12 @@ class RevurderForskuddServiceTest {
                     opprettGrunnlagslisteBidrag(
                         listOf(
                             opprettDelberegningSumInntekt().copy(
-                                grunnlagsreferanseListe = listOf("INNTEKT_MANUEL", "INNTEKT_BARNETILLEGG", "INNTEKT_KONTANTSTØTTE"),
+                                grunnlagsreferanseListe =
+                                    listOf(
+                                        "INNTEKT_MANUEL",
+                                        "INNTEKT_BARNETILLEGG",
+                                        "INNTEKT_KONTANTSTØTTE",
+                                    ),
                                 innhold =
                                     POJONode(
                                         DelberegningSumInntekt(
@@ -741,7 +754,12 @@ class RevurderForskuddServiceTest {
                 søknadsbarn = persongrunnlagBA,
                 listOf(
                     opprettDelberegningSumInntekt().copy(
-                        grunnlagsreferanseListe = listOf("INNTEKT_MANUEL", "INNTEKT_BARNETILLEGG", "INNTEKT_KONTANTSTØTTE"),
+                        grunnlagsreferanseListe =
+                            listOf(
+                                "INNTEKT_MANUEL",
+                                "INNTEKT_BARNETILLEGG",
+                                "INNTEKT_KONTANTSTØTTE",
+                            ),
                         innhold =
                             POJONode(
                                 DelberegningSumInntekt(
@@ -798,7 +816,12 @@ class RevurderForskuddServiceTest {
                 søknadsbarn = persongrunnlagBA2,
                 listOf(
                     opprettDelberegningSumInntekt().copy(
-                        grunnlagsreferanseListe = listOf("INNTEKT_MANUEL", "INNTEKT_BARNETILLEGG", "INNTEKT_KONTANTSTØTTE"),
+                        grunnlagsreferanseListe =
+                            listOf(
+                                "INNTEKT_MANUEL",
+                                "INNTEKT_BARNETILLEGG",
+                                "INNTEKT_KONTANTSTØTTE",
+                            ),
                         innhold =
                             POJONode(
                                 DelberegningSumInntekt(
@@ -857,7 +880,12 @@ class RevurderForskuddServiceTest {
                     opprettGrunnlagslisteBidrag(
                         listOf(
                             opprettDelberegningSumInntekt().copy(
-                                grunnlagsreferanseListe = listOf("INNTEKT_MANUEL", "INNTEKT_BARNETILLEGG", "INNTEKT_KONTANTSTØTTE"),
+                                grunnlagsreferanseListe =
+                                    listOf(
+                                        "INNTEKT_MANUEL",
+                                        "INNTEKT_BARNETILLEGG",
+                                        "INNTEKT_KONTANTSTØTTE",
+                                    ),
                                 innhold =
                                     POJONode(
                                         DelberegningSumInntekt(

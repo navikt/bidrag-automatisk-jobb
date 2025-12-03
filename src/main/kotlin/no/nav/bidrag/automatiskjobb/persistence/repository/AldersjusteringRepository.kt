@@ -1,8 +1,8 @@
 package no.nav.bidrag.automatiskjobb.persistence.repository
 
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
-import no.nav.bidrag.automatiskjobb.persistence.entity.Behandlingstype
-import no.nav.bidrag.automatiskjobb.persistence.entity.Status
+import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
+import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository

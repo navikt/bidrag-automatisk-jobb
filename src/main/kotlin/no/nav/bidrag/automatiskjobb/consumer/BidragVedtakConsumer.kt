@@ -1,6 +1,9 @@
 package no.nav.bidrag.automatiskjobb.consumer
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.automatiskjobb.configuration.CacheConfiguration.Companion.VEDTAK_CACHE
+import no.nav.bidrag.automatiskjobb.service.model.OpprettVedtakConflictResponse
+import no.nav.bidrag.automatiskjobb.utils.JsonUtil.Companion.tilJson
 import no.nav.bidrag.beregn.barnebidrag.service.external.BeregningVedtakConsumer
 import no.nav.bidrag.commons.web.client.AbstractRestClient
 import no.nav.bidrag.transport.behandling.vedtak.request.HentVedtakForStønadRequest
@@ -10,16 +13,20 @@ import no.nav.bidrag.transport.behandling.vedtak.response.VedtakDto
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.annotation.Cacheable
+import org.springframework.http.HttpStatus
 import org.springframework.retry.annotation.Backoff
 import org.springframework.retry.annotation.Retryable
 import org.springframework.stereotype.Component
+import org.springframework.web.client.HttpStatusCodeException
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.util.UriComponentsBuilder
 import java.net.URI
 
+private val LOGGER = KotlinLogging.logger { }
+
 @Component
 class BidragVedtakConsumer(
-    @Value("\${BIDRAG_VEDTAK_URL}") private val bidragVedtakUrl: URI,
+    @param:Value("\${BIDRAG_VEDTAK_URL}") private val bidragVedtakUrl: URI,
     @Qualifier("azure") restTemplate: RestTemplate,
 ) : AbstractRestClient(restTemplate, "bidrag-vedtak"),
     BeregningVedtakConsumer {
@@ -56,6 +63,31 @@ class BidragVedtakConsumer(
             null,
         )
 
+    fun opprettEllerOppdaterVedtaksforslag(request: OpprettVedtakRequestDto) =
+        try {
+            slettEksisterendeVedtaksforslag(request.unikReferanse!!)
+            LOGGER.info { "Oppretter vedtaksforslag: ${tilJson(request)}" }
+            opprettVedtaksforslag(request)
+        } catch (e: HttpStatusCodeException) {
+            if (e.statusCode == HttpStatus.CONFLICT) {
+                LOGGER.info { "Vedtaksforslag med referanse ${request.unikReferanse} finnes allerede. Oppdaterer vedtaksforslaget" }
+                val resultat = e.getResponseBodyAs(OpprettVedtakConflictResponse::class.java)!!
+                oppdaterVedtaksforslag(resultat.vedtaksid, request)
+            } else {
+                LOGGER.error(e) { "Feil ved oppretting av vedtaksforslag med referanse ${request.unikReferanse}" }
+                throw e
+            }
+        }
+
+    private fun slettEksisterendeVedtaksforslag(referanse: String) {
+        hentVedtaksforslagBasertPåReferanase(referanse)?.let {
+            LOGGER.info {
+                "Fant eksisterende vedtaksforslag med referanse $referanse og id ${it.vedtaksid}. Sletter eksisterende vedtaksforslag "
+            }
+            slettVedtaksforslag(it.vedtaksid)
+        }
+    }
+
     fun oppdaterVedtaksforslag(
         vedtakId: Int,
         request: OpprettVedtakRequestDto,
@@ -91,11 +123,11 @@ class BidragVedtakConsumer(
         maxAttempts = 3,
         backoff = Backoff(delay = 200, maxDelay = 1000, multiplier = 2.0),
     )
-    override fun hentVedtak(vedtakId: Int): VedtakDto? =
+    override fun hentVedtak(vedtaksid: Int): VedtakDto? =
         getForEntity(
             bidragVedtakUri
                 .pathSegment("vedtak")
-                .pathSegment(vedtakId.toString())
+                .pathSegment(vedtaksid.toString())
                 .build()
                 .toUri(),
         )
@@ -105,13 +137,13 @@ class BidragVedtakConsumer(
         maxAttempts = 3,
         backoff = Backoff(delay = 200, maxDelay = 1000, multiplier = 2.0),
     )
-    override fun hentVedtakForStønad(request: HentVedtakForStønadRequest): HentVedtakForStønadResponse =
+    override fun hentVedtakForStønad(hentVedtakForStønadRequest: HentVedtakForStønadRequest): HentVedtakForStønadResponse =
         postForNonNullEntity(
             bidragVedtakUri
                 .pathSegment("vedtak")
                 .pathSegment("hent-vedtak")
                 .build()
                 .toUri(),
-            request,
+            hentVedtakForStønadRequest,
         )
 }
