@@ -181,7 +181,7 @@ class ForsendelseBestillingService(
         val eksisterende = forsendelseBestillingRepository.findByAldersjustering(aldersjustering)
         eksisterende
             .filter {
-                it.skalSlettes && it.slettetTidspunkt == null || it.forsendelseId == null && it.distribuertTidspunkt == null
+                (it.skalSlettes && (it.slettetTidspunkt == null)) || ((it.forsendelseId == null) && (it.distribuertTidspunkt == null))
             }.forEach {
                 slettForsendelse(it)
             }
