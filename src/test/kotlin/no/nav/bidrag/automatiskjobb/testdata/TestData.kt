@@ -23,6 +23,8 @@ import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.domene.organisasjon.Enhetsnummer
 import no.nav.bidrag.domene.sak.Saksnummer
 import no.nav.bidrag.domene.tid.ÅrMånedsperiode
+import no.nav.bidrag.generer.testdata.person.genererFødselsnummer
+import no.nav.bidrag.generer.testdata.sak.genererSaksnummer
 import no.nav.bidrag.transport.behandling.belopshistorikk.response.StønadDto
 import no.nav.bidrag.transport.behandling.belopshistorikk.response.StønadPeriodeDto
 import no.nav.bidrag.transport.behandling.felles.grunnlag.BostatusPeriode
@@ -89,17 +91,17 @@ data class TestDataPerson(
 }
 
 val SOKNAD_ID = 12412421414L
-val saksnummer = "21321312321"
+val saksnummer = genererSaksnummer()
 val testdataEnhet = "4806"
-val personIdentSøknadsbarn1 = "213213213213"
-val personIdentSøknadsbarn2 = "213213333213213"
-val personIdentBidragsmottaker = "123213333"
-val personIdentBidragspliktig = "55555"
+val personIdentSøknadsbarn1 = genererFødselsnummer()
+val personIdentSøknadsbarn2 = genererFødselsnummer()
+val personIdentBidragsmottaker = genererFødselsnummer()
+val personIdentBidragspliktig = genererFødselsnummer()
 val SAKSBEHANDLER_IDENT = "Z999999"
 
 val testdataSøknadsbarn1 =
     TestDataPerson(
-        personIdent = Personident("213213213213"),
+        personIdent = Personident(personIdentSøknadsbarn1),
         navn = "Søknadsbarn 1",
         fødselsdato = LocalDate.now().minusYears(6),
         rolletype = Rolletype.BARN,
@@ -107,7 +109,7 @@ val testdataSøknadsbarn1 =
 
 val testdataSøknadsbarn2 =
     TestDataPerson(
-        personIdent = Personident("213213333213213"),
+        personIdent = Personident(personIdentSøknadsbarn2),
         navn = "Søknadsbarn 2",
         fødselsdato = LocalDate.now().minusYears(11),
         rolletype = Rolletype.BARN,
@@ -115,7 +117,7 @@ val testdataSøknadsbarn2 =
 
 val testdataBidragspliktig =
     TestDataPerson(
-        personIdent = Personident("55555"),
+        personIdent = Personident(personIdentBidragspliktig),
         navn = "Bidragspliktig",
         fødselsdato = LocalDate.now().minusYears(45),
         rolletype = Rolletype.BIDRAGSPLIKTIG,
@@ -123,7 +125,7 @@ val testdataBidragspliktig =
 
 val testdataBidragsmottaker =
     TestDataPerson(
-        personIdent = Personident("123213333"),
+        personIdent = Personident(personIdentBidragsmottaker),
         navn = "Bidragsmottaker",
         fødselsdato = LocalDate.now().minusYears(45),
         rolletype = Rolletype.BIDRAGSMOTTAKER,
