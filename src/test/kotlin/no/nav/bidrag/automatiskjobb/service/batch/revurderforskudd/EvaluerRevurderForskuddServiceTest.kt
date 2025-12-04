@@ -19,11 +19,11 @@ import no.nav.bidrag.automatiskjobb.persistence.repository.RevurderForskuddRepos
 import no.nav.bidrag.automatiskjobb.service.ReskontroService
 import no.nav.bidrag.beregn.barnebidrag.service.VedtakService
 import no.nav.bidrag.beregn.forskudd.BeregnForskuddApi
-import no.nav.bidrag.commons.util.PersonidentGenerator
 import no.nav.bidrag.domene.enums.beregning.Resultatkode
 import no.nav.bidrag.domene.enums.grunnlag.Grunnlagstype
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.domene.tid.ÅrMånedsperiode
+import no.nav.bidrag.generer.testdata.person.genererFødselsnummer
 import no.nav.bidrag.inntekt.InntektApi
 import no.nav.bidrag.transport.behandling.belopshistorikk.response.StønadDto
 import no.nav.bidrag.transport.behandling.belopshistorikk.response.StønadPeriodeDto
@@ -127,8 +127,8 @@ class EvaluerRevurderForskuddServiceTest {
 
     @Test
     fun skalSimulereNårSimulerErSatt() {
-        val barnFnr = PersonidentGenerator.genererFødselsnummer()
-        val bmFnr = PersonidentGenerator.genererFødselsnummer()
+        val barnFnr = genererFødselsnummer()
+        val bmFnr = genererFødselsnummer()
         val revurderingForskudd =
             mockk<RevurderingForskudd>(relaxed = true) {
                 every { barn } returns
@@ -186,8 +186,8 @@ class EvaluerRevurderForskuddServiceTest {
 
     @Test
     fun skalSetteStatusBehandletNårIngenNedsettelse() {
-        val barnFnr = PersonidentGenerator.genererFødselsnummer()
-        val bmFnr = PersonidentGenerator.genererFødselsnummer()
+        val barnFnr = genererFødselsnummer()
+        val bmFnr = genererFødselsnummer()
         val revurderingForskudd =
             mockk<RevurderingForskudd>(relaxed = true) {
                 every { barn } returns
@@ -245,8 +245,8 @@ class EvaluerRevurderForskuddServiceTest {
 
     @Test
     fun skalSetteStatusBehandletOgOppretteVedtaksforslagVedNedsettelse() {
-        val barnFnr = PersonidentGenerator.genererFødselsnummer()
-        val bmFnr = PersonidentGenerator.genererFødselsnummer()
+        val barnFnr = genererFødselsnummer()
+        val bmFnr = genererFødselsnummer()
         val revurderingForskudd =
             mockk<RevurderingForskudd>(relaxed = true) {
                 every { barn } returns

@@ -13,8 +13,8 @@ import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import no.nav.bidrag.beregn.barnebidrag.service.SisteManuelleVedtak
 import no.nav.bidrag.beregn.barnebidrag.service.VedtakService
-import no.nav.bidrag.commons.util.PersonidentGenerator
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
+import no.nav.bidrag.generer.testdata.person.genererFødselsnummer
 import no.nav.bidrag.transport.behandling.behandling.HentÅpneBehandlingerRespons
 import no.nav.bidrag.transport.behandling.behandling.ÅpenBehandling
 import org.junit.jupiter.api.Test
@@ -34,7 +34,7 @@ class OpprettRevurderForskuddServiceTest {
 
     @Test
     fun `skal ikke opprette revurdering forskudd om det finnes åpen forskuddssak`() {
-        val kravhaver = PersonidentGenerator.genererFødselsnummer()
+        val kravhaver = genererFødselsnummer()
         every { bidragBehandlingConsumer.hentÅpneBehandlingerForBarn(kravhaver) } returns
             mockk<HentÅpneBehandlingerRespons> {
                 every { behandlinger } returns
@@ -57,8 +57,8 @@ class OpprettRevurderForskuddServiceTest {
 
     @Test
     fun `skal ikke opprette revudering forskudd om siste manuelle vedtak er etter cutoff tidspunkt`() {
-        val kravhaver = PersonidentGenerator.genererFødselsnummer()
-        val skyldner = PersonidentGenerator.genererFødselsnummer()
+        val kravhaver = genererFødselsnummer()
+        val skyldner = genererFødselsnummer()
         val saksnummer = "2500001"
         every { bidragBehandlingConsumer.hentÅpneBehandlingerForBarn(kravhaver) } returns
             mockk<HentÅpneBehandlingerRespons> {
@@ -85,8 +85,8 @@ class OpprettRevurderForskuddServiceTest {
 
     @Test
     fun `skal opprette revudering forskudd`() {
-        val kravhaver = PersonidentGenerator.genererFødselsnummer()
-        val skyldner = PersonidentGenerator.genererFødselsnummer()
+        val kravhaver = genererFødselsnummer()
+        val skyldner = genererFødselsnummer()
         val saksnummer = "2500001"
         every { bidragBehandlingConsumer.hentÅpneBehandlingerForBarn(kravhaver) } returns
             mockk<HentÅpneBehandlingerRespons> {

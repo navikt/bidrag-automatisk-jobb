@@ -14,7 +14,6 @@ import no.nav.bidrag.automatiskjobb.consumer.BidragPersonConsumer
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
 import no.nav.bidrag.commons.util.IdentUtils
-import no.nav.bidrag.commons.util.PersonidentGenerator
 import no.nav.bidrag.domene.enums.vedtak.Beslutningstype
 import no.nav.bidrag.domene.enums.vedtak.Innkrevingstype
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
@@ -23,6 +22,7 @@ import no.nav.bidrag.domene.enums.vedtak.Vedtakstype
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.domene.sak.Saksnummer
 import no.nav.bidrag.domene.tid.ÅrMånedsperiode
+import no.nav.bidrag.generer.testdata.person.genererFødselsnummer
 import no.nav.bidrag.transport.behandling.vedtak.Periode
 import no.nav.bidrag.transport.behandling.vedtak.Sporingsdata
 import no.nav.bidrag.transport.behandling.vedtak.Stønadsendring
@@ -106,7 +106,7 @@ class VedtakServiceTest {
     @Test
     fun skalOppretteNyttBarnForFlereSaker(): Unit =
         runBlocking {
-            val kravhaver = Personident(PersonidentGenerator.genererFødselsnummer())
+            val kravhaver = Personident(genererFødselsnummer())
             val vedtakHendelse =
                 opprettVedtakHendelse(
                     Stønadstype.BIDRAG,
@@ -116,15 +116,19 @@ class VedtakServiceTest {
                             Stønadsendring(
                                 type = Stønadstype.BIDRAG,
                                 sak = Saksnummer("112323"),
-                                skyldner = Personident(PersonidentGenerator.genererFødselsnummer()),
+                                skyldner = Personident(genererFødselsnummer()),
                                 kravhaver = kravhaver,
-                                mottaker = Personident(PersonidentGenerator.genererFødselsnummer()),
+                                mottaker = Personident(genererFødselsnummer()),
                                 innkreving = Innkrevingstype.MED_INNKREVING,
                                 beslutning = Beslutningstype.ENDRING,
                                 periodeListe =
                                     listOf(
                                         Periode(
-                                            periode = ÅrMånedsperiode(LocalDate.now().minusMonths(2).withDayOfMonth(1), null),
+                                            periode =
+                                                ÅrMånedsperiode(
+                                                    LocalDate.now().minusMonths(2).withDayOfMonth(1),
+                                                    null,
+                                                ),
                                             beløp = BigDecimal.valueOf(1000),
                                             valutakode = "NOK",
                                             resultatkode = "OK",
@@ -138,15 +142,19 @@ class VedtakServiceTest {
                             Stønadsendring(
                                 type = Stønadstype.FORSKUDD,
                                 sak = Saksnummer("123"),
-                                skyldner = Personident(PersonidentGenerator.genererFødselsnummer()),
+                                skyldner = Personident(genererFødselsnummer()),
                                 kravhaver = kravhaver,
-                                mottaker = Personident(PersonidentGenerator.genererFødselsnummer()),
+                                mottaker = Personident(genererFødselsnummer()),
                                 innkreving = Innkrevingstype.MED_INNKREVING,
                                 beslutning = Beslutningstype.ENDRING,
                                 periodeListe =
                                     listOf(
                                         Periode(
-                                            periode = ÅrMånedsperiode(LocalDate.now().minusMonths(1).withDayOfMonth(1), null),
+                                            periode =
+                                                ÅrMånedsperiode(
+                                                    LocalDate.now().minusMonths(1).withDayOfMonth(1),
+                                                    null,
+                                                ),
                                             beløp = BigDecimal.valueOf(1000),
                                             valutakode = "NOK",
                                             resultatkode = "OK",
@@ -184,7 +192,7 @@ class VedtakServiceTest {
     @Test
     fun skalOppretteNyttBarnForBidragOgForskudd(): Unit =
         runBlocking {
-            val kravhaver = Personident(PersonidentGenerator.genererFødselsnummer())
+            val kravhaver = Personident(genererFødselsnummer())
             val vedtakHendelse =
                 opprettVedtakHendelse(
                     Stønadstype.BIDRAG,
@@ -194,15 +202,19 @@ class VedtakServiceTest {
                             Stønadsendring(
                                 type = Stønadstype.BIDRAG,
                                 sak = Saksnummer("123"),
-                                skyldner = Personident(PersonidentGenerator.genererFødselsnummer()),
+                                skyldner = Personident(genererFødselsnummer()),
                                 kravhaver = kravhaver,
-                                mottaker = Personident(PersonidentGenerator.genererFødselsnummer()),
+                                mottaker = Personident(genererFødselsnummer()),
                                 innkreving = Innkrevingstype.MED_INNKREVING,
                                 beslutning = Beslutningstype.ENDRING,
                                 periodeListe =
                                     listOf(
                                         Periode(
-                                            periode = ÅrMånedsperiode(LocalDate.now().minusMonths(2).withDayOfMonth(1), null),
+                                            periode =
+                                                ÅrMånedsperiode(
+                                                    LocalDate.now().minusMonths(2).withDayOfMonth(1),
+                                                    null,
+                                                ),
                                             beløp = BigDecimal.valueOf(1000),
                                             valutakode = "NOK",
                                             resultatkode = "OK",
@@ -216,15 +228,19 @@ class VedtakServiceTest {
                             Stønadsendring(
                                 type = Stønadstype.FORSKUDD,
                                 sak = Saksnummer("123"),
-                                skyldner = Personident(PersonidentGenerator.genererFødselsnummer()),
+                                skyldner = Personident(genererFødselsnummer()),
                                 kravhaver = kravhaver,
-                                mottaker = Personident(PersonidentGenerator.genererFødselsnummer()),
+                                mottaker = Personident(genererFødselsnummer()),
                                 innkreving = Innkrevingstype.MED_INNKREVING,
                                 beslutning = Beslutningstype.ENDRING,
                                 periodeListe =
                                     listOf(
                                         Periode(
-                                            periode = ÅrMånedsperiode(LocalDate.now().minusMonths(1).withDayOfMonth(1), null),
+                                            periode =
+                                                ÅrMånedsperiode(
+                                                    LocalDate.now().minusMonths(1).withDayOfMonth(1),
+                                                    null,
+                                                ),
                                             beløp = BigDecimal.valueOf(1000),
                                             valutakode = "NOK",
                                             resultatkode = "OK",
@@ -301,20 +317,24 @@ class VedtakServiceTest {
                             Stønadsendring(
                                 type = Stønadstype.BIDRAG,
                                 sak = Saksnummer("123"),
-                                skyldner = Personident(PersonidentGenerator.genererFødselsnummer()),
+                                skyldner = Personident(genererFødselsnummer()),
                                 kravhaver =
                                     Personident(
-                                        PersonidentGenerator.genererFødselsnummer(
+                                        genererFødselsnummer(
                                             innsendtFodselsdato = LocalDate.now().minusYears(10),
                                         ),
                                     ),
-                                mottaker = Personident(PersonidentGenerator.genererFødselsnummer()),
+                                mottaker = Personident(genererFødselsnummer()),
                                 innkreving = Innkrevingstype.MED_INNKREVING,
                                 beslutning = Beslutningstype.ENDRING,
                                 periodeListe =
                                     listOf(
                                         Periode(
-                                            periode = ÅrMånedsperiode(LocalDate.now().minusMonths(2).withDayOfMonth(1), null),
+                                            periode =
+                                                ÅrMånedsperiode(
+                                                    LocalDate.now().minusMonths(2).withDayOfMonth(1),
+                                                    null,
+                                                ),
                                             beløp = BigDecimal.valueOf(1000),
                                             valutakode = "NOK",
                                             resultatkode = "OK",
@@ -328,20 +348,24 @@ class VedtakServiceTest {
                             Stønadsendring(
                                 type = Stønadstype.BIDRAG,
                                 sak = Saksnummer("123"),
-                                skyldner = Personident(PersonidentGenerator.genererFødselsnummer()),
+                                skyldner = Personident(genererFødselsnummer()),
                                 kravhaver =
                                     Personident(
-                                        PersonidentGenerator.genererFødselsnummer(
+                                        genererFødselsnummer(
                                             innsendtFodselsdato = LocalDate.now().minusYears(12),
                                         ),
                                     ),
-                                mottaker = Personident(PersonidentGenerator.genererFødselsnummer()),
+                                mottaker = Personident(genererFødselsnummer()),
                                 innkreving = Innkrevingstype.MED_INNKREVING,
                                 beslutning = Beslutningstype.ENDRING,
                                 periodeListe =
                                     listOf(
                                         Periode(
-                                            periode = ÅrMånedsperiode(LocalDate.now().minusMonths(1).withDayOfMonth(1), null),
+                                            periode =
+                                                ÅrMånedsperiode(
+                                                    LocalDate.now().minusMonths(1).withDayOfMonth(1),
+                                                    null,
+                                                ),
                                             beløp = BigDecimal.valueOf(1000),
                                             valutakode = "NOK",
                                             resultatkode = "OK",
@@ -377,7 +401,7 @@ class VedtakServiceTest {
     @Test
     fun skalOppdatereEksisterendeBarn(): Unit =
         runBlocking {
-            val kravhaver = Personident(PersonidentGenerator.genererFødselsnummer())
+            val kravhaver = Personident(genererFødselsnummer())
             val eksisterendeBarn =
                 Barn(
                     saksnummer = "123",
@@ -426,7 +450,7 @@ class VedtakServiceTest {
     @Test
     fun skalOpphøreLøpendeBidragPåBarnNårBeløpErNull(): Unit =
         runBlocking {
-            val kravhaver = Personident(PersonidentGenerator.genererFødselsnummer())
+            val kravhaver = Personident(genererFødselsnummer())
             val eksisterendeBidragFra = LocalDate.now().minusMonths(5)
             val eksisterendeForskuddFra = LocalDate.now().minusMonths(2)
             val eksisterendeForskuddTil = LocalDate.now().minusMonths(1)
@@ -453,9 +477,9 @@ class VedtakServiceTest {
                             Stønadsendring(
                                 type = Stønadstype.BIDRAG,
                                 sak = Saksnummer("123"),
-                                skyldner = Personident(PersonidentGenerator.genererFødselsnummer()),
+                                skyldner = Personident(genererFødselsnummer()),
                                 kravhaver = kravhaver,
-                                mottaker = Personident(PersonidentGenerator.genererFødselsnummer()),
+                                mottaker = Personident(genererFødselsnummer()),
                                 innkreving = Innkrevingstype.MED_INNKREVING,
                                 beslutning = Beslutningstype.ENDRING,
                                 periodeListe =
@@ -508,8 +532,8 @@ class VedtakServiceTest {
     private fun opprettVedtakHendelse(
         stønadstype: Stønadstype,
         innkreving: Innkrevingstype,
-        skyldner: Personident = Personident(PersonidentGenerator.genererFødselsnummer()),
-        kravhaver: Personident = Personident(PersonidentGenerator.genererFødselsnummer()),
+        skyldner: Personident = Personident(genererFødselsnummer()),
+        kravhaver: Personident = Personident(genererFødselsnummer()),
         stønadsendringListe: List<Stønadsendring> =
             listOf(
                 Stønadsendring(
@@ -517,7 +541,7 @@ class VedtakServiceTest {
                     sak = Saksnummer("123"),
                     skyldner = skyldner,
                     kravhaver = kravhaver,
-                    mottaker = Personident(PersonidentGenerator.genererFødselsnummer()),
+                    mottaker = Personident(genererFødselsnummer()),
                     innkreving = innkreving,
                     beslutning = Beslutningstype.ENDRING,
                     periodeListe =
