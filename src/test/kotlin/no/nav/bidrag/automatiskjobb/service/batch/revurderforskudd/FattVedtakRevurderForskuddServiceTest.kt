@@ -2,15 +2,11 @@ package no.nav.bidrag.automatiskjobb.service.batch.revurderforskudd
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldHaveSize
-import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import io.mockk.Runs
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
-import io.mockk.impl.annotations.SpyK
 import io.mockk.junit5.MockKExtension
-import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer
@@ -21,12 +17,12 @@ import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Forsendelsestype
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import no.nav.bidrag.automatiskjobb.persistence.repository.RevurderForskuddRepository
 import no.nav.bidrag.automatiskjobb.service.ForsendelseBestillingService
-import no.nav.bidrag.commons.util.PersonidentGenerator
+import no.nav.bidrag.generer.testdata.person.genererFødselsnummer
+import no.nav.bidrag.generer.testdata.sak.genererSaksnummer
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import java.time.YearMonth
 import java.util.UUID
-import kotlin.apply
 
 @ExtendWith(MockKExtension::class)
 class FattVedtakRevurderForskuddServiceTest {
@@ -70,7 +66,12 @@ class FattVedtakRevurderForskuddServiceTest {
 
         every { revurderForskuddRepository.save(any()) } returns mockk()
         every { bidragVedtakConsumer.fatteVedtaksforslag(123) } returns 1
-        every { forsendelseBestillingService.opprettBestilling(revurderingForskudd, Forsendelsestype.REVURDERING_FORSKUDD) } returns
+        every {
+            forsendelseBestillingService.opprettBestilling(
+                revurderingForskudd,
+                Forsendelsestype.REVURDERING_FORSKUDD,
+            )
+        } returns
             mutableListOf(mockk<ForsendelseBestilling>())
 
         fattVedtakRevurderForskuddService.fattVedtak(revurderingForskudd, false)
@@ -87,8 +88,8 @@ class FattVedtakRevurderForskuddServiceTest {
             batchId = UUID.randomUUID().toString(),
             barn =
                 mockk<Barn>(relaxed = true).apply {
-                    every { this@apply.kravhaver } returns PersonidentGenerator.genererFødselsnummer()
-                    every { this@apply.saksnummer } returns "25000001"
+                    every { this@apply.kravhaver } returns genererFødselsnummer()
+                    every { this@apply.saksnummer } returns genererSaksnummer()
                 },
             status = Status.BEHANDLET,
             vedtak = vedtakId,
