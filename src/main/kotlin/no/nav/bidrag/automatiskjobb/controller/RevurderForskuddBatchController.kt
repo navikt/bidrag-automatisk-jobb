@@ -31,7 +31,7 @@ class RevurderForskuddBatchController(
         security = [SecurityRequirement(name = "bearer-key")],
     )
     fun opprettRevurderForskudd(
-        @Parameter(required = false, example = "true") månederTilbakeForManueltVedtak: Int = 12,
+        @Parameter(required = false, example = "12") månederTilbakeForManueltVedtak: Int = 12,
     ) {
         opprettRevurderForskuddBatch.start(månederTilbakeForManueltVedtak)
     }

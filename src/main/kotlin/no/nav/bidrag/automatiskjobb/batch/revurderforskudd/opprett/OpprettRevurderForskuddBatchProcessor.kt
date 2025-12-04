@@ -21,7 +21,7 @@ class OpprettRevurderForskuddBatchProcessor(
         batchId = stepExecution.jobParameters.getString("batchId")!!
         månederTilbakeForManueltVedtak =
             stepExecution.jobParameters
-                .getString("manederTilbakeForManueltVedtak")
+                .getString("månederTilbakeForManueltVedtak")
                 ?.toLong()
                 .let { LocalDateTime.now().minusMonths(it!!) }
     }
