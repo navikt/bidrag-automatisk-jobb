@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.batch.revurderforskudd.beregn
+package no.nav.bidrag.automatiskjobb.batch.revurderforskudd.evaluer
 
 import no.nav.bidrag.automatiskjobb.batch.BatchCompletionNotificationListener
 import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.CHUNK_SIZE

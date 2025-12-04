@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.batch.revurderforskudd.beregn
+package no.nav.bidrag.automatiskjobb.batch.revurderforskudd.evaluer
 
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.JobParametersBuilder

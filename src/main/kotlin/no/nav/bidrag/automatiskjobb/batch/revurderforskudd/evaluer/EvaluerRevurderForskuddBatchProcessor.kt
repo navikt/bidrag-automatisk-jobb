@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.batch.revurderforskudd.beregn
+package no.nav.bidrag.automatiskjobb.batch.revurderforskudd.evaluer
 
 import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
 import no.nav.bidrag.automatiskjobb.service.batch.revurderforskudd.EvaluerRevurderForskuddService

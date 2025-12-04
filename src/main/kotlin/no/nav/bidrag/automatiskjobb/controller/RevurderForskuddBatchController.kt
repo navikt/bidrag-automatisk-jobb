@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
-import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.beregn.EvaluerRevurderForskuddBatch
+import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.evaluer.EvaluerRevurderForskuddBatch
 import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.fattvedtak.FatteVedtakRevurderForskuddBatch
 import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.oppgave.OppgaveRevurderForskuddBatch
 import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.opprett.OpprettRevurderForskuddBatch
@@ -47,7 +47,7 @@ class RevurderForskuddBatchController(
     fun evaluerRevurderForskudd(
         @Parameter(required = true, example = "true") simuler: Boolean = true,
         @Parameter(required = true, example = "3") antallMånederForBeregning: Long = 3,
-        @Parameter(required = false, example = "2025-01") beregnFraMåned: YearMonth = YearMonth.now().minusYears(1),
+        @Parameter(required = false) beregnFraMåned: YearMonth = YearMonth.now().minusYears(1),
     ) {
         evaluerRevurderForskuddBatch.start(simuler, antallMånederForBeregning, beregnFraMåned)
     }
