@@ -25,12 +25,12 @@ class RevurderingslenkeRevurderForskuddBatchConfiguration {
     @Bean
     fun revurderingslenkeRevurderForskuddJob(
         jobRepository: JobRepository,
-        evaluerRevurderForskuddStep: Step,
+        revurderingslenkeRevurderForskuddStep: Step,
         listener: BatchCompletionNotificationListener,
     ): Job =
         JobBuilder("revurderingslenkeRevurderForskuddJob", jobRepository)
             .listener(listener)
-            .start(evaluerRevurderForskuddStep)
+            .start(revurderingslenkeRevurderForskuddStep)
             .build()
 
     @Bean
@@ -38,13 +38,13 @@ class RevurderingslenkeRevurderForskuddBatchConfiguration {
         @Qualifier("batchTaskExecutor") taskExecutor: TaskExecutor,
         jobRepository: JobRepository,
         transactionManager: PlatformTransactionManager,
-        evaluerRevurderForskuddBatchReader: RepositoryItemReader<RevurderingForskudd>,
+        revurderingslenkeRevurderForskuddBatchReader: RepositoryItemReader<RevurderingForskudd>,
         revurderingslenkeRevurderForskuddBatchProcessor: RevurderingslenkeRevurderForskuddBatchProcessor,
         dummmyWriter: DummyItemWriter,
     ): Step =
         StepBuilder("revurderingslenkeRevurderForskuddStep", jobRepository)
             .chunk<RevurderingForskudd, Int?>(CHUNK_SIZE, transactionManager)
-            .reader(evaluerRevurderForskuddBatchReader)
+            .reader(revurderingslenkeRevurderForskuddBatchReader)
             .processor(revurderingslenkeRevurderForskuddBatchProcessor)
             .writer(dummmyWriter)
             .taskExecutor(taskExecutor)
