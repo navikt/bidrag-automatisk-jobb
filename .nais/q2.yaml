@@ -54,6 +54,9 @@ outbound-access-apps:
   - bidrag-samhandler-q2
   - bidrag-kodeverk
   - bidrag-dokument-forsendelse
+  - bidrag-reskontro-q2
+  - bidrag-behandling-q2
+  - bidrag-grunnlag-q2
 outbound-access-hosts:
   - bidrag-person-q2.dev-fss-pub.nais.io
   - bidrag-sak-q2.dev-fss-pub.nais.io
