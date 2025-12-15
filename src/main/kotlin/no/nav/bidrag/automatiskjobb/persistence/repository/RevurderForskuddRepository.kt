@@ -26,5 +26,8 @@ interface RevurderForskuddRepository : JpaRepository<RevurderingForskudd, Int> {
     ): Page<RevurderingForskudd>
 
     @Suppress("Unused")
-    fun findAllByBarnIdAndForMåned(barnId: Int, måned: String): RevurderingForskudd?
+    fun findAllByBarnIdAndForMåned(
+        barnId: Int,
+        måned: String,
+    ): RevurderingForskudd?
 }

@@ -30,7 +30,9 @@ class OpprettRevurderForskuddService(
     ): RevurderingForskudd? {
         val inneværendeMåned = YearMonth.now().toString()
         if (finnesEksisterendeRevurderingForskudd(barn, inneværendeMåned)) {
-            LOGGER.info { "Barn ${barn.kravhaver} har allerede revurdering av forskudd for måned $inneværendeMåned. Oppretter ikke ny revurdering." }
+            LOGGER.info {
+                "Barn ${barn.kravhaver} har allerede revurdering av forskudd for måned $inneværendeMåned. Oppretter ikke ny revurdering."
+            }
             return null
         }
         if (harÅpentForskuddssak(barn)) {
@@ -58,10 +60,8 @@ class OpprettRevurderForskuddService(
 
     private fun finnesEksisterendeRevurderingForskudd(
         barn: Barn,
-        inneværendeMåned: String
-    ): Boolean {
-        return revurderForskuddRepository.findAllByBarnIdAndForMåned(barn.id!!, inneværendeMåned) != null
-    }
+        inneværendeMåned: String,
+    ): Boolean = revurderForskuddRepository.findAllByBarnIdAndForMåned(barn.id!!, inneværendeMåned) != null
 
     private fun harÅpentForskuddssak(barn: Barn): Boolean {
         val hentÅpneBehandlingerRespons = bidragBehandlingConsumer.hentÅpneBehandlingerForBarn(barn.kravhaver)
