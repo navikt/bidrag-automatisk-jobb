@@ -53,6 +53,8 @@ class OpprettRevurderForskuddBatchConfiguration {
             .processor(opprettRevurderForskuddBatchProcessor)
             .writer(dummmyWriter)
             .taskExecutor(taskExecutor)
+            .faultTolerant()
+            .skipLimit(CHUNK_SIZE)
             .build()
 
     @Bean
