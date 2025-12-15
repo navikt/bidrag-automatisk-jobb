@@ -27,13 +27,13 @@ env:
   BIDRAG_DOKUMENT_FORSENDELSE_SCOPE: dev-gcp.bidrag.bidrag-dokument-forsendelse-feature
   BIDRAG_SAMHANDLER_URL: http://bidrag-samhandler-q1
   BIDRAG_SAMHANDLER_SCOPE: dev-gcp.bidrag.bidrag-samhandler-q1
-  BIDRAG_RESKONTRO_URL: https://bidrag-reskontro-q1
+  BIDRAG_RESKONTRO_URL: http://bidrag-reskontro-q1
   BIDRAG_RESKONTRO_SCOPE: dev-gcp.bidrag.bidrag-reskontro-q1
   BIDRAG_SAK_URL: https://bidrag-sak-q1.dev-fss-pub.nais.io
   BIDRAG_SAK_SCOPE: dev-fss.bidrag.bidrag-sak-q1
-  BIDRAG_BEHANDLING_URL: https://bidrag-behandling-q1
+  BIDRAG_BEHANDLING_URL: http://bidrag-behandling-q1
   BIDRAG_BEHANDLING_SCOPE: dev-gcp.bidrag.bidrag-behandling-q1
-  BIDRAG_GRUNNLAG_URL: https://bidrag-grunnlag-q1
+  BIDRAG_GRUNNLAG_URL: http://bidrag-grunnlag-q1
   BIDRAG_GRUNNLAG_SCOPE: dev-gcp.bidrag.bidrag-grunnlag-q1
   OPPGAVE_URL: https://oppgave-q1.dev-fss-pub.nais.io
   OPPGAVE_SCOPE: dev-fss.oppgavehandtering.oppgave-q1
