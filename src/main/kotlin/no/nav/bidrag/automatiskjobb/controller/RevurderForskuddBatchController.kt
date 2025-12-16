@@ -2,6 +2,8 @@ package no.nav.bidrag.automatiskjobb.controller
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import kotlinx.coroutines.CoroutineScope
@@ -34,6 +36,14 @@ class RevurderForskuddBatchController(
         summary = "Starter batch: Opprett revurder forskudd.",
         description = "Oppretter revurdering av forskudd for alle barn som ikke har hatt en revurdering siste 12 måneder.",
         security = [SecurityRequirement(name = "bearer-key")],
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "201",
+                description = "Batch for oppretting av revurdering av forskudd startet",
+            ),
+        ],
     )
     fun opprettRevurderForskudd(
         @Parameter(required = false, example = "12") månederTilbakeForManueltVedtak: Int = 12,
