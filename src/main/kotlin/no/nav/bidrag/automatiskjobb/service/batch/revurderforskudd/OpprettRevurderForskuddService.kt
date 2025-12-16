@@ -74,7 +74,7 @@ class OpprettRevurderForskuddService(
                 Stønadsid(
                     Stønadstype.FORSKUDD,
                     Personident(barn.kravhaver),
-                    Personident(barn.skyldner ?: ""),
+                    Personident("NAV"),
                     Saksnummer(barn.saksnummer),
                 ),
             )?.vedtak
