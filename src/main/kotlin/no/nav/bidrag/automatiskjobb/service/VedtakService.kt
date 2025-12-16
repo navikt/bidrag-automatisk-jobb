@@ -144,8 +144,8 @@ class VedtakService(
             stønadsendring
                 .filter { it.type == stønadstype }
                 .flatMap { it.periodeListe }
-                .maxBy { it.periode.fom }
-                .takeIf { it.beløp == null }
+                .maxByOrNull { it.periode.fom }
+                ?.takeIf { it.beløp == null }
                 ?.periode
         return avsluttendePeriode?.toDatoperiode()?.fom
     }
