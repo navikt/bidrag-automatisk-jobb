@@ -1,6 +1,7 @@
 package no.nav.bidrag.automatiskjobb.service.batch.revurderforskudd
 
 import com.fasterxml.jackson.databind.node.POJONode
+import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
@@ -14,8 +15,8 @@ import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer
 import no.nav.bidrag.automatiskjobb.mapper.VedtakMapper
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
+import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
-import no.nav.bidrag.automatiskjobb.persistence.repository.RevurderForskuddRepository
 import no.nav.bidrag.automatiskjobb.service.ReskontroService
 import no.nav.bidrag.beregn.barnebidrag.service.VedtakService
 import no.nav.bidrag.beregn.forskudd.BeregnForskuddApi
@@ -43,9 +44,6 @@ import kotlin.test.Test
 class EvaluerRevurderForskuddServiceTest {
     @MockK(relaxed = true)
     private lateinit var vedtakService: VedtakService
-
-    @MockK(relaxed = true)
-    private lateinit var revurderForskuddRepository: RevurderForskuddRepository
 
     @MockK(relaxed = true)
     private lateinit var bidragBeløpshistorikkConsumer: BidragBeløpshistorikkConsumer
@@ -76,38 +74,58 @@ class EvaluerRevurderForskuddServiceTest {
 
     @Test
     fun skalIkkeFortsetteUtenManueltVedtak() {
-        val revurderingForskudd = mockk<RevurderingForskudd>(relaxed = true)
+        val revurderingForskudd =
+            RevurderingForskudd(
+                forMåned = YearMonth.now().toString(),
+                batchId = "123",
+                barn = mockk(relaxed = true),
+                status = Status.UBEHANDLET,
+            )
         every { vedtakService.finnSisteManuelleVedtak(any()) } returns null
 
-        evaluerRevurderForskuddService.evaluerRevurderForskudd(
-            revurderingForskudd,
-            simuler = false,
-            antallMånederForBeregning = 12,
-            beregnFraMåned = YearMonth.now(),
-        )
+        val revurderingForskuddRetur =
+            evaluerRevurderForskuddService.evaluerRevurderForskudd(
+                revurderingForskudd,
+                simuler = false,
+                antallMånederForBeregning = 12,
+                beregnFraMåned = YearMonth.now(),
+            )
 
-        verify(exactly = 0) { revurderForskuddRepository.save(any()) }
+        revurderingForskuddRetur?.behandlingstype shouldBe Behandlingstype.INGEN
     }
 
     @Test
     fun skalIkkeFortsetteNårForskuddErNull() {
-        val revurderingForskudd = mockk<RevurderingForskudd>(relaxed = true)
+        val revurderingForskudd =
+            RevurderingForskudd(
+                forMåned = YearMonth.now().toString(),
+                batchId = "123",
+                barn = mockk(relaxed = true),
+                status = Status.UBEHANDLET,
+            )
         every { vedtakService.finnSisteManuelleVedtak(any()) } returns mockk()
         every { bidragBeløpshistorikkConsumer.hentHistoriskeStønader(any()) } returns null
 
-        evaluerRevurderForskuddService.evaluerRevurderForskudd(
-            revurderingForskudd,
-            simuler = false,
-            antallMånederForBeregning = 6,
-            beregnFraMåned = YearMonth.now(),
-        )
+        val revurderingForskuddRetur =
+            evaluerRevurderForskuddService.evaluerRevurderForskudd(
+                revurderingForskudd,
+                simuler = false,
+                antallMånederForBeregning = 6,
+                beregnFraMåned = YearMonth.now(),
+            )
 
-        verify(exactly = 0) { revurderForskuddRepository.save(any()) }
+        revurderingForskuddRetur?.behandlingstype shouldBe Behandlingstype.INGEN
     }
 
     @Test
     fun skalIkkeFortsetteNårForskuddIkkeLøpende() {
-        val revurderingForskudd = mockk<RevurderingForskudd>(relaxed = true)
+        val revurderingForskudd =
+            RevurderingForskudd(
+                forMåned = YearMonth.now().toString(),
+                batchId = "123",
+                barn = mockk(relaxed = true),
+                status = Status.UBEHANDLET,
+            )
         val stønadDto =
             mockk<StønadDto> {
                 every { periodeListe } returns emptyList()
@@ -115,14 +133,15 @@ class EvaluerRevurderForskuddServiceTest {
         every { vedtakService.finnSisteManuelleVedtak(any()) } returns mockk()
         every { bidragBeløpshistorikkConsumer.hentHistoriskeStønader(any()) } returns stønadDto
 
-        evaluerRevurderForskuddService.evaluerRevurderForskudd(
-            revurderingForskudd,
-            simuler = false,
-            antallMånederForBeregning = 12,
-            beregnFraMåned = YearMonth.now(),
-        )
+        val revurderingForskuddRetur =
+            evaluerRevurderForskuddService.evaluerRevurderForskudd(
+                revurderingForskudd,
+                simuler = false,
+                antallMånederForBeregning = 12,
+                beregnFraMåned = YearMonth.now(),
+            )
 
-        verify(exactly = 0) { revurderForskuddRepository.save(any()) }
+        revurderingForskuddRetur?.behandlingstype shouldBe Behandlingstype.INGEN
     }
 
     @Test
@@ -170,7 +189,6 @@ class EvaluerRevurderForskuddServiceTest {
             mockk {
                 every { summertMånedsinntektListe } returns emptyList()
             }
-        every { revurderForskuddRepository.save(any()) } returns mockk()
 
         evaluerRevurderForskuddService.evaluerRevurderForskudd(
             revurderingForskudd,
@@ -180,7 +198,6 @@ class EvaluerRevurderForskuddServiceTest {
         )
 
         verify { revurderingForskudd.status = Status.SIMULERT }
-        verify { revurderForskuddRepository.save(revurderingForskudd) }
         verify(exactly = 0) { bidragVedtakConsumer.opprettEllerOppdaterVedtaksforslag(any()) }
     }
 
@@ -229,8 +246,6 @@ class EvaluerRevurderForskuddServiceTest {
             mockk {
                 every { summertMånedsinntektListe } returns emptyList()
             }
-        every { revurderForskuddRepository.save(any()) } returns mockk()
-
         evaluerRevurderForskuddService.evaluerRevurderForskudd(
             revurderingForskudd,
             simuler = false,
@@ -239,7 +254,7 @@ class EvaluerRevurderForskuddServiceTest {
         )
 
         verify { revurderingForskudd.status = Status.BEHANDLET }
-        verify { revurderForskuddRepository.save(revurderingForskudd) }
+        verify { revurderingForskudd.behandlingstype = Behandlingstype.INGEN }
         verify(exactly = 0) { bidragVedtakConsumer.opprettEllerOppdaterVedtaksforslag(any()) }
     }
 
@@ -296,7 +311,6 @@ class EvaluerRevurderForskuddServiceTest {
                         ),
                     )
             }
-        every { revurderForskuddRepository.save(any()) } returns mockk()
         every { beregnForskuddApi.beregn(any()) } returns
             mockk<BeregnetForskuddResultat>(relaxed = true) {
                 every { beregnetForskuddPeriodeListe } returns
@@ -322,7 +336,7 @@ class EvaluerRevurderForskuddServiceTest {
         )
 
         verify { revurderingForskudd.status = Status.BEHANDLET }
-        verify { revurderForskuddRepository.save(revurderingForskudd) }
+        verify { revurderingForskudd.behandlingstype = Behandlingstype.FATTET_FORSLAG }
         verify { bidragVedtakConsumer.opprettEllerOppdaterVedtaksforslag(any()) }
     }
 }

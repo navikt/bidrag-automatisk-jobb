@@ -2,7 +2,6 @@ package no.nav.bidrag.automatiskjobb.batch.revurderforskudd.evaluer
 
 import no.nav.bidrag.automatiskjobb.batch.BatchCompletionNotificationListener
 import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.CHUNK_SIZE
-import no.nav.bidrag.automatiskjobb.batch.DummyItemWriter
 import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import no.nav.bidrag.automatiskjobb.persistence.repository.RevurderForskuddRepository
@@ -40,13 +39,13 @@ class EvaluerRevurderForskuddBatchConfiguration {
         transactionManager: PlatformTransactionManager,
         evaluerRevurderForskuddBatchReader: RepositoryItemReader<RevurderingForskudd>,
         evaluerRevurderForskuddBatchProcessor: EvaluerRevurderForskuddBatchProcessor,
-        dummmyWriter: DummyItemWriter,
+        evaluerRevurderForskuddBatchWriter: EvaluerRevurderForskuddBatchWriter,
     ): Step =
         StepBuilder("evaluerRevurderForskuddStep", jobRepository)
-            .chunk<RevurderingForskudd, Unit>(CHUNK_SIZE, transactionManager)
+            .chunk<RevurderingForskudd, RevurderingForskudd>(CHUNK_SIZE, transactionManager)
             .reader(evaluerRevurderForskuddBatchReader)
             .processor(evaluerRevurderForskuddBatchProcessor)
-            .writer(dummmyWriter)
+            .writer(evaluerRevurderForskuddBatchWriter)
             .taskExecutor(taskExecutor)
             .build()
 
