@@ -25,15 +25,15 @@ env:
   BIDRAG_VEDTAK_SCOPE: dev-gcp.bidrag.bidrag-vedtak-q2
   BIDRAG_SAMHANDLER_URL: http://bidrag-samhandler-q2
   BIDRAG_SAMHANDLER_SCOPE: dev-gcp.bidrag.bidrag-samhandler-q2
-  BIDRAG_RESKONTRO_URL: https://bidrag-reskontro-q2.intern.dev.nav.no/
+  BIDRAG_RESKONTRO_URL: http://bidrag-reskontro-q2
   BIDRAG_RESKONTRO_SCOPE: dev-gcp.bidrag.bidrag-reskontro-q2
   BIDRAG_DOKUMENT_FORSENDELSE_URL: http://bidrag-dokument-forsendelse
   BIDRAG_DOKUMENT_FORSENDELSE_SCOPE: dev-gcp.bidrag.bidrag-dokument-forsendelse
   BIDRAG_SAK_URL: https://bidrag-sak-q2.dev-fss-pub.nais.io
   BIDRAG_SAK_SCOPE: dev-fss.bidrag.bidrag-sak-q2
-  BIDRAG_BEHANDLING_URL: https://bidrag-behandling-q2.intern.dev.nav.no
+  BIDRAG_BEHANDLING_URL: http://bidrag-behandling-q2
   BIDRAG_BEHANDLING_SCOPE: dev-gcp.bidrag.bidrag-behandling-q2
-  BIDRAG_GRUNNLAG_URL: https://bidrag-grunnlag-q2.intern.dev.nav.no
+  BIDRAG_GRUNNLAG_URL: http://bidrag-grunnlag-q2
   BIDRAG_GRUNNLAG_SCOPE: dev-gcp.bidrag.bidrag-grunnlag-q2
   OPPGAVE_URL: https://oppgave.dev-fss-pub.nais.io
   OPPGAVE_SCOPE: dev-fss.oppgavehandtering.oppgave

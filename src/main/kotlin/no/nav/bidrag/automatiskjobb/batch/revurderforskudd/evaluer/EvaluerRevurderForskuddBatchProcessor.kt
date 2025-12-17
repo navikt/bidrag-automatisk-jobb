@@ -11,7 +11,7 @@ import java.time.YearMonth
 @Component
 class EvaluerRevurderForskuddBatchProcessor(
     private val evaluerRevurderForskuddService: EvaluerRevurderForskuddService,
-) : ItemProcessor<RevurderingForskudd, Unit> {
+) : ItemProcessor<RevurderingForskudd, RevurderingForskudd> {
     private var simuler: Boolean = true
     private var antallMånederForBeregning: Long = 3
     private var beregnFraMåned: YearMonth = YearMonth.now().minusYears(1)
@@ -23,7 +23,6 @@ class EvaluerRevurderForskuddBatchProcessor(
         beregnFraMåned = YearMonth.parse(stepExecution.jobParameters.getString("beregnFraManed")!!)
     }
 
-    override fun process(item: RevurderingForskudd) {
+    override fun process(item: RevurderingForskudd): RevurderingForskudd? =
         evaluerRevurderForskuddService.evaluerRevurderForskudd(item, simuler, antallMånederForBeregning, beregnFraMåned)
-    }
 }

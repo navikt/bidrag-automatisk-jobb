@@ -9,8 +9,8 @@ import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer
 import no.nav.bidrag.automatiskjobb.mapper.VedtakMapper
 import no.nav.bidrag.automatiskjobb.mapper.tilOpprettGrunnlagRequestDto
 import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
+import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
-import no.nav.bidrag.automatiskjobb.persistence.repository.RevurderForskuddRepository
 import no.nav.bidrag.automatiskjobb.service.ReskontroService
 import no.nav.bidrag.beregn.barnebidrag.service.SisteManuelleVedtak
 import no.nav.bidrag.beregn.barnebidrag.service.VedtakService
@@ -71,7 +71,6 @@ class EvaluerRevurderForskuddService(
     private val bidragBeløpshistorikkConsumer: BidragBeløpshistorikkConsumer,
     private val inntektApi: InntektApi,
     private val beregnForskuddApi: BeregnForskuddApi,
-    private val revurderForskuddRepository: RevurderForskuddRepository,
     private val bidragReskontroService: ReskontroService,
     private val bidragSakConsumer: BidragSakConsumer,
     private val vedtakMapper: VedtakMapper,
@@ -83,13 +82,15 @@ class EvaluerRevurderForskuddService(
         simuler: Boolean,
         antallMånederForBeregning: Long,
         beregnFraMåned: YearMonth,
-    ) {
+    ): RevurderingForskudd? {
         val sisteManuelleVedtak = finnSisteManuelleVedtak(revurderingForskudd)
         if (sisteManuelleVedtak == null) {
             LOGGER.info {
                 "Fant ingen manuelle vedtak for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer}. Beregner ikke revurdering av forskudd."
             }
-            return
+            revurderingForskudd.behandlingstype = Behandlingstype.INGEN
+            revurderingForskudd.status = Status.BEHANDLET
+            return revurderingForskudd
         }
 
         val forskudd = hentForskuddForSak(revurderingForskudd.barn.saksnummer, revurderingForskudd.barn.kravhaver)
@@ -97,7 +98,9 @@ class EvaluerRevurderForskuddService(
             LOGGER.info {
                 "Forskudd $forskudd er ikke løpende for revurderingForskudd $revurderingForskudd! Beregner ikke revurdering av forskudd."
             }
-            return
+            revurderingForskudd.behandlingstype = Behandlingstype.INGEN
+            revurderingForskudd.status = Status.BEHANDLET
+            return revurderingForskudd
         }
 
         val barnGrunnlagReferanse =
@@ -174,14 +177,16 @@ class EvaluerRevurderForskuddService(
                 LOGGER.info {
                     "Simulering: Forskudd for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer} skal settes ned etter revurdering."
                 }
+                revurderingForskudd.behandlingstype = Behandlingstype.FATTET_FORSLAG
             } else {
                 LOGGER.info {
                     "Simulering: Forskudd for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer} skal ikke settes ned etter revurdering."
                 }
+                revurderingForskudd.behandlingstype = Behandlingstype.INGEN
             }
             revurderingForskudd.status = Status.SIMULERT
-            revurderForskuddRepository.save(revurderingForskudd)
-            return
+            revurderingForskudd.behandlingstype = Behandlingstype.FATTET_FORSLAG
+            return revurderingForskudd
         }
 
         // Ingen endring i forskudd skal gjøres
@@ -190,8 +195,8 @@ class EvaluerRevurderForskuddService(
                 "Forskudd for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer} skal ikke settes ned etter revurdering."
             }
             revurderingForskudd.status = Status.BEHANDLET
-            revurderForskuddRepository.save(revurderingForskudd)
-            return
+            revurderingForskudd.behandlingstype = Behandlingstype.INGEN
+            return revurderingForskudd
         }
 
         // Gjør en sjekk mot reskontro for å se om det eksisterer A4 transaksjoner (forskudd) for de siste 3 månedene. Dette gjøres for å kunne opprette oppgaver for tilbakekreving det er utbetalt forskudd
@@ -219,8 +224,9 @@ class EvaluerRevurderForskuddService(
         revurderingForskudd.vedtaksidBeregning = sisteManuelleVedtak.vedtaksId
         revurderingForskudd.vedtak = vedtakId
         revurderingForskudd.status = Status.BEHANDLET
+        revurderingForskudd.behandlingstype = Behandlingstype.FATTET_FORSLAG
 
-        revurderForskuddRepository.save(revurderingForskudd)
+        return revurderingForskudd
     }
 
     private fun opprettVedtaksforslag(

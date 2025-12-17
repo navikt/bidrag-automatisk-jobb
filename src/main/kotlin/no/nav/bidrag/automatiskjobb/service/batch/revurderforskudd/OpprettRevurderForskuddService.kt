@@ -5,6 +5,7 @@ import no.nav.bidrag.automatiskjobb.consumer.BidragBehandlingConsumer
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
+import no.nav.bidrag.automatiskjobb.persistence.repository.RevurderForskuddRepository
 import no.nav.bidrag.beregn.barnebidrag.service.VedtakService
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.ident.Personident
@@ -20,12 +21,20 @@ private val LOGGER = KotlinLogging.logger { }
 class OpprettRevurderForskuddService(
     private val bidragBehandlingConsumer: BidragBehandlingConsumer,
     private val vedtakService: VedtakService,
+    private val revurderForskuddRepository: RevurderForskuddRepository,
 ) {
     fun opprettRevurdereForskudd(
         barn: Barn,
         batchId: String,
         cutoffTidspunktForManueltVedtak: LocalDateTime,
     ): RevurderingForskudd? {
+        val inneværendeMåned = YearMonth.now().toString()
+        if (finnesEksisterendeRevurderingForskudd(barn, inneværendeMåned)) {
+            LOGGER.info {
+                "Barn ${barn.kravhaver} har allerede revurdering av forskudd for måned $inneværendeMåned. Oppretter ikke ny revurdering."
+            }
+            return null
+        }
         if (harÅpentForskuddssak(barn)) {
             LOGGER.info { "Barn ${barn.kravhaver} har åpent forskuddssak. Oppretter ikke revurdering av forskudd." }
             return null
@@ -38,7 +47,7 @@ class OpprettRevurderForskuddService(
             return null
         }
         return RevurderingForskudd(
-            forMåned = YearMonth.now().toString(),
+            forMåned = inneværendeMåned,
             batchId = batchId,
             barn = barn,
             status = Status.UBEHANDLET,
@@ -48,6 +57,11 @@ class OpprettRevurderForskuddService(
             }
         }
     }
+
+    private fun finnesEksisterendeRevurderingForskudd(
+        barn: Barn,
+        inneværendeMåned: String,
+    ): Boolean = revurderForskuddRepository.findAllByBarnIdAndForMåned(barn.id!!, inneværendeMåned) != null
 
     private fun harÅpentForskuddssak(barn: Barn): Boolean {
         val hentÅpneBehandlingerRespons = bidragBehandlingConsumer.hentÅpneBehandlingerForBarn(barn.kravhaver)
@@ -60,7 +74,7 @@ class OpprettRevurderForskuddService(
                 Stønadsid(
                     Stønadstype.FORSKUDD,
                     Personident(barn.kravhaver),
-                    Personident(barn.skyldner ?: ""),
+                    Personident("NAV"),
                     Saksnummer(barn.saksnummer),
                 ),
             )?.vedtak

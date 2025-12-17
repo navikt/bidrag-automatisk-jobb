@@ -62,13 +62,13 @@ class VedtakService(
         if (stønadsendringer.any { it.type == Stønadstype.BIDRAG }) {
             lagretBarn.apply {
                 bidragFra = finnPeriodeFra(stønadsendringer, Stønadstype.BIDRAG, bidragFra)
-                bidragTil = finnPeriodeTil(stønadsendringer, Stønadstype.BIDRAG, bidragTil)
+                bidragTil = finnPeriodeTil(stønadsendringer, Stønadstype.BIDRAG)
             }
         }
         if (stønadsendringer.any { it.type == Stønadstype.FORSKUDD }) {
             lagretBarn.apply {
                 forskuddFra = finnPeriodeFra(stønadsendringer, Stønadstype.FORSKUDD, forskuddFra)
-                forskuddTil = finnPeriodeTil(stønadsendringer, Stønadstype.FORSKUDD, forskuddTil)
+                forskuddTil = finnPeriodeTil(stønadsendringer, Stønadstype.FORSKUDD)
             }
         }
         lagretBarn.oppdatert = LocalDateTime.now()
@@ -138,36 +138,16 @@ class VedtakService(
     private fun finnPeriodeTil(
         stønadsendring: List<Stønadsendring>,
         stønadstype: Stønadstype,
-        eksisterendePeriodeTil: LocalDate? = null,
     ): LocalDate? {
-        val nyPeriodeTil =
-            stønadsendring
-                .find { it.type == stønadstype }
-                ?.periodeListe
-                ?.filter { it.beløp != null }
-                ?.map { it.periode.toDatoperiode() }
-                ?.takeIf { it.all { periode -> periode.til != null } }
-                ?.sortedByDescending { it.til }
-                ?.firstOrNull()
-                ?.til
-
         // Om det er avsluttende periode så skal den avsluttende periodens fra dato settes som tilDato da dette er starten på opphøret.
         val avsluttendePeriode =
             stønadsendring
                 .filter { it.type == stønadstype }
                 .flatMap { it.periodeListe }
-                .find { it.beløp == null }
+                .maxByOrNull { it.periode.fom }
+                ?.takeIf { it.beløp == null }
                 ?.periode
-        if (avsluttendePeriode != null) {
-            return avsluttendePeriode.toDatoperiode().fom
-        }
-
-        // Velg den som er lengst frem i tid av ny eller eksisterende periode, behold null om det finnes
-        return if (eksisterendePeriodeTil != null && nyPeriodeTil != null) {
-            maxOf(eksisterendePeriodeTil, nyPeriodeTil)
-        } else {
-            null
-        }
+        return avsluttendePeriode?.toDatoperiode()?.fom
     }
 
     private fun finnSkyldner(stønadsendring: List<Stønadsendring>): String? =

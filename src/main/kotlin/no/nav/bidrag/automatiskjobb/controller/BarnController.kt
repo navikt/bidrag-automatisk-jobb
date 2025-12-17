@@ -56,9 +56,8 @@ class BarnController(
     fun startOppdaterBarnBatch(
         @RequestParam simuler: Boolean = true,
         @RequestParam barn: String? = null,
-        @RequestParam dagerTilbake: Int? = null,
     ): ResponseEntity<Any> {
-        oppdaterBarnBatch.startOppdaterBarnBatch(barn, dagerTilbake ?: 1, simuler)
+        oppdaterBarnBatch.startOppdaterBarnBatch(barn, simuler)
         return ResponseEntity.ok().build()
     }
 }

@@ -24,16 +24,16 @@ env:
   BIDRAG_VEDTAK_URL: http://bidrag-vedtak
   BIDRAG_VEDTAK_SCOPE: prod-gcp.bidrag.bidrag-vedtak
   BIDRAG_SAMHANDLER_URL: http://bidrag-samhandler
-  BIDRAG_RESKONTRO_URL: https://bidrag-reskontro.intern.nav.no/
+  BIDRAG_RESKONTRO_URL: http://bidrag-reskontro
   BIDRAG_RESKONTRO_SCOPE: prod-gcp.bidrag.bidrag-reskontro
   BIDRAG_SAMHANDLER_SCOPE: prod-gcp.bidrag.bidrag-samhandler
   BIDRAG_DOKUMENT_FORSENDELSE_URL: http://bidrag-dokument-forsendelse
   BIDRAG_DOKUMENT_FORSENDELSE_SCOPE: prod-gcp.bidrag.bidrag-dokument-forsendelse
   BIDRAG_SAK_URL: https://bidrag-sak.prod-fss-pub.nais.io
   BIDRAG_SAK_SCOPE: prod-fss.bidrag.bidrag-sak
-  BIDRAG_BEHANDLING_URL: https://bidrag-behandling.intern.nav.no
+  BIDRAG_BEHANDLING_URL: http://bidrag-behandling
   BIDRAG_BEHANDLING_SCOPE: prod-gcp.bidrag.bidrag-behandling
-  BIDRAG_GRUNNLAG_URL: https://bidrag-grunnlag.intern.nav.no
+  BIDRAG_GRUNNLAG_URL: http://bidrag-grunnlag
   BIDRAG_GRUNNLAG_SCOPE: prod-gcp.bidrag.bidrag-grunnlag
   OPPGAVE_URL: https://oppgave.prod-fss-pub.nais.io
   OPPGAVE_SCOPE: prod-fss.oppgavehandtering.oppgave

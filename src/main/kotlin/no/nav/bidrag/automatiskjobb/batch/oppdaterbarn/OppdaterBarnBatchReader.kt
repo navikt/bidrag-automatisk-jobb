@@ -16,7 +16,6 @@ import javax.sql.DataSource
 class OppdaterBarnBatchReader(
     private val dataSource: DataSource,
     @Value("#{jobParameters['barn']}") barn: String? = "",
-    @param:Value("#{jobParameters['dager'] ?: 1}") private val dager: Int,
 ) : JdbcPagingItemReader<Barn>() {
     init {
         val barnListe =
@@ -35,12 +34,6 @@ class OppdaterBarnBatchReader(
             parameterValues["barnIds"] = barnListe
         }
         whereClause.append(")")
-        whereClause.append(" AND (oppdatert IS NULL OR oppdatert < (NOW() - MAKE_INTERVAL(days => :dager)))")
-        parameterValues["dager"] = dager
-
-        if (barnListe.isEmpty()) {
-            whereClause.append(" AND fodselsdato >= NOW() - INTERVAL '18 year'")
-        }
 
         val sqlPagingQuaryPoviderFactoryBean =
             SqlPagingQueryProviderFactoryBean().apply {

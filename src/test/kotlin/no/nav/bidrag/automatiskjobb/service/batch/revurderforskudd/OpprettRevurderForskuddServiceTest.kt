@@ -11,12 +11,14 @@ import io.mockk.verify
 import no.nav.bidrag.automatiskjobb.consumer.BidragBehandlingConsumer
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
+import no.nav.bidrag.automatiskjobb.persistence.repository.RevurderForskuddRepository
 import no.nav.bidrag.beregn.barnebidrag.service.SisteManuelleVedtak
 import no.nav.bidrag.beregn.barnebidrag.service.VedtakService
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.generer.testdata.person.genererFødselsnummer
 import no.nav.bidrag.transport.behandling.behandling.HentÅpneBehandlingerRespons
 import no.nav.bidrag.transport.behandling.behandling.ÅpenBehandling
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDateTime
@@ -29,8 +31,16 @@ class OpprettRevurderForskuddServiceTest {
     @MockK
     private lateinit var vedtakService: VedtakService
 
+    @MockK
+    private lateinit var revurderForskuddRepository: RevurderForskuddRepository
+
     @InjectMockKs
     private lateinit var opprettRevurderForskuddService: OpprettRevurderForskuddService
+
+    @BeforeEach
+    fun init() {
+        every { revurderForskuddRepository.findAllByBarnIdAndForMåned(any(), any()) } returns null
+    }
 
     @Test
     fun `skal ikke opprette revurdering forskudd om det finnes åpen forskuddssak`() {
@@ -48,6 +58,7 @@ class OpprettRevurderForskuddServiceTest {
         val barn =
             mockk<Barn>().apply {
                 every { this@apply.kravhaver } returns kravhaver
+                every { this@apply.id } returns 0
             }
 
         val resultat = opprettRevurderForskuddService.opprettRevurdereForskudd(barn, "batchId", LocalDateTime.now())
@@ -75,6 +86,7 @@ class OpprettRevurderForskuddServiceTest {
                 every { this@apply.kravhaver } returns kravhaver
                 every { this@apply.skyldner } returns skyldner
                 every { this@apply.saksnummer } returns saksnummer
+                every { this@apply.id } returns 0
             }
 
         val resultat = opprettRevurderForskuddService.opprettRevurdereForskudd(barn, "batchId", cutoffTidspunkt)
@@ -103,6 +115,7 @@ class OpprettRevurderForskuddServiceTest {
                 every { this@apply.kravhaver } returns kravhaver
                 every { this@apply.skyldner } returns skyldner
                 every { this@apply.saksnummer } returns saksnummer
+                every { this@apply.id } returns 0
             }
 
         val resultat = opprettRevurderForskuddService.opprettRevurdereForskudd(barn, "batchId", cutoffTidspunkt)

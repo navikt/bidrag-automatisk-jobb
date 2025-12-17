@@ -37,7 +37,7 @@ interface BarnRepository : JpaRepository<Barn, Int> {
 
     @Query(
         "SELECT b FROM barn b WHERE b.forskuddFra IS NOT NULL " +
-            "AND (b.forskuddTil IS NULL OR b.forskuddTil < :forskuddDato) ",
+            "AND (b.forskuddTil IS NULL OR b.forskuddTil > :forskuddDato) ",
     )
     fun findBarnSomSkalRevurdereForskudd(
         @Param("forskuddDato") forskuddDato: LocalDate,

@@ -2,7 +2,6 @@ package no.nav.bidrag.automatiskjobb.batch.revurderforskudd.opprett
 
 import no.nav.bidrag.automatiskjobb.batch.BatchCompletionNotificationListener
 import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.CHUNK_SIZE
-import no.nav.bidrag.automatiskjobb.batch.DummyItemWriter
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
@@ -45,14 +44,16 @@ class OpprettRevurderForskuddBatchConfiguration {
         transactionManager: PlatformTransactionManager,
         opprettRevurderForskuddBatchReader: RepositoryItemReader<Barn>,
         opprettRevurderForskuddBatchProcessor: OpprettRevurderForskuddBatchProcessor,
-        dummmyWriter: DummyItemWriter,
+        opprettRevurderForskuddBatchWriter: OpprettRevurderForskuddBatchWriter,
     ): Step =
         StepBuilder("opprettRevurderForskuddStep", jobRepository)
             .chunk<Barn, RevurderingForskudd>(CHUNK_SIZE, transactionManager)
             .reader(opprettRevurderForskuddBatchReader)
             .processor(opprettRevurderForskuddBatchProcessor)
-            .writer(dummmyWriter)
+            .writer(opprettRevurderForskuddBatchWriter)
             .taskExecutor(taskExecutor)
+            .faultTolerant()
+            .skipLimit(CHUNK_SIZE)
             .build()
 
     @Bean
