@@ -35,7 +35,6 @@ import no.nav.bidrag.transport.behandling.beregning.forskudd.ResultatPeriode
 import no.nav.bidrag.transport.behandling.felles.grunnlag.GrunnlagDto
 import no.nav.bidrag.transport.behandling.felles.grunnlag.Person
 import no.nav.bidrag.transport.behandling.inntekt.response.SummertMånedsinntekt
-import no.nav.bidrag.transport.behandling.vedtak.response.behandlingId
 import org.junit.jupiter.api.extension.ExtendWith
 import java.math.BigDecimal
 import java.time.Year
@@ -185,12 +184,13 @@ class EvaluerRevurderForskuddServiceTest {
                             ),
                         ),
                     )
-                every { vedtak.behandlingsreferanseListe } returns listOf(
-                    mockk {
-                        every { kilde } returns BehandlingsrefKilde.BEHANDLING_ID
-                        every { referanse } returns "123"
-                    }
-                )
+                every { vedtak.behandlingsreferanseListe } returns
+                    listOf(
+                        mockk {
+                            every { kilde } returns BehandlingsrefKilde.BEHANDLING_ID
+                            every { referanse } returns "123"
+                        },
+                    )
                 every { vedtak.kildeapplikasjon } returns "kilde"
             }
         every { bidragBeløpshistorikkConsumer.hentHistoriskeStønader(any()) } returns stønadDto
@@ -249,12 +249,13 @@ class EvaluerRevurderForskuddServiceTest {
                             ),
                         ),
                     )
-                every { vedtak.behandlingsreferanseListe } returns listOf(
-                    mockk {
-                        every { kilde } returns BehandlingsrefKilde.BEHANDLING_ID
-                        every { referanse } returns "123"
-                    }
-                )
+                every { vedtak.behandlingsreferanseListe } returns
+                    listOf(
+                        mockk {
+                            every { kilde } returns BehandlingsrefKilde.BEHANDLING_ID
+                            every { referanse } returns "123"
+                        },
+                    )
                 every { vedtak.kildeapplikasjon } returns "kilde"
             }
         every { bidragBeløpshistorikkConsumer.hentHistoriskeStønader(any()) } returns stønadDto
@@ -314,12 +315,13 @@ class EvaluerRevurderForskuddServiceTest {
                         ),
                     )
                 every { vedtaksId } returns 1
-                every { vedtak.behandlingsreferanseListe } returns listOf(
-                    mockk {
-                        every { kilde } returns BehandlingsrefKilde.BEHANDLING_ID
-                        every { referanse } returns "123"
-                    }
-                )
+                every { vedtak.behandlingsreferanseListe } returns
+                    listOf(
+                        mockk {
+                            every { kilde } returns BehandlingsrefKilde.BEHANDLING_ID
+                            every { referanse } returns "123"
+                        },
+                    )
                 every { vedtak.kildeapplikasjon } returns "KkildeILDE"
             }
         every { bidragBeløpshistorikkConsumer.hentHistoriskeStønader(any()) } returns stønadDto
