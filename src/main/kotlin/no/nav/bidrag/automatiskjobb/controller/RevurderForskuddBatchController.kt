@@ -66,8 +66,11 @@ class RevurderForskuddBatchController(
         @Parameter(required = true, example = "true") simuler: Boolean = true,
         @Parameter(required = true, example = "3") antallMånederForBeregning: Long = 3,
         @Parameter(required = false) beregnFraMåned: YearMonth = YearMonth.now().minusYears(1),
-    ) {
-        evaluerRevurderForskuddBatch.start(simuler, antallMånederForBeregning, beregnFraMåned)
+    ): ResponseEntity<Void> {
+        CoroutineScope(Dispatchers.IO).launch {
+            evaluerRevurderForskuddBatch.start(simuler, antallMånederForBeregning, beregnFraMåned)
+        }
+        return ResponseEntity.status(HttpStatus.CREATED).build()
     }
 
     @PostMapping("/revurderforskudd/batch/fattevedtak")
@@ -78,8 +81,11 @@ class RevurderForskuddBatchController(
     )
     fun fatteVedtakRevurderForskudd(
         @Parameter(required = true, example = "true") simuler: Boolean = true,
-    ) {
-        fatteVedtakRevurderForskuddBatch.start(simuler)
+    ): ResponseEntity<Void> {
+        CoroutineScope(Dispatchers.IO).launch {
+            fatteVedtakRevurderForskuddBatch.start(simuler)
+        }
+        return ResponseEntity.status(HttpStatus.CREATED).build()
     }
 
     @PostMapping("/revurderforskudd/batch/opprettoppgaver")
@@ -88,8 +94,11 @@ class RevurderForskuddBatchController(
         description = "Oppretter oppgaver for saksbehandling i de tilfeller hvor revurdering av forskudd medfører tilbakekreving.",
         security = [SecurityRequirement(name = "bearer-key")],
     )
-    fun opprettOppgaverForRevurderForskudd() {
-        opprettOppgaveRevurderForskuddBatch.start()
+    fun opprettOppgaverForRevurderForskudd(): ResponseEntity<Void> {
+        CoroutineScope(Dispatchers.IO).launch {
+            opprettOppgaveRevurderForskuddBatch.start()
+        }
+        return ResponseEntity.status(HttpStatus.CREATED).build()
     }
 
     @PostMapping("/revurderforskudd/batch/revurderingslenke")
@@ -98,7 +107,10 @@ class RevurderForskuddBatchController(
         description = "Oppretter revurderingslenke for saksbehandling i de tilfeller hvor revurdering av forskudd medfører tilbakekreving.",
         security = [SecurityRequirement(name = "bearer-key")],
     )
-    fun opprettRevurderingslengeForRevurderForskudd() {
-        revurderingslenkeRevurderForskuddBatch.start()
+    fun opprettRevurderingslengeForRevurderForskudd(): ResponseEntity<Void> {
+        CoroutineScope(Dispatchers.IO).launch {
+            revurderingslenkeRevurderForskuddBatch.start()
+        }
+        return ResponseEntity.status(HttpStatus.CREATED).build()
     }
 }
