@@ -34,7 +34,6 @@ class EvaluerRevurderForskuddBatchConfiguration {
 
     @Bean
     fun evaluerRevurderForskuddStep(
-        @Qualifier("batchTaskExecutor") taskExecutor: TaskExecutor,
         jobRepository: JobRepository,
         transactionManager: PlatformTransactionManager,
         evaluerRevurderForskuddBatchReader: RepositoryItemReader<RevurderingForskudd>,
@@ -46,7 +45,6 @@ class EvaluerRevurderForskuddBatchConfiguration {
             .reader(evaluerRevurderForskuddBatchReader)
             .processor(evaluerRevurderForskuddBatchProcessor)
             .writer(evaluerRevurderForskuddBatchWriter)
-            .taskExecutor(taskExecutor)
             .build()
 
     @Bean
@@ -58,7 +56,6 @@ class EvaluerRevurderForskuddBatchConfiguration {
             .repository(revurderForskuddRepository)
             .methodName("findAllByStatusIs")
             .arguments(listOf(Status.UBEHANDLET))
-            .saveState(true)
             .pageSize(CHUNK_SIZE)
             .sorts(mapOf("id" to Sort.Direction.ASC))
             .build()
