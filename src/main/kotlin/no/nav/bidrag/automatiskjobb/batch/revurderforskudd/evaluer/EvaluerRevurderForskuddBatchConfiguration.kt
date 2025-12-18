@@ -58,7 +58,7 @@ class EvaluerRevurderForskuddBatchConfiguration {
             .repository(revurderForskuddRepository)
             .methodName("findAllByStatusIs")
             .arguments(listOf(Status.UBEHANDLET))
-            .saveState(false)
+            .saveState(true)
             .pageSize(CHUNK_SIZE)
             .sorts(mapOf("id" to Sort.Direction.ASC))
             .build()
