@@ -104,7 +104,7 @@ class EvaluerRevurderForskuddService(
             return revurderingForskudd
         }
 
-        if (sisteManuelleVedtak.vedtak.kildeapplikasjon == "BISYS") {
+        if (sisteManuelleVedtak.vedtak.kildeapplikasjon == "bisys") {
             LOGGER.info {
                 "Siste manuelle vedtak for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer} er fra BISYS. Beregner ikke revurdering av forskudd."
             }
