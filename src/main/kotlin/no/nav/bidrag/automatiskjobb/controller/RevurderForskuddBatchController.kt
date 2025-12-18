@@ -6,9 +6,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.evaluer.EvaluerRevurderForskuddBatch
 import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.fattvedtak.FatteVedtakRevurderForskuddBatch
 import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.oppgave.OppgaveRevurderForskuddBatch
@@ -48,9 +45,7 @@ class RevurderForskuddBatchController(
     fun opprettRevurderForskudd(
         @Parameter(required = false, example = "12") månederTilbakeForManueltVedtak: Int = 12,
     ): ResponseEntity<Void> {
-        CoroutineScope(Dispatchers.IO).launch {
-            opprettRevurderForskuddBatch.start(månederTilbakeForManueltVedtak)
-        }
+        opprettRevurderForskuddBatch.start(månederTilbakeForManueltVedtak)
         return ResponseEntity.status(HttpStatus.CREATED).build()
     }
 
@@ -67,9 +62,7 @@ class RevurderForskuddBatchController(
         @Parameter(required = true, example = "3") antallMånederForBeregning: Long = 3,
         @Parameter(required = false) beregnFraMåned: YearMonth = YearMonth.now().minusYears(1),
     ): ResponseEntity<Void> {
-        CoroutineScope(Dispatchers.IO).launch {
-            evaluerRevurderForskuddBatch.start(simuler, antallMånederForBeregning, beregnFraMåned)
-        }
+        evaluerRevurderForskuddBatch.start(simuler, antallMånederForBeregning, beregnFraMåned)
         return ResponseEntity.status(HttpStatus.CREATED).build()
     }
 
@@ -82,9 +75,7 @@ class RevurderForskuddBatchController(
     fun fatteVedtakRevurderForskudd(
         @Parameter(required = true, example = "true") simuler: Boolean = true,
     ): ResponseEntity<Void> {
-        CoroutineScope(Dispatchers.IO).launch {
-            fatteVedtakRevurderForskuddBatch.start(simuler)
-        }
+        fatteVedtakRevurderForskuddBatch.start(simuler)
         return ResponseEntity.status(HttpStatus.CREATED).build()
     }
 
@@ -95,9 +86,7 @@ class RevurderForskuddBatchController(
         security = [SecurityRequirement(name = "bearer-key")],
     )
     fun opprettOppgaverForRevurderForskudd(): ResponseEntity<Void> {
-        CoroutineScope(Dispatchers.IO).launch {
-            opprettOppgaveRevurderForskuddBatch.start()
-        }
+        opprettOppgaveRevurderForskuddBatch.start()
         return ResponseEntity.status(HttpStatus.CREATED).build()
     }
 
@@ -108,9 +97,7 @@ class RevurderForskuddBatchController(
         security = [SecurityRequirement(name = "bearer-key")],
     )
     fun opprettRevurderingslengeForRevurderForskudd(): ResponseEntity<Void> {
-        CoroutineScope(Dispatchers.IO).launch {
-            revurderingslenkeRevurderForskuddBatch.start()
-        }
+        revurderingslenkeRevurderForskuddBatch.start()
         return ResponseEntity.status(HttpStatus.CREATED).build()
     }
 }
