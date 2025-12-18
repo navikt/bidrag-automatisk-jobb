@@ -22,6 +22,7 @@ import no.nav.bidrag.beregn.barnebidrag.service.VedtakService
 import no.nav.bidrag.beregn.forskudd.BeregnForskuddApi
 import no.nav.bidrag.domene.enums.beregning.Resultatkode
 import no.nav.bidrag.domene.enums.grunnlag.Grunnlagstype
+import no.nav.bidrag.domene.enums.vedtak.BehandlingsrefKilde
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.domene.tid.ÅrMånedsperiode
 import no.nav.bidrag.generer.testdata.person.genererFødselsnummer
@@ -34,6 +35,7 @@ import no.nav.bidrag.transport.behandling.beregning.forskudd.ResultatPeriode
 import no.nav.bidrag.transport.behandling.felles.grunnlag.GrunnlagDto
 import no.nav.bidrag.transport.behandling.felles.grunnlag.Person
 import no.nav.bidrag.transport.behandling.inntekt.response.SummertMånedsinntekt
+import no.nav.bidrag.transport.behandling.vedtak.response.behandlingId
 import org.junit.jupiter.api.extension.ExtendWith
 import java.math.BigDecimal
 import java.time.Year
@@ -183,6 +185,13 @@ class EvaluerRevurderForskuddServiceTest {
                             ),
                         ),
                     )
+                every { vedtak.behandlingsreferanseListe } returns listOf(
+                    mockk {
+                        every { kilde } returns BehandlingsrefKilde.BEHANDLING_ID
+                        every { referanse } returns "123"
+                    }
+                )
+                every { vedtak.kildeapplikasjon } returns "kilde"
             }
         every { bidragBeløpshistorikkConsumer.hentHistoriskeStønader(any()) } returns stønadDto
         every { inntektApi.transformerInntekter(any()) } returns
@@ -240,6 +249,13 @@ class EvaluerRevurderForskuddServiceTest {
                             ),
                         ),
                     )
+                every { vedtak.behandlingsreferanseListe } returns listOf(
+                    mockk {
+                        every { kilde } returns BehandlingsrefKilde.BEHANDLING_ID
+                        every { referanse } returns "123"
+                    }
+                )
+                every { vedtak.kildeapplikasjon } returns "kilde"
             }
         every { bidragBeløpshistorikkConsumer.hentHistoriskeStønader(any()) } returns stønadDto
         every { inntektApi.transformerInntekter(any()) } returns
@@ -298,6 +314,13 @@ class EvaluerRevurderForskuddServiceTest {
                         ),
                     )
                 every { vedtaksId } returns 1
+                every { vedtak.behandlingsreferanseListe } returns listOf(
+                    mockk {
+                        every { kilde } returns BehandlingsrefKilde.BEHANDLING_ID
+                        every { referanse } returns "123"
+                    }
+                )
+                every { vedtak.kildeapplikasjon } returns "KkildeILDE"
             }
         every { bidragBeløpshistorikkConsumer.hentHistoriskeStønader(any()) } returns stønadDto
         every { inntektApi.transformerInntekter(any()) } returns
