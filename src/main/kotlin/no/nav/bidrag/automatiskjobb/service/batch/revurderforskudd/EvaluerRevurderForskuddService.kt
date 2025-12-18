@@ -55,6 +55,7 @@ import no.nav.bidrag.transport.behandling.vedtak.request.OpprettBehandlingsrefer
 import no.nav.bidrag.transport.behandling.vedtak.request.OpprettPeriodeRequestDto
 import no.nav.bidrag.transport.behandling.vedtak.request.OpprettStønadsendringRequestDto
 import no.nav.bidrag.transport.behandling.vedtak.request.OpprettVedtakRequestDto
+import no.nav.bidrag.transport.behandling.vedtak.response.behandlingId
 import org.springframework.context.annotation.Import
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
@@ -97,6 +98,24 @@ class EvaluerRevurderForskuddService(
         if (forskudd == null || !erForskuddLøpende(forskudd)) {
             LOGGER.info {
                 "Forskudd $forskudd er ikke løpende for revurderingForskudd $revurderingForskudd! Beregner ikke revurdering av forskudd."
+            }
+            revurderingForskudd.behandlingstype = Behandlingstype.INGEN
+            revurderingForskudd.status = Status.BEHANDLET
+            return revurderingForskudd
+        }
+
+        if (sisteManuelleVedtak.vedtak.kildeapplikasjon == "BISYS") {
+            LOGGER.info {
+                "Siste manuelle vedtak for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer} er fra BISYS. Beregner ikke revurdering av forskudd."
+            }
+            revurderingForskudd.behandlingstype = Behandlingstype.INGEN
+            revurderingForskudd.status = Status.BEHANDLET
+            return revurderingForskudd
+        }
+
+        if (sisteManuelleVedtak.vedtak.behandlingId == null) {
+            LOGGER.info {
+                "Siste manuelle vedtak for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer} har ingen behandlingId. Beregner ikke revurdering av forskudd."
             }
             revurderingForskudd.behandlingstype = Behandlingstype.INGEN
             revurderingForskudd.status = Status.BEHANDLET
