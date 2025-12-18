@@ -300,7 +300,7 @@ class EvaluerRevurderForskuddService(
             Stønadsid(
                 Stønadstype.FORSKUDD,
                 Personident(revurderingForskudd.barn.kravhaver),
-                Personident(IdentUtils.NAV_TSS_IDENT),
+                Personident("NAV"),
                 Saksnummer(revurderingForskudd.barn.saksnummer),
             ),
         )
