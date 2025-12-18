@@ -165,8 +165,10 @@ class EvaluerRevurderForskuddService(
                         ?.sumInntekt ?: BigDecimal.ZERO
                 }.reduce { årsinntekt, månedsinntekt -> årsinntekt.add(månedsinntekt) }
 
-        val beregnetForskuddLavesteMånedsinntekt =
-            lavesteMånedsinntekt?.let {
+        var beregnetForskuddÅrsinntekt: BeregnetForskuddResultat
+        var beregnetForskuddLavesteMånedsinntekt: BeregnetForskuddResultat?
+        try {
+            beregnetForskuddLavesteMånedsinntekt = lavesteMånedsinntekt?.let {
                 beregnNyttForskudd(
                     filtrertGrunnlagForBarn,
                     beregnFraMåned,
@@ -175,14 +177,19 @@ class EvaluerRevurderForskuddService(
                     it,
                 )
             }
-        val beregnetForskuddÅrsinntekt =
-            beregnNyttForskudd(
+            beregnetForskuddÅrsinntekt = beregnNyttForskudd(
                 filtrertGrunnlagForBarn,
                 beregnFraMåned,
                 barnGrunnlagReferanse,
                 bmGrunnlagReferanse,
                 årsinntekt,
             )
+        } catch (e: IllegalArgumentException) {
+            LOGGER.error(e) { "Feil ved beregning av revurdering forskudd for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer}" }
+            revurderingForskudd.behandlingstype = Behandlingstype.FEILET
+            revurderingForskudd.status = Status.FEILET
+            return revurderingForskudd
+        }
 
         val løpendeBeløp = forskudd.periodeListe.hentSisteLøpendePeriode()!!.beløp!!
 
