@@ -45,6 +45,8 @@ class EvaluerRevurderForskuddBatchConfiguration {
             .reader(evaluerRevurderForskuddBatchReader)
             .processor(evaluerRevurderForskuddBatchProcessor)
             .writer(evaluerRevurderForskuddBatchWriter)
+            .faultTolerant()
+            .skipLimit(CHUNK_SIZE)
             .build()
 
     @Bean
