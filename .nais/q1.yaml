@@ -33,8 +33,8 @@ env:
   BIDRAG_SAK_SCOPE: dev-fss.bidrag.bidrag-sak-q1
   BIDRAG_BEHANDLING_URL: http://bidrag-behandling-q1
   BIDRAG_BEHANDLING_SCOPE: dev-gcp.bidrag.bidrag-behandling-q1
-  BIDRAG_GRUNNLAG_URL: http://bidrag-grunnlag-q1
-  BIDRAG_GRUNNLAG_SCOPE: dev-gcp.bidrag.bidrag-grunnlag-q1
+  BIDRAG_GRUNNLAG_URL: http://bidrag-grunnlag-feature
+  BIDRAG_GRUNNLAG_SCOPE: dev-gcp.bidrag.bidrag-grunnlag-feature
   OPPGAVE_URL: https://oppgave-q1.dev-fss-pub.nais.io
   OPPGAVE_SCOPE: dev-fss.oppgavehandtering.oppgave-q1
   KODEVERK_URL: http://bidrag-kodeverk
@@ -56,7 +56,7 @@ outbound-access-apps:
   - bidrag-dokument-forsendelse-feature
   - bidrag-reskontro-q1
   - bidrag-behandling-q1
-  - bidrag-grunnlag-q1
+  - bidrag-grunnlag-feature
 outbound-access-hosts:
   - bidrag-person-q1.dev-fss-pub.nais.io
   - bidrag-sak-q1.dev-fss-pub.nais.io
