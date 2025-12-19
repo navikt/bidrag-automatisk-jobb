@@ -14,7 +14,7 @@ class EvaluerRevurderForskuddBatchProcessor(
 ) : ItemProcessor<RevurderingForskudd, RevurderingForskudd> {
     private var simuler: Boolean = true
     private var antallMånederForBeregning: Long = 3
-    private var beregnFraMåned: YearMonth = YearMonth.now().minusYears(1)
+    private var beregnFraMåned: YearMonth = YearMonth.now().plusMonths(1)
 
     @BeforeStep
     fun beforeStep(stepExecution: StepExecution) {
