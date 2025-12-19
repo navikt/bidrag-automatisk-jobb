@@ -103,8 +103,8 @@ class EvaluerRevurderForskuddService(
             revurderingForskudd.status = Status.BEHANDLET
             return revurderingForskudd
         }
-
-        if (sisteManuelleVedtak.vedtak.kildeapplikasjon == "bisys") { //TODO(Fjerne mot å helder ha en sjekk på at alt grunnlaget vi trenger er på plass)
+        // TODO(Fjerne mot å helder ha en sjekk på at alt grunnlaget vi trenger er på plass)
+        if (sisteManuelleVedtak.vedtak.kildeapplikasjon == "bisys") {
             LOGGER.info {
                 "Siste manuelle vedtak for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer} er fra BISYS. Beregner ikke revurdering av forskudd."
             }
@@ -112,8 +112,8 @@ class EvaluerRevurderForskuddService(
             revurderingForskudd.status = Status.BEHANDLET
             return revurderingForskudd
         }
-
-        if (sisteManuelleVedtak.vedtak.behandlingId == null) { //TODO(Fjerne mot å helder ha en sjekk på at alt grunnlaget vi trenger er på plass)
+        // TODO(Fjerne mot å helder ha en sjekk på at alt grunnlaget vi trenger er på plass)
+        if (sisteManuelleVedtak.vedtak.behandlingId == null) {
             LOGGER.info {
                 "Siste manuelle vedtak for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer} har ingen behandlingId. Beregner ikke revurdering av forskudd."
             }
