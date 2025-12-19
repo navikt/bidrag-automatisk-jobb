@@ -6,6 +6,7 @@ import no.nav.bidrag.automatiskjobb.service.model.OpprettVedtakConflictResponse
 import no.nav.bidrag.automatiskjobb.utils.JsonUtil.Companion.tilJson
 import no.nav.bidrag.beregn.barnebidrag.service.external.BeregningVedtakConsumer
 import no.nav.bidrag.commons.web.client.AbstractRestClient
+import no.nav.bidrag.transport.behandling.vedtak.request.HentManuelleVedtakRequest
 import no.nav.bidrag.transport.behandling.vedtak.request.HentVedtakForStønadRequest
 import no.nav.bidrag.transport.behandling.vedtak.request.OpprettVedtakRequestDto
 import no.nav.bidrag.transport.behandling.vedtak.response.HentVedtakForStønadResponse
@@ -131,6 +132,10 @@ class BidragVedtakConsumer(
                 .build()
                 .toUri(),
         )
+
+    override fun hentManuelleVedtak(hentManuelleVedtak: HentManuelleVedtakRequest): HentVedtakForStønadResponse {
+        TODO("Not yet implemented")
+    }
 
     @Retryable(
         value = [Exception::class],

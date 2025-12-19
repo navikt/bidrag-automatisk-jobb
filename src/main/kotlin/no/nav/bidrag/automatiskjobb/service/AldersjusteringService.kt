@@ -15,9 +15,9 @@ import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
 import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringResponse
 import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringResultatResponse
 import no.nav.bidrag.automatiskjobb.utils.ugyldigForespørsel
-import no.nav.bidrag.beregn.barnebidrag.service.AldersjusteresManueltException
-import no.nav.bidrag.beregn.barnebidrag.service.AldersjusteringOrchestrator
-import no.nav.bidrag.beregn.barnebidrag.service.SkalIkkeAldersjusteresException
+import no.nav.bidrag.beregn.barnebidrag.service.orkestrering.AldersjusteresManueltException
+import no.nav.bidrag.beregn.barnebidrag.service.orkestrering.AldersjusteringOrchestrator
+import no.nav.bidrag.beregn.barnebidrag.service.orkestrering.SkalIkkeAldersjusteresException
 import no.nav.bidrag.domene.enums.rolle.Rolletype
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.ident.Personident

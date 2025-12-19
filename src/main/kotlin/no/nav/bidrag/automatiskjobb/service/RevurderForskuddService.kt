@@ -14,7 +14,7 @@ import no.nav.bidrag.automatiskjobb.utils.enesteResultatkode
 import no.nav.bidrag.automatiskjobb.utils.erDirekteAvslag
 import no.nav.bidrag.automatiskjobb.utils.erHusstandsmedlem
 import no.nav.bidrag.automatiskjobb.utils.tilResultatkode
-import no.nav.bidrag.beregn.barnebidrag.service.SisteManuelleVedtak
+import no.nav.bidrag.beregn.barnebidrag.service.external.SisteManuelleVedtak
 import no.nav.bidrag.beregn.forskudd.BeregnForskuddApi
 import no.nav.bidrag.beregn.vedtak.Vedtaksfiltrering
 import no.nav.bidrag.domene.enums.beregning.Resultatkode.Companion.erDirekteAvslag

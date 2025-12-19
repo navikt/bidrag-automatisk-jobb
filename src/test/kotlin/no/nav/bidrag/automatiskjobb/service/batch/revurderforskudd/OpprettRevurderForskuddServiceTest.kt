@@ -12,8 +12,8 @@ import no.nav.bidrag.automatiskjobb.consumer.BidragBehandlingConsumer
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import no.nav.bidrag.automatiskjobb.persistence.repository.RevurderForskuddRepository
-import no.nav.bidrag.beregn.barnebidrag.service.SisteManuelleVedtak
-import no.nav.bidrag.beregn.barnebidrag.service.VedtakService
+import no.nav.bidrag.beregn.barnebidrag.service.external.SisteManuelleVedtak
+import no.nav.bidrag.beregn.barnebidrag.service.external.VedtakService
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.generer.testdata.person.genererFødselsnummer
 import no.nav.bidrag.transport.behandling.behandling.HentÅpneBehandlingerRespons
