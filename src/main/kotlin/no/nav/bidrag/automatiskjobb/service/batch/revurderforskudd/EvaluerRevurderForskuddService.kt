@@ -104,7 +104,7 @@ class EvaluerRevurderForskuddService(
             return revurderingForskudd
         }
 
-        if (sisteManuelleVedtak.vedtak.kildeapplikasjon == "bisys") {
+        if (sisteManuelleVedtak.vedtak.kildeapplikasjon == "bisys") { //TODO(Fjerne mot å helder ha en sjekk på at alt grunnlaget vi trenger er på plass)
             LOGGER.info {
                 "Siste manuelle vedtak for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer} er fra BISYS. Beregner ikke revurdering av forskudd."
             }
@@ -113,7 +113,7 @@ class EvaluerRevurderForskuddService(
             return revurderingForskudd
         }
 
-        if (sisteManuelleVedtak.vedtak.behandlingId == null) {
+        if (sisteManuelleVedtak.vedtak.behandlingId == null) { //TODO(Fjerne mot å helder ha en sjekk på at alt grunnlaget vi trenger er på plass)
             LOGGER.info {
                 "Siste manuelle vedtak for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer} har ingen behandlingId. Beregner ikke revurdering av forskudd."
             }
@@ -430,7 +430,7 @@ class EvaluerRevurderForskuddService(
                 innhold =
                     POJONode(
                         InntektsrapporteringPeriode(
-                            periode = ÅrMånedsperiode(beregnFraMåned, null),
+                            periode = ÅrMånedsperiode(beregnFraMåned, beregnFraMåned.plusMonths(1)),
                             manueltRegistrert = true,
                             inntektsrapportering = Inntektsrapportering.AINNTEKT_BEREGNET_12MND,
                             beløp = inntekt,
