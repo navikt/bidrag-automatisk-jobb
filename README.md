@@ -1,12 +1,18 @@
 # Bidrag-automatisk-jobb
-Applikasjon for å aldersjustere barn i bidragssaker.
+Applikasjon for å kjøre jobber, primært batcher, for å utføre endringer i bidragssaker.
 
 [![continuous integration](https://github.com/navikt/bidrag-automatisk-jobb/actions/workflows/deploy_q1.yaml/badge.svg)](https://github.com/navikt/bidrag-automatisk-jobb/actions/workflows/deploy_q1.yaml)
 [![release bidrag-automatisk-jobb](https://github.com/navikt/bidrag-automatisk-jobb/actions/workflows/deploy_prod.yaml/badge.svg)](https://github.com/navikt/bidrag-automatisk-jobb/actions/workflows/deploy_prod.yaml)
 
 ## Beskrivelse
+
+### Alderjustering
 Bidrag-automatisk-jobb lagrer alle barn som er part i en bidragssak, og aldersjusterer disse. 
 Aldersjustering skjer for alle barn året de fyller 6, 11 og 15 år basert på sjablong-verdier.
+
+### Revurdering forskudd
+Bidrag-automatisk-jobb henter ut alle løpende forskudd det ikke har blitt gjort manuelle endringer på i løpet av x 
+siste måneder og utfører en beregning for å sjekke om forskudded skal settes ned. 
 
 ## Kjøre applikasjonen lokalt
 
