@@ -14,6 +14,7 @@ import no.nav.bidrag.domene.enums.diverse.Språk
 import no.nav.bidrag.domene.enums.rolle.Rolletype
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import org.hibernate.annotations.SQLRestriction
+import org.hibernate.proxy.HibernateProxy
 import java.sql.Timestamp
 
 @Entity(name = "forsendelseBestilling")
@@ -49,4 +50,43 @@ data class ForsendelseBestilling(
     @JoinColumn(name = "barn_id")
     val barn: Barn,
     val batchId: String,
-) : EntityObject
+) : EntityObject {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null) return false
+        val oEffectiveClass =
+            if (other is HibernateProxy) other.hibernateLazyInitializer.persistentClass else other.javaClass
+        val thisEffectiveClass =
+            this.javaClass
+        if (thisEffectiveClass != oEffectiveClass) return false
+        other as ForsendelseBestilling
+
+        return id != null && id == other.id
+    }
+
+    override fun hashCode(): Int = javaClass.hashCode()
+
+    @Override
+    override fun toString(): String =
+        this::class.simpleName + "(" +
+            "id = $id, " +
+            "forsendelsestype = $forsendelsestype, " +
+            "forsendelseId = $forsendelseId, " +
+            "journalpostId = $journalpostId, " +
+            "rolletype = $rolletype, " +
+            "gjelder = $gjelder, " +
+            "mottaker = $mottaker, " +
+            "språkkode = $språkkode, " +
+            "dokumentmal = $dokumentmal, " +
+            "opprettetTidspunkt = $opprettetTidspunkt, " +
+            "forsendelseOpprettetTidspunkt = $forsendelseOpprettetTidspunkt, " +
+            "distribuertTidspunkt = $distribuertTidspunkt, " +
+            "slettetTidspunkt = $slettetTidspunkt, " +
+            "skalSlettes = $skalSlettes, " +
+            "feilBegrunnelse = $feilBegrunnelse, " +
+            "unikReferanse = $unikReferanse, " +
+            "vedtak = $vedtak, " +
+            "stønadstype = $stønadstype, " +
+            "barn = $barn, " +
+            "batchId = $batchId)"
+}

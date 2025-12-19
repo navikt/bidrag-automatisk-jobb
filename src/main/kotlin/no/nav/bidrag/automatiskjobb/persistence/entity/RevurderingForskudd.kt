@@ -13,6 +13,7 @@ import jakarta.persistence.OneToMany
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
+import org.hibernate.proxy.HibernateProxy
 import java.sql.Timestamp
 
 @Entity(name = "revurdering_forskudd")
@@ -53,4 +54,38 @@ data class RevurderingForskudd(
             begrunnelse.map { begrunnelse ->
                 begrunnelse.lowercase().replaceFirstChar { it.uppercase() }.replace("_", " ")
             }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null) return false
+        val oEffectiveClass =
+            if (other is HibernateProxy) other.hibernateLazyInitializer.persistentClass else other.javaClass
+        val thisEffectiveClass =
+            this.javaClass
+        if (thisEffectiveClass != oEffectiveClass) return false
+        other as RevurderingForskudd
+
+        return id != null && id == other.id
+    }
+
+    override fun hashCode(): Int = javaClass.hashCode()
+
+    @Override
+    override fun toString(): String =
+        this::class.simpleName + "(" +
+            "id = $id, " +
+            "forMåned = $forMåned, " +
+            "batchId = $batchId, " +
+            "barn = $barn, " +
+            "begrunnelse = $begrunnelse, " +
+            "status = $status, " +
+            "behandlingstype = $behandlingstype, " +
+            "vurdereTilbakekreving = $vurdereTilbakekreving, " +
+            "vedtaksidBeregning = $vedtaksidBeregning, " +
+            "vedtak = $vedtak, " +
+            "oppgave = $oppgave, " +
+            "opprettetTidspunkt = $opprettetTidspunkt, " +
+            "fattetTidspunkt = $fattetTidspunkt, " +
+            "resultatSisteVedtak = $resultatSisteVedtak, " +
+            "stønadstype = $stønadstype)"
 }
