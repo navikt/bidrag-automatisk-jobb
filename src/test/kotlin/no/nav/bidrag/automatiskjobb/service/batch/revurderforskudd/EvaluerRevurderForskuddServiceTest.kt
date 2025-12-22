@@ -183,6 +183,36 @@ class EvaluerRevurderForskuddServiceTest {
                                 ),
                             ),
                         ),
+                        GrunnlagDto(
+                            "bostatus",
+                            Grunnlagstype.BOSTATUS_PERIODE,
+                            POJONode(emptyMap<String, Any>()),
+                        ),
+                        GrunnlagDto(
+                            "inntekt_periode",
+                            Grunnlagstype.INNTEKT_RAPPORTERING_PERIODE,
+                            POJONode(emptyMap<String, Any>()),
+                        ),
+                        GrunnlagDto(
+                            "husstandsmedlem",
+                            Grunnlagstype.PERSON_HUSSTANDSMEDLEM,
+                            POJONode(emptyMap<String, Any>()),
+                        ),
+                        GrunnlagDto(
+                            "sivilstand_periode",
+                            Grunnlagstype.SIVILSTAND_PERIODE,
+                            POJONode(emptyMap<String, Any>()),
+                        ),
+                        GrunnlagDto(
+                            "innhentet_husstandsmedlem",
+                            Grunnlagstype.INNHENTET_HUSSTANDSMEDLEM,
+                            POJONode(emptyMap<String, Any>()),
+                        ),
+                        GrunnlagDto(
+                            "innhentet_sivilstand",
+                            Grunnlagstype.INNHENTET_SIVILSTAND,
+                            POJONode(emptyMap<String, Any>()),
+                        ),
                     )
                 every { vedtak.behandlingsreferanseListe } returns
                     listOf(
@@ -248,6 +278,36 @@ class EvaluerRevurderForskuddServiceTest {
                                 ),
                             ),
                         ),
+                        GrunnlagDto(
+                            "bostatus",
+                            Grunnlagstype.BOSTATUS_PERIODE,
+                            POJONode(emptyMap<String, Any>()),
+                        ),
+                        GrunnlagDto(
+                            "inntekt_periode",
+                            Grunnlagstype.INNTEKT_RAPPORTERING_PERIODE,
+                            POJONode(emptyMap<String, Any>()),
+                        ),
+                        GrunnlagDto(
+                            "husstandsmedlem",
+                            Grunnlagstype.PERSON_HUSSTANDSMEDLEM,
+                            POJONode(emptyMap<String, Any>()),
+                        ),
+                        GrunnlagDto(
+                            "sivilstand_periode",
+                            Grunnlagstype.SIVILSTAND_PERIODE,
+                            POJONode(emptyMap<String, Any>()),
+                        ),
+                        GrunnlagDto(
+                            "innhentet_husstandsmedlem",
+                            Grunnlagstype.INNHENTET_HUSSTANDSMEDLEM,
+                            POJONode(emptyMap<String, Any>()),
+                        ),
+                        GrunnlagDto(
+                            "innhentet_sivilstand",
+                            Grunnlagstype.INNHENTET_SIVILSTAND,
+                            POJONode(emptyMap<String, Any>()),
+                        ),
                     )
                 every { vedtak.behandlingsreferanseListe } returns
                     listOf(
@@ -312,6 +372,36 @@ class EvaluerRevurderForskuddServiceTest {
                                     ident = Personident(bmFnr),
                                 ),
                             ),
+                        ),
+                        GrunnlagDto(
+                            "bostatus",
+                            Grunnlagstype.BOSTATUS_PERIODE,
+                            POJONode(mockk()),
+                        ),
+                        GrunnlagDto(
+                            "inntekt_periode",
+                            Grunnlagstype.INNTEKT_RAPPORTERING_PERIODE,
+                            POJONode(mockk()),
+                        ),
+                        GrunnlagDto(
+                            "husstandsmedlem",
+                            Grunnlagstype.PERSON_HUSSTANDSMEDLEM,
+                            POJONode(mockk()),
+                        ),
+                        GrunnlagDto(
+                            "sivilstand_periode",
+                            Grunnlagstype.SIVILSTAND_PERIODE,
+                            POJONode(mockk()),
+                        ),
+                        GrunnlagDto(
+                            "innhentet_husstandsmedlem",
+                            Grunnlagstype.INNHENTET_HUSSTANDSMEDLEM,
+                            POJONode(mockk()),
+                        ),
+                        GrunnlagDto(
+                            "innhentet_sivilstand",
+                            Grunnlagstype.INNHENTET_SIVILSTAND,
+                            POJONode(mockk()),
                         ),
                     )
                 every { vedtaksId } returns 1
