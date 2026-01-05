@@ -27,6 +27,7 @@ import no.nav.bidrag.domene.enums.vedtak.Innkrevingstype
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.enums.vedtak.Vedtakskilde
 import no.nav.bidrag.domene.enums.vedtak.Vedtakstype
+import no.nav.bidrag.domene.enums.vedtak.VirkningstidspunktÅrsakstype
 import no.nav.bidrag.domene.felles.personidentNav
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.domene.organisasjon.Enhetsnummer
@@ -149,10 +150,14 @@ class EvaluerRevurderForskuddService(
             setOf(
                 Grunnlagstype.BOSTATUS_PERIODE,
                 Grunnlagstype.INNTEKT_RAPPORTERING_PERIODE,
-                Grunnlagstype.PERSON_HUSSTANDSMEDLEM,
                 Grunnlagstype.PERSON_BIDRAGSMOTTAKER,
                 Grunnlagstype.PERSON_SØKNADSBARN,
                 Grunnlagstype.SIVILSTAND_PERIODE,
+            )
+
+        val andreGrunnlagstyper =
+            setOf(
+                Grunnlagstype.PERSON_HUSSTANDSMEDLEM,
                 Grunnlagstype.INNHENTET_HUSSTANDSMEDLEM,
                 Grunnlagstype.INNHENTET_SIVILSTAND,
             )
@@ -160,7 +165,7 @@ class EvaluerRevurderForskuddService(
         val relevantGrunnlag =
             filtrertGrunnlagForBarn
                 .filter {
-                    påkrevdeGrunnlagstyper.contains(it.type)
+                    påkrevdeGrunnlagstyper.contains(it.type) || andreGrunnlagstyper.contains(it.type)
                 }.toMutableList()
 
         val eksisterendeGrunnlagstyper = relevantGrunnlag.map { it.type }.toSet()
@@ -180,14 +185,13 @@ class EvaluerRevurderForskuddService(
 
         // Henter inntektsgrunnlaget for forskuddet
         val grunnlag = hentInntektsGrunnlagForForskudd(forskudd)
-
         // Legger til INNHETET_INNTEKT_AINNTEKT på grunnlaget
-        relevantGrunnlag.add(
+        val innhentetGrunnlagForBM =
             grunnlag.ainntektListe.tilGrunnlagsobjekt(
                 LocalDateTime.now(),
                 forskudd.mottaker.verdi,
-            ),
-        )
+            )
+        relevantGrunnlag.add(innhentetGrunnlagForBM)
 
         // Finner inntekter for forskuddsmottaker fra grunnlaget
         val transformerteInntekter = finnInntekterForForskuddFraGrunnlaget(grunnlag)
@@ -205,16 +209,15 @@ class EvaluerRevurderForskuddService(
 
         //  Finner summert årsintekt basert på siste 12 månedsinntekter
         val årsinntekt =
-            (12L downTo 1)
-                .mapNotNull { i ->
-                    val måned = YearMonth.now().minusMonths(i)
-                    transformerteInntekter.summertMånedsinntektListe
-                        .find { måned.equals(it.gjelderÅrMåned) }
-                        ?.sumInntekt ?: BigDecimal.ZERO
-                }.reduce { årsinntekt, månedsinntekt -> årsinntekt.add(månedsinntekt) }
+            transformerteInntekter.summertÅrsinntektListe
+                .find {
+                    it.inntektRapportering == Inntektsrapportering.AINNTEKT_BEREGNET_12MND
+                }?.sumInntekt
+                ?: beregn12MånedsInntekt(transformerteInntekter)
 
         var beregnetForskuddÅrsinntekt: BeregnetForskuddResultat
         var beregnetForskuddLavesteMånedsinntekt: BeregnetForskuddResultat?
+
         try {
             beregnetForskuddLavesteMånedsinntekt =
                 lavesteMånedsinntekt?.let {
@@ -224,6 +227,7 @@ class EvaluerRevurderForskuddService(
                         barnGrunnlagReferanse,
                         bmGrunnlagReferanse,
                         it,
+                        innhentetGrunnlagForBM.referanse,
                     )
                 }
             beregnetForskuddÅrsinntekt =
@@ -233,6 +237,7 @@ class EvaluerRevurderForskuddService(
                     barnGrunnlagReferanse,
                     bmGrunnlagReferanse,
                     årsinntekt,
+                    innhentetGrunnlagForBM.referanse,
                 )
         } catch (e: IllegalArgumentException) {
             LOGGER.error(e) {
@@ -306,6 +311,15 @@ class EvaluerRevurderForskuddService(
 
         return revurderingForskudd
     }
+
+    private fun beregn12MånedsInntekt(transformerteInntekter: TransformerInntekterResponse): BigDecimal =
+        (12L downTo 1)
+            .mapNotNull { i ->
+                val måned = YearMonth.now().minusMonths(i)
+                transformerteInntekter.summertMånedsinntektListe
+                    .find { måned.equals(it.gjelderÅrMåned) }
+                    ?.sumInntekt ?: BigDecimal.ZERO
+            }.reduce { årsinntekt, månedsinntekt -> årsinntekt.add(månedsinntekt) }
 
     private fun opprettVedtaksforslag(
         revurderingForskudd: RevurderingForskudd,
@@ -465,11 +479,13 @@ class EvaluerRevurderForskuddService(
 
     private fun beregnNyttForskudd(
         grunnlag: MutableList<GrunnlagDto>,
-        beregnFraMåned: YearMonth,
+        `beregnFraMåned`: YearMonth,
         barnGrunnlagReferanse: String,
         bmGrunnlagReferanse: String,
         inntekt: BigDecimal,
+        innhentetGrunnlagReferanse: String,
     ): BeregnetForskuddResultat {
+        val periode = ÅrMånedsperiode(beregnFraMåned, null)
         grunnlag.removeIf { it.type == Grunnlagstype.INNTEKT_RAPPORTERING_PERIODE }
         grunnlag.add(
             GrunnlagDto(
@@ -477,17 +493,19 @@ class EvaluerRevurderForskuddService(
                 innhold =
                     POJONode(
                         InntektsrapporteringPeriode(
-                            periode = ÅrMånedsperiode(beregnFraMåned, beregnFraMåned.plusMonths(1)),
-                            manueltRegistrert = true,
+                            periode = periode,
+                            manueltRegistrert = false,
                             inntektsrapportering = Inntektsrapportering.AINNTEKT_BEREGNET_12MND,
                             beløp = inntekt,
                             gjelderBarn = barnGrunnlagReferanse,
                             valgt = true,
                         ),
                     ),
-                referanse = "${Grunnlagstype.INNTEKT_RAPPORTERING_PERIODE}_$bmGrunnlagReferanse",
+                referanse = "${Grunnlagstype.INNTEKT_RAPPORTERING_PERIODE}_${bmGrunnlagReferanse}_$periode",
                 gjelderReferanse = bmGrunnlagReferanse,
-                gjelderBarnReferanse = barnGrunnlagReferanse,
+                // Dette skal bare settes for Barnetillegg og Kontanstøtte inntektene
+                gjelderBarnReferanse = null,
+                grunnlagsreferanseListe = listOf(innhentetGrunnlagReferanse),
             ),
         )
 
@@ -528,13 +546,14 @@ class EvaluerRevurderForskuddService(
         innhold =
             POJONode(
                 VirkningstidspunktGrunnlag(
+                    årsak = VirkningstidspunktÅrsakstype.REVURDERING_MÅNEDEN_ETTER,
                     virkningstidspunkt = beregnFraMåned.atDay(1),
                 ),
             ),
     )
 
     private fun List<AinntektGrunnlagDto>.tilGrunnlagsobjekt(
-        hentetTidspunkt: LocalDateTime,
+        hentetTidspunkt: LocalDateTime = LocalDateTime.now(),
         gjelderReferanse: String,
     ) = GrunnlagDto(
         referanse = opprettAinntektGrunnlagsreferanse(gjelderReferanse),
