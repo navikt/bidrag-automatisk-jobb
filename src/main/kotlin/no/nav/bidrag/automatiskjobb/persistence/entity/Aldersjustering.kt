@@ -44,11 +44,8 @@ data class Aldersjustering(
     @Enumerated(EnumType.STRING)
     override val stønadstype: Stønadstype = Stønadstype.BIDRAG,
     var resultatSisteVedtak: String? = null,
-    // TODO: Til Simen, dette fungerer ikke mtp at aldersjustering kan inneholde flere forsendelser.
-    //  Må legge til aldersjustering_id på forsendelsen istedenfor på aldersjusteringen
-//    @OneToMany
-//    @JoinColumn(name = "forsendelse_bestilling_id")
-    @Transient
+    @OneToMany
+    @JoinColumn(name = "aldersjustering_id")
     override val forsendelseBestilling: MutableList<ForsendelseBestilling> = mutableListOf(),
 ) : ForsendelseEntity {
     val aldersjusteresForÅr get() = barn.fødselsdato!!.year + aldersgruppe
