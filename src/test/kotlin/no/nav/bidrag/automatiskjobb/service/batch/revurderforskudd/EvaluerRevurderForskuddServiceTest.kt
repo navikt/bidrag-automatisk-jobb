@@ -227,6 +227,7 @@ class EvaluerRevurderForskuddServiceTest {
         every { inntektApi.transformerInntekter(any()) } returns
             mockk {
                 every { summertMånedsinntektListe } returns emptyList()
+                every { summertÅrsinntektListe } returns emptyList()
             }
 
         evaluerRevurderForskuddService.evaluerRevurderForskudd(
@@ -322,6 +323,7 @@ class EvaluerRevurderForskuddServiceTest {
         every { inntektApi.transformerInntekter(any()) } returns
             mockk {
                 every { summertMånedsinntektListe } returns emptyList()
+                every { summertÅrsinntektListe } returns emptyList()
             }
         evaluerRevurderForskuddService.evaluerRevurderForskudd(
             revurderingForskudd,
@@ -425,6 +427,7 @@ class EvaluerRevurderForskuddServiceTest {
                             emptyList(),
                         ),
                     )
+                every { summertÅrsinntektListe } returns emptyList()
             }
         every { beregnForskuddApi.beregn(any()) } returns
             mockk<BeregnetForskuddResultat>(relaxed = true) {
