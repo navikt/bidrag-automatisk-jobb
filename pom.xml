@@ -335,6 +335,24 @@
         </dependency>
     </dependencies>
 
+    <profiles>
+        <profile>
+            <id>default</id>
+            <activation>
+                <property>
+                    <name>profile.default.on</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <repositories>
+                <repository>
+                    <id>github</id>
+                    <url>https://maven.pkg.github.com/navikt/bidrag-felles</url>
+                </repository>
+            </repositories>
+        </profile>
+    </profiles>
+
     <build>
         <finalName>app</finalName>
         <sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
