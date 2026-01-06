@@ -13,6 +13,7 @@ import jakarta.persistence.OneToMany
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
+import org.hibernate.proxy.HibernateProxy
 import java.math.BigDecimal
 import java.sql.Timestamp
 
@@ -44,11 +45,44 @@ data class Aldersjustering(
     override val stønadstype: Stønadstype = Stønadstype.BIDRAG,
     var resultatSisteVedtak: String? = null,
     @OneToMany
-    @JoinColumn(name = "forsendelse_bestilling_id")
+    @JoinColumn(name = "aldersjustering_id")
     override val forsendelseBestilling: MutableList<ForsendelseBestilling> = mutableListOf(),
 ) : ForsendelseEntity {
     val aldersjusteresForÅr get() = barn.fødselsdato!!.year + aldersgruppe
     override val unikReferanse get() = "aldersjustering_${batchId}_${barn.tilStønadsid(stønadstype).toReferanse()}"
     val begrunnelseVisningsnavn get() =
         begrunnelse.map { it.lowercase().replaceFirstChar { it.uppercase() }.replace("_", " ") }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null) return false
+        val oEffectiveClass =
+            if (other is HibernateProxy) other.hibernateLazyInitializer.persistentClass else other.javaClass
+        val thisEffectiveClass = this.javaClass
+        if (thisEffectiveClass != oEffectiveClass) return false
+        other as Aldersjustering
+
+        return id != null && id == other.id
+    }
+
+    override fun hashCode(): Int = javaClass.hashCode()
+
+    @Override
+    override fun toString(): String =
+        this::class.simpleName + "(" +
+            "id = $id, " +
+            "batchId = $batchId, " +
+            "vedtaksidBeregning = $vedtaksidBeregning, " +
+            "barn = $barn, " +
+            "aldersgruppe = $aldersgruppe, " +
+            "lopendeBelop = $lopendeBelop, " +
+            "begrunnelse = $begrunnelse, " +
+            "status = $status, " +
+            "behandlingstype = $behandlingstype, " +
+            "vedtak = $vedtak, " +
+            "oppgave = $oppgave, " +
+            "opprettetTidspunkt = $opprettetTidspunkt, " +
+            "fattetTidspunkt = $fattetTidspunkt, " +
+            "stønadstype = $stønadstype, " +
+            "resultatSisteVedtak = $resultatSisteVedtak)"
 }

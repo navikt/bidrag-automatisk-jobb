@@ -18,10 +18,11 @@ import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import no.nav.bidrag.automatiskjobb.service.ReskontroService
-import no.nav.bidrag.beregn.barnebidrag.service.VedtakService
+import no.nav.bidrag.beregn.barnebidrag.service.external.VedtakService
 import no.nav.bidrag.beregn.forskudd.BeregnForskuddApi
 import no.nav.bidrag.domene.enums.beregning.Resultatkode
 import no.nav.bidrag.domene.enums.grunnlag.Grunnlagstype
+import no.nav.bidrag.domene.enums.vedtak.BehandlingsrefKilde
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.domene.tid.ÅrMånedsperiode
 import no.nav.bidrag.generer.testdata.person.genererFødselsnummer
@@ -182,12 +183,51 @@ class EvaluerRevurderForskuddServiceTest {
                                 ),
                             ),
                         ),
+                        GrunnlagDto(
+                            "bostatus",
+                            Grunnlagstype.BOSTATUS_PERIODE,
+                            POJONode(emptyMap<String, Any>()),
+                        ),
+                        GrunnlagDto(
+                            "inntekt_periode",
+                            Grunnlagstype.INNTEKT_RAPPORTERING_PERIODE,
+                            POJONode(emptyMap<String, Any>()),
+                        ),
+                        GrunnlagDto(
+                            "husstandsmedlem",
+                            Grunnlagstype.PERSON_HUSSTANDSMEDLEM,
+                            POJONode(emptyMap<String, Any>()),
+                        ),
+                        GrunnlagDto(
+                            "sivilstand_periode",
+                            Grunnlagstype.SIVILSTAND_PERIODE,
+                            POJONode(emptyMap<String, Any>()),
+                        ),
+                        GrunnlagDto(
+                            "innhentet_husstandsmedlem",
+                            Grunnlagstype.INNHENTET_HUSSTANDSMEDLEM,
+                            POJONode(emptyMap<String, Any>()),
+                        ),
+                        GrunnlagDto(
+                            "innhentet_sivilstand",
+                            Grunnlagstype.INNHENTET_SIVILSTAND,
+                            POJONode(emptyMap<String, Any>()),
+                        ),
                     )
+                every { vedtak.behandlingsreferanseListe } returns
+                    listOf(
+                        mockk {
+                            every { kilde } returns BehandlingsrefKilde.BEHANDLING_ID
+                            every { referanse } returns "123"
+                        },
+                    )
+                every { vedtak.kildeapplikasjon } returns "kilde"
             }
         every { bidragBeløpshistorikkConsumer.hentHistoriskeStønader(any()) } returns stønadDto
         every { inntektApi.transformerInntekter(any()) } returns
             mockk {
                 every { summertMånedsinntektListe } returns emptyList()
+                every { summertÅrsinntektListe } returns emptyList()
             }
 
         evaluerRevurderForskuddService.evaluerRevurderForskudd(
@@ -239,12 +279,51 @@ class EvaluerRevurderForskuddServiceTest {
                                 ),
                             ),
                         ),
+                        GrunnlagDto(
+                            "bostatus",
+                            Grunnlagstype.BOSTATUS_PERIODE,
+                            POJONode(emptyMap<String, Any>()),
+                        ),
+                        GrunnlagDto(
+                            "inntekt_periode",
+                            Grunnlagstype.INNTEKT_RAPPORTERING_PERIODE,
+                            POJONode(emptyMap<String, Any>()),
+                        ),
+                        GrunnlagDto(
+                            "husstandsmedlem",
+                            Grunnlagstype.PERSON_HUSSTANDSMEDLEM,
+                            POJONode(emptyMap<String, Any>()),
+                        ),
+                        GrunnlagDto(
+                            "sivilstand_periode",
+                            Grunnlagstype.SIVILSTAND_PERIODE,
+                            POJONode(emptyMap<String, Any>()),
+                        ),
+                        GrunnlagDto(
+                            "innhentet_husstandsmedlem",
+                            Grunnlagstype.INNHENTET_HUSSTANDSMEDLEM,
+                            POJONode(emptyMap<String, Any>()),
+                        ),
+                        GrunnlagDto(
+                            "innhentet_sivilstand",
+                            Grunnlagstype.INNHENTET_SIVILSTAND,
+                            POJONode(emptyMap<String, Any>()),
+                        ),
                     )
+                every { vedtak.behandlingsreferanseListe } returns
+                    listOf(
+                        mockk {
+                            every { kilde } returns BehandlingsrefKilde.BEHANDLING_ID
+                            every { referanse } returns "123"
+                        },
+                    )
+                every { vedtak.kildeapplikasjon } returns "kilde"
             }
         every { bidragBeløpshistorikkConsumer.hentHistoriskeStønader(any()) } returns stønadDto
         every { inntektApi.transformerInntekter(any()) } returns
             mockk {
                 every { summertMånedsinntektListe } returns emptyList()
+                every { summertÅrsinntektListe } returns emptyList()
             }
         evaluerRevurderForskuddService.evaluerRevurderForskudd(
             revurderingForskudd,
@@ -296,8 +375,46 @@ class EvaluerRevurderForskuddServiceTest {
                                 ),
                             ),
                         ),
+                        GrunnlagDto(
+                            "bostatus",
+                            Grunnlagstype.BOSTATUS_PERIODE,
+                            POJONode(mockk()),
+                        ),
+                        GrunnlagDto(
+                            "inntekt_periode",
+                            Grunnlagstype.INNTEKT_RAPPORTERING_PERIODE,
+                            POJONode(mockk()),
+                        ),
+                        GrunnlagDto(
+                            "husstandsmedlem",
+                            Grunnlagstype.PERSON_HUSSTANDSMEDLEM,
+                            POJONode(mockk()),
+                        ),
+                        GrunnlagDto(
+                            "sivilstand_periode",
+                            Grunnlagstype.SIVILSTAND_PERIODE,
+                            POJONode(mockk()),
+                        ),
+                        GrunnlagDto(
+                            "innhentet_husstandsmedlem",
+                            Grunnlagstype.INNHENTET_HUSSTANDSMEDLEM,
+                            POJONode(mockk()),
+                        ),
+                        GrunnlagDto(
+                            "innhentet_sivilstand",
+                            Grunnlagstype.INNHENTET_SIVILSTAND,
+                            POJONode(mockk()),
+                        ),
                     )
                 every { vedtaksId } returns 1
+                every { vedtak.behandlingsreferanseListe } returns
+                    listOf(
+                        mockk {
+                            every { kilde } returns BehandlingsrefKilde.BEHANDLING_ID
+                            every { referanse } returns "123"
+                        },
+                    )
+                every { vedtak.kildeapplikasjon } returns "KkildeILDE"
             }
         every { bidragBeløpshistorikkConsumer.hentHistoriskeStønader(any()) } returns stønadDto
         every { inntektApi.transformerInntekter(any()) } returns
@@ -310,6 +427,7 @@ class EvaluerRevurderForskuddServiceTest {
                             emptyList(),
                         ),
                     )
+                every { summertÅrsinntektListe } returns emptyList()
             }
         every { beregnForskuddApi.beregn(any()) } returns
             mockk<BeregnetForskuddResultat>(relaxed = true) {

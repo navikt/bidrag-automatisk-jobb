@@ -2,8 +2,6 @@ package no.nav.bidrag.automatiskjobb.consumer
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.commons.web.client.AbstractRestClient
-import no.nav.bidrag.transport.behandling.behandling.HentÅpneBehandlingerRequest
-import no.nav.bidrag.transport.behandling.behandling.HentÅpneBehandlingerRespons
 import no.nav.bidrag.transport.behandling.grunnlag.request.HentGrunnlagRequestDto
 import no.nav.bidrag.transport.behandling.grunnlag.response.HentGrunnlagDto
 import org.springframework.beans.factory.annotation.Qualifier

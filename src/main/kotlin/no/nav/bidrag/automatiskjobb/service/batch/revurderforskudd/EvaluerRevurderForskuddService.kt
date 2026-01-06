@@ -12,8 +12,8 @@ import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import no.nav.bidrag.automatiskjobb.service.ReskontroService
-import no.nav.bidrag.beregn.barnebidrag.service.SisteManuelleVedtak
-import no.nav.bidrag.beregn.barnebidrag.service.VedtakService
+import no.nav.bidrag.beregn.barnebidrag.service.external.SisteManuelleVedtak
+import no.nav.bidrag.beregn.barnebidrag.service.external.VedtakService
 import no.nav.bidrag.beregn.barnebidrag.utils.hentSisteLøpendePeriode
 import no.nav.bidrag.beregn.forskudd.BeregnForskuddApi
 import no.nav.bidrag.commons.util.IdentUtils
@@ -27,11 +27,13 @@ import no.nav.bidrag.domene.enums.vedtak.Innkrevingstype
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.enums.vedtak.Vedtakskilde
 import no.nav.bidrag.domene.enums.vedtak.Vedtakstype
+import no.nav.bidrag.domene.enums.vedtak.VirkningstidspunktÅrsakstype
 import no.nav.bidrag.domene.felles.personidentNav
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.domene.organisasjon.Enhetsnummer
 import no.nav.bidrag.domene.sak.Saksnummer
 import no.nav.bidrag.domene.sak.Stønadsid
+import no.nav.bidrag.domene.tid.Datoperiode
 import no.nav.bidrag.domene.tid.ÅrMånedsperiode
 import no.nav.bidrag.inntekt.InntektApi
 import no.nav.bidrag.transport.behandling.belopshistorikk.request.HentStønadHistoriskRequest
@@ -39,9 +41,12 @@ import no.nav.bidrag.transport.behandling.belopshistorikk.response.StønadDto
 import no.nav.bidrag.transport.behandling.beregning.felles.BeregnGrunnlag
 import no.nav.bidrag.transport.behandling.beregning.forskudd.BeregnetForskuddResultat
 import no.nav.bidrag.transport.behandling.felles.grunnlag.GrunnlagDto
+import no.nav.bidrag.transport.behandling.felles.grunnlag.InnhentetAinntekt
 import no.nav.bidrag.transport.behandling.felles.grunnlag.InntektsrapporteringPeriode
+import no.nav.bidrag.transport.behandling.felles.grunnlag.VirkningstidspunktGrunnlag
 import no.nav.bidrag.transport.behandling.felles.grunnlag.bidragsmottaker
 import no.nav.bidrag.transport.behandling.felles.grunnlag.hentPersonMedIdent
+import no.nav.bidrag.transport.behandling.felles.grunnlag.opprettAinntektGrunnlagsreferanse
 import no.nav.bidrag.transport.behandling.grunnlag.request.GrunnlagRequestDto
 import no.nav.bidrag.transport.behandling.grunnlag.request.HentGrunnlagRequestDto
 import no.nav.bidrag.transport.behandling.grunnlag.response.AinntektGrunnlagDto
@@ -107,12 +112,31 @@ class EvaluerRevurderForskuddService(
             sisteManuelleVedtak.vedtak.grunnlagListe
                 .hentPersonMedIdent(
                     revurderingForskudd.barn.kravhaver,
-                )!!
-                .referanse
+                )?.referanse
+
+        if (barnGrunnlagReferanse == null) {
+            LOGGER.warn {
+                "Fant ingen grunnlag for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer}. " +
+                    "Dette skal ikke forekomme! Beregner ikke revurdering av forskudd."
+            }
+            revurderingForskudd.behandlingstype = Behandlingstype.FEILET
+            revurderingForskudd.status = Status.FEILET
+            return revurderingForskudd
+        }
 
         val bmGrunnlagReferanse =
-            sisteManuelleVedtak.vedtak.grunnlagListe.bidragsmottaker!!
-                .referanse
+            sisteManuelleVedtak.vedtak.grunnlagListe.bidragsmottaker
+                ?.referanse
+
+        if (bmGrunnlagReferanse == null) {
+            LOGGER.warn {
+                "Fant ingen grunnlag for bidragsmottaker for barn ${revurderingForskudd.barn.kravhaver} i sak " +
+                    "${revurderingForskudd.barn.saksnummer}. Dette skal ikke forekomme! Beregner ikke revurdering av forskudd."
+            }
+            revurderingForskudd.behandlingstype = Behandlingstype.FEILET
+            revurderingForskudd.status = Status.FEILET
+            return revurderingForskudd
+        }
 
         // Filterer ut grunnlag som gjelder andre barn enn det som revurderes
         val filtrertGrunnlagForBarn =
@@ -122,8 +146,55 @@ class EvaluerRevurderForskuddService(
                         it.gjelderBarnReferanse == barnGrunnlagReferanse
                 }.toMutableList()
 
+        val påkrevdeGrunnlagstyper =
+            setOf(
+                Grunnlagstype.BOSTATUS_PERIODE,
+                Grunnlagstype.INNTEKT_RAPPORTERING_PERIODE,
+                Grunnlagstype.PERSON_BIDRAGSMOTTAKER,
+                Grunnlagstype.PERSON_SØKNADSBARN,
+                Grunnlagstype.SIVILSTAND_PERIODE,
+            )
+
+        val andreGrunnlagstyper =
+            setOf(
+                Grunnlagstype.PERSON_HUSSTANDSMEDLEM,
+                Grunnlagstype.INNHENTET_HUSSTANDSMEDLEM,
+                Grunnlagstype.INNHENTET_SIVILSTAND,
+            )
+
+        val relevantGrunnlag =
+            filtrertGrunnlagForBarn
+                .filter {
+                    påkrevdeGrunnlagstyper.contains(it.type) || andreGrunnlagstyper.contains(it.type)
+                }.toMutableList()
+
+        val eksisterendeGrunnlagstyper = relevantGrunnlag.map { it.type }.toSet()
+        val manglendeGrunnlagstyper = påkrevdeGrunnlagstyper - eksisterendeGrunnlagstyper
+
+        if (manglendeGrunnlagstyper.isNotEmpty()) {
+            LOGGER.warn {
+                "Manglende grunnlagstyper for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer}: ${manglendeGrunnlagstyper.joinToString()}"
+            }
+            revurderingForskudd.behandlingstype = Behandlingstype.FEILET
+            revurderingForskudd.status = Status.FEILET
+            return revurderingForskudd
+        }
+
+        // Oppretter grunnlag for virkningstidspunkt
+        relevantGrunnlag.add(opprettVirkningstidspunkt(forskudd.mottaker.verdi, beregnFraMåned))
+
+        // Henter inntektsgrunnlaget for forskuddet
+        val grunnlag = hentInntektsGrunnlagForForskudd(forskudd)
+        // Legger til INNHETET_INNTEKT_AINNTEKT på grunnlaget
+        val innhentetGrunnlagForBM =
+            grunnlag.ainntektListe.tilGrunnlagsobjekt(
+                LocalDateTime.now(),
+                forskudd.mottaker.verdi,
+            )
+        relevantGrunnlag.add(innhentetGrunnlagForBM)
+
         // Finner inntekter for forskuddsmottaker fra grunnlaget
-        val transformerteInntekter = finnInntekterForForskuddFraGrunnlaget(forskudd)
+        val transformerteInntekter = finnInntekterForForskuddFraGrunnlaget(grunnlag)
 
         // Finn laveste summert månedsinntekt for måneder i perioden ganget med 12
         val lavesteMånedsinntekt =
@@ -138,32 +209,44 @@ class EvaluerRevurderForskuddService(
 
         //  Finner summert årsintekt basert på siste 12 månedsinntekter
         val årsinntekt =
-            (12L downTo 1)
-                .mapNotNull { i ->
-                    val måned = YearMonth.now().minusMonths(i)
-                    transformerteInntekter.summertMånedsinntektListe
-                        .find { måned.equals(it.gjelderÅrMåned) }
-                        ?.sumInntekt ?: BigDecimal.ZERO
-                }.reduce { årsinntekt, månedsinntekt -> årsinntekt.add(månedsinntekt) }
+            transformerteInntekter.summertÅrsinntektListe
+                .find {
+                    it.inntektRapportering == Inntektsrapportering.AINNTEKT_BEREGNET_12MND
+                }?.sumInntekt
+                ?: beregn12MånedsInntekt(transformerteInntekter)
 
-        val beregnetForskuddLavesteMånedsinntekt =
-            lavesteMånedsinntekt?.let {
+        var beregnetForskuddÅrsinntekt: BeregnetForskuddResultat
+        var beregnetForskuddLavesteMånedsinntekt: BeregnetForskuddResultat?
+
+        try {
+            beregnetForskuddLavesteMånedsinntekt =
+                lavesteMånedsinntekt?.let {
+                    beregnNyttForskudd(
+                        relevantGrunnlag,
+                        beregnFraMåned,
+                        barnGrunnlagReferanse,
+                        bmGrunnlagReferanse,
+                        it,
+                        innhentetGrunnlagForBM.referanse,
+                    )
+                }
+            beregnetForskuddÅrsinntekt =
                 beregnNyttForskudd(
-                    filtrertGrunnlagForBarn,
+                    relevantGrunnlag,
                     beregnFraMåned,
                     barnGrunnlagReferanse,
                     bmGrunnlagReferanse,
-                    it,
+                    årsinntekt,
+                    innhentetGrunnlagForBM.referanse,
                 )
+        } catch (e: IllegalArgumentException) {
+            LOGGER.error(e) {
+                "Feil ved beregning av revurdering forskudd for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer}"
             }
-        val beregnetForskuddÅrsinntekt =
-            beregnNyttForskudd(
-                filtrertGrunnlagForBarn,
-                beregnFraMåned,
-                barnGrunnlagReferanse,
-                bmGrunnlagReferanse,
-                årsinntekt,
-            )
+            revurderingForskudd.behandlingstype = Behandlingstype.FEILET
+            revurderingForskudd.status = Status.FEILET
+            return revurderingForskudd
+        }
 
         val løpendeBeløp = forskudd.periodeListe.hentSisteLøpendePeriode()!!.beløp!!
 
@@ -228,6 +311,15 @@ class EvaluerRevurderForskuddService(
 
         return revurderingForskudd
     }
+
+    private fun beregn12MånedsInntekt(transformerteInntekter: TransformerInntekterResponse): BigDecimal =
+        (12L downTo 1)
+            .mapNotNull { i ->
+                val måned = YearMonth.now().minusMonths(i)
+                transformerteInntekter.summertMånedsinntektListe
+                    .find { måned.equals(it.gjelderÅrMåned) }
+                    ?.sumInntekt ?: BigDecimal.ZERO
+            }.reduce { årsinntekt, månedsinntekt -> årsinntekt.add(månedsinntekt) }
 
     private fun opprettVedtaksforslag(
         revurderingForskudd: RevurderingForskudd,
@@ -300,7 +392,7 @@ class EvaluerRevurderForskuddService(
             Stønadsid(
                 Stønadstype.FORSKUDD,
                 Personident(revurderingForskudd.barn.kravhaver),
-                Personident(IdentUtils.NAV_TSS_IDENT),
+                Personident("NAV"),
                 Saksnummer(revurderingForskudd.barn.saksnummer),
             ),
         )
@@ -330,8 +422,7 @@ class EvaluerRevurderForskuddService(
             }
         }
 
-    private fun finnInntekterForForskuddFraGrunnlaget(forskudd: StønadDto): TransformerInntekterResponse {
-        val grunnlag = hentInntektsGrunnlagForForskudd(forskudd)
+    private fun finnInntekterForForskuddFraGrunnlaget(grunnlag: HentGrunnlagDto): TransformerInntekterResponse {
         val transformerInntekterRequest = transformerInntekter(grunnlag)
         val transformerInntekterResponse = inntektApi.transformerInntekter(transformerInntekterRequest)
         return transformerInntekterResponse
@@ -387,30 +478,34 @@ class EvaluerRevurderForskuddService(
         )
 
     private fun beregnNyttForskudd(
-        filtrertGrunnlagForBarn: MutableList<GrunnlagDto>,
-        beregnFraMåned: YearMonth,
+        grunnlag: MutableList<GrunnlagDto>,
+        `beregnFraMåned`: YearMonth,
         barnGrunnlagReferanse: String,
         bmGrunnlagReferanse: String,
         inntekt: BigDecimal,
+        innhentetGrunnlagReferanse: String,
     ): BeregnetForskuddResultat {
-        filtrertGrunnlagForBarn.removeIf { it.type == Grunnlagstype.INNTEKT_RAPPORTERING_PERIODE }
-        filtrertGrunnlagForBarn.add(
+        val periode = ÅrMånedsperiode(beregnFraMåned, null)
+        grunnlag.removeIf { it.type == Grunnlagstype.INNTEKT_RAPPORTERING_PERIODE }
+        grunnlag.add(
             GrunnlagDto(
                 type = Grunnlagstype.INNTEKT_RAPPORTERING_PERIODE,
                 innhold =
                     POJONode(
                         InntektsrapporteringPeriode(
-                            periode = ÅrMånedsperiode(beregnFraMåned, null),
-                            manueltRegistrert = true,
+                            periode = periode,
+                            manueltRegistrert = false,
                             inntektsrapportering = Inntektsrapportering.AINNTEKT_BEREGNET_12MND,
                             beløp = inntekt,
                             gjelderBarn = barnGrunnlagReferanse,
                             valgt = true,
                         ),
                     ),
-                referanse = "${Grunnlagstype.INNTEKT_RAPPORTERING_PERIODE}_$bmGrunnlagReferanse",
+                referanse = "${Grunnlagstype.INNTEKT_RAPPORTERING_PERIODE}_${bmGrunnlagReferanse}_$periode",
                 gjelderReferanse = bmGrunnlagReferanse,
-                gjelderBarnReferanse = barnGrunnlagReferanse,
+                // Dette skal bare settes for Barnetillegg og Kontanstøtte inntektene
+                gjelderBarnReferanse = null,
+                grunnlagsreferanseListe = listOf(innhentetGrunnlagReferanse),
             ),
         )
 
@@ -418,12 +513,12 @@ class EvaluerRevurderForskuddService(
             BeregnGrunnlag(
                 periode =
                     ÅrMånedsperiode(
-                        YearMonth.now(),
-                        YearMonth.now().plusMonths(1),
+                        beregnFraMåned,
+                        beregnFraMåned.plusMonths(1),
                     ),
                 stønadstype = Stønadstype.FORSKUDD,
                 søknadsbarnReferanse = barnGrunnlagReferanse,
-                grunnlagListe = filtrertGrunnlagForBarn,
+                grunnlagListe = grunnlag,
             ),
         )
     }
@@ -440,4 +535,57 @@ class EvaluerRevurderForskuddService(
                 .last()
                 .resultat.belop
     }
+
+    private fun opprettVirkningstidspunkt(
+        gjelderReferanse: String,
+        beregnFraMåned: YearMonth,
+    ) = GrunnlagDto(
+        referanse = "virkningstidspunkt_$gjelderReferanse",
+        type = Grunnlagstype.VIRKNINGSTIDSPUNKT,
+        gjelderReferanse = gjelderReferanse,
+        innhold =
+            POJONode(
+                VirkningstidspunktGrunnlag(
+                    årsak = VirkningstidspunktÅrsakstype.REVURDERING_MÅNEDEN_ETTER,
+                    virkningstidspunkt = beregnFraMåned.atDay(1),
+                ),
+            ),
+    )
+
+    private fun List<AinntektGrunnlagDto>.tilGrunnlagsobjekt(
+        hentetTidspunkt: LocalDateTime = LocalDateTime.now(),
+        gjelderReferanse: String,
+    ) = GrunnlagDto(
+        referanse = opprettAinntektGrunnlagsreferanse(gjelderReferanse),
+        type = Grunnlagstype.INNHENTET_INNTEKT_AINNTEKT,
+        gjelderReferanse = gjelderReferanse,
+        innhold =
+            POJONode(
+                InnhentetAinntekt(
+                    hentetTidspunkt = hentetTidspunkt,
+                    grunnlag =
+                        map {
+                            InnhentetAinntekt.AinntektInnhentet(
+                                periode = Datoperiode(it.periodeFra, it.periodeTil),
+                                ainntektspostListe =
+                                    it.ainntektspostListe.map { post ->
+                                        InnhentetAinntekt.Ainntektspost(
+                                            utbetalingsperiode = post.utbetalingsperiode,
+                                            opptjeningsperiodeFra = post.opptjeningsperiodeFra,
+                                            opptjeningsperiodeTil = post.opptjeningsperiodeTil,
+                                            kategori = post.kategori,
+                                            fordelType = post.fordelType,
+                                            beløp = post.beløp,
+                                            etterbetalingsperiodeFra = post.etterbetalingsperiodeFra,
+                                            etterbetalingsperiodeTil = post.etterbetalingsperiodeTil,
+                                            beskrivelse = post.beskrivelse,
+                                            opplysningspliktigId = post.opplysningspliktigId,
+                                            virksomhetId = post.virksomhetId,
+                                        )
+                                    },
+                            )
+                        },
+                ),
+            ),
+    )
 }

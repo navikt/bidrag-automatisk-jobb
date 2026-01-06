@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.enums.SecuritySchemeType
 import io.swagger.v3.oas.annotations.info.Info
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.security.SecurityScheme
-import no.nav.bidrag.beregn.barnebidrag.service.AldersjusteringOrchestrator
+import no.nav.bidrag.beregn.barnebidrag.service.orkestrering.AldersjusteringOrchestrator
 import no.nav.bidrag.commons.service.organisasjon.EnableSaksbehandlernavnProvider
 import no.nav.bidrag.commons.unleash.EnableUnleashFeatures
 import no.nav.bidrag.commons.util.EnableSjekkForNyIdent

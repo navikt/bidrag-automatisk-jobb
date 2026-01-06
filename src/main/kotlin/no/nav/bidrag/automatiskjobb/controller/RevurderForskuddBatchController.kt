@@ -6,9 +6,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.evaluer.EvaluerRevurderForskuddBatch
 import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.fattvedtak.FatteVedtakRevurderForskuddBatch
 import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.oppgave.OppgaveRevurderForskuddBatch
@@ -48,9 +45,7 @@ class RevurderForskuddBatchController(
     fun opprettRevurderForskudd(
         @Parameter(required = false, example = "12") månederTilbakeForManueltVedtak: Int = 12,
     ): ResponseEntity<Void> {
-        CoroutineScope(Dispatchers.IO).launch {
-            opprettRevurderForskuddBatch.start(månederTilbakeForManueltVedtak)
-        }
+        opprettRevurderForskuddBatch.start(månederTilbakeForManueltVedtak)
         return ResponseEntity.status(HttpStatus.CREATED).build()
     }
 
@@ -66,8 +61,9 @@ class RevurderForskuddBatchController(
         @Parameter(required = true, example = "true") simuler: Boolean = true,
         @Parameter(required = true, example = "3") antallMånederForBeregning: Long = 3,
         @Parameter(required = false) beregnFraMåned: YearMonth = YearMonth.now().minusYears(1),
-    ) {
+    ): ResponseEntity<Void> {
         evaluerRevurderForskuddBatch.start(simuler, antallMånederForBeregning, beregnFraMåned)
+        return ResponseEntity.status(HttpStatus.CREATED).build()
     }
 
     @PostMapping("/revurderforskudd/batch/fattevedtak")
@@ -78,8 +74,9 @@ class RevurderForskuddBatchController(
     )
     fun fatteVedtakRevurderForskudd(
         @Parameter(required = true, example = "true") simuler: Boolean = true,
-    ) {
+    ): ResponseEntity<Void> {
         fatteVedtakRevurderForskuddBatch.start(simuler)
+        return ResponseEntity.status(HttpStatus.CREATED).build()
     }
 
     @PostMapping("/revurderforskudd/batch/opprettoppgaver")
@@ -88,8 +85,9 @@ class RevurderForskuddBatchController(
         description = "Oppretter oppgaver for saksbehandling i de tilfeller hvor revurdering av forskudd medfører tilbakekreving.",
         security = [SecurityRequirement(name = "bearer-key")],
     )
-    fun opprettOppgaverForRevurderForskudd() {
+    fun opprettOppgaverForRevurderForskudd(): ResponseEntity<Void> {
         opprettOppgaveRevurderForskuddBatch.start()
+        return ResponseEntity.status(HttpStatus.CREATED).build()
     }
 
     @PostMapping("/revurderforskudd/batch/revurderingslenke")
@@ -98,7 +96,8 @@ class RevurderForskuddBatchController(
         description = "Oppretter revurderingslenke for saksbehandling i de tilfeller hvor revurdering av forskudd medfører tilbakekreving.",
         security = [SecurityRequirement(name = "bearer-key")],
     )
-    fun opprettRevurderingslengeForRevurderForskudd() {
+    fun opprettRevurderingslengeForRevurderForskudd(): ResponseEntity<Void> {
         revurderingslenkeRevurderForskuddBatch.start()
+        return ResponseEntity.status(HttpStatus.CREATED).build()
     }
 }
