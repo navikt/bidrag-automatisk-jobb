@@ -101,7 +101,7 @@ class RevurderForskuddPersonhendelseTest {
                 bidragPersonConsumer,
                 BeregnForskuddApi(),
                 Vedtaksfiltrering(),
-                revurderForskuddRepository
+                revurderForskuddRepository,
             )
     }
 
