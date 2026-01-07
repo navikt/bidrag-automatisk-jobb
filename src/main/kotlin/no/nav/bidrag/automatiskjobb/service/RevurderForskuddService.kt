@@ -7,6 +7,8 @@ import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer
 import no.nav.bidrag.automatiskjobb.mapper.GrunnlagMapper
 import no.nav.bidrag.automatiskjobb.mapper.erBidrag
+import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
+import no.nav.bidrag.automatiskjobb.persistence.repository.RevurderForskuddRepository
 import no.nav.bidrag.automatiskjobb.service.model.AdresseEndretResultat
 import no.nav.bidrag.automatiskjobb.service.model.ForskuddRedusertResultat
 import no.nav.bidrag.automatiskjobb.service.model.StønadEngangsbeløpId
@@ -43,7 +45,9 @@ import no.nav.bidrag.transport.behandling.vedtak.response.referertVedtaksid
 import no.nav.bidrag.transport.behandling.vedtak.saksnummer
 import no.nav.bidrag.transport.felles.ifTrue
 import org.springframework.context.annotation.Import
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.time.YearMonth
 
@@ -61,6 +65,7 @@ class RevurderForskuddService(
     private val bidragPersonConsumer: BidragPersonConsumer,
     private val beregning: BeregnForskuddApi,
     private val vedtaksFilter: Vedtaksfiltrering,
+    private val revurderForskuddRepository: RevurderForskuddRepository,
 ) {
     fun skalBMFortsattMottaForskuddForSøknadsbarnEtterAdresseendring(aktørId: String): List<AdresseEndretResultat> {
         val person = bidragPersonConsumer.hentPerson(Personident(aktørId))
@@ -107,8 +112,8 @@ class RevurderForskuddService(
 
             LOGGER.info {
                 "Bidragsmottaker ${bidragsmottaker.fødselsnummer?.verdi} mottar forskudd for barn ${barnIdent.verdi} " +
-                    "i sak ${sak.saksnummer} med beløp ${løpendeForskudd.beløp} ${løpendeForskudd.valutakode}. " +
-                    "Barnet bor ikke lenger hos bidragsmottaker og skal derfor ikke motta forskudd lenger"
+                        "i sak ${sak.saksnummer} med beløp ${løpendeForskudd.beløp} ${løpendeForskudd.valutakode}. " +
+                        "Barnet bor ikke lenger hos bidragsmottaker og skal derfor ikke motta forskudd lenger"
             }
             AdresseEndretResultat(
                 saksnummer = sak.saksnummer.verdi,
@@ -130,6 +135,17 @@ class RevurderForskuddService(
                 vedtak,
             ),
         ) + erForskuddRedusertEtterSærbidrag(SisteManuelleVedtak(vedtakHendelse.id, vedtak))
+    }
+
+    @Transactional
+    fun resetEvalueringEtterSimuering() {
+        val simulerteRevurderForskudd =
+            revurderForskuddRepository.findAllByStatusIs(Status.SIMULERT, Pageable.unpaged())
+        simulerteRevurderForskudd.forEach {
+            it.status = Status.UBEHANDLET
+            it.behandlingstype = null
+            it.begrunnelse = emptyList()
+        }
     }
 
     private fun erForskuddRedusertEtterSærbidrag(vedtakInfo: SisteManuelleVedtak): List<ForskuddRedusertResultat> {

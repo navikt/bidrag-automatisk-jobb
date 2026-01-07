@@ -11,6 +11,7 @@ import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.fattvedtak.FatteVedta
 import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.oppgave.OppgaveRevurderForskuddBatch
 import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.opprett.OpprettRevurderForskuddBatch
 import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.revurderingslenke.RevurderingslenkeRevurderForskuddBatch
+import no.nav.bidrag.automatiskjobb.service.RevurderForskuddService
 import no.nav.security.token.support.core.api.Protected
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -27,6 +28,7 @@ class RevurderForskuddBatchController(
     private val fatteVedtakRevurderForskuddBatch: FatteVedtakRevurderForskuddBatch,
     private val opprettOppgaveRevurderForskuddBatch: OppgaveRevurderForskuddBatch,
     private val revurderingslenkeRevurderForskuddBatch: RevurderingslenkeRevurderForskuddBatch,
+    private val revurderForskuddService: RevurderForskuddService,
 ) {
     @PostMapping("/revurderforskudd/batch/opprett")
     @Operation(
@@ -63,6 +65,18 @@ class RevurderForskuddBatchController(
         @Parameter(required = false) beregnFraMåned: YearMonth = YearMonth.now().minusYears(1),
     ): ResponseEntity<Void> {
         evaluerRevurderForskuddBatch.start(simuler, antallMånederForBeregning, beregnFraMåned)
+        return ResponseEntity.status(HttpStatus.CREATED).build()
+    }
+
+    @PostMapping("/revurderforskudd/batch/evaluer/resetSimulering")
+    @Operation(
+        summary = "Resetter evaluering for revurdering av forskudd etter simulering.",
+        description =
+            "Resetter evaluerer om forskudd skal revurderes så alle innslag er ubehandlede.",
+        security = [SecurityRequirement(name = "bearer-key")],
+    )
+    fun evaluerRevurderForskudd(): ResponseEntity<Void> {
+        revurderForskuddService.resetEvalueringEtterSimuering()
         return ResponseEntity.status(HttpStatus.CREATED).build()
     }
 
