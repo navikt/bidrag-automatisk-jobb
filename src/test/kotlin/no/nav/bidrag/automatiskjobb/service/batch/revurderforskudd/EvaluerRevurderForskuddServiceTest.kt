@@ -1,6 +1,7 @@
 package no.nav.bidrag.automatiskjobb.service.batch.revurderforskudd
 
 import com.fasterxml.jackson.databind.node.POJONode
+import io.kotest.matchers.longs.exactly
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
@@ -456,5 +457,126 @@ class EvaluerRevurderForskuddServiceTest {
         verify { revurderingForskudd.status = Status.BEHANDLET }
         verify { revurderingForskudd.behandlingstype = Behandlingstype.FATTET_FORSLAG }
         verify { bidragVedtakConsumer.opprettEllerOppdaterVedtaksforslag(any()) }
+    }
+
+    @Test
+    fun skalGjennomføreFultLøpMenIkkeOppretteVedtaksforslagVedSimulering() {
+        val barnFnr = genererFødselsnummer()
+        val bmFnr = genererFødselsnummer()
+        val revurderingForskudd =
+            mockk<RevurderingForskudd>(relaxed = true) {
+                every { barn } returns
+                    mockk<Barn>(relaxed = true) {
+                        every { kravhaver } returns barnFnr
+                    }
+            }
+        val stønadPeriodeDto =
+            mockk<StønadPeriodeDto>(relaxed = true) {
+                every { periode.til } returns null
+                every { beløp } returns BigDecimal(100)
+            }
+        val stønadDto =
+            mockk<StønadDto>(relaxed = true) {
+                every { periodeListe } returns listOf(stønadPeriodeDto)
+            }
+        every { vedtakService.finnSisteManuelleVedtak(any()) } returns
+            mockk {
+                every { vedtak.grunnlagListe } returns
+                    listOf(
+                        GrunnlagDto(
+                            "barn",
+                            Grunnlagstype.PERSON_SØKNADSBARN,
+                            POJONode(Person(ident = Personident(barnFnr))),
+                        ),
+                        GrunnlagDto(
+                            "bm",
+                            Grunnlagstype.PERSON_BIDRAGSMOTTAKER,
+                            POJONode(
+                                Person(
+                                    ident = Personident(bmFnr),
+                                ),
+                            ),
+                        ),
+                        GrunnlagDto(
+                            "bostatus",
+                            Grunnlagstype.BOSTATUS_PERIODE,
+                            POJONode(mockk()),
+                        ),
+                        GrunnlagDto(
+                            "inntekt_periode",
+                            Grunnlagstype.INNTEKT_RAPPORTERING_PERIODE,
+                            POJONode(mockk()),
+                        ),
+                        GrunnlagDto(
+                            "husstandsmedlem",
+                            Grunnlagstype.PERSON_HUSSTANDSMEDLEM,
+                            POJONode(mockk()),
+                        ),
+                        GrunnlagDto(
+                            "sivilstand_periode",
+                            Grunnlagstype.SIVILSTAND_PERIODE,
+                            POJONode(mockk()),
+                        ),
+                        GrunnlagDto(
+                            "innhentet_husstandsmedlem",
+                            Grunnlagstype.INNHENTET_HUSSTANDSMEDLEM,
+                            POJONode(mockk()),
+                        ),
+                        GrunnlagDto(
+                            "innhentet_sivilstand",
+                            Grunnlagstype.INNHENTET_SIVILSTAND,
+                            POJONode(mockk()),
+                        ),
+                    )
+                every { vedtaksId } returns 1
+                every { vedtak.behandlingsreferanseListe } returns
+                    listOf(
+                        mockk {
+                            every { kilde } returns BehandlingsrefKilde.BEHANDLING_ID
+                            every { referanse } returns "123"
+                        },
+                    )
+                every { vedtak.kildeapplikasjon } returns "KkildeILDE"
+            }
+        every { bidragBeløpshistorikkConsumer.hentHistoriskeStønader(any()) } returns stønadDto
+        every { inntektApi.transformerInntekter(any()) } returns
+            mockk {
+                every { summertMånedsinntektListe } returns
+                    listOf(
+                        SummertMånedsinntekt(
+                            YearMonth.now().minusMonths(1),
+                            BigDecimal(1000),
+                            emptyList(),
+                        ),
+                    )
+                every { summertÅrsinntektListe } returns emptyList()
+            }
+        every { beregnForskuddApi.beregn(any()) } returns
+            mockk<BeregnetForskuddResultat>(relaxed = true) {
+                every { beregnetForskuddPeriodeListe } returns
+                    listOf(
+                        ResultatPeriode(
+                            periode = ÅrMånedsperiode(Year.now().atMonth(1), null),
+                            resultat =
+                                ResultatBeregning(
+                                    belop = BigDecimal(12),
+                                    kode = Resultatkode.REDUSERT_FORSKUDD_50_PROSENT,
+                                    regel = "Regel",
+                                ),
+                            grunnlagsreferanseListe = emptyList(),
+                        ),
+                    )
+            }
+
+        evaluerRevurderForskuddService.evaluerRevurderForskudd(
+            revurderingForskudd,
+            simuler = true,
+            antallMånederForBeregning = 12,
+            beregnFraMåned = YearMonth.now(),
+        )
+
+        verify { revurderingForskudd.status = Status.SIMULERT }
+        verify { revurderingForskudd.behandlingstype = Behandlingstype.FATTET_FORSLAG }
+        verify(exactly = 0) { bidragVedtakConsumer.opprettEllerOppdaterVedtaksforslag(any()) }
     }
 }
