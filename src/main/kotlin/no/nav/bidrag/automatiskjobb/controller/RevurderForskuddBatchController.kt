@@ -76,7 +76,8 @@ class RevurderForskuddBatchController(
         ) beregnFraMåned: YearMonth? = null,
         @Parameter(
             required = false,
-            description = "Kan settes for å endre hvilken måned av revurdering forskudd innslag som skal behandles. " +
+            description =
+                "Kan settes for å endre hvilken måned av revurdering forskudd innslag som skal behandles. " +
                     "Default er innværende måned.",
         ) fraMåned: YearMonth? = null,
     ): ResponseEntity<Void> {

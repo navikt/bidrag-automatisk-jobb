@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component
 import java.time.YearMonth
 
 private val LOGGER = KotlinLogging.logger { }
+
 @Component
 class EvaluerRevurderForskuddBatchProcessor(
     private val evaluerRevurderForskuddService: EvaluerRevurderForskuddService,
@@ -41,7 +42,7 @@ class EvaluerRevurderForskuddBatchProcessor(
             item,
             simuler,
             antallMånederForBeregning,
-            beregnFraMåned
+            beregnFraMåned,
         )
     }
 }
