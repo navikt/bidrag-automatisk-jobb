@@ -52,15 +52,15 @@ data class RevurderingForskudd(
     @JoinColumn(name = "revurdering_forskudd_id")
     override val forsendelseBestilling: MutableList<ForsendelseBestilling> = mutableListOf(),
 ) : ForsendelseEntity {
-    override val unikReferanse get() = "revurdering_forskudd_${batchId}_${tilStønadsidReferanse()}"
+    override val unikReferanse get() = "revurdering_forskudd_${batchId}_${tilStønadsid().toReferanse()}"
 
-    fun tilStønadsidReferanse(): String =
+    fun tilStønadsid(): Stønadsid =
         Stønadsid(
             Stønadstype.FORSKUDD,
             Personident(barn.kravhaver),
             personidentNav,
             Saksnummer(barn.saksnummer),
-        ).toReferanse()
+        )
 
     val begrunnelseVisningsnavn
         get() =

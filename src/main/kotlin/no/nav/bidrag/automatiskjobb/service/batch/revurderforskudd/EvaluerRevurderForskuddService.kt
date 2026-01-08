@@ -345,9 +345,7 @@ class EvaluerRevurderForskuddService(
                             innkreving = Innkrevingstype.MED_INNKREVING,
                             sisteVedtaksid =
                                 vedtakService.finnSisteVedtaksid(
-                                    revurderingForskudd.barn.tilStønadsid(
-                                        Stønadstype.FORSKUDD,
-                                    ),
+                                    revurderingForskudd.tilStønadsid(),
                                 ),
                             førsteIndeksreguleringsår = YearMonth.now().plusYears(1).year,
                             periodeListe =
