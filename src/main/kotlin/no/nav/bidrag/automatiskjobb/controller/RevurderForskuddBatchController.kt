@@ -60,11 +60,26 @@ class RevurderForskuddBatchController(
         security = [SecurityRequirement(name = "bearer-key")],
     )
     fun evaluerRevurderForskudd(
-        @Parameter(required = true, example = "true") simuler: Boolean = true,
-        @Parameter(required = true, example = "3") antallMånederForBeregning: Long = 3,
-        @Parameter(required = false) beregnFraMåned: YearMonth = YearMonth.now().minusYears(1),
+        @Parameter(
+            required = true,
+            example = "true",
+            description = "Avgjør om batchen skal kjøres i simuleringsmodus.",
+        ) simuler: Boolean = true,
+        @Parameter(
+            required = true,
+            example = "3",
+            description = "Avgjør hvor mange måneder som skal brukes tilbake i tid for beregning av månedsinntekt.",
+        ) antallMånederForBeregning: Long = 3,
+        @Parameter(
+            required = false,
+            description = "Kan settes for å endre hvilken måned beregningen skal gjelde fra. Default er en måned frem i tid.",
+        ) beregnFraMåned: YearMonth? = null,
+        @Parameter(
+            required = false,
+            description = "Kan settes for å endre hvilken måned av revurdering forskudd innslag som skal behandles. Default er innværende måned.",
+        ) fraMåned: YearMonth? = null,
     ): ResponseEntity<Void> {
-        evaluerRevurderForskuddBatch.start(simuler, antallMånederForBeregning, beregnFraMåned)
+        evaluerRevurderForskuddBatch.start(simuler, antallMånederForBeregning, beregnFraMåned, fraMåned)
         return ResponseEntity.status(HttpStatus.CREATED).build()
     }
 

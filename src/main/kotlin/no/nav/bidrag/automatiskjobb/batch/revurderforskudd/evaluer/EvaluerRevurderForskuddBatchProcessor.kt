@@ -18,9 +18,15 @@ class EvaluerRevurderForskuddBatchProcessor(
 
     @BeforeStep
     fun beforeStep(stepExecution: StepExecution) {
-        simuler = stepExecution.jobParameters.getString("simuler")!!.toBoolean()
-        antallMånederForBeregning = stepExecution.jobParameters.getString("antallManederForBeregning")!!.toLong()
-        beregnFraMåned = YearMonth.parse(stepExecution.jobParameters.getString("beregnFraManed")!!)
+        stepExecution.jobParameters
+            .getString("simuler")
+            ?.toBoolean()
+            ?.let { simuler = it }
+        stepExecution.jobParameters
+            .getString("antallManederForBeregning")
+            ?.toLong()
+            ?.let { antallMånederForBeregning = it }
+        stepExecution.jobParameters.getString("beregnFraManed")?.let { beregnFraMåned = YearMonth.parse(it) }
     }
 
     override fun process(item: RevurderingForskudd): RevurderingForskudd? =

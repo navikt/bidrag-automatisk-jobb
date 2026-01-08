@@ -91,7 +91,7 @@ class EvaluerRevurderForskuddService(
         val sisteManuelleVedtak = finnSisteManuelleVedtak(revurderingForskudd)
         if (sisteManuelleVedtak == null) {
             LOGGER.info {
-                "Fant ingen manuelle vedtak for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer}. Beregner ikke revurdering av forskudd."
+                "Fant ingen manuelle vedtak for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer}. \nBeregner ikke revurdering av forskudd."
             }
             revurderingForskudd.behandlingstype = Behandlingstype.INGEN
             revurderingForskudd.status = if (simuler) Status.SIMULERT else Status.BEHANDLET
@@ -102,7 +102,7 @@ class EvaluerRevurderForskuddService(
         val forskudd = hentForskuddForSak(revurderingForskudd.barn.saksnummer, revurderingForskudd.barn.kravhaver)
         if (forskudd == null || !erForskuddLøpende(forskudd)) {
             LOGGER.info {
-                "Forskudd $forskudd er ikke løpende for revurderingForskudd $revurderingForskudd! Beregner ikke revurdering av forskudd."
+                "Forskudd i sak ${forskudd?.sak} er ikke løpende for revurderingForskudd $revurderingForskudd! \nBeregner ikke revurdering av forskudd."
             }
             revurderingForskudd.behandlingstype = Behandlingstype.INGEN
             revurderingForskudd.status = if (simuler) Status.SIMULERT else Status.BEHANDLET
@@ -119,7 +119,7 @@ class EvaluerRevurderForskuddService(
         if (barnGrunnlagReferanse == null) {
             LOGGER.warn {
                 "Fant ingen grunnlag for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer}. " +
-                    "Dette skal ikke forekomme! Beregner ikke revurdering av forskudd."
+                    "\nDette skal ikke forekomme! Beregner ikke revurdering av forskudd."
             }
             revurderingForskudd.behandlingstype = Behandlingstype.FEILET
             revurderingForskudd.status = if (simuler) Status.SIMULERT else Status.FEILET
@@ -134,7 +134,7 @@ class EvaluerRevurderForskuddService(
         if (bmGrunnlagReferanse == null) {
             LOGGER.warn {
                 "Fant ingen grunnlag for bidragsmottaker for barn ${revurderingForskudd.barn.kravhaver} i sak " +
-                    "${revurderingForskudd.barn.saksnummer}. Dette skal ikke forekomme! Beregner ikke revurdering av forskudd."
+                    "${revurderingForskudd.barn.saksnummer}. \nDette skal ikke forekomme! Beregner ikke revurdering av forskudd."
             }
             revurderingForskudd.behandlingstype = Behandlingstype.FEILET
             revurderingForskudd.status = if (simuler) Status.SIMULERT else Status.FEILET
