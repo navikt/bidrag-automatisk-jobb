@@ -1,6 +1,8 @@
 package no.nav.bidrag.automatiskjobb.batch.revurderforskudd.evaluer
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
+import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import no.nav.bidrag.automatiskjobb.service.batch.revurderforskudd.EvaluerRevurderForskuddService
 import org.springframework.batch.core.StepExecution
 import org.springframework.batch.core.annotation.BeforeStep
@@ -8,6 +10,7 @@ import org.springframework.batch.item.ItemProcessor
 import org.springframework.stereotype.Component
 import java.time.YearMonth
 
+private val LOGGER = KotlinLogging.logger { }
 @Component
 class EvaluerRevurderForskuddBatchProcessor(
     private val evaluerRevurderForskuddService: EvaluerRevurderForskuddService,
@@ -29,6 +32,16 @@ class EvaluerRevurderForskuddBatchProcessor(
         stepExecution.jobParameters.getString("beregnFraManed")?.let { beregnFraMåned = YearMonth.parse(it) }
     }
 
-    override fun process(item: RevurderingForskudd): RevurderingForskudd? =
-        evaluerRevurderForskuddService.evaluerRevurderForskudd(item, simuler, antallMånederForBeregning, beregnFraMåned)
+    override fun process(item: RevurderingForskudd): RevurderingForskudd? {
+        if (item.status != Status.UBEHANDLET) {
+            LOGGER.info { "Revurdering forskudd ${item.id} er allerede ${item.status}. Skal ikke evalueres på nytt." }
+            return null
+        }
+        return evaluerRevurderForskuddService.evaluerRevurderForskudd(
+            item,
+            simuler,
+            antallMånederForBeregning,
+            beregnFraMåned
+        )
+    }
 }
