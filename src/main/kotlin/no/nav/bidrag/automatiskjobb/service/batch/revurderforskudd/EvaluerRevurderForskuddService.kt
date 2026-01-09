@@ -91,20 +91,22 @@ class EvaluerRevurderForskuddService(
         val sisteManuelleVedtak = finnSisteManuelleVedtak(revurderingForskudd)
         if (sisteManuelleVedtak == null) {
             LOGGER.info {
-                "Fant ingen manuelle vedtak for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer}. Beregner ikke revurdering av forskudd."
+                "Fant ingen manuelle vedtak for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer}. \nBeregner ikke revurdering av forskudd."
             }
             revurderingForskudd.behandlingstype = Behandlingstype.INGEN
-            revurderingForskudd.status = Status.BEHANDLET
+            revurderingForskudd.status = if (simuler) Status.SIMULERT else Status.BEHANDLET
+            revurderingForskudd.begrunnelse = listOf("INGEN_MANUELLE_VEDTAK")
             return revurderingForskudd
         }
 
         val forskudd = hentForskuddForSak(revurderingForskudd.barn.saksnummer, revurderingForskudd.barn.kravhaver)
         if (forskudd == null || !erForskuddLøpende(forskudd)) {
             LOGGER.info {
-                "Forskudd $forskudd er ikke løpende for revurderingForskudd $revurderingForskudd! Beregner ikke revurdering av forskudd."
+                "Forskudd i sak ${forskudd?.sak} er ikke løpende for revurderingForskudd $revurderingForskudd! \nBeregner ikke revurdering av forskudd."
             }
             revurderingForskudd.behandlingstype = Behandlingstype.INGEN
-            revurderingForskudd.status = Status.BEHANDLET
+            revurderingForskudd.status = if (simuler) Status.SIMULERT else Status.BEHANDLET
+            revurderingForskudd.begrunnelse = listOf("FORSKUDD_IKKE_LØPENDE")
             return revurderingForskudd
         }
 
@@ -117,10 +119,11 @@ class EvaluerRevurderForskuddService(
         if (barnGrunnlagReferanse == null) {
             LOGGER.warn {
                 "Fant ingen grunnlag for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer}. " +
-                    "Dette skal ikke forekomme! Beregner ikke revurdering av forskudd."
+                    "\nDette skal ikke forekomme! Beregner ikke revurdering av forskudd."
             }
             revurderingForskudd.behandlingstype = Behandlingstype.FEILET
-            revurderingForskudd.status = Status.FEILET
+            revurderingForskudd.status = if (simuler) Status.SIMULERT else Status.FEILET
+            revurderingForskudd.begrunnelse = listOf("FANT_INGEN_GRUNNLAG_FOR_BARN")
             return revurderingForskudd
         }
 
@@ -131,10 +134,11 @@ class EvaluerRevurderForskuddService(
         if (bmGrunnlagReferanse == null) {
             LOGGER.warn {
                 "Fant ingen grunnlag for bidragsmottaker for barn ${revurderingForskudd.barn.kravhaver} i sak " +
-                    "${revurderingForskudd.barn.saksnummer}. Dette skal ikke forekomme! Beregner ikke revurdering av forskudd."
+                    "${revurderingForskudd.barn.saksnummer}. \nDette skal ikke forekomme! Beregner ikke revurdering av forskudd."
             }
             revurderingForskudd.behandlingstype = Behandlingstype.FEILET
-            revurderingForskudd.status = Status.FEILET
+            revurderingForskudd.status = if (simuler) Status.SIMULERT else Status.FEILET
+            revurderingForskudd.begrunnelse = listOf("FANT_INGEN_GRUNNLAG_FOR_BIDRAGSMOTTAKER")
             return revurderingForskudd
         }
 
@@ -176,7 +180,8 @@ class EvaluerRevurderForskuddService(
                 "Manglende grunnlagstyper for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer}: ${manglendeGrunnlagstyper.joinToString()}"
             }
             revurderingForskudd.behandlingstype = Behandlingstype.FEILET
-            revurderingForskudd.status = Status.FEILET
+            revurderingForskudd.status = if (simuler) Status.SIMULERT else Status.FEILET
+            revurderingForskudd.begrunnelse = listOf("MANGLENDE_GRUNNLAGSTYPER: ${manglendeGrunnlagstyper.joinToString()}")
             return revurderingForskudd
         }
 
@@ -244,7 +249,8 @@ class EvaluerRevurderForskuddService(
                 "Feil ved beregning av revurdering forskudd for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer}"
             }
             revurderingForskudd.behandlingstype = Behandlingstype.FEILET
-            revurderingForskudd.status = Status.FEILET
+            revurderingForskudd.status = if (simuler) Status.SIMULERT else Status.FEILET
+            revurderingForskudd.begrunnelse = listOf("FEIL_VED_BEREGNING: ${e.message}")
             return revurderingForskudd
         }
 
@@ -254,31 +260,14 @@ class EvaluerRevurderForskuddService(
         val skalSetteNedForskuddMånedsinntekt =
             skalForskuddSettesNed(løpendeBeløp, beregnetForskuddLavesteMånedsinntekt)
 
-        // Simuleringsmodus er slått på og ingen endring skal gjøres
-        if (simuler) {
-            if (skalSetteNedForskuddÅrsinntekt || skalSetteNedForskuddMånedsinntekt) {
-                LOGGER.info {
-                    "Simulering: Forskudd for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer} skal settes ned etter revurdering."
-                }
-                revurderingForskudd.behandlingstype = Behandlingstype.FATTET_FORSLAG
-            } else {
-                LOGGER.info {
-                    "Simulering: Forskudd for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer} skal ikke settes ned etter revurdering."
-                }
-                revurderingForskudd.behandlingstype = Behandlingstype.INGEN
-            }
-            revurderingForskudd.status = Status.SIMULERT
-            revurderingForskudd.behandlingstype = Behandlingstype.FATTET_FORSLAG
-            return revurderingForskudd
-        }
-
         // Ingen endring i forskudd skal gjøres
         if (!skalSetteNedForskuddMånedsinntekt && !skalSetteNedForskuddÅrsinntekt) {
             LOGGER.info {
                 "Forskudd for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer} skal ikke settes ned etter revurdering."
             }
-            revurderingForskudd.status = Status.BEHANDLET
             revurderingForskudd.behandlingstype = Behandlingstype.INGEN
+            revurderingForskudd.status = if (simuler) Status.SIMULERT else Status.BEHANDLET
+            revurderingForskudd.begrunnelse = listOf("SKAL_IKKE_SETTES_NED")
             return revurderingForskudd
         }
 
@@ -302,11 +291,11 @@ class EvaluerRevurderForskuddService(
                 beregnetForskuddÅrsinntekt,
                 beregnetForskuddLavesteMånedsinntekt,
             )
-        val vedtakId = bidragVedtakConsumer.opprettEllerOppdaterVedtaksforslag(opprettVedtakRequestDto)
+        val vedtakId = if (simuler) null else bidragVedtakConsumer.opprettEllerOppdaterVedtaksforslag(opprettVedtakRequestDto)
 
         revurderingForskudd.vedtaksidBeregning = sisteManuelleVedtak.vedtaksId
         revurderingForskudd.vedtak = vedtakId
-        revurderingForskudd.status = Status.BEHANDLET
+        revurderingForskudd.status = if (simuler) Status.SIMULERT else Status.BEHANDLET
         revurderingForskudd.behandlingstype = Behandlingstype.FATTET_FORSLAG
 
         return revurderingForskudd
@@ -356,9 +345,7 @@ class EvaluerRevurderForskuddService(
                             innkreving = Innkrevingstype.MED_INNKREVING,
                             sisteVedtaksid =
                                 vedtakService.finnSisteVedtaksid(
-                                    revurderingForskudd.barn.tilStønadsid(
-                                        Stønadstype.FORSKUDD,
-                                    ),
+                                    revurderingForskudd.tilStønadsid(),
                                 ),
                             førsteIndeksreguleringsår = YearMonth.now().plusYears(1).year,
                             periodeListe =
