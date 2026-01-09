@@ -57,7 +57,7 @@ class EvaluerRevurderForskuddBatchConfiguration {
     @StepScope
     fun evaluerRevurderForskuddBatchReader(
         revurderForskuddRepository: RevurderForskuddRepository,
-        @Value("#{jobParameters['forMåned']}") forMånedString: String?,
+        @Value("#{jobParameters['forManed']}") forMånedString: String?,
     ): RepositoryItemReader<RevurderingForskudd> {
         val forMåned = forMånedString?.let { YearMonth.parse(it) } ?: YearMonth.now()
 

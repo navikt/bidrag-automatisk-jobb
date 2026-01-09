@@ -79,9 +79,9 @@ class RevurderForskuddBatchController(
             description =
                 "Kan settes for å endre hvilken måned av revurdering forskudd innslag som skal behandles. " +
                     "Default er innværende måned.",
-        ) fraMåned: YearMonth? = null,
+        ) forMåned: YearMonth? = null,
     ): ResponseEntity<Void> {
-        evaluerRevurderForskuddBatch.start(simuler, antallMånederForBeregning, beregnFraMåned, fraMåned)
+        evaluerRevurderForskuddBatch.start(simuler, antallMånederForBeregning, beregnFraMåned, forMåned)
         return ResponseEntity.status(HttpStatus.CREATED).build()
     }
 
