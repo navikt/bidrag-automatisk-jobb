@@ -65,7 +65,7 @@ class EvaluerRevurderForskuddBatchConfiguration {
             .name("evaluerRevurderForskuddBatchReader")
             .repository(revurderForskuddRepository)
             .methodName("findAllByForMåned")
-            .arguments(listOf(forMåned))
+            .arguments(listOf(forMåned.toString()))
             .pageSize(CHUNK_SIZE)
             .sorts(mapOf("id" to Sort.Direction.ASC))
             .saveState(false)
