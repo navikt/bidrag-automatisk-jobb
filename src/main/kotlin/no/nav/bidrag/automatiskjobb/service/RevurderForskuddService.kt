@@ -152,7 +152,10 @@ class RevurderForskuddService(
     fun slettRevurderingForskuddForMåned(forMåned: YearMonth) {
         val revurderingerForMåned =
             revurderForskuddRepository.findAllByForMåned(forMåned.toString(), Pageable.unpaged())
-        revurderForskuddRepository.deleteAll(revurderingerForMåned.content)
+
+        revurderingerForMåned.forEach {
+            revurderForskuddRepository.delete(it)
+        }
         LOGGER.info {
             "Slettet ${revurderingerForMåned.totalElements} revurderinger av forskudd for måned $forMåned"
         }
