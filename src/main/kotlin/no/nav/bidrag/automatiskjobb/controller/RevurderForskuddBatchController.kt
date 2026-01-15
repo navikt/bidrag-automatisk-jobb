@@ -15,6 +15,7 @@ import no.nav.bidrag.automatiskjobb.service.RevurderForskuddService
 import no.nav.security.token.support.core.api.Protected
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RestController
 import java.time.YearMonth
@@ -49,6 +50,23 @@ class RevurderForskuddBatchController(
     ): ResponseEntity<Void> {
         opprettRevurderForskuddBatch.start(månederTilbakeForManueltVedtak)
         return ResponseEntity.status(HttpStatus.CREATED).build()
+    }
+
+    @DeleteMapping("/revurderforskudd/batch/opprett/slett")
+    @Operation(
+        summary = "Sletter alle revurderinger av forskudd for en måned opprettet av batch.",
+        description = "Sletter alle revurderinger av forskudd for en måned opprettet av batch.",
+        security = [SecurityRequirement(name = "bearer-key")],
+    )
+    fun slettRevurderingForskuddForMåned(
+        @Parameter(
+            required = true,
+            description = "Måneden (YYYY-MM) som revurderingene skal slettes for.",
+            example = "2026-01",
+        ) forMåned: YearMonth,
+    ): ResponseEntity<Void> {
+        revurderForskuddService.slettRevurderingForskuddForMåned(forMåned)
+        return ResponseEntity.status(HttpStatus.OK).build()
     }
 
     @PostMapping("/revurderforskudd/batch/evaluer")

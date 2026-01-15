@@ -148,6 +148,16 @@ class RevurderForskuddService(
         }
     }
 
+    @Transactional
+    fun slettRevurderingForskuddForMåned(forMåned: YearMonth) {
+        val revurderingerForMåned =
+            revurderForskuddRepository.findAllByForMåned(forMåned.toString(), Pageable.unpaged())
+        revurderForskuddRepository.deleteAll(revurderingerForMåned.content)
+        LOGGER.info {
+            "Slettet ${revurderingerForMåned.totalElements} revurderinger av forskudd for måned $forMåned"
+        }
+    }
+
     private fun erForskuddRedusertEtterSærbidrag(vedtakInfo: SisteManuelleVedtak): List<ForskuddRedusertResultat> {
         val (vedtaksid, vedtak) = vedtakInfo
         return vedtak.engangsbeløpListe
