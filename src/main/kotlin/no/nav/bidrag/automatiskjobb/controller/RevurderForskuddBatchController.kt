@@ -11,9 +11,11 @@ import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.fattvedtak.FatteVedta
 import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.oppgave.OppgaveRevurderForskuddBatch
 import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.opprett.OpprettRevurderForskuddBatch
 import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.revurderingslenke.RevurderingslenkeRevurderForskuddBatch
+import no.nav.bidrag.automatiskjobb.service.RevurderForskuddService
 import no.nav.security.token.support.core.api.Protected
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RestController
 import java.time.YearMonth
@@ -27,6 +29,7 @@ class RevurderForskuddBatchController(
     private val fatteVedtakRevurderForskuddBatch: FatteVedtakRevurderForskuddBatch,
     private val opprettOppgaveRevurderForskuddBatch: OppgaveRevurderForskuddBatch,
     private val revurderingslenkeRevurderForskuddBatch: RevurderingslenkeRevurderForskuddBatch,
+    private val revurderForskuddService: RevurderForskuddService,
 ) {
     @PostMapping("/revurderforskudd/batch/opprett")
     @Operation(
@@ -49,6 +52,23 @@ class RevurderForskuddBatchController(
         return ResponseEntity.status(HttpStatus.CREATED).build()
     }
 
+    @DeleteMapping("/revurderforskudd/batch/opprett/slett")
+    @Operation(
+        summary = "Sletter alle revurderinger av forskudd for en måned opprettet av batch.",
+        description = "Sletter alle revurderinger av forskudd for en måned opprettet av batch.",
+        security = [SecurityRequirement(name = "bearer-key")],
+    )
+    fun slettRevurderingForskuddForMåned(
+        @Parameter(
+            required = true,
+            description = "Måneden (YYYY-MM) som revurderingene skal slettes for.",
+            example = "2026-01",
+        ) forMåned: YearMonth,
+    ): ResponseEntity<Void> {
+        revurderForskuddService.slettRevurderingForskuddForMåned(forMåned)
+        return ResponseEntity.status(HttpStatus.OK).build()
+    }
+
     @PostMapping("/revurderforskudd/batch/evaluer")
     @Operation(
         summary = "Starter batch: Evaluering for revurdering av forskudd.",
@@ -58,11 +78,40 @@ class RevurderForskuddBatchController(
         security = [SecurityRequirement(name = "bearer-key")],
     )
     fun evaluerRevurderForskudd(
-        @Parameter(required = true, example = "true") simuler: Boolean = true,
-        @Parameter(required = true, example = "3") antallMånederForBeregning: Long = 3,
-        @Parameter(required = false) beregnFraMåned: YearMonth = YearMonth.now().minusYears(1),
+        @Parameter(
+            required = true,
+            example = "true",
+            description = "Avgjør om batchen skal kjøres i simuleringsmodus.",
+        ) simuler: Boolean = true,
+        @Parameter(
+            required = true,
+            example = "3",
+            description = "Avgjør hvor mange måneder som skal brukes tilbake i tid for beregning av månedsinntekt.",
+        ) antallMånederForBeregning: Long = 3,
+        @Parameter(
+            required = false,
+            description = "Kan settes for å endre hvilken måned beregningen skal gjelde fra. Default er en måned frem i tid.",
+        ) beregnFraMåned: YearMonth? = null,
+        @Parameter(
+            required = false,
+            description =
+                "Kan settes for å endre hvilken måned av revurdering forskudd innslag som skal behandles. " +
+                    "Default er innværende måned.",
+        ) forMåned: YearMonth? = null,
     ): ResponseEntity<Void> {
-        evaluerRevurderForskuddBatch.start(simuler, antallMånederForBeregning, beregnFraMåned)
+        evaluerRevurderForskuddBatch.start(simuler, antallMånederForBeregning, beregnFraMåned, forMåned)
+        return ResponseEntity.status(HttpStatus.CREATED).build()
+    }
+
+    @PostMapping("/revurderforskudd/batch/evaluer/resetSimulering")
+    @Operation(
+        summary = "Resetter evaluering for revurdering av forskudd etter simulering.",
+        description =
+            "Resetter evaluerer om forskudd skal revurderes så alle innslag er ubehandlede.",
+        security = [SecurityRequirement(name = "bearer-key")],
+    )
+    fun evaluerRevurderForskudd(): ResponseEntity<Void> {
+        revurderForskuddService.resetEvalueringEtterSimuering()
         return ResponseEntity.status(HttpStatus.CREATED).build()
     }
 

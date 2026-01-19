@@ -11,6 +11,7 @@ import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.domene.sak.Saksnummer
 import no.nav.bidrag.domene.sak.Stønadsid
+import no.nav.bidrag.transport.felles.toLocalDate
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.time.YearMonth
@@ -28,7 +29,7 @@ class OpprettRevurderForskuddService(
         batchId: String,
         cutoffTidspunktForManueltVedtak: LocalDateTime,
     ): RevurderingForskudd? {
-        val inneværendeMåned = YearMonth.now().toString()
+        val inneværendeMåned = YearMonth.now()
         if (finnesEksisterendeRevurderingForskudd(barn, inneværendeMåned)) {
             LOGGER.info {
                 "Barn ${barn.kravhaver} har allerede revurdering av forskudd for måned $inneværendeMåned. Oppretter ikke ny revurdering."
@@ -46,8 +47,15 @@ class OpprettRevurderForskuddService(
             }
             return null
         }
+
+        if (erBarnAttenFørNesteMåned(barn, inneværendeMåned)) {
+            LOGGER.info {
+                "Barn ${barn.kravhaver} er over 18 år eller fyller 18 inneværende måned. Oppretter ikke revurdering av forskudd."
+            }
+            return null
+        }
         return RevurderingForskudd(
-            forMåned = inneværendeMåned,
+            forMåned = inneværendeMåned.toString(),
             batchId = batchId,
             barn = barn,
             status = Status.UBEHANDLET,
@@ -58,10 +66,15 @@ class OpprettRevurderForskuddService(
         }
     }
 
+    private fun erBarnAttenFørNesteMåned(
+        barn: Barn,
+        inneværendeMåned: YearMonth,
+    ): Boolean = barn.fødselsdato?.plusYears(18)?.isBefore(inneværendeMåned.toLocalDate().plusMonths(1)) == true
+
     private fun finnesEksisterendeRevurderingForskudd(
         barn: Barn,
-        inneværendeMåned: String,
-    ): Boolean = revurderForskuddRepository.findAllByBarnIdAndForMåned(barn.id!!, inneværendeMåned) != null
+        inneværendeMåned: YearMonth,
+    ): Boolean = revurderForskuddRepository.findAllByBarnIdAndForMåned(barn.id!!, inneværendeMåned.toString()) != null
 
     private fun harÅpentForskuddssak(barn: Barn): Boolean {
         val hentÅpneBehandlingerRespons = bidragBehandlingConsumer.hentÅpneBehandlingerForBarn(barn.kravhaver)

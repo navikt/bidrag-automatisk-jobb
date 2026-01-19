@@ -21,6 +21,7 @@ import no.nav.bidrag.transport.behandling.behandling.ÅpenBehandling
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 @ExtendWith(MockKExtension::class)
@@ -116,6 +117,7 @@ class OpprettRevurderForskuddServiceTest {
                 every { this@apply.skyldner } returns skyldner
                 every { this@apply.saksnummer } returns saksnummer
                 every { this@apply.id } returns 0
+                every { this@apply.fødselsdato } returns LocalDate.now().minusYears(5)
             }
 
         val resultat = opprettRevurderForskuddService.opprettRevurdereForskudd(barn, "batchId", cutoffTidspunkt)
@@ -123,5 +125,34 @@ class OpprettRevurderForskuddServiceTest {
         resultat shouldNotBe null
         verify(exactly = 1) { vedtakService.finnSisteManuelleVedtak(any()) }
         resultat?.status shouldBe Status.UBEHANDLET
+    }
+
+    @Test
+    fun `skal ikke opprette revudering forskudd om barn har fylt 18`() {
+        val kravhaver = genererFødselsnummer()
+        val skyldner = genererFødselsnummer()
+        val saksnummer = "2500001"
+        every { bidragBehandlingConsumer.hentÅpneBehandlingerForBarn(kravhaver) } returns
+            mockk<HentÅpneBehandlingerRespons> {
+                every { behandlinger } returns emptyList()
+            }
+        val cutoffTidspunkt = LocalDateTime.now().minusDays(1)
+        every { vedtakService.finnSisteManuelleVedtak(any()) } returns
+            mockk<SisteManuelleVedtak> {
+                every { vedtak.opprettetTidspunkt } returns cutoffTidspunkt.minusHours(1)
+            }
+
+        val barn =
+            mockk<Barn>().apply {
+                every { this@apply.kravhaver } returns kravhaver
+                every { this@apply.skyldner } returns skyldner
+                every { this@apply.saksnummer } returns saksnummer
+                every { this@apply.id } returns 0
+                every { this@apply.fødselsdato } returns LocalDate.now().minusYears(18)
+            }
+
+        val resultat = opprettRevurderForskuddService.opprettRevurdereForskudd(barn, "batchId", cutoffTidspunkt)
+
+        resultat shouldBe null
     }
 }

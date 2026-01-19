@@ -13,6 +13,10 @@ import jakarta.persistence.OneToMany
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
+import no.nav.bidrag.domene.felles.personidentNav
+import no.nav.bidrag.domene.ident.Personident
+import no.nav.bidrag.domene.sak.Saksnummer
+import no.nav.bidrag.domene.sak.Stønadsid
 import org.hibernate.proxy.HibernateProxy
 import java.sql.Timestamp
 
@@ -48,7 +52,16 @@ data class RevurderingForskudd(
     @JoinColumn(name = "revurdering_forskudd_id")
     override val forsendelseBestilling: MutableList<ForsendelseBestilling> = mutableListOf(),
 ) : ForsendelseEntity {
-    override val unikReferanse get() = "revurdering_forskudd_${batchId}_${barn.tilStønadsid(Stønadstype.FORSKUDD).toReferanse()}"
+    override val unikReferanse get() = "revurdering_forskudd_${batchId}_${tilStønadsid().toReferanse()}"
+
+    fun tilStønadsid(): Stønadsid =
+        Stønadsid(
+            Stønadstype.FORSKUDD,
+            Personident(barn.kravhaver),
+            personidentNav,
+            Saksnummer(barn.saksnummer),
+        )
+
     val begrunnelseVisningsnavn
         get() =
             begrunnelse.map { begrunnelse ->

@@ -3,21 +3,23 @@ package no.nav.bidrag.automatiskjobb.batch.revurderforskudd.evaluer
 import no.nav.bidrag.automatiskjobb.batch.BatchCompletionNotificationListener
 import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.CHUNK_SIZE
 import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
-import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import no.nav.bidrag.automatiskjobb.persistence.repository.RevurderForskuddRepository
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.Step
+import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.batch.core.job.builder.JobBuilder
 import org.springframework.batch.core.repository.JobRepository
 import org.springframework.batch.core.step.builder.StepBuilder
 import org.springframework.batch.item.data.RepositoryItemReader
 import org.springframework.batch.item.data.builder.RepositoryItemReaderBuilder
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.task.TaskExecutor
 import org.springframework.data.domain.Sort
 import org.springframework.transaction.PlatformTransactionManager
+import java.time.YearMonth
 
 @Configuration
 class EvaluerRevurderForskuddBatchConfiguration {
@@ -34,6 +36,7 @@ class EvaluerRevurderForskuddBatchConfiguration {
 
     @Bean
     fun evaluerRevurderForskuddStep(
+        @Qualifier("batchTaskExecutor") taskExecutor: TaskExecutor,
         jobRepository: JobRepository,
         transactionManager: PlatformTransactionManager,
         evaluerRevurderForskuddBatchReader: RepositoryItemReader<RevurderingForskudd>,
@@ -45,20 +48,27 @@ class EvaluerRevurderForskuddBatchConfiguration {
             .reader(evaluerRevurderForskuddBatchReader)
             .processor(evaluerRevurderForskuddBatchProcessor)
             .writer(evaluerRevurderForskuddBatchWriter)
+            .taskExecutor(taskExecutor)
             .faultTolerant()
             .skipLimit(CHUNK_SIZE)
             .build()
 
     @Bean
+    @StepScope
     fun evaluerRevurderForskuddBatchReader(
         revurderForskuddRepository: RevurderForskuddRepository,
-    ): RepositoryItemReader<RevurderingForskudd> =
-        RepositoryItemReaderBuilder<RevurderingForskudd>()
+        @Value("#{jobParameters['forManed']}") forMånedString: String?,
+    ): RepositoryItemReader<RevurderingForskudd> {
+        val forMåned = forMånedString?.let { YearMonth.parse(it) } ?: YearMonth.now()
+
+        return RepositoryItemReaderBuilder<RevurderingForskudd>()
             .name("evaluerRevurderForskuddBatchReader")
             .repository(revurderForskuddRepository)
-            .methodName("findAllByStatusIs")
-            .arguments(listOf(Status.UBEHANDLET))
+            .methodName("findAllByForMåned")
+            .arguments(listOf(forMåned.toString()))
             .pageSize(CHUNK_SIZE)
             .sorts(mapOf("id" to Sort.Direction.ASC))
+            .saveState(false)
             .build()
+    }
 }
