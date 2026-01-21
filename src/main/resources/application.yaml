@@ -142,6 +142,10 @@ spring:
   jpa:
     database: postgresql
     open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 100
   kafka:
     bootstrap-servers: ${KAFKA_BROKERS}
     properties:
