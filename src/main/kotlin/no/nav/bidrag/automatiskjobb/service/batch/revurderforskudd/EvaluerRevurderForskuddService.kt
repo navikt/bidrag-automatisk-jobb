@@ -189,7 +189,19 @@ class EvaluerRevurderForskuddService(
         relevantGrunnlag.add(opprettVirkningstidspunkt(forskudd.mottaker.verdi, beregnFraMåned))
 
         // Henter inntektsgrunnlaget for forskuddet
-        val grunnlag = hentInntektsGrunnlagForForskudd(forskudd)
+        var grunnlag: HentGrunnlagDto
+        try {
+            grunnlag = hentInntektsGrunnlagForForskudd(forskudd)
+        } catch (e: Exception) {
+            LOGGER.warn(e) {
+                "Feil ved henting av inntektsgrunnlag for revurdering av forskudd for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer}"
+            }
+            revurderingForskudd.behandlingstype = Behandlingstype.FEILET
+            revurderingForskudd.status = if (simuler) Status.SIMULERT else Status.FEILET
+            revurderingForskudd.begrunnelse = listOf("FEIL_VED_HENTING_AV_INNTEKTSGRUNNLAG: ${e.message}")
+            return revurderingForskudd
+        }
+
         // Legger til INNHETET_INNTEKT_AINNTEKT på grunnlaget
         val innhentetGrunnlagForBM =
             grunnlag.ainntektListe.tilGrunnlagsobjekt(
