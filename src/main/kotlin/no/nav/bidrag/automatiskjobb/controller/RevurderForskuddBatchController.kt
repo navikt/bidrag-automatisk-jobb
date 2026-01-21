@@ -128,6 +128,7 @@ class RevurderForskuddBatchController(
         return ResponseEntity.status(HttpStatus.CREATED).build()
     }
 
+    @Deprecated("Bruk revurderingslenke i stedet")
     @PostMapping("/revurderforskudd/batch/opprettoppgaver")
     @Operation(
         summary = "Starter batch: Opprett oppgaver for revurder forskudd i tilfeller hvor det skal tilbakekreves forskudd.",
