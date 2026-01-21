@@ -10,13 +10,17 @@ class BatchConfiguration {
     companion object {
         const val CHUNK_SIZE = 100
         const val PAGE_SIZE = 100
-        const val GRID_SIZE = 5
+        const val GRID_SIZE = 10
     }
 
     @Bean
-    fun batchTaskExecutor(): TaskExecutor? =
+    fun batchTaskExecutor(): TaskExecutor =
         ThreadPoolTaskExecutor().apply {
             corePoolSize = GRID_SIZE
-            maxPoolSize = 20
+            maxPoolSize = 30
+            queueCapacity = 200
+            setThreadNamePrefix("batch-")
+            setWaitForTasksToCompleteOnShutdown(true)
+            setAwaitTerminationSeconds(60)
         }
 }
