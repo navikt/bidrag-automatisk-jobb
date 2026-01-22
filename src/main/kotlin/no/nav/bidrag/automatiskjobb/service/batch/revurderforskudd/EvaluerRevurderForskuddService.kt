@@ -15,6 +15,7 @@ import no.nav.bidrag.automatiskjobb.service.ReskontroService
 import no.nav.bidrag.beregn.barnebidrag.service.external.SisteManuelleVedtak
 import no.nav.bidrag.beregn.barnebidrag.service.external.VedtakService
 import no.nav.bidrag.beregn.barnebidrag.utils.hentSisteLøpendePeriode
+import no.nav.bidrag.beregn.core.exception.UgyldigInputException
 import no.nav.bidrag.beregn.forskudd.BeregnForskuddApi
 import no.nav.bidrag.commons.util.IdentUtils
 import no.nav.bidrag.domene.enums.grunnlag.GrunnlagRequestType
@@ -189,7 +190,19 @@ class EvaluerRevurderForskuddService(
         relevantGrunnlag.add(opprettVirkningstidspunkt(forskudd.mottaker.verdi, beregnFraMåned))
 
         // Henter inntektsgrunnlaget for forskuddet
-        val grunnlag = hentInntektsGrunnlagForForskudd(forskudd)
+        var grunnlag: HentGrunnlagDto
+        try {
+            grunnlag = hentInntektsGrunnlagForForskudd(forskudd)
+        } catch (e: Exception) {
+            LOGGER.warn(e) {
+                "Feil ved henting av inntektsgrunnlag for revurdering av forskudd for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer}"
+            }
+            revurderingForskudd.behandlingstype = Behandlingstype.FEILET
+            revurderingForskudd.status = if (simuler) Status.SIMULERT else Status.FEILET
+            revurderingForskudd.begrunnelse = listOf("FEIL_VED_HENTING_AV_INNTEKTSGRUNNLAG: ${e.message}")
+            return revurderingForskudd
+        }
+
         // Legger til INNHETET_INNTEKT_AINNTEKT på grunnlaget
         val innhentetGrunnlagForBM =
             grunnlag.ainntektListe.tilGrunnlagsobjekt(
@@ -251,6 +264,22 @@ class EvaluerRevurderForskuddService(
             revurderingForskudd.behandlingstype = Behandlingstype.FEILET
             revurderingForskudd.status = if (simuler) Status.SIMULERT else Status.FEILET
             revurderingForskudd.begrunnelse = listOf("FEIL_VED_BEREGNING: ${e.message}")
+            return revurderingForskudd
+        } catch (e: UgyldigInputException) {
+            LOGGER.error(e) {
+                "Ugyldig input ved beregning av revurdering forskudd for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer}"
+            }
+            revurderingForskudd.behandlingstype = Behandlingstype.FEILET
+            revurderingForskudd.status = if (simuler) Status.SIMULERT else Status.FEILET
+            revurderingForskudd.begrunnelse = listOf("UGYLDIG_INPUT_VED_BEREGNING: ${e.message}")
+            return revurderingForskudd
+        } catch (e: Exception) {
+            LOGGER.error(e) {
+                "Ukjent feil ved beregning av revurdering forskudd for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer}"
+            }
+            revurderingForskudd.behandlingstype = Behandlingstype.FEILET
+            revurderingForskudd.status = if (simuler) Status.SIMULERT else Status.FEILET
+            revurderingForskudd.begrunnelse = listOf("UKJENT_FEIL_VED_BEREGNING: ${e.message}")
             return revurderingForskudd
         }
 

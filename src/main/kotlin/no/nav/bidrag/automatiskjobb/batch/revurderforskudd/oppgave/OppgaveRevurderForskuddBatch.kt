@@ -6,6 +6,7 @@ import org.springframework.batch.core.launch.JobLauncher
 import org.springframework.stereotype.Component
 import java.util.UUID
 
+@Deprecated("Bruk revurderingslenke i stedet")
 @Component
 class OppgaveRevurderForskuddBatch(
     private val jobLauncher: JobLauncher,

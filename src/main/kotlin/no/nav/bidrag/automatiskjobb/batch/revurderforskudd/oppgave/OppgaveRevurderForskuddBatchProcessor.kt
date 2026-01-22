@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component
 private val LOGGER = KotlinLogging.logger { }
 
 @Component
+@Deprecated("Bruk revurderingslenke i stedet")
 class OppgaveRevurderForskuddBatchProcessor(
     private val oppgaveRevurderingForskuddService: OppgaveRevurderingForskuddService,
 ) : ItemProcessor<RevurderingForskudd, Int> {

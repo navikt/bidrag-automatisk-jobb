@@ -127,8 +127,8 @@ spring:
       idle-timeout: 600000
       max-lifetime: 1800000
       connectionTimeout: 30000
-      maximum-pool-size: 15
-      minimum-idle: 2
+      maximum-pool-size: 35
+      minimum-idle: 5
       leakDetectionThreshold: 300000
       data-source-properties:
         ssl: true
@@ -142,6 +142,10 @@ spring:
   jpa:
     database: postgresql
     open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 100
   kafka:
     bootstrap-servers: ${KAFKA_BROKERS}
     properties:

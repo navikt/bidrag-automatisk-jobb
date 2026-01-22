@@ -20,6 +20,7 @@ import org.springframework.core.task.TaskExecutor
 import org.springframework.data.domain.Sort
 import org.springframework.transaction.PlatformTransactionManager
 
+@Deprecated("Bruk revurderingslenke i stedet")
 @Configuration
 class OppgaveRevurderForskuddBatchConfiguration {
     @Bean
