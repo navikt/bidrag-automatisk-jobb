@@ -18,6 +18,7 @@ class ReskontroService(
         return transaksjoner.transaksjoner.any {
             it.transaksjonskode == "A4" &&
                 it.beløp != null &&
+                it.beløp != BigDecimal.ZERO &&
                 perioder.any { periode -> periode == it.periode?.fom }
         }
     }
