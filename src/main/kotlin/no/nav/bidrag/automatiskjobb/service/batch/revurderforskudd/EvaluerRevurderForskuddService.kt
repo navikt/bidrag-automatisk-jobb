@@ -182,7 +182,8 @@ class EvaluerRevurderForskuddService(
             }
             revurderingForskudd.behandlingstype = Behandlingstype.FEILET
             revurderingForskudd.status = if (simuler) Status.SIMULERT else Status.FEILET
-            revurderingForskudd.begrunnelse = listOf("MANGLENDE_GRUNNLAGSTYPER: ${manglendeGrunnlagstyper.joinToString()}")
+            revurderingForskudd.begrunnelse =
+                listOf("MANGLENDE_GRUNNLAGSTYPER: ${manglendeGrunnlagstyper.joinToString()}")
             return revurderingForskudd
         }
 
@@ -301,16 +302,26 @@ class EvaluerRevurderForskuddService(
         }
 
         // Gjør en sjekk mot reskontro for å se om det eksisterer A4 transaksjoner (forskudd) for de siste 3 månedene. Dette gjøres for å kunne opprette oppgaver for tilbakekreving det er utbetalt forskudd
-        if (bidragReskontroService.finnesForskuddForSakPeriode(
-                Saksnummer(revurderingForskudd.barn.saksnummer),
-                listOf(
-                    LocalDate.now().minusMonths(3),
-                    LocalDate.now().minusMonths(2),
-                    LocalDate.now().minusMonths(1),
-                ),
-            )
-        ) {
-            revurderingForskudd.vurdereTilbakekreving = true
+        try {
+            if (bidragReskontroService.finnesForskuddForSakPeriode(
+                    Saksnummer(revurderingForskudd.barn.saksnummer),
+                    listOf(
+                        LocalDate.now().minusMonths(3),
+                        LocalDate.now().minusMonths(2),
+                        LocalDate.now().minusMonths(1),
+                    ),
+                )
+            ) {
+                revurderingForskudd.vurdereTilbakekreving = true
+            }
+        } catch (e: Exception) {
+            LOGGER.error(e) {
+                "Feil ved sjekk av reskontro for revurdering forskudd for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer}"
+            }
+            revurderingForskudd.behandlingstype = Behandlingstype.FEILET
+            revurderingForskudd.status = if (simuler) Status.SIMULERT else Status.FEILET
+            revurderingForskudd.begrunnelse = listOf("FEIL_VED_SJEKK_AV_RESKONTRO: ${e.message}")
+            return revurderingForskudd
         }
 
         val opprettVedtakRequestDto =
@@ -320,7 +331,8 @@ class EvaluerRevurderForskuddService(
                 beregnetForskuddÅrsinntekt,
                 beregnetForskuddLavesteMånedsinntekt,
             )
-        val vedtakId = if (simuler) null else bidragVedtakConsumer.opprettEllerOppdaterVedtaksforslag(opprettVedtakRequestDto)
+        val vedtakId =
+            if (simuler) null else bidragVedtakConsumer.opprettEllerOppdaterVedtaksforslag(opprettVedtakRequestDto)
 
         revurderingForskudd.vedtaksidBeregning = sisteManuelleVedtak.vedtaksId
         revurderingForskudd.vedtak = vedtakId
