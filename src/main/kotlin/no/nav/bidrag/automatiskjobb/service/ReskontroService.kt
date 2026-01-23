@@ -17,8 +17,8 @@ class ReskontroService(
         val transaksjoner = bidragReskontroConsumer.hentTransaksjonerForBidragssak(saksnummer)
         return transaksjoner.transaksjoner.any {
             it.transaksjonskode == "A4" &&
-                perioder.any { periode -> periode.equals(it.periode?.fom) } &&
-                it.beløp != null && it.beløp!! > BigDecimal.ZERO
+                it.beløp != null &&
+                perioder.any { periode -> periode == it.periode?.fom }
         }
     }
 }
