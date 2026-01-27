@@ -103,6 +103,12 @@ class RevurderForskuddBatchController(
         return ResponseEntity.status(HttpStatus.CREATED).build()
     }
 
+    @PostMapping("/revurderforskudd/batch/reskontroVurderTilbakekreving")
+    fun reskontroVurderTilbakekreving(): ResponseEntity<Void> {
+        revurderForskuddService.vurderTilbakekrevingBasertPåReskontro()
+        return ResponseEntity.status(HttpStatus.CREATED).build()
+    }
+
     @PostMapping("/revurderforskudd/batch/evaluer/resetSimulering")
     @Operation(
         summary = "Resetter evaluering for revurdering av forskudd etter simulering.",

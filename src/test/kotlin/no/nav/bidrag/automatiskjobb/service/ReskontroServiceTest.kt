@@ -32,7 +32,7 @@ class ReskontroServiceTest {
                 ),
             )
 
-        val resultat = reskontroService.finnesForskuddForSakPeriode(Saksnummer("123"), listOf(LocalDate.of(2023, 1, 1)))
+        val resultat = reskontroService.finnesForskuddForSakPeriode(Saksnummer("123"), listOf(LocalDate.of(2023, 1, 25)))
         assertTrue(resultat)
     }
 

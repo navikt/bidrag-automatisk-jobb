@@ -1,6 +1,7 @@
 package no.nav.bidrag.automatiskjobb.persistence.repository
 
 import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
+import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -36,4 +37,6 @@ interface RevurderForskuddRepository : JpaRepository<RevurderingForskudd, Int> {
         forMåned: String,
         pageable: Pageable,
     ): Page<RevurderingForskudd>
+
+    fun findAllByBehandlingstypeIs(behandlingstype: Behandlingstype): List<RevurderingForskudd>
 }
