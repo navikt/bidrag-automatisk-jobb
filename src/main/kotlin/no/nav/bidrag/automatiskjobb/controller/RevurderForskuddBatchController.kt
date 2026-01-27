@@ -6,6 +6,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.evaluer.EvaluerRevurderForskuddBatch
 import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.fattvedtak.FatteVedtakRevurderForskuddBatch
 import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.oppgave.OppgaveRevurderForskuddBatch
@@ -105,7 +108,9 @@ class RevurderForskuddBatchController(
 
     @PostMapping("/revurderforskudd/batch/reskontroVurderTilbakekreving")
     fun reskontroVurderTilbakekreving(): ResponseEntity<Void> {
-        revurderForskuddService.vurderTilbakekrevingBasertPåReskontro()
+        CoroutineScope(Dispatchers.IO).launch {
+            revurderForskuddService.vurderTilbakekrevingBasertPåReskontro()
+        }
         return ResponseEntity.status(HttpStatus.CREATED).build()
     }
 
