@@ -7,6 +7,7 @@ import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer
 import no.nav.bidrag.automatiskjobb.mapper.GrunnlagMapper
 import no.nav.bidrag.automatiskjobb.mapper.erBidrag
+import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import no.nav.bidrag.automatiskjobb.persistence.repository.RevurderForskuddRepository
 import no.nav.bidrag.automatiskjobb.service.model.AdresseEndretResultat
@@ -48,6 +49,7 @@ import org.springframework.context.annotation.Import
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
 
@@ -59,13 +61,14 @@ private val LOGGER = KotlinLogging.logger { }
 @Service
 @Import(BeregnForskuddApi::class, Vedtaksfiltrering::class)
 class RevurderForskuddService(
-    private val bidragBeløpshistorikkConsumer: BidragBeløpshistorikkConsumer,
+    private val `bidragBeløpshistorikkConsumer`: BidragBeløpshistorikkConsumer,
     private val bidragVedtakConsumer: BidragVedtakConsumer,
     private val bidragSakConsumer: BidragSakConsumer,
     private val bidragPersonConsumer: BidragPersonConsumer,
     private val beregning: BeregnForskuddApi,
     private val vedtaksFilter: Vedtaksfiltrering,
     private val revurderForskuddRepository: RevurderForskuddRepository,
+    private val reskontroService: ReskontroService,
 ) {
     fun skalBMFortsattMottaForskuddForSøknadsbarnEtterAdresseendring(aktørId: String): List<AdresseEndretResultat> {
         val person = bidragPersonConsumer.hentPerson(Personident(aktørId))
@@ -398,4 +401,24 @@ class RevurderForskuddService(
 
     private fun List<StønadPeriodeDto>.hentSisteLøpendePeriode() =
         maxByOrNull { it.periode.fom }?.takeIf { it.periode.til == null || it.periode.til!!.isAfter(YearMonth.now()) }
+
+    /**
+     * Oppdaterer vurdereTilbakekrevingsfeltet basert på om det finnes forskudd i reskontro for en eller flere av tre siste månedene.
+     */
+    @Transactional
+    fun vurderTilbakekrevingBasertPåReskontro() {
+        val fattedeForslag = revurderForskuddRepository.findAllByBehandlingstypeIs(Behandlingstype.FATTET_FORSLAG)
+        fattedeForslag.forEach {
+            it.vurdereTilbakekreving =
+                reskontroService.finnesForskuddForSakPeriode(
+                    Saksnummer(it.barn.saksnummer),
+                    listOf(
+                        LocalDate.now().minusMonths(3),
+                        LocalDate.now().minusMonths(2),
+                        LocalDate.now().minusMonths(1),
+                    ),
+                )
+        }
+        fattedeForslag.forEach { revurderForskuddRepository.save(it) }
+    }
 }

@@ -11,6 +11,7 @@ import no.nav.bidrag.automatiskjobb.consumer.BidragPersonConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer
 import no.nav.bidrag.automatiskjobb.persistence.repository.RevurderForskuddRepository
+import no.nav.bidrag.automatiskjobb.service.ReskontroService
 import no.nav.bidrag.automatiskjobb.service.RevurderForskuddService
 import no.nav.bidrag.automatiskjobb.testdata.opprettSakRespons
 import no.nav.bidrag.automatiskjobb.testdata.opprettStønadDto
@@ -60,6 +61,9 @@ class RevurderForskuddPersonhendelseTest {
     @MockK
     lateinit var revurderForskuddRepository: RevurderForskuddRepository
 
+    @MockK
+    lateinit var reskontroService: ReskontroService
+
     @BeforeEach
     fun initMocks() {
         // commonObjectmapper.readValue(hentFil("/__files/vedtak_forskudd.json"))
@@ -102,6 +106,7 @@ class RevurderForskuddPersonhendelseTest {
                 BeregnForskuddApi(),
                 Vedtaksfiltrering(),
                 revurderForskuddRepository,
+                reskontroService,
             )
     }
 
