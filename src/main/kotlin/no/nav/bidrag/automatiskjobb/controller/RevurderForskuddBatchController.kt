@@ -118,12 +118,24 @@ class RevurderForskuddBatchController(
     @Operation(
         summary = "Resetter evaluering for revurdering av forskudd etter simulering.",
         description =
-            "Resetter evaluerer om forskudd skal revurderes så alle innslag er ubehandlede.",
+            "Resetter status til UBEHANDLET for alle revurdering som er simulerte.",
         security = [SecurityRequirement(name = "bearer-key")],
     )
     fun evaluerRevurderForskudd(): ResponseEntity<Void> {
         revurderForskuddService.resetEvalueringEtterSimuering()
-        return ResponseEntity.status(HttpStatus.CREATED).build()
+        return ResponseEntity.status(HttpStatus.OK).build()
+    }
+
+    @PostMapping("/revurderforskudd/batch/evaluer/resetFeilede")
+    @Operation(
+        summary = "Resetter evaluering for feilede revurderinger av forskudd.",
+        description =
+            "Setter status til UBEHANDLET for alle revurderinger av forskudd som har feilet i evaluering.",
+        security = [SecurityRequirement(name = "bearer-key")],
+    )
+    fun resetFeiledeRevurderForskudd(): ResponseEntity<Void> {
+        revurderForskuddService.resetFeiledeRevurderinger()
+        return ResponseEntity.status(HttpStatus.OK).build()
     }
 
     @PostMapping("/revurderforskudd/batch/fattevedtak")

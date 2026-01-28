@@ -152,6 +152,17 @@ class RevurderForskuddService(
     }
 
     @Transactional
+    fun resetFeiledeRevurderinger() {
+        val feiledeRevurderForskudd =
+            revurderForskuddRepository.findAllByBehandlingstypeIs(Behandlingstype.FEILET)
+        feiledeRevurderForskudd.forEach {
+            it.status = Status.UBEHANDLET
+            it.behandlingstype = null
+            it.begrunnelse = emptyList()
+        }
+    }
+
+    @Transactional
     fun slettRevurderingForskuddForMåned(forMåned: YearMonth) {
         val revurderingerForMåned =
             revurderForskuddRepository.findAllByForMåned(forMåned.toString(), Pageable.unpaged())
