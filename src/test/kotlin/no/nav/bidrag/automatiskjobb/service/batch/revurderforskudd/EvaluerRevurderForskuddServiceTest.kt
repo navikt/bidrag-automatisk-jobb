@@ -1,7 +1,6 @@
 package no.nav.bidrag.automatiskjobb.service.batch.revurderforskudd
 
 import com.fasterxml.jackson.databind.node.POJONode
-import io.kotest.matchers.longs.exactly
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
@@ -70,6 +69,9 @@ class EvaluerRevurderForskuddServiceTest {
 
     @MockK(relaxed = true)
     private lateinit var vedtakMapper: VedtakMapper
+
+//    @MockK(relaxed = true)
+//    private lateinit var grunnlagMapper: GrunnlagMapper
 
     @InjectMockKs
     private lateinit var evaluerRevurderForskuddService: EvaluerRevurderForskuddService
@@ -379,32 +381,56 @@ class EvaluerRevurderForskuddServiceTest {
                         GrunnlagDto(
                             "bostatus",
                             Grunnlagstype.BOSTATUS_PERIODE,
-                            POJONode(mockk()),
+                            POJONode(
+                                Person(
+                                    ident = Personident(bmFnr),
+                                ),
+                            ),
                         ),
                         GrunnlagDto(
                             "inntekt_periode",
                             Grunnlagstype.INNTEKT_RAPPORTERING_PERIODE,
-                            POJONode(mockk()),
+                            POJONode(
+                                Person(
+                                    ident = Personident(bmFnr),
+                                ),
+                            ),
                         ),
                         GrunnlagDto(
                             "husstandsmedlem",
                             Grunnlagstype.PERSON_HUSSTANDSMEDLEM,
-                            POJONode(mockk()),
+                            POJONode(
+                                Person(
+                                    ident = Personident(bmFnr),
+                                ),
+                            ),
                         ),
                         GrunnlagDto(
                             "sivilstand_periode",
                             Grunnlagstype.SIVILSTAND_PERIODE,
-                            POJONode(mockk()),
+                            POJONode(
+                                Person(
+                                    ident = Personident(bmFnr),
+                                ),
+                            ),
                         ),
                         GrunnlagDto(
                             "innhentet_husstandsmedlem",
                             Grunnlagstype.INNHENTET_HUSSTANDSMEDLEM,
-                            POJONode(mockk()),
+                            POJONode(
+                                Person(
+                                    ident = Personident(bmFnr),
+                                ),
+                            ),
                         ),
                         GrunnlagDto(
                             "innhentet_sivilstand",
                             Grunnlagstype.INNHENTET_SIVILSTAND,
-                            POJONode(mockk()),
+                            POJONode(
+                                Person(
+                                    ident = Personident(bmFnr),
+                                ),
+                            ),
                         ),
                     )
                 every { vedtaksId } returns 1
@@ -500,32 +526,56 @@ class EvaluerRevurderForskuddServiceTest {
                         GrunnlagDto(
                             "bostatus",
                             Grunnlagstype.BOSTATUS_PERIODE,
-                            POJONode(mockk()),
+                            POJONode(
+                                Person(
+                                    ident = Personident(bmFnr),
+                                ),
+                            ),
                         ),
                         GrunnlagDto(
                             "inntekt_periode",
                             Grunnlagstype.INNTEKT_RAPPORTERING_PERIODE,
-                            POJONode(mockk()),
+                            POJONode(
+                                Person(
+                                    ident = Personident(bmFnr),
+                                ),
+                            ),
                         ),
                         GrunnlagDto(
                             "husstandsmedlem",
                             Grunnlagstype.PERSON_HUSSTANDSMEDLEM,
-                            POJONode(mockk()),
+                            POJONode(
+                                Person(
+                                    ident = Personident(bmFnr),
+                                ),
+                            ),
                         ),
                         GrunnlagDto(
                             "sivilstand_periode",
                             Grunnlagstype.SIVILSTAND_PERIODE,
-                            POJONode(mockk()),
+                            POJONode(
+                                Person(
+                                    ident = Personident(bmFnr),
+                                ),
+                            ),
                         ),
                         GrunnlagDto(
                             "innhentet_husstandsmedlem",
                             Grunnlagstype.INNHENTET_HUSSTANDSMEDLEM,
-                            POJONode(mockk()),
+                            POJONode(
+                                Person(
+                                    ident = Personident(bmFnr),
+                                ),
+                            ),
                         ),
                         GrunnlagDto(
                             "innhentet_sivilstand",
                             Grunnlagstype.INNHENTET_SIVILSTAND,
-                            POJONode(mockk()),
+                            POJONode(
+                                Person(
+                                    ident = Personident(bmFnr),
+                                ),
+                            ),
                         ),
                     )
                 every { vedtaksId } returns 1
@@ -536,7 +586,7 @@ class EvaluerRevurderForskuddServiceTest {
                             every { referanse } returns "123"
                         },
                     )
-                every { vedtak.kildeapplikasjon } returns "KkildeILDE"
+                every { vedtak.kildeapplikasjon } returns "kildeapplikasjon"
             }
         every { bidragBeløpshistorikkConsumer.hentHistoriskeStønader(any()) } returns stønadDto
         every { inntektApi.transformerInntekter(any()) } returns
