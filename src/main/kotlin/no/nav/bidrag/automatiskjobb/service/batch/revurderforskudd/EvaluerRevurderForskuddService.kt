@@ -528,6 +528,7 @@ class EvaluerRevurderForskuddService(
                             manueltRegistrert = false,
                             inntektsrapportering = Inntektsrapportering.AINNTEKT_BEREGNET_12MND,
                             beløp = inntekt,
+                            opprinneligPeriode = ÅrMånedsperiode(LocalDate.now().minusYears(1), null),
                             gjelderBarn = barnGrunnlagReferanse,
                             valgt = true,
                         ),
