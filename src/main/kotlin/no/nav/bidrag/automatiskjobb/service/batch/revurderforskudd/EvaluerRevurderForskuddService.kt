@@ -329,6 +329,7 @@ class EvaluerRevurderForskuddService(
                 skalSetteNedForskuddÅrsinntekt,
                 beregnetForskuddÅrsinntekt,
                 beregnetForskuddLavesteMånedsinntekt,
+                relevantGrunnlag,
             )
         val vedtakId =
             if (simuler) null else bidragVedtakConsumer.opprettEllerOppdaterVedtaksforslag(opprettVedtakRequestDto)
@@ -355,6 +356,7 @@ class EvaluerRevurderForskuddService(
         skalSetteNedForskuddÅrsinntekt: Boolean,
         beregnetForskuddÅrsinntekt: BeregnetForskuddResultat,
         beregnetForskuddLavesteMånedsinntekt: BeregnetForskuddResultat?,
+        relevantGrunnlag: MutableList<GrunnlagDto>,
     ): OpprettVedtakRequestDto {
         val sak = bidragSakConsumer.hentSak(revurderingForskudd.barn.saksnummer)
         val sakrolleBarn = vedtakMapper.hentBarn(sak, revurderingForskudd.barn.kravhaver)
@@ -365,6 +367,8 @@ class EvaluerRevurderForskuddService(
             } else {
                 beregnetForskuddLavesteMånedsinntekt!!
             }
+        // Siden beregningen ikke returnerer alt grunnlag er det nødvendig å slå sammen grunnlagene. toSet() sørger for at duplikater fjernes.
+        val grunnlag = listOf(beregnetForskuddResultat.grunnlagListe, relevantGrunnlag).flatten().toSet()
 
         val opprettVedtakRequestDto =
             OpprettVedtakRequestDto(
@@ -408,7 +412,7 @@ class EvaluerRevurderForskuddService(
                             referanse = revurderingForskudd.batchId,
                         ),
                     ),
-                grunnlagListe = beregnetForskuddResultat.grunnlagListe.map { it.tilOpprettGrunnlagRequestDto() },
+                grunnlagListe = grunnlag.map { it.tilOpprettGrunnlagRequestDto() },
                 kilde = Vedtakskilde.AUTOMATISK,
             )
         return opprettVedtakRequestDto
