@@ -17,7 +17,6 @@ import no.nav.bidrag.beregn.barnebidrag.service.external.VedtakService
 import no.nav.bidrag.beregn.barnebidrag.utils.hentSisteLøpendePeriode
 import no.nav.bidrag.beregn.core.exception.UgyldigInputException
 import no.nav.bidrag.beregn.forskudd.BeregnForskuddApi
-import no.nav.bidrag.commons.util.IdentUtils
 import no.nav.bidrag.domene.enums.grunnlag.GrunnlagRequestType
 import no.nav.bidrag.domene.enums.grunnlag.Grunnlagstype
 import no.nav.bidrag.domene.enums.inntekt.Inntektsrapportering
@@ -379,7 +378,7 @@ class EvaluerRevurderForskuddService(
                             type = Stønadstype.FORSKUDD,
                             sak = Saksnummer(revurderingForskudd.barn.saksnummer),
                             kravhaver = Personident(revurderingForskudd.barn.kravhaver),
-                            skyldner = Personident(IdentUtils.NAV_TSS_IDENT),
+                            skyldner = Personident("NAV"),
                             mottaker = mottaker,
                             beslutning = Beslutningstype.ENDRING,
                             grunnlagReferanseListe = emptyList(),
