@@ -74,6 +74,14 @@ class BidragVedtakConsumer(
                 LOGGER.info { "Vedtaksforslag med referanse ${request.unikReferanse} finnes allerede. Oppdaterer vedtaksforslaget" }
                 val resultat = e.getResponseBodyAs(OpprettVedtakConflictResponse::class.java)!!
                 oppdaterVedtaksforslag(resultat.vedtaksid, request)
+            } else if (e.statusCode == HttpStatus.PRECONDITION_FAILED) {
+                LOGGER.error(e) {
+                    "Precondition failed (HTTP 412) ved oppretting av vedtaksforslag " +
+                        "med referanse ${request.unikReferanse} " +
+                        "for barn ${request.stønadsendringListe.first().kravhaver} " +
+                        "i sak ${request.stønadsendringListe.first().sak}"
+                }
+                throw e
             } else {
                 LOGGER.error(e) { "Feil ved oppretting av vedtaksforslag med referanse ${request.unikReferanse}" }
                 throw e

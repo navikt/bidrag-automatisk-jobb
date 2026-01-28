@@ -409,14 +409,15 @@ class RevurderForskuddService(
     fun vurderTilbakekrevingBasertPåReskontro() {
         val fattedeForslag = revurderForskuddRepository.findAllByBehandlingstypeIs(Behandlingstype.FATTET_FORSLAG)
         fattedeForslag.forEach {
-            val finnesForskuddForSakPeriode = reskontroService.finnesForskuddForSakPeriode(
-                Saksnummer(it.barn.saksnummer),
-                listOf(
-                    LocalDate.now().minusMonths(3),
-                    LocalDate.now().minusMonths(2),
-                    LocalDate.now().minusMonths(1),
-                ),
-            )
+            val finnesForskuddForSakPeriode =
+                reskontroService.finnesForskuddForSakPeriode(
+                    Saksnummer(it.barn.saksnummer),
+                    listOf(
+                        LocalDate.now().minusMonths(3),
+                        LocalDate.now().minusMonths(2),
+                        LocalDate.now().minusMonths(1),
+                    ),
+                )
             LOGGER.info { "Sak ${it.barn.saksnummer} skal vurdere tilbakekreving: $finnesForskuddForSakPeriode" }
             it.vurdereTilbakekreving = finnesForskuddForSakPeriode
         }
