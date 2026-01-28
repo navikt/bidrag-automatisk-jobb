@@ -11,7 +11,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.evaluer.EvaluerRevurderForskuddBatch
 import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.fattvedtak.FatteVedtakRevurderForskuddBatch
-import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.oppgave.OppgaveRevurderForskuddBatch
 import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.opprett.OpprettRevurderForskuddBatch
 import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.revurderingslenke.RevurderingslenkeRevurderForskuddBatch
 import no.nav.bidrag.automatiskjobb.service.RevurderForskuddService
@@ -30,7 +29,6 @@ class RevurderForskuddBatchController(
     private val opprettRevurderForskuddBatch: OpprettRevurderForskuddBatch,
     private val evaluerRevurderForskuddBatch: EvaluerRevurderForskuddBatch,
     private val fatteVedtakRevurderForskuddBatch: FatteVedtakRevurderForskuddBatch,
-    private val opprettOppgaveRevurderForskuddBatch: OppgaveRevurderForskuddBatch,
     private val revurderingslenkeRevurderForskuddBatch: RevurderingslenkeRevurderForskuddBatch,
     private val revurderForskuddService: RevurderForskuddService,
 ) {
@@ -148,18 +146,6 @@ class RevurderForskuddBatchController(
         @Parameter(required = true, example = "true") simuler: Boolean = true,
     ): ResponseEntity<Void> {
         fatteVedtakRevurderForskuddBatch.start(simuler)
-        return ResponseEntity.status(HttpStatus.CREATED).build()
-    }
-
-    @Deprecated("Bruk revurderingslenke i stedet")
-    @PostMapping("/revurderforskudd/batch/opprettoppgaver")
-    @Operation(
-        summary = "Starter batch: Opprett oppgaver for revurder forskudd i tilfeller hvor det skal tilbakekreves forskudd.",
-        description = "Oppretter oppgaver for saksbehandling i de tilfeller hvor revurdering av forskudd medfører tilbakekreving.",
-        security = [SecurityRequirement(name = "bearer-key")],
-    )
-    fun opprettOppgaverForRevurderForskudd(): ResponseEntity<Void> {
-        opprettOppgaveRevurderForskuddBatch.start()
         return ResponseEntity.status(HttpStatus.CREATED).build()
     }
 
