@@ -207,7 +207,7 @@ class EvaluerRevurderForskuddService(
         val innhentetGrunnlagForBM =
             grunnlag.ainntektListe.tilGrunnlagsobjekt(
                 LocalDateTime.now(),
-                forskudd.mottaker.verdi,
+                bmGrunnlagReferanse,
             )
         relevantGrunnlag.add(innhentetGrunnlagForBM)
 
