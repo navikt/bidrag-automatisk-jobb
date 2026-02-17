@@ -42,12 +42,12 @@ class OpprettRevurderForskuddBatchConfiguration {
         @Qualifier("batchTaskExecutor") taskExecutor: TaskExecutor,
         jobRepository: JobRepository,
         transactionManager: PlatformTransactionManager,
-        opprettRevurderForskuddBatchReader: RepositoryItemReader<Barn>,
+        opprettRevurderForskuddBatchReader: RepositoryItemReader<List<Barn>>,
         opprettRevurderForskuddBatchProcessor: OpprettRevurderForskuddBatchProcessor,
         opprettRevurderForskuddBatchWriter: OpprettRevurderForskuddBatchWriter,
     ): Step =
         StepBuilder("opprettRevurderForskuddStep", jobRepository)
-            .chunk<Barn, RevurderingForskudd>(CHUNK_SIZE, transactionManager)
+            .chunk<List<Barn>, RevurderingForskudd>(CHUNK_SIZE, transactionManager)
             .reader(opprettRevurderForskuddBatchReader)
             .processor(opprettRevurderForskuddBatchProcessor)
             .writer(opprettRevurderForskuddBatchWriter)
@@ -57,8 +57,8 @@ class OpprettRevurderForskuddBatchConfiguration {
             .build()
 
     @Bean
-    fun opprettRevurderForskuddBatchReader(barnRepository: BarnRepository): RepositoryItemReader<Barn> =
-        RepositoryItemReaderBuilder<Barn>()
+    fun opprettRevurderForskuddBatchReader(barnRepository: BarnRepository): RepositoryItemReader<List<Barn>> =
+        RepositoryItemReaderBuilder<List<Barn>>()
             .name("opprettRevurderForskuddBatchReader")
             .repository(barnRepository)
             .methodName("findBarnSomSkalRevurdereForskudd")

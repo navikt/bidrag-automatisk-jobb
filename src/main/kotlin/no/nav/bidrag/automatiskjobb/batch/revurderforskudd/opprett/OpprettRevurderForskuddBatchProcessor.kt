@@ -12,7 +12,7 @@ import java.time.LocalDateTime
 @Component
 class OpprettRevurderForskuddBatchProcessor(
     private val opprettRevurderForskuddService: OpprettRevurderForskuddService,
-) : ItemProcessor<Barn, RevurderingForskudd> {
+) : ItemProcessor<List<Barn>, RevurderingForskudd> {
     private lateinit var batchId: String
     private lateinit var månederTilbakeForManueltVedtak: LocalDateTime
 
@@ -26,6 +26,6 @@ class OpprettRevurderForskuddBatchProcessor(
                 .let { LocalDateTime.now().minusMonths(it!!) }
     }
 
-    override fun process(barn: Barn): RevurderingForskudd? =
+    override fun process(barn: List<Barn>): RevurderingForskudd? =
         opprettRevurderForskuddService.opprettRevurdereForskudd(barn, batchId, månederTilbakeForManueltVedtak)
 }
