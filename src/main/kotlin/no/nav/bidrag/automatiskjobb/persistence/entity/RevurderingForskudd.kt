@@ -10,6 +10,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
+import jakarta.persistence.OrderBy
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
@@ -29,9 +30,11 @@ data class RevurderingForskudd(
     val forMåned: String,
     @Column(name = "batch_id", nullable = false)
     override val batchId: String,
-    @ManyToOne
-    @JoinColumn(name = "barn_id")
-    override val barn: Barn,
+    @OneToMany(mappedBy = "revurderingForskudd")
+    @OrderBy("id")
+    val barn: MutableList<Barn>,
+    @Column(nullable = false)
+    val saksnummer: String,
     var begrunnelse: List<String> = emptyList(),
     @Enumerated(EnumType.STRING)
     var status: Status,
@@ -49,17 +52,17 @@ data class RevurderingForskudd(
     @Enumerated(EnumType.STRING)
     override val stønadstype: Stønadstype = Stønadstype.FORSKUDD,
     @OneToMany
-    @JoinColumn(name = "revurdering_forskudd_id")
+    @JoinColumn(name = "id")
     override val forsendelseBestilling: MutableList<ForsendelseBestilling> = mutableListOf(),
 ) : ForsendelseEntity {
-    override val unikReferanse get() = "revurdering_forskudd_${batchId}_${tilStønadsid().toReferanse()}"
+    override val unikReferanse get() = "revurdering_forskudd_${batchId}_${tilStønadsid(barn.joinToString(separator = "-") { it.kravhaver }).toReferanse()}"
 
-    fun tilStønadsid(): Stønadsid =
+    fun tilStønadsid(kravhaver: String): Stønadsid =
         Stønadsid(
             Stønadstype.FORSKUDD,
-            Personident(barn.kravhaver),
+            Personident(kravhaver),
             personidentNav,
-            Saksnummer(barn.saksnummer),
+            Saksnummer(saksnummer),
         )
 
     val begrunnelseVisningsnavn
@@ -86,19 +89,20 @@ data class RevurderingForskudd(
     @Override
     override fun toString(): String =
         this::class.simpleName + "(" +
-            "id = $id, " +
-            "forMåned = $forMåned, " +
-            "batchId = $batchId, " +
-            "barn = $barn, " +
-            "begrunnelse = $begrunnelse, " +
-            "status = $status, " +
-            "behandlingstype = $behandlingstype, " +
-            "vurdereTilbakekreving = $vurdereTilbakekreving, " +
-            "vedtaksidBeregning = $vedtaksidBeregning, " +
-            "vedtak = $vedtak, " +
-            "oppgave = $oppgave, " +
-            "opprettetTidspunkt = $opprettetTidspunkt, " +
-            "fattetTidspunkt = $fattetTidspunkt, " +
-            "resultatSisteVedtak = $resultatSisteVedtak, " +
-            "stønadstype = $stønadstype)"
+                "id = $id, " +
+                "forMåned = $forMåned, " +
+                "batchId = $batchId, " +
+                "barn = $barn, " +
+                "saksnummer = $saksnummer, " +
+                "begrunnelse = $begrunnelse, " +
+                "status = $status, " +
+                "behandlingstype = $behandlingstype, " +
+                "vurdereTilbakekreving = $vurdereTilbakekreving, " +
+                "vedtaksidBeregning = $vedtaksidBeregning, " +
+                "vedtak = $vedtak, " +
+                "oppgave = $oppgave, " +
+                "opprettetTidspunkt = $opprettetTidspunkt, " +
+                "fattetTidspunkt = $fattetTidspunkt, " +
+                "resultatSisteVedtak = $resultatSisteVedtak, " +
+                "stønadstype = $stønadstype)"
 }
