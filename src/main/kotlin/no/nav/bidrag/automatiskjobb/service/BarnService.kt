@@ -45,10 +45,20 @@ class BarnService(
                 return
             }
 
-        if (forskuddStønad.periodeListe.isEmpty()) {
+        if (forskuddStønad.periodeListe.isEmpty() && barn.forskuddFra == null) {
             LOGGER.info { "Ingen forskudd perioder funnet for barn ${barn.infoMedPerioder()}" }
             return
         }
+
+        if (forskuddStønad.periodeListe.isEmpty()) {
+            LOGGER.info {
+                "Ingen forskudd perioder funnet for barn ${barn.infoMedPerioder()} men det finnes en løpende forskudd registrert på barnet." +
+                    "Det betyr at forskuddet har blitt opphørt. Fjerner forskudd periode fra"
+            }
+            barn.forskuddFra = null
+            return
+        }
+
         LOGGER.info {
             "Fant forskudd periode ${forskuddStønad.periodeFom()} - ${forskuddStønad.periodeTil()} " +
                 "for barn med lagret forskudd periode ${barn.forskuddFra} - ${barn.forskuddTil} - ${barn.infoUtenPerioder()}"
