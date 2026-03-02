@@ -108,16 +108,14 @@ class BarnService(
 
     private fun StønadDto.periodeFom() =
         periodeListe
-            .minByOrNull { it.periode.fom }
-            ?.periode
-            ?.fom
-            ?.atDay(1)
+            .minBy { it.periode.fom }
+            .periode.fom
+            .atDay(1)
 
     private fun StønadDto.periodeTil() =
         periodeListe
-            .maxByOrNull { it.periode.fom }
-            ?.periode
-            ?.til
+            .maxBy { it.periode.fom }
+            .periode.til
             ?.atDay(1)
 
     fun Barn.tilHentStønadHistoriskRequest(stønadstype: Stønadstype) =
