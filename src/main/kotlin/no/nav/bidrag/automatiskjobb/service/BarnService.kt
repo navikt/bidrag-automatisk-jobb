@@ -51,7 +51,6 @@ class BarnService(
         }
 
         if (forskuddStønad.periodeListe.isEmpty()) {
-            LOGGER.info { "Forskudd har opphørt for barn ${barn.infoMedPerioder()}" }
             LOGGER.info {
                 "Ingen forskudd perioder funnet for barn ${barn.infoMedPerioder()} men det finnes en løpende forskudd registrert på barnet." +
                     "Det betyr at forskuddet har blitt opphørt. Fjerner forskudd periode fra"
