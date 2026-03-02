@@ -45,10 +45,21 @@ class BarnService(
                 return
             }
 
-        if (forskuddStønad.periodeListe.isEmpty()) {
+        if (forskuddStønad.periodeListe.isEmpty() && barn.forskuddFra == null) {
             LOGGER.info { "Ingen forskudd perioder funnet for barn ${barn.infoMedPerioder()}" }
             return
         }
+
+        if (forskuddStønad.periodeListe.isEmpty()) {
+            LOGGER.info { "Forskudd har opphørt for barn ${barn.infoMedPerioder()}" }
+            LOGGER.info {
+                "Ingen forskudd perioder funnet for barn ${barn.infoMedPerioder()} men det finnes en løpende forskudd registrert på barnet." +
+                    "Det betyr at forskuddet har blitt opphørt. Fjerner forskudd periode fra"
+            }
+            barn.forskuddFra = null
+            return
+        }
+
         LOGGER.info {
             "Fant forskudd periode ${forskuddStønad.periodeFom()} - ${forskuddStønad.periodeTil()} " +
                 "for barn med lagret forskudd periode ${barn.forskuddFra} - ${barn.forskuddTil} - ${barn.infoUtenPerioder()}"
@@ -98,14 +109,16 @@ class BarnService(
 
     private fun StønadDto.periodeFom() =
         periodeListe
-            .minBy { it.periode.fom }
-            .periode.fom
-            .atDay(1)
+            .minByOrNull { it.periode.fom }
+            ?.periode
+            ?.fom
+            ?.atDay(1)
 
     private fun StønadDto.periodeTil() =
         periodeListe
-            .maxBy { it.periode.fom }
-            .periode.til
+            .maxByOrNull { it.periode.fom }
+            ?.periode
+            ?.til
             ?.atDay(1)
 
     fun Barn.tilHentStønadHistoriskRequest(stønadstype: Stønadstype) =
