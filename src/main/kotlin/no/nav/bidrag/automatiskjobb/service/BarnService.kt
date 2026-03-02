@@ -45,7 +45,7 @@ class BarnService(
                 return
             }
 
-        if (forskuddStønad.periodeListe.isEmpty() && barn.forskuddFra == null) {
+        if (forskuddStønad.periodeListe.isEmpty() && barn.forskuddFra == null && barn.forskuddTil == null) {
             LOGGER.info { "Ingen forskudd perioder funnet for barn ${barn.infoMedPerioder()}" }
             return
         }
