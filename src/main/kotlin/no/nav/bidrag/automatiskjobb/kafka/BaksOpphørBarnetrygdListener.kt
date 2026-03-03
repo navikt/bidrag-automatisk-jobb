@@ -20,8 +20,8 @@ class BaksOpphørBarnetrygdListener(
     private val baksOpphørBarnetrygdService: BaksOpphørBarnetrygdService,
 ) {
     @KafkaListener(
-        topics = ["\${KAFKA_BAKS_OPPHØR_BARNETRYGD_TOPIC}"],
-        groupId = "\${BAKS_OPPHØR_BARNETRYGD_KAFKA_GROUP_ID:bidrag-automatisk-jobb}",
+        topics = ["\${KAFKA_BAKS_OPPHOER_BARNETRYGD_TOPIC}"],
+        groupId = "\${BAKS_OPPHOER_BARNETRYGD_KAFKA_GROUP_ID:bidrag-automatisk-jobb}",
         properties = ["auto.offset.reset=latest"],
     )
     fun behandleBarnetrygdHendelse(
