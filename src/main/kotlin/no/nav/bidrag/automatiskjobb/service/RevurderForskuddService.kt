@@ -422,14 +422,14 @@ class RevurderForskuddService(
         fattedeForslag.forEach {
             val finnesForskuddForSakPeriode =
                 reskontroService.finnesForskuddForSakPeriode(
-                    Saksnummer(it.barn.saksnummer),
+                    Saksnummer(it.saksnummer),
                     listOf(
                         LocalDate.now().minusMonths(3),
                         LocalDate.now().minusMonths(2),
                         LocalDate.now().minusMonths(1),
                     ),
                 )
-            LOGGER.info { "Sak ${it.barn.saksnummer} skal vurdere tilbakekreving: $finnesForskuddForSakPeriode" }
+            LOGGER.info { "Sak ${it.saksnummer} skal vurdere tilbakekreving: $finnesForskuddForSakPeriode" }
             it.vurdereTilbakekreving = finnesForskuddForSakPeriode
         }
         fattedeForslag.forEach { revurderForskuddRepository.save(it) }

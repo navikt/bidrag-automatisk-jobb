@@ -51,7 +51,7 @@ class RevurderingslenkeRevurderForskuddBatchConfiguration {
             .build()
 
     @Bean
-    fun revurderingslenkeRevurderForskuddBatchReader(
+    fun revurderingslenkeRevurderForskuddBatchReader( // TODO(Endre til å hente revurderingsForskudd per sak)
         revurderForskuddRepository: RevurderForskuddRepository,
     ): RepositoryItemReader<RevurderingForskudd> =
         RepositoryItemReaderBuilder<RevurderingForskudd>()

@@ -87,10 +87,13 @@ class FattVedtakRevurderForskuddServiceTest {
             forMåned = YearMonth.now().toString(),
             batchId = UUID.randomUUID().toString(),
             barn =
-                mockk<Barn>(relaxed = true).apply {
-                    every { this@apply.kravhaver } returns genererFødselsnummer()
-                    every { this@apply.saksnummer } returns genererSaksnummer()
-                },
+                mutableListOf(
+                    mockk<Barn>(relaxed = true).apply {
+                        every { this@apply.kravhaver } returns genererFødselsnummer()
+                        every { this@apply.saksnummer } returns genererSaksnummer()
+                    },
+                ),
+            saksnummer = genererSaksnummer(),
             status = Status.BEHANDLET,
             vedtak = vedtakId,
         )

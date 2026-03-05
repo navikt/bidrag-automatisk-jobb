@@ -40,7 +40,7 @@ class OpprettRevurderForskuddServiceTest {
 
     @BeforeEach
     fun init() {
-        every { revurderForskuddRepository.findAllByBarnIdAndForMåned(any(), any()) } returns null
+        every { revurderForskuddRepository.findAllBySaksnummerAndForMåned(any(), any()) } returns null
     }
 
     @Test
@@ -62,7 +62,7 @@ class OpprettRevurderForskuddServiceTest {
                 every { this@apply.id } returns 0
             }
 
-        val resultat = opprettRevurderForskuddService.opprettRevurdereForskudd(barn, "batchId", LocalDateTime.now())
+        val resultat = opprettRevurderForskuddService.opprettRevurdereForskudd(listOf(barn), "batchId", LocalDateTime.now())
 
         resultat shouldBe null
     }
@@ -90,7 +90,7 @@ class OpprettRevurderForskuddServiceTest {
                 every { this@apply.id } returns 0
             }
 
-        val resultat = opprettRevurderForskuddService.opprettRevurdereForskudd(barn, "batchId", cutoffTidspunkt)
+        val resultat = opprettRevurderForskuddService.opprettRevurdereForskudd(listOf(barn), "batchId", cutoffTidspunkt)
 
         resultat shouldBe null
         verify(exactly = 1) { vedtakService.finnSisteManuelleVedtak(any()) }
@@ -120,7 +120,7 @@ class OpprettRevurderForskuddServiceTest {
                 every { this@apply.fødselsdato } returns LocalDate.now().minusYears(5)
             }
 
-        val resultat = opprettRevurderForskuddService.opprettRevurdereForskudd(barn, "batchId", cutoffTidspunkt)
+        val resultat = opprettRevurderForskuddService.opprettRevurdereForskudd(listOf(barn), "batchId", cutoffTidspunkt)
 
         resultat shouldNotBe null
         verify(exactly = 1) { vedtakService.finnSisteManuelleVedtak(any()) }
@@ -151,7 +151,7 @@ class OpprettRevurderForskuddServiceTest {
                 every { this@apply.fødselsdato } returns LocalDate.now().minusYears(18)
             }
 
-        val resultat = opprettRevurderForskuddService.opprettRevurdereForskudd(barn, "batchId", cutoffTidspunkt)
+        val resultat = opprettRevurderForskuddService.opprettRevurdereForskudd(listOf(barn), "batchId", cutoffTidspunkt)
 
         resultat shouldBe null
     }

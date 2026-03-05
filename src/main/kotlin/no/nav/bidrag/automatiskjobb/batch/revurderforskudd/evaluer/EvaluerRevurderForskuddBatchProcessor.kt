@@ -33,13 +33,15 @@ class EvaluerRevurderForskuddBatchProcessor(
         stepExecution.jobParameters.getString("beregnFraManed")?.let { beregnFraMåned = YearMonth.parse(it) }
     }
 
-    override fun process(item: RevurderingForskudd): RevurderingForskudd? {
-        if (item.status != Status.UBEHANDLET) {
-            LOGGER.info { "Revurdering forskudd ${item.id} er allerede ${item.status}. Skal ikke evalueres på nytt." }
+    override fun process(revurderingForskudd: RevurderingForskudd): RevurderingForskudd? {
+        if (revurderingForskudd.status != Status.UBEHANDLET) {
+            LOGGER.info {
+                "Revurdering forskudd ${revurderingForskudd.id} er allerede ${revurderingForskudd.status}. Skal ikke evalueres på nytt."
+            }
             return null
         }
         return evaluerRevurderForskuddService.evaluerRevurderForskudd(
-            item,
+            revurderingForskudd,
             simuler,
             antallMånederForBeregning,
             beregnFraMåned,

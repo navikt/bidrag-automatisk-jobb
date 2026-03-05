@@ -14,7 +14,7 @@ class RevurderingslenkeRevurderingForskuddService(
     private val revurderForskuddRepository: RevurderForskuddRepository,
 ) {
     fun opprettRevurderingslenke(revurderingForskudd: RevurderingForskudd): Int? {
-        val sak = bidragSakConsumer.hentSak(revurderingForskudd.barn.saksnummer)
+        val sak = bidragSakConsumer.hentSak(revurderingForskudd.saksnummer)
         val bidragsmottaker = sak.roller.find { it.type == Rolletype.BIDRAGSMOTTAKER }
         val opprettBehandlingResponse =
             bidragBehandlingConsumer.opprettBehandlingForRevurderingAvForskudd(

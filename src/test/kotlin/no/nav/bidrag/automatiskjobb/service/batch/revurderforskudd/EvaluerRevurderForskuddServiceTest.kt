@@ -70,9 +70,6 @@ class EvaluerRevurderForskuddServiceTest {
     @MockK(relaxed = true)
     private lateinit var vedtakMapper: VedtakMapper
 
-//    @MockK(relaxed = true)
-//    private lateinit var grunnlagMapper: GrunnlagMapper
-
     @InjectMockKs
     private lateinit var evaluerRevurderForskuddService: EvaluerRevurderForskuddService
 
@@ -82,7 +79,8 @@ class EvaluerRevurderForskuddServiceTest {
             RevurderingForskudd(
                 forMåned = YearMonth.now().toString(),
                 batchId = "123",
-                barn = mockk(relaxed = true),
+                barn = mutableListOf(mockk(relaxed = true)),
+                saksnummer = "123456",
                 status = Status.UBEHANDLET,
             )
         every { vedtakService.finnSisteManuelleVedtak(any()) } returns null
@@ -104,7 +102,8 @@ class EvaluerRevurderForskuddServiceTest {
             RevurderingForskudd(
                 forMåned = YearMonth.now().toString(),
                 batchId = "123",
-                barn = mockk(relaxed = true),
+                barn = mutableListOf(mockk(relaxed = true)),
+                saksnummer = "123456",
                 status = Status.UBEHANDLET,
             )
         every { vedtakService.finnSisteManuelleVedtak(any()) } returns mockk()
@@ -127,7 +126,8 @@ class EvaluerRevurderForskuddServiceTest {
             RevurderingForskudd(
                 forMåned = YearMonth.now().toString(),
                 batchId = "123",
-                barn = mockk(relaxed = true),
+                barn = mutableListOf(mockk(relaxed = true)),
+                saksnummer = "123456",
                 status = Status.UBEHANDLET,
             )
         val stønadDto =
@@ -155,9 +155,11 @@ class EvaluerRevurderForskuddServiceTest {
         val revurderingForskudd =
             mockk<RevurderingForskudd>(relaxed = true) {
                 every { barn } returns
-                    mockk<Barn>(relaxed = true) {
-                        every { kravhaver } returns barnFnr
-                    }
+                    mutableListOf(
+                        mockk<Barn>(relaxed = true) {
+                            every { kravhaver } returns barnFnr
+                        },
+                    )
             }
         val stønadPeriodeDto =
             mockk<StønadPeriodeDto>(relaxed = true) {
@@ -251,9 +253,11 @@ class EvaluerRevurderForskuddServiceTest {
         val revurderingForskudd =
             mockk<RevurderingForskudd>(relaxed = true) {
                 every { barn } returns
-                    mockk<Barn>(relaxed = true) {
-                        every { kravhaver } returns barnFnr
-                    }
+                    mutableListOf(
+                        mockk<Barn>(relaxed = true) {
+                            every { kravhaver } returns barnFnr
+                        },
+                    )
             }
         val stønadPeriodeDto =
             mockk<StønadPeriodeDto>(relaxed = true) {
@@ -347,9 +351,11 @@ class EvaluerRevurderForskuddServiceTest {
         val revurderingForskudd =
             mockk<RevurderingForskudd>(relaxed = true) {
                 every { barn } returns
-                    mockk<Barn>(relaxed = true) {
-                        every { kravhaver } returns barnFnr
-                    }
+                    mutableListOf(
+                        mockk<Barn>(relaxed = true) {
+                            every { kravhaver } returns barnFnr
+                        },
+                    )
             }
         val stønadPeriodeDto =
             mockk<StønadPeriodeDto>(relaxed = true) {
@@ -492,9 +498,11 @@ class EvaluerRevurderForskuddServiceTest {
         val revurderingForskudd =
             mockk<RevurderingForskudd>(relaxed = true) {
                 every { barn } returns
-                    mockk<Barn>(relaxed = true) {
-                        every { kravhaver } returns barnFnr
-                    }
+                    mutableListOf(
+                        mockk<Barn>(relaxed = true) {
+                            every { kravhaver } returns barnFnr
+                        },
+                    )
             }
         val stønadPeriodeDto =
             mockk<StønadPeriodeDto>(relaxed = true) {

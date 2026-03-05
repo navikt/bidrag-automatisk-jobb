@@ -8,7 +8,8 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
-import jakarta.persistence.ManyToOne
+import jakarta.persistence.JoinTable
+import jakarta.persistence.ManyToMany
 import jakarta.persistence.OneToMany
 import jakarta.persistence.OrderBy
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
@@ -30,7 +31,12 @@ data class RevurderingForskudd(
     val forMåned: String,
     @Column(name = "batch_id", nullable = false)
     override val batchId: String,
-    @OneToMany(mappedBy = "revurderingForskudd")
+    @ManyToMany
+    @JoinTable(
+        name = "revurdering_forskudd_barn",
+        joinColumns = [JoinColumn(name = "revurdering_forskudd_id")],
+        inverseJoinColumns = [JoinColumn(name = "barn_id")],
+    )
     @OrderBy("id")
     val barn: MutableList<Barn>,
     @Column(nullable = false)
@@ -55,7 +61,9 @@ data class RevurderingForskudd(
     @JoinColumn(name = "id")
     override val forsendelseBestilling: MutableList<ForsendelseBestilling> = mutableListOf(),
 ) : ForsendelseEntity {
-    override val unikReferanse get() = "revurdering_forskudd_${batchId}_${tilStønadsid(barn.joinToString(separator = "-") { it.kravhaver }).toReferanse()}"
+    override val unikReferanse get() = "revurdering_forskudd_${batchId}_${tilStønadsid(
+        barn.joinToString(separator = "-") { it.kravhaver },
+    ).toReferanse()}"
 
     fun tilStønadsid(kravhaver: String): Stønadsid =
         Stønadsid(
@@ -89,20 +97,20 @@ data class RevurderingForskudd(
     @Override
     override fun toString(): String =
         this::class.simpleName + "(" +
-                "id = $id, " +
-                "forMåned = $forMåned, " +
-                "batchId = $batchId, " +
-                "barn = $barn, " +
-                "saksnummer = $saksnummer, " +
-                "begrunnelse = $begrunnelse, " +
-                "status = $status, " +
-                "behandlingstype = $behandlingstype, " +
-                "vurdereTilbakekreving = $vurdereTilbakekreving, " +
-                "vedtaksidBeregning = $vedtaksidBeregning, " +
-                "vedtak = $vedtak, " +
-                "oppgave = $oppgave, " +
-                "opprettetTidspunkt = $opprettetTidspunkt, " +
-                "fattetTidspunkt = $fattetTidspunkt, " +
-                "resultatSisteVedtak = $resultatSisteVedtak, " +
-                "stønadstype = $stønadstype)"
+            "id = $id, " +
+            "forMåned = $forMåned, " +
+            "batchId = $batchId, " +
+            "barn = $barn, " +
+            "saksnummer = $saksnummer, " +
+            "begrunnelse = $begrunnelse, " +
+            "status = $status, " +
+            "behandlingstype = $behandlingstype, " +
+            "vurdereTilbakekreving = $vurdereTilbakekreving, " +
+            "vedtaksidBeregning = $vedtaksidBeregning, " +
+            "vedtak = $vedtak, " +
+            "oppgave = $oppgave, " +
+            "opprettetTidspunkt = $opprettetTidspunkt, " +
+            "fattetTidspunkt = $fattetTidspunkt, " +
+            "resultatSisteVedtak = $resultatSisteVedtak, " +
+            "stønadstype = $stønadstype)"
 }
