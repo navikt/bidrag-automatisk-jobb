@@ -302,7 +302,7 @@ class EvaluerRevurderForskuddService(
                 revurderingForskudd.behandlingstype = Behandlingstype.INGEN
                 revurderingForskudd.status = if (simuler) Status.SIMULERT else Status.BEHANDLET
                 revurderingForskudd.begrunnelse = listOf("SKAL_IKKE_SETTES_NED")
-                return revurderingForskudd
+                return@forEach
             }
 
             // Gjør en sjekk mot reskontro for å se om det eksisterer A4 transaksjoner (forskudd) for de siste 3 månedene. Dette gjøres for å kunne opprette oppgaver for tilbakekreving det er utbetalt forskudd
