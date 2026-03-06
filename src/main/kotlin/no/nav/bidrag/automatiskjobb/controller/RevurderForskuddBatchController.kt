@@ -20,6 +20,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RestController
+import java.time.LocalDate
 import java.time.YearMonth
 
 @Protected
@@ -155,8 +156,10 @@ class RevurderForskuddBatchController(
         description = "Oppretter revurderingslenke for saksbehandling i de tilfeller hvor revurdering av forskudd medfører tilbakekreving.",
         security = [SecurityRequirement(name = "bearer-key")],
     )
-    fun opprettRevurderingslengeForRevurderForskudd(): ResponseEntity<Void> {
-        revurderingslenkeRevurderForskuddBatch.start()
+    fun opprettRevurderingslengeForRevurderForskudd(
+        @Parameter(required = false, description = "Settes default til 12 måneder tilbake.") søktFraDato: LocalDate,
+    ): ResponseEntity<Void> {
+        revurderingslenkeRevurderForskuddBatch.start(søktFraDato)
         return ResponseEntity.status(HttpStatus.CREATED).build()
     }
 }

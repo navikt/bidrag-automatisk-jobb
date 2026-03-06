@@ -58,12 +58,13 @@ class BidragBehandlingConsumer(
         revurderingForskudd: RevurderingForskudd,
         bm: Personident?,
         enhetsnummer: Enhetsnummer,
+        søktFraDato: LocalDate,
     ): OpprettBehandlingResponse {
         val opprettBehandlingRequest =
             OpprettBehandlingRequest(
                 behandlingstema = Behandlingstema.FORSKUDD,
                 vedtakstype = Vedtakstype.REVURDERING,
-                søktFomDato = LocalDate.now().minusMonths(6).withDayOfMonth(1),
+                søktFomDato = søktFraDato,
                 mottattdato = LocalDate.now(),
                 søknadFra = SøktAvType.NAV_BIDRAG,
                 saksnummer = revurderingForskudd.saksnummer,
