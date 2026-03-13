@@ -42,7 +42,7 @@ class OpprettRevurderForskuddServiceTest {
 
     @BeforeEach
     fun init() {
-        every { revurderForskuddRepository.findAllBySaksnummerAndForMåned(any(), any()) } returns null
+        every { revurderForskuddRepository.existsBySaksnummerAndForMåned(any(), any()) } returns false
     }
 
     @Test
