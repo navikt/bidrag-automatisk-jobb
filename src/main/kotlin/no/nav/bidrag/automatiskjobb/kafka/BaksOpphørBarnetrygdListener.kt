@@ -22,7 +22,7 @@ class BaksOpphørBarnetrygdListener(
     @KafkaListener(
         topics = ["\${KAFKA_BAKS_OPPHOER_BARNETRYGD_TOPIC}"],
         groupId = "\${BAKS_OPPHOER_BARNETRYGD_KAFKA_GROUP_ID:bidrag-automatisk-jobb}",
-        properties = ["auto.offset.reset=latest"],
+        properties = ["auto.offset.reset=earliest"],
     )
     fun behandleBarnetrygdHendelse(
         hendelse: String,
