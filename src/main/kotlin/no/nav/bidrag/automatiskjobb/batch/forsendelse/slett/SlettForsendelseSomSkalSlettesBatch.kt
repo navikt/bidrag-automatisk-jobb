@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.batch.revurderforskudd.opprett
+package no.nav.bidrag.automatiskjobb.batch.forsendelse.slett
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.batch.core.Job
@@ -12,21 +12,20 @@ import java.util.UUID
 private val LOGGER = KotlinLogging.logger { }
 
 @Component
-class OpprettRevurderForskuddBatch(
+class SlettForsendelseSomSkalSlettesBatch(
     @param:Qualifier("asyncJobLauncher") private val jobLauncher: JobLauncher,
-    private val opprettRevurderForskuddJob: Job,
+    private val slettForsendelserSomSkalSlettesJob: Job,
 ) {
-    fun start(månederTilbakeForManueltVedtak: Int = 12) {
+    fun start() {
         try {
             jobLauncher.run(
-                opprettRevurderForskuddJob,
+                slettForsendelserSomSkalSlettesJob,
                 JobParametersBuilder()
-                    .addString("batchId", UUID.randomUUID().toString())
-                    .addString("månederTilbakeForManueltVedtak", månederTilbakeForManueltVedtak.toString())
+                    .addString("runId", UUID.randomUUID().toString())
                     .toJobParameters(),
             )
         } catch (_: JobExecutionAlreadyRunningException) {
-            LOGGER.warn { "Batch opprettRevurderForskudd kjører allerede. Ignorerer ny forespørsel." }
+            LOGGER.warn { "Batch slettForsendelseSomSkalSlettes kjører allerede. Ignorerer ny forespørsel." }
         }
     }
 }

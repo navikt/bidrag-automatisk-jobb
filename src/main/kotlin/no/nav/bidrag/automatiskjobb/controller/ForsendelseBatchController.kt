@@ -7,7 +7,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import no.nav.bidrag.automatiskjobb.batch.forsendelse.distribuer.DistribuerForsendelseBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.forsendelse.opprett.OpprettForsendelseBatch
-import no.nav.bidrag.automatiskjobb.batch.forsendelse.slett.SlettForsendelseSomSkalSlettesBidragBatch
+import no.nav.bidrag.automatiskjobb.batch.forsendelse.slett.SlettForsendelseSomSkalSlettesBatch
 import no.nav.security.token.support.core.api.Protected
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @Tag(name = "Forsendelse batch")
 class ForsendelseBatchController(
-    private val slettForsendelseSomSkalSlettesBidragBatch: SlettForsendelseSomSkalSlettesBidragBatch,
+    private val slettForsendelseSomSkalSlettesBatch: SlettForsendelseSomSkalSlettesBatch,
     private val opprettForsendelseBatch: OpprettForsendelseBatch,
     private val distribuerForsendelseBidragBatch: DistribuerForsendelseBidragBatch,
 ) {
@@ -39,7 +39,7 @@ class ForsendelseBatchController(
         ],
     )
     fun starSlettForsendelserSomSkalSlettesBatch(): ResponseEntity<Any> {
-        slettForsendelseSomSkalSlettesBidragBatch.start()
+        slettForsendelseSomSkalSlettesBatch.start()
         return ResponseEntity.ok().build()
     }
 
