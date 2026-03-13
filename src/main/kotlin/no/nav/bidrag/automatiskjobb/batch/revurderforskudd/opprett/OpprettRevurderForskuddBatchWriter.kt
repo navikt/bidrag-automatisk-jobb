@@ -17,9 +17,9 @@ class OpprettRevurderForskuddBatchWriter(
         revurderForskuddRepository.saveAll(
             chunk.filterNotNull().map {
                 LOGGER.info {
-                    "Lagrer opprettelse av revurdering forskudd for barn med id=${it.barn.map { barn ->
-                        barn.id
-                    }.joinToString()} med status ${it.status}"
+                    "Lagrer opprettelse av revurdering forskudd for barn med id=${
+                        it.barn.map { barn -> barn.id }.joinToString()
+                    } med status ${it.status}"
                 }
                 it
             },
