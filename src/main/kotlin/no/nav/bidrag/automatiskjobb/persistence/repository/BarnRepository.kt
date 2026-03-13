@@ -43,5 +43,5 @@ interface BarnRepository : JpaRepository<Barn, Int> {
     fun findBarnSomSkalRevurdereForskudd(
         @Param("forskuddDato") forskuddDato: LocalDate,
         pageable: Pageable,
-    ): Page<List<Barn>>
+    ): Page<Barn>
 }

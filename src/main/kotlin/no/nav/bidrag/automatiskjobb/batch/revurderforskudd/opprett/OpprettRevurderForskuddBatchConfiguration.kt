@@ -10,13 +10,10 @@ import org.springframework.batch.core.Step
 import org.springframework.batch.core.job.builder.JobBuilder
 import org.springframework.batch.core.repository.JobRepository
 import org.springframework.batch.core.step.builder.StepBuilder
-import org.springframework.batch.item.data.RepositoryItemReader
-import org.springframework.batch.item.data.builder.RepositoryItemReaderBuilder
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.task.TaskExecutor
-import org.springframework.data.domain.Sort
 import org.springframework.transaction.PlatformTransactionManager
 import java.time.LocalDate
 
@@ -42,7 +39,7 @@ class OpprettRevurderForskuddBatchConfiguration {
         @Qualifier("batchTaskExecutor") taskExecutor: TaskExecutor,
         jobRepository: JobRepository,
         transactionManager: PlatformTransactionManager,
-        opprettRevurderForskuddBatchReader: RepositoryItemReader<List<Barn>>,
+        opprettRevurderForskuddBatchReader: OpprettRevurderForskuddBatchReader,
         opprettRevurderForskuddBatchProcessor: OpprettRevurderForskuddBatchProcessor,
         opprettRevurderForskuddBatchWriter: OpprettRevurderForskuddBatchWriter,
     ): Step =
@@ -57,14 +54,6 @@ class OpprettRevurderForskuddBatchConfiguration {
             .build()
 
     @Bean
-    fun opprettRevurderForskuddBatchReader(barnRepository: BarnRepository): RepositoryItemReader<List<Barn>> =
-        RepositoryItemReaderBuilder<List<Barn>>()
-            .name("opprettRevurderForskuddBatchReader")
-            .repository(barnRepository)
-            .methodName("findBarnSomSkalRevurdereForskudd")
-            .arguments(listOf(FORSKUDD_FREM_TIL_DATO))
-            .saveState(false) // Savestate må være false for å unngå feil ved parallell kjøring
-            .pageSize(CHUNK_SIZE)
-            .sorts(mapOf("id" to Sort.Direction.ASC))
-            .build()
+    fun opprettRevurderForskuddBatchReader(barnRepository: BarnRepository): OpprettRevurderForskuddBatchReader =
+        OpprettRevurderForskuddBatchReader(barnRepository, FORSKUDD_FREM_TIL_DATO, CHUNK_SIZE)
 }
