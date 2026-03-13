@@ -85,7 +85,7 @@ class OpprettRevurderForskuddService(
     private fun finnesEksisterendeRevurderingForskudd(
         saksnummer: String,
         inneværendeMåned: YearMonth,
-    ): Boolean = revurderForskuddRepository.findAllBySaksnummerAndForMåned(saksnummer, inneværendeMåned.toString()) != null
+    ): Boolean = revurderForskuddRepository.existsBySaksnummerAndForMåned(saksnummer, inneværendeMåned.toString())
 
     private fun harÅpentForskuddssak(barn: Barn): Boolean {
         val hentÅpneBehandlingerRespons = bidragBehandlingConsumer.hentÅpneBehandlingerForBarn(barn.kravhaver)
