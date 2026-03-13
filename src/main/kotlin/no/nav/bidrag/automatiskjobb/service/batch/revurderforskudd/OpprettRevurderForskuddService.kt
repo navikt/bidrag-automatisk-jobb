@@ -12,6 +12,7 @@ import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.domene.sak.Saksnummer
 import no.nav.bidrag.domene.sak.Stønadsid
 import no.nav.bidrag.transport.felles.toLocalDate
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.time.YearMonth
@@ -56,16 +57,27 @@ class OpprettRevurderForskuddService(
             }
             return null
         }
-        return RevurderingForskudd(
-            forMåned = inneværendeMåned.toString(),
-            batchId = batchId,
-            barn = barnFiltrert,
-            saksnummer = barnFiltrert.first().saksnummer,
-            status = Status.UBEHANDLET,
-        ).also {
-            LOGGER.info {
-                "Opprettet revurdering forskudd for sak ${barnFiltrert.first().saksnummer}. $it"
+        return try {
+            RevurderingForskudd(
+                forMåned = inneværendeMåned.toString(),
+                batchId = batchId,
+                barn = barnFiltrert,
+                saksnummer = barnFiltrert.first().saksnummer,
+                status = Status.UBEHANDLET,
+            ).also {
+                LOGGER.info {
+                    "Opprettet revurdering forskudd for sak ${barnFiltrert.first().saksnummer}. $it"
+                }
             }
+        } catch (e: DataIntegrityViolationException) {
+            // Kan skje ved parallell kjøring: to tråder passerte exists-sjekken samtidig
+            // og begge forsøkte å sette inn rad for samme (saksnummer, forMåned).
+            // Database-constrainten forhindrer duplikatet – vi logger og hopper over.
+            LOGGER.warn(e) {
+                "Revurdering forskudd for sak ${barnFiltrert.first().saksnummer} og måned $inneværendeMåned " +
+                    "ble allerede opprettet av en annen tråd. Hopper over."
+            }
+            null
         }
     }
 
