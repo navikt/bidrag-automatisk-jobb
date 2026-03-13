@@ -40,18 +40,18 @@ class RevurderingslenkeRevurderForskuddBatchConfiguration {
         transactionManager: PlatformTransactionManager,
         revurderingslenkeRevurderForskuddBatchReader: RepositoryItemReader<RevurderingForskudd>,
         revurderingslenkeRevurderForskuddBatchProcessor: RevurderingslenkeRevurderForskuddBatchProcessor,
-        dummmyWriter: DummyItemWriter,
+        dummyItemWriter: DummyItemWriter,
     ): Step =
         StepBuilder("revurderingslenkeRevurderForskuddStep", jobRepository)
-            .chunk<RevurderingForskudd, Int?>(CHUNK_SIZE, transactionManager)
+            .chunk<RevurderingForskudd, Unit>(CHUNK_SIZE, transactionManager)
             .reader(revurderingslenkeRevurderForskuddBatchReader)
             .processor(revurderingslenkeRevurderForskuddBatchProcessor)
-            .writer(dummmyWriter)
+            .writer(dummyItemWriter)
             .taskExecutor(taskExecutor)
             .build()
 
     @Bean
-    fun revurderingslenkeRevurderForskuddBatchReader( // TODO(Endre til å hente revurderingsForskudd per sak)
+    fun revurderingslenkeRevurderForskuddBatchReader(
         revurderForskuddRepository: RevurderForskuddRepository,
     ): RepositoryItemReader<RevurderingForskudd> =
         RepositoryItemReaderBuilder<RevurderingForskudd>()

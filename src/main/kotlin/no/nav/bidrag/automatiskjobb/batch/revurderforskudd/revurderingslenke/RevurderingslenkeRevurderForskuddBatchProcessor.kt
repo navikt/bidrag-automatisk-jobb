@@ -8,14 +8,13 @@ import org.springframework.batch.core.annotation.BeforeStep
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.stereotype.Component
 import java.time.LocalDate
-import java.time.YearMonth
 
 private val LOGGER = KotlinLogging.logger { }
 
 @Component
 class RevurderingslenkeRevurderForskuddBatchProcessor(
     private val revurderingslenkeRevurderingForskuddService: RevurderingslenkeRevurderingForskuddService,
-) : ItemProcessor<RevurderingForskudd, Int?> {
+) : ItemProcessor<RevurderingForskudd, Unit> {
     private var søktFraDato = LocalDate.now().minusMonths(12).withDayOfMonth(1)
 
     @BeforeStep
@@ -23,11 +22,12 @@ class RevurderingslenkeRevurderForskuddBatchProcessor(
         stepExecution.jobParameters.getString("soktFraDato")?.let { søktFraDato = LocalDate.parse(it) }
     }
 
-    override fun process(revurderingForskudd: RevurderingForskudd): Int? =
+    override fun process(revurderingForskudd: RevurderingForskudd): Unit? =
         try {
             revurderingslenkeRevurderingForskuddService.opprettRevurderingslenke(revurderingForskudd, søktFraDato)
+            Unit
         } catch (e: Exception) {
-            LOGGER.error(e) { "Det skjedde en feil ved opprettelse av oppgave for aldersjustering ${revurderingForskudd.id}" }
+            LOGGER.error(e) { "Det skjedde en feil ved opprettelse av revurderingslenke for revurdering forskudd ${revurderingForskudd.id}" }
             null
         }
 }
