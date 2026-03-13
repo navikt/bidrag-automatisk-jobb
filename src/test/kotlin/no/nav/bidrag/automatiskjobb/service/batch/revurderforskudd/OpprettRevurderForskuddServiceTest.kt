@@ -12,10 +12,12 @@ import no.nav.bidrag.automatiskjobb.consumer.BidragBehandlingConsumer
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import no.nav.bidrag.automatiskjobb.persistence.repository.RevurderForskuddRepository
+import no.nav.bidrag.automatiskjobb.testdata.TestDataPerson
 import no.nav.bidrag.beregn.barnebidrag.service.external.SisteManuelleVedtak
 import no.nav.bidrag.beregn.barnebidrag.service.external.VedtakService
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.generer.testdata.person.genererFødselsnummer
+import no.nav.bidrag.generer.testdata.sak.genererSaksnummer
 import no.nav.bidrag.transport.behandling.behandling.HentÅpneBehandlingerRespons
 import no.nav.bidrag.transport.behandling.behandling.ÅpenBehandling
 import org.junit.jupiter.api.BeforeEach
@@ -59,6 +61,7 @@ class OpprettRevurderForskuddServiceTest {
         val barn =
             mockk<Barn>().apply {
                 every { this@apply.kravhaver } returns kravhaver
+                every { this@apply.saksnummer } returns genererSaksnummer()
                 every { this@apply.id } returns 0
             }
 
