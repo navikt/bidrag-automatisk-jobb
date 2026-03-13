@@ -12,9 +12,7 @@ class RevurderingslenkeRevurderForskuddBatch(
     private val jobLauncher: JobLauncher,
     private val revurderingslenkeRevurderForskuddJob: Job,
 ) {
-    fun start(
-        søktFraDato: LocalDate?,
-    ) {
+    fun start(søktFraDato: LocalDate?) {
         jobLauncher.run(
             revurderingslenkeRevurderForskuddJob,
             JobParametersBuilder()

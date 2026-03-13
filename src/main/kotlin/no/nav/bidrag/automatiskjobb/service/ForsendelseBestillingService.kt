@@ -71,7 +71,8 @@ class ForsendelseBestillingService(
             is RevurderingForskudd -> {
                 forsendelseEntity.barn.forEach { barn ->
                     forsendelseBestillinger.add(
-                        opprettBestillingForBidragsmottakerMedBarn(forsendelseEntity, barn, sak, forsendelsestype), // TODO(Samle alle barna i samme forsendelse)
+                        // TODO(Samle alle barna i samme forsendelse)
+                        opprettBestillingForBidragsmottakerMedBarn(forsendelseEntity, barn, sak, forsendelsestype),
                     )
                 }
             }
