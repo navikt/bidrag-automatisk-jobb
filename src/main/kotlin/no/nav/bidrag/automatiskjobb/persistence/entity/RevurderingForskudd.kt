@@ -58,7 +58,7 @@ data class RevurderingForskudd(
     @Enumerated(EnumType.STRING)
     override val stønadstype: Stønadstype = Stønadstype.FORSKUDD,
     @OneToMany
-    @JoinColumn(name = "id")
+    @JoinColumn(name = "revurdering_forskudd_id")
     override val forsendelseBestilling: MutableList<ForsendelseBestilling> = mutableListOf(),
 ) : ForsendelseEntity {
     override val unikReferanse get() = "revurdering_forskudd_${batchId}_${tilStønadsid(
