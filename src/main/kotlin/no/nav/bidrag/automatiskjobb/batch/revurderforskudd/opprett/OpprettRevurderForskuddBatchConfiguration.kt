@@ -50,6 +50,7 @@ class OpprettRevurderForskuddBatchConfiguration {
             .writer(opprettRevurderForskuddBatchWriter)
             .taskExecutor(taskExecutor)
             .faultTolerant()
+            .skip(Exception::class.java)
             .skipLimit(CHUNK_SIZE)
             .build()
 

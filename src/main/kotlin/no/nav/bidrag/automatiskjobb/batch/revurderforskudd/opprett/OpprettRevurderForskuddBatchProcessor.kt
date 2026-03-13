@@ -1,5 +1,6 @@
 package no.nav.bidrag.automatiskjobb.batch.revurderforskudd.opprett
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
 import no.nav.bidrag.automatiskjobb.service.batch.revurderforskudd.OpprettRevurderForskuddService
@@ -8,6 +9,8 @@ import org.springframework.batch.core.annotation.BeforeStep
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
+
+private val LOGGER = KotlinLogging.logger { }
 
 @Component
 class OpprettRevurderForskuddBatchProcessor(
@@ -27,5 +30,12 @@ class OpprettRevurderForskuddBatchProcessor(
     }
 
     override fun process(barn: List<Barn>): RevurderingForskudd? =
-        opprettRevurderForskuddService.opprettRevurdereForskudd(barn, batchId, månederTilbakeForManueltVedtak)
+        try {
+            opprettRevurderForskuddService.opprettRevurdereForskudd(barn, batchId, månederTilbakeForManueltVedtak)
+        } catch (e: Exception) {
+            LOGGER.error(e) {
+                "Det skjedde en feil ved oppretting av revurdering forskudd for sak ${barn.first().saksnummer}. Hopper over saken."
+            }
+            null
+        }
 }

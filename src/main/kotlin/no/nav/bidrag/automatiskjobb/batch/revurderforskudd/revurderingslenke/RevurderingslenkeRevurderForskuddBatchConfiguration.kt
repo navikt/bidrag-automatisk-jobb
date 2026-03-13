@@ -48,6 +48,9 @@ class RevurderingslenkeRevurderForskuddBatchConfiguration {
             .processor(revurderingslenkeRevurderForskuddBatchProcessor)
             .writer(dummyItemWriter)
             .taskExecutor(taskExecutor)
+            .faultTolerant()
+            .skip(Exception::class.java)
+            .skipLimit(CHUNK_SIZE)
             .build()
 
     @Bean
