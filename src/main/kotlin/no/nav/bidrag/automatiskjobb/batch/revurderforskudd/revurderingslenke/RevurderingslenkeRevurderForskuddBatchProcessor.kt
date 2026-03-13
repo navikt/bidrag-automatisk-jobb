@@ -27,7 +27,9 @@ class RevurderingslenkeRevurderForskuddBatchProcessor(
             revurderingslenkeRevurderingForskuddService.opprettRevurderingslenke(revurderingForskudd, søktFraDato)
             Unit
         } catch (e: Exception) {
-            LOGGER.error(e) { "Det skjedde en feil ved opprettelse av revurderingslenke for revurdering forskudd ${revurderingForskudd.id}" }
+            LOGGER.error(
+                e,
+            ) { "Det skjedde en feil ved opprettelse av revurderingslenke for revurdering forskudd ${revurderingForskudd.id}" }
             null
         }
 }
