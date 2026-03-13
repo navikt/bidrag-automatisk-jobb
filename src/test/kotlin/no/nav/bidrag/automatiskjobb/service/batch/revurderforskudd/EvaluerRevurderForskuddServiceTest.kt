@@ -332,6 +332,22 @@ class EvaluerRevurderForskuddServiceTest {
                 every { summertMånedsinntektListe } returns emptyList()
                 every { summertÅrsinntektListe } returns emptyList()
             }
+        every { beregnForskuddApi.beregn(any()) } returns
+            mockk<BeregnetForskuddResultat>(relaxed = true) {
+                every { beregnetForskuddPeriodeListe } returns
+                    listOf(
+                        ResultatPeriode(
+                            periode = ÅrMånedsperiode(Year.now().atMonth(1), null),
+                            resultat =
+                                ResultatBeregning(
+                                    belop = BigDecimal(100),
+                                    kode = Resultatkode.ORDINÆRT_FORSKUDD_75_PROSENT,
+                                    regel = "Regel",
+                                ),
+                            grunnlagsreferanseListe = emptyList(),
+                        ),
+                    )
+            }
         evaluerRevurderForskuddService.evaluerRevurderForskudd(
             revurderingForskudd,
             simuler = false,

@@ -373,6 +373,10 @@ class EvaluerRevurderForskuddService(
             )
         }
 
+        if (stønadsendringer.isEmpty()) {
+            return revurderingForskudd
+        }
+
         val opprettVedtakRequestDto =
             opprettVedtaksforslag(
                 revurderingForskudd,
