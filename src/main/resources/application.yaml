@@ -11,6 +11,7 @@ springdoc:
     display-request-duration: true
     try-it-out-enabled: true
 spring.main.banner-mode: off
+spring.batch.job.enabled: false
 ---
 spring.config.activate.on-profile: nais,lokal-nais
 
