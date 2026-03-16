@@ -11,8 +11,6 @@ import no.nav.bidrag.automatiskjobb.consumer.OppgaveConsumer
 import no.nav.bidrag.automatiskjobb.consumer.dto.OppgaveDto
 import no.nav.bidrag.automatiskjobb.consumer.dto.OppgaveSokResponse
 import no.nav.bidrag.automatiskjobb.consumer.dto.OppgaveType
-import no.nav.bidrag.automatiskjobb.consumer.dto.behandlingstypeNasjonal
-import no.nav.bidrag.automatiskjobb.consumer.dto.formatterDatoForOppgave
 import no.nav.bidrag.automatiskjobb.domene.BarnEndretOpplysning
 import no.nav.bidrag.automatiskjobb.domene.BarnetrygdBisysMelding
 import no.nav.bidrag.automatiskjobb.domene.BarnetrygdEndretType
@@ -21,25 +19,13 @@ import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
 import no.nav.bidrag.automatiskjobb.service.BaksOpphørBarnetrygdService
 import no.nav.bidrag.automatiskjobb.service.OppgaveService
 import no.nav.bidrag.automatiskjobb.service.RevurderForskuddService
-import no.nav.bidrag.automatiskjobb.service.model.ForskuddRedusertResultat
-import no.nav.bidrag.automatiskjobb.testdata.SAKSBEHANDLER_IDENT
-import no.nav.bidrag.automatiskjobb.testdata.opprettVedtakhendelse
 import no.nav.bidrag.automatiskjobb.testdata.personIdentBidragsmottaker
-import no.nav.bidrag.automatiskjobb.testdata.personIdentBidragspliktig
 import no.nav.bidrag.automatiskjobb.testdata.personIdentSøknadsbarn1
-import no.nav.bidrag.automatiskjobb.testdata.personIdentSøknadsbarn2
 import no.nav.bidrag.automatiskjobb.testdata.saksnummer
-import no.nav.bidrag.automatiskjobb.utils.revurderForskuddBeskrivelse
-import no.nav.bidrag.commons.util.VirkedagerProvider
 import no.nav.bidrag.domene.enums.sak.Bidragssakstatus
 import no.nav.bidrag.domene.enums.sak.Sakskategori
-import no.nav.bidrag.domene.enums.vedtak.Beslutningstype
-import no.nav.bidrag.domene.enums.vedtak.Innkrevingstype
-import no.nav.bidrag.domene.enums.vedtak.Stønadstype
-import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.domene.organisasjon.Enhetsnummer
 import no.nav.bidrag.domene.sak.Saksnummer
-import no.nav.bidrag.transport.behandling.vedtak.Stønadsendring
 import no.nav.bidrag.transport.sak.BidragssakDto
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
@@ -47,6 +33,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDate
 import java.time.YearMonth
+import java.time.format.DateTimeFormatter
 
 @ExtendWith(MockKExtension::class)
 class OppgaveRevurderForskuddOgBidragTest {
@@ -67,8 +54,11 @@ class OppgaveRevurderForskuddOgBidragTest {
 //    @MockK
     lateinit var baksOpphørBarnetrygdService: BaksOpphørBarnetrygdService
 
+    val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
     val beskrivelse =
-        "Barnetrygd er opphørt eller redusert manuelt fra og med ${LocalDate.now().withDayOfMonth(1)} i denne saken for " +
+        "Barnetrygd er opphørt eller redusert manuelt fra og med ${LocalDate.now().withDayOfMonth(
+            1,
+        ).format(formatter)} i denne saken for " +
             "barnet med fødselsnummer " +
             "$personIdentSøknadsbarn1. Vurder om bidrag eller forskudd også skal stoppes."
 
