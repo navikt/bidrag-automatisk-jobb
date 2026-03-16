@@ -68,7 +68,7 @@ class OppgaveRevurderForskuddOgBidragTest {
     lateinit var baksOpphørBarnetrygdService: BaksOpphørBarnetrygdService
 
     val beskrivelse =
-        "Barnetrygd er opphørt/redusert manuelt fra og med ${YearMonth.now()} i denne saken for barnet med fødselsnummer " +
+        "Barnetrygd er opphørt eller redusert manuelt fra og med ${YearMonth.now()} i denne saken for barnet med fødselsnummer " +
             "$personIdentSøknadsbarn1. Vurder om bidrag eller forskudd også skal stoppes."
 
     @BeforeEach
