@@ -31,13 +31,13 @@ data class RevurderingForskudd(
     val forMåned: String,
     @Column(name = "batch_id", nullable = false)
     override val batchId: String,
-    @ManyToMany
-    @JoinTable(
+    @field:ManyToMany
+    @field:JoinTable(
         name = "revurdering_forskudd_barn",
         joinColumns = [JoinColumn(name = "revurdering_forskudd_id")],
         inverseJoinColumns = [JoinColumn(name = "barn_id")],
     )
-    @OrderBy("id")
+    @field:OrderBy("id")
     val barn: MutableList<Barn>,
     @Column(nullable = false)
     val saksnummer: String,
