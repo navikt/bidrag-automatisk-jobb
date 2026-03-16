@@ -286,12 +286,12 @@ class OppgaveService(
         )
 
         if (!oppgaveFinnesFraFør(saksnummer, beskrivelse)) {
-            /*            val oppgaveResponse =
+            val oppgaveResponse =
                 oppgaveConsumer.opprettOppgave(
                     OpprettOppgaveRequest(
                         beskrivelse = beskrivelse,
                         oppgavetype = OppgaveType.GEN,
-                        tema = if (enhet_farskap == enhet) "FAR" else "BID",
+                        tema = "BID",
                         saksreferanse = saksnummer,
                         tildeltEnhetsnr = enhet,
                         personident = mottaker,
@@ -299,12 +299,13 @@ class OppgaveService(
                 )
 
             secureLogger.info {
-                "Opprettet oppgave for å revurdere forskudd/bidrag $oppgaveResponse for sak $saksnummer, enhet $enhet og bidragsmottaker $mottaker.}"
-            }*/
-
-            secureLogger.info {
-                "Opprettet oppgave for å revurdere forskudd/bidrag for sak $saksnummer, enhet $enhet og bidragsmottaker $mottaker.}"
+                "Opprettet oppgave for å revurdere forskudd/bidrag for sak $saksnummer, enhet $enhet og bidragsmottaker $mottaker." +
+                    "Respons fra Oppgave: $oppgaveResponse "
             }
+
+//            secureLogger.info {
+//                "Opprettet oppgave for å revurdere forskudd/bidrag for sak $saksnummer, enhet $enhet og bidragsmottaker $mottaker."
+//            }
         }
     }
 
