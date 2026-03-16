@@ -4,6 +4,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.automatiskjobb.domene.BarnetrygdBisysMelding
 import no.nav.bidrag.automatiskjobb.domene.BarnetrygdEndretType
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
+import no.nav.bidrag.commons.util.secureLogger
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
@@ -29,16 +30,17 @@ class BaksOpphørBarnetrygdService(
             if ((barnMedForskudd != null || barnMedBidrag != null) &&
                 barnhendelse.årsakskode in listOf(BarnetrygdEndretType.RO, BarnetrygdEndretType.RR)
             ) {
-                LOGGER.info {
-                    "Vedtak om reduksjon/opphør av barnetrygd mottatt for barn det løper forskudd eller bidrag for: ${barnhendelse.ident} "
+                secureLogger.info {
+                    "Vedtak om reduksjon/opphør av barnetrygd mottatt for barn med forskudd eller bidrag: " +
+                        "${barnhendelse.ident}, hendelse: $hendelse"
                 }
                 // lag oppgave for å revurdere forskudd og bidrag for barnet
-                oppgaveService.opprettRevurderForskuddOgBidragOppgave(
-                    saksnummer = barnMedForskudd?.saksnummer ?: barnMedBidrag!!.saksnummer,
-                    mottaker = hendelse.søker,
-                    kravhaver = barnhendelse.ident,
-                    fom = barnhendelse.fom,
-                )
+//                oppgaveService.opprettRevurderForskuddOgBidragOppgave(
+//                    saksnummer = barnMedForskudd?.saksnummer ?: barnMedBidrag!!.saksnummer,
+//                    mottaker = hendelse.søker,
+//                    kravhaver = barnhendelse.ident,
+//                    fom = barnhendelse.fom,
+//                )
             }
         }
     }

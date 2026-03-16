@@ -44,7 +44,7 @@ env:
   KAFKA_VEDTAK_TOPIC: bidrag.vedtak-q2
   KAFKA_PERSON_HENDELSE_TOPIC: bidrag.personhendelse.v1
   KAFKA_BAKS_OPPHOER_BARNETRYGD_TOPIC: teamfamilie.aapen-familie-ba-sak-opphoer-barnetrygd
-  BAKS_OPPHOER_BARNETRYGD_KAFKA_GROUP_ID: bidrag-automatisk-jobb-q2-v3
+  BAKS_OPPHOER_BARNETRYGD_KAFKA_GROUP_ID: bidrag-automatisk-jobb-q2-v4
   VEDTAK_KAFKA_GROUP_ID_SISTE: bidrag-automatisk-jobb-q2-siste
   VEDTAK_KAFKA_GROUP_ID_START: bidrag-automatisk-jobb-q2-start-2
   PERSON_HENDELSE_KAFKA_GROUP_ID: bidrag-automatisk-jobb-q2
