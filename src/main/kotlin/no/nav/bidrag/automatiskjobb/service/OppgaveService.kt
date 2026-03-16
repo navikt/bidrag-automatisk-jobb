@@ -27,8 +27,11 @@ import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.domene.enums.vedtak.Vedtakskilde
 import no.nav.bidrag.domene.felles.enhet_farskap
 import no.nav.bidrag.transport.behandling.vedtak.VedtakHendelse
+import no.nav.bidrag.transport.felles.toLocalDate
 import org.springframework.stereotype.Service
 import java.time.YearMonth
+import java.time.format.DateTimeFormatter
+import kotlin.text.format
 
 private val LOGGER = KotlinLogging.logger {}
 
@@ -275,9 +278,11 @@ class OppgaveService(
         fom: YearMonth,
     ) {
         val enhet = finnEierfogd(saksnummer)
+        val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
+        val formatertDato = fom.toLocalDate().withDayOfMonth(1).format(formatter)
         val beskrivelse = (
             "Barnetrygd er opphørt eller redusert manuelt fra og med " +
-                fom +
+                formatertDato +
                 " i denne saken " +
                 "for barnet med fødselsnummer " +
                 kravhaver +
@@ -299,13 +304,9 @@ class OppgaveService(
                 )
 
             secureLogger.info {
-                "Opprettet oppgave for å revurdere forskudd/bidrag for sak $saksnummer, enhet $enhet og bidragsmottaker $mottaker." +
+                "Opprettet oppgave for å revurdere forskudd/bidrag for sak $saksnummer, enhet $enhet og bidragsmottaker $mottaker. " +
                     "Respons fra Oppgave: $oppgaveResponse "
             }
-
-//            secureLogger.info {
-//                "Opprettet oppgave for å revurdere forskudd/bidrag for sak $saksnummer, enhet $enhet og bidragsmottaker $mottaker."
-//            }
         }
     }
 
