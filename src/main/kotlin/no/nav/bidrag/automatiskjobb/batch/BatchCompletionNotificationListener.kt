@@ -23,17 +23,17 @@ class BatchCompletionNotificationListener : JobExecutionListener {
             LOGGER.warn("Batch: $jobNavn avsluttet med status: ${jobExecution.status}")
         }
 
-        // Rapporter skipped items per steg
-        jobExecution.stepExecutions.forEach { steg ->
-            val skipCount = steg.skipCount
+        // Rapporter skipped items per step
+        jobExecution.stepExecutions.forEach { step ->
+            val skipCount = step.skipCount
             if (skipCount > 0) {
                 LOGGER.warn(
-                    "Batch: $jobNavn / steg: ${steg.stepName} hoppet over $skipCount item(s). " +
-                        "Leste: ${steg.readCount}, behandlet: ${steg.processSkipCount} skippet under prosessering, " +
-                        "${steg.writeSkipCount} skippet under skriving.",
+                    "Batch: $jobNavn / step: ${step.stepName} hoppet over $skipCount item(s). " +
+                        "Leste: ${step.readCount}, behandlet: ${step.processSkipCount} skippet under prosessering, " +
+                        "${step.writeSkipCount} skippet under skriving.",
                 )
-                steg.failureExceptions.forEach { ex ->
-                    LOGGER.warn("  -> Årsak: ${ex.message}", ex)
+                step.failureExceptions.forEach { e ->
+                    LOGGER.warn("  -> Årsak: ${e.message}", e)
                 }
             }
         }
