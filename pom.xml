@@ -24,7 +24,7 @@
         <mockk.version>1.14.6</mockk.version>
         <ktlint.version>1.8.0</ktlint.version>
         <shedlock.version>6.10.0</shedlock.version>
-        <bidrag-beregn-felles.version>2026.01.05.150751</bidrag-beregn-felles.version>
+        <bidrag-beregn-felles.version>2026.01.09.140333</bidrag-beregn-felles.version>
     </properties>
 
     <repositories>
