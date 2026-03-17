@@ -152,15 +152,21 @@ class RevurderForskuddService(
     }
 
     @Transactional
-    fun slettRevurderingForskuddForMåned(forMåned: YearMonth) {
-        val revurderingerForMåned =
-            revurderForskuddRepository.findAllByForMåned(forMåned.toString(), Pageable.unpaged())
-
-        revurderingerForMåned.forEach {
-            revurderForskuddRepository.delete(it)
+    fun resetFeiledeRevurderinger() {
+        val feiledeRevurderForskudd =
+            revurderForskuddRepository.findAllByBehandlingstypeIs(Behandlingstype.FEILET)
+        feiledeRevurderForskudd.forEach {
+            it.status = Status.UBEHANDLET
+            it.behandlingstype = null
+            it.begrunnelse = emptyList()
         }
-        LOGGER.info {
-            "Slettet ${revurderingerForMåned.totalElements} revurderinger av forskudd for måned $forMåned"
+    }
+
+    @Transactional
+    fun slettRevurderingForskuddForMåned(forMåned: YearMonth) {
+        revurderForskuddRepository.deleteAllByForMåned(forMåned.toString())
+        LOGGER.warn {
+            "Slettet alle revurderinger av forskudd for måned $forMåned"
         }
     }
 
@@ -411,14 +417,14 @@ class RevurderForskuddService(
         fattedeForslag.forEach {
             val finnesForskuddForSakPeriode =
                 reskontroService.finnesForskuddForSakPeriode(
-                    Saksnummer(it.barn.saksnummer),
+                    Saksnummer(it.saksnummer),
                     listOf(
                         LocalDate.now().minusMonths(3),
                         LocalDate.now().minusMonths(2),
                         LocalDate.now().minusMonths(1),
                     ),
                 )
-            LOGGER.info { "Sak ${it.barn.saksnummer} skal vurdere tilbakekreving: $finnesForskuddForSakPeriode" }
+            LOGGER.info { "Sak ${it.saksnummer} skal vurdere tilbakekreving: $finnesForskuddForSakPeriode" }
             it.vurdereTilbakekreving = finnesForskuddForSakPeriode
         }
         fattedeForslag.forEach { revurderForskuddRepository.save(it) }

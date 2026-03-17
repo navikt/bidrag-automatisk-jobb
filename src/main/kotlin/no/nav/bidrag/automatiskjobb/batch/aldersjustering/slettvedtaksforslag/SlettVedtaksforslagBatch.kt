@@ -1,22 +1,31 @@
 package no.nav.bidrag.automatiskjobb.batch.aldersjustering.slettvedtaksforslag
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.JobParametersBuilder
 import org.springframework.batch.core.launch.JobLauncher
+import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Component
 import java.util.UUID
 
+private val LOGGER = KotlinLogging.logger { }
+
 @Component
 class SlettVedtaksforslagBatch(
-    private val jobLauncher: JobLauncher,
+    @param:Qualifier("asyncJobLauncher") private val jobLauncher: JobLauncher,
     private val slettVedtaksforslagJob: Job,
 ) {
     fun startSlettVedtaksforslagBatch() {
-        jobLauncher.run(
-            slettVedtaksforslagJob,
-            JobParametersBuilder()
-                .addString("runId", UUID.randomUUID().toString())
-                .toJobParameters(),
-        )
+        try {
+            jobLauncher.run(
+                slettVedtaksforslagJob,
+                JobParametersBuilder()
+                    .addString("runId", UUID.randomUUID().toString())
+                    .toJobParameters(),
+            )
+        } catch (_: JobExecutionAlreadyRunningException) {
+            LOGGER.warn { "Batch slettVedtaksforslag kjører allerede. Ignorerer ny forespørsel." }
+        }
     }
 }

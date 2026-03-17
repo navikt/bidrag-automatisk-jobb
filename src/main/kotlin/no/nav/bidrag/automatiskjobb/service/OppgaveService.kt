@@ -103,7 +103,7 @@ class OppgaveService(
     }
 
     private fun finnEksisterendeOppgaveForTilbakekrevingForskudd(revurderingForskudd: RevurderingForskudd): OppgaveDto? {
-        val oppgaver = hentOppgave(revurderingForskudd.barn)
+        val oppgaver = hentOppgave(revurderingForskudd.barn.first()) // TODO(Per barn?)
         return oppgaver.oppgaver.find { it.beskrivelse!!.contains(oppgaveTilbakekrevingForskudd) }
     }
 
@@ -133,34 +133,36 @@ class OppgaveService(
     }
 
     fun opprettOppgaveForTilbakekrevingAvForskudd(revurderingForskudd: RevurderingForskudd): Int {
-        val eksisterendeOppgave = finnEksisterendeOppgaveForTilbakekrevingForskudd(revurderingForskudd)
-        if (eksisterendeOppgave != null) {
-            LOGGER.info {
-                "Fant eksisterende oppgave $eksisterendeOppgave for " +
-                    "tilbakekreving av forskudd ${revurderingForskudd.id} i sak ${revurderingForskudd.barn.saksnummer} " +
-                    "og barn ${revurderingForskudd.barn.saksnummer}. " +
-                    "Oppretter ikke ny oppgave."
-            }
-            return eksisterendeOppgave.id.toInt()
-        }
+//        val eksisterendeOppgave = finnEksisterendeOppgaveForTilbakekrevingForskudd(revurderingForskudd)
+//        if (eksisterendeOppgave != null) {
+//            LOGGER.info {
+//                "Fant eksisterende oppgave $eksisterendeOppgave for " +
+//                    "tilbakekreving av forskudd ${revurderingForskudd.id} i sak ${revurderingForskudd.saksnummer} " +
+//                    "og barn ${revurderingForskudd.barn.joinToString { it.kravhaver }}. " +
+//                    "Oppretter ikke ny oppgave."
+//            // TODO(Flytte til finnEksisterendeOppgaveForTilbakekrevingForskudd og spesifisere per barn?)
+//            }
+//            return eksisterendeOppgave.id.toInt()
+//        }
+//
+//        val barn = revurderingForskudd.barn.first() // TODO(Per barn?)
+//        val enhet = finnEierfogd(revurderingForskudd.saksnummer)
+//        val oppgaveResponse =
+//            oppgaveConsumer.opprettOppgave(
+//                OpprettOppgaveRequest(
+//                    beskrivelse =
+//                        lagBeskrivelseHeaderAutomatiskJobb() + oppgaveTilbakekrevingForskudd,
+//                    oppgavetype = OppgaveType.GEN,
+//                    saksreferanse = revurderingForskudd.saksnummer,
+//                    tema = if (enhet_farskap == enhet) "FAR" else "BID",
+//                    tildeltEnhetsnr = enhet,
+//                    personident = barn.kravhaver,
+//                ),
+//            )
+//        LOGGER.info { "Opprettet oppgave $oppgaveResponse for barn $barn, enhet $enhet." }
 
-        val barn = revurderingForskudd.barn
-        val enhet = finnEierfogd(barn.saksnummer)
-        val oppgaveResponse =
-            oppgaveConsumer.opprettOppgave(
-                OpprettOppgaveRequest(
-                    beskrivelse =
-                        lagBeskrivelseHeaderAutomatiskJobb() + oppgaveTilbakekrevingForskudd,
-                    oppgavetype = OppgaveType.GEN,
-                    saksreferanse = barn.saksnummer,
-                    tema = if (enhet_farskap == enhet) "FAR" else "BID",
-                    tildeltEnhetsnr = enhet,
-                    personident = barn.kravhaver,
-                ),
-            )
-        LOGGER.info { "Opprettet oppgave $oppgaveResponse for barn $barn, enhet $enhet." }
-
-        return oppgaveResponse.id.toInt()
+//        return oppgaveResponse.id.toInt()
+        TODO("Ikke implementert ennå, da det ikke er avklart om det skal opprettes oppgave for tilbakekreving av forskudd ved revurdering")
     }
 
     fun opprettOppgaveForManuellAldersjustering(aldersjustering: Aldersjustering): Int {

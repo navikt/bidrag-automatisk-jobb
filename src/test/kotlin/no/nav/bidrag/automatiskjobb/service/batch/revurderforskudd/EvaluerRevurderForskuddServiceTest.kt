@@ -1,7 +1,6 @@
 package no.nav.bidrag.automatiskjobb.service.batch.revurderforskudd
 
 import com.fasterxml.jackson.databind.node.POJONode
-import io.kotest.matchers.longs.exactly
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
@@ -80,7 +79,8 @@ class EvaluerRevurderForskuddServiceTest {
             RevurderingForskudd(
                 forMåned = YearMonth.now().toString(),
                 batchId = "123",
-                barn = mockk(relaxed = true),
+                barn = mutableListOf(mockk(relaxed = true)),
+                saksnummer = "123456",
                 status = Status.UBEHANDLET,
             )
         every { vedtakService.finnSisteManuelleVedtak(any()) } returns null
@@ -102,7 +102,8 @@ class EvaluerRevurderForskuddServiceTest {
             RevurderingForskudd(
                 forMåned = YearMonth.now().toString(),
                 batchId = "123",
-                barn = mockk(relaxed = true),
+                barn = mutableListOf(mockk(relaxed = true)),
+                saksnummer = "123456",
                 status = Status.UBEHANDLET,
             )
         every { vedtakService.finnSisteManuelleVedtak(any()) } returns mockk()
@@ -125,7 +126,8 @@ class EvaluerRevurderForskuddServiceTest {
             RevurderingForskudd(
                 forMåned = YearMonth.now().toString(),
                 batchId = "123",
-                barn = mockk(relaxed = true),
+                barn = mutableListOf(mockk(relaxed = true)),
+                saksnummer = "123456",
                 status = Status.UBEHANDLET,
             )
         val stønadDto =
@@ -153,9 +155,11 @@ class EvaluerRevurderForskuddServiceTest {
         val revurderingForskudd =
             mockk<RevurderingForskudd>(relaxed = true) {
                 every { barn } returns
-                    mockk<Barn>(relaxed = true) {
-                        every { kravhaver } returns barnFnr
-                    }
+                    mutableListOf(
+                        mockk<Barn>(relaxed = true) {
+                            every { kravhaver } returns barnFnr
+                        },
+                    )
             }
         val stønadPeriodeDto =
             mockk<StønadPeriodeDto>(relaxed = true) {
@@ -249,9 +253,11 @@ class EvaluerRevurderForskuddServiceTest {
         val revurderingForskudd =
             mockk<RevurderingForskudd>(relaxed = true) {
                 every { barn } returns
-                    mockk<Barn>(relaxed = true) {
-                        every { kravhaver } returns barnFnr
-                    }
+                    mutableListOf(
+                        mockk<Barn>(relaxed = true) {
+                            every { kravhaver } returns barnFnr
+                        },
+                    )
             }
         val stønadPeriodeDto =
             mockk<StønadPeriodeDto>(relaxed = true) {
@@ -326,6 +332,22 @@ class EvaluerRevurderForskuddServiceTest {
                 every { summertMånedsinntektListe } returns emptyList()
                 every { summertÅrsinntektListe } returns emptyList()
             }
+        every { beregnForskuddApi.beregn(any()) } returns
+            mockk<BeregnetForskuddResultat>(relaxed = true) {
+                every { beregnetForskuddPeriodeListe } returns
+                    listOf(
+                        ResultatPeriode(
+                            periode = ÅrMånedsperiode(Year.now().atMonth(1), null),
+                            resultat =
+                                ResultatBeregning(
+                                    belop = BigDecimal(100),
+                                    kode = Resultatkode.ORDINÆRT_FORSKUDD_75_PROSENT,
+                                    regel = "Regel",
+                                ),
+                            grunnlagsreferanseListe = emptyList(),
+                        ),
+                    )
+            }
         evaluerRevurderForskuddService.evaluerRevurderForskudd(
             revurderingForskudd,
             simuler = false,
@@ -345,9 +367,11 @@ class EvaluerRevurderForskuddServiceTest {
         val revurderingForskudd =
             mockk<RevurderingForskudd>(relaxed = true) {
                 every { barn } returns
-                    mockk<Barn>(relaxed = true) {
-                        every { kravhaver } returns barnFnr
-                    }
+                    mutableListOf(
+                        mockk<Barn>(relaxed = true) {
+                            every { kravhaver } returns barnFnr
+                        },
+                    )
             }
         val stønadPeriodeDto =
             mockk<StønadPeriodeDto>(relaxed = true) {
@@ -379,32 +403,56 @@ class EvaluerRevurderForskuddServiceTest {
                         GrunnlagDto(
                             "bostatus",
                             Grunnlagstype.BOSTATUS_PERIODE,
-                            POJONode(mockk()),
+                            POJONode(
+                                Person(
+                                    ident = Personident(bmFnr),
+                                ),
+                            ),
                         ),
                         GrunnlagDto(
                             "inntekt_periode",
                             Grunnlagstype.INNTEKT_RAPPORTERING_PERIODE,
-                            POJONode(mockk()),
+                            POJONode(
+                                Person(
+                                    ident = Personident(bmFnr),
+                                ),
+                            ),
                         ),
                         GrunnlagDto(
                             "husstandsmedlem",
                             Grunnlagstype.PERSON_HUSSTANDSMEDLEM,
-                            POJONode(mockk()),
+                            POJONode(
+                                Person(
+                                    ident = Personident(bmFnr),
+                                ),
+                            ),
                         ),
                         GrunnlagDto(
                             "sivilstand_periode",
                             Grunnlagstype.SIVILSTAND_PERIODE,
-                            POJONode(mockk()),
+                            POJONode(
+                                Person(
+                                    ident = Personident(bmFnr),
+                                ),
+                            ),
                         ),
                         GrunnlagDto(
                             "innhentet_husstandsmedlem",
                             Grunnlagstype.INNHENTET_HUSSTANDSMEDLEM,
-                            POJONode(mockk()),
+                            POJONode(
+                                Person(
+                                    ident = Personident(bmFnr),
+                                ),
+                            ),
                         ),
                         GrunnlagDto(
                             "innhentet_sivilstand",
                             Grunnlagstype.INNHENTET_SIVILSTAND,
-                            POJONode(mockk()),
+                            POJONode(
+                                Person(
+                                    ident = Personident(bmFnr),
+                                ),
+                            ),
                         ),
                     )
                 every { vedtaksId } returns 1
@@ -466,9 +514,11 @@ class EvaluerRevurderForskuddServiceTest {
         val revurderingForskudd =
             mockk<RevurderingForskudd>(relaxed = true) {
                 every { barn } returns
-                    mockk<Barn>(relaxed = true) {
-                        every { kravhaver } returns barnFnr
-                    }
+                    mutableListOf(
+                        mockk<Barn>(relaxed = true) {
+                            every { kravhaver } returns barnFnr
+                        },
+                    )
             }
         val stønadPeriodeDto =
             mockk<StønadPeriodeDto>(relaxed = true) {
@@ -500,32 +550,56 @@ class EvaluerRevurderForskuddServiceTest {
                         GrunnlagDto(
                             "bostatus",
                             Grunnlagstype.BOSTATUS_PERIODE,
-                            POJONode(mockk()),
+                            POJONode(
+                                Person(
+                                    ident = Personident(bmFnr),
+                                ),
+                            ),
                         ),
                         GrunnlagDto(
                             "inntekt_periode",
                             Grunnlagstype.INNTEKT_RAPPORTERING_PERIODE,
-                            POJONode(mockk()),
+                            POJONode(
+                                Person(
+                                    ident = Personident(bmFnr),
+                                ),
+                            ),
                         ),
                         GrunnlagDto(
                             "husstandsmedlem",
                             Grunnlagstype.PERSON_HUSSTANDSMEDLEM,
-                            POJONode(mockk()),
+                            POJONode(
+                                Person(
+                                    ident = Personident(bmFnr),
+                                ),
+                            ),
                         ),
                         GrunnlagDto(
                             "sivilstand_periode",
                             Grunnlagstype.SIVILSTAND_PERIODE,
-                            POJONode(mockk()),
+                            POJONode(
+                                Person(
+                                    ident = Personident(bmFnr),
+                                ),
+                            ),
                         ),
                         GrunnlagDto(
                             "innhentet_husstandsmedlem",
                             Grunnlagstype.INNHENTET_HUSSTANDSMEDLEM,
-                            POJONode(mockk()),
+                            POJONode(
+                                Person(
+                                    ident = Personident(bmFnr),
+                                ),
+                            ),
                         ),
                         GrunnlagDto(
                             "innhentet_sivilstand",
                             Grunnlagstype.INNHENTET_SIVILSTAND,
-                            POJONode(mockk()),
+                            POJONode(
+                                Person(
+                                    ident = Personident(bmFnr),
+                                ),
+                            ),
                         ),
                     )
                 every { vedtaksId } returns 1
@@ -536,7 +610,7 @@ class EvaluerRevurderForskuddServiceTest {
                             every { referanse } returns "123"
                         },
                     )
-                every { vedtak.kildeapplikasjon } returns "KkildeILDE"
+                every { vedtak.kildeapplikasjon } returns "kildeapplikasjon"
             }
         every { bidragBeløpshistorikkConsumer.hentHistoriskeStønader(any()) } returns stønadDto
         every { inntektApi.transformerInntekter(any()) } returns

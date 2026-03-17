@@ -25,43 +25,46 @@ class OpprettRevurderForskuddService(
     private val revurderForskuddRepository: RevurderForskuddRepository,
 ) {
     fun opprettRevurdereForskudd(
-        barn: Barn,
+        barn: List<Barn>,
         batchId: String,
         cutoffTidspunktForManueltVedtak: LocalDateTime,
     ): RevurderingForskudd? {
         val inneværendeMåned = YearMonth.now()
-        if (finnesEksisterendeRevurderingForskudd(barn, inneværendeMåned)) {
+        if (finnesEksisterendeRevurderingForskudd(barn.first().saksnummer, inneværendeMåned)) {
             LOGGER.info {
-                "Barn ${barn.kravhaver} har allerede revurdering av forskudd for måned $inneværendeMåned. Oppretter ikke ny revurdering."
+                "Sak ${barn.first().saksnummer} har allerede revurdering av forskudd for måned $inneværendeMåned. Oppretter ikke ny revurdering."
             }
             return null
         }
-        if (harÅpentForskuddssak(barn)) {
-            LOGGER.info { "Barn ${barn.kravhaver} har åpent forskuddssak. Oppretter ikke revurdering av forskudd." }
+        if (harÅpentForskuddssak(barn.first())) {
+            LOGGER.info { "Sak ${barn.first().saksnummer} har åpent forskuddssak. Oppretter ikke revurdering av forskudd." }
             return null
         }
-        val sisteManuelleVedtakTidspunkt = hentSisteManuelleVedtakTidspunkt(barn)
+
+        val sisteManuelleVedtakTidspunkt = hentSisteManuelleVedtakTidspunkt(barn.first())
         if (sisteManuelleVedtakTidspunkt != null && sisteManuelleVedtakTidspunkt.isAfter(cutoffTidspunktForManueltVedtak)) {
             LOGGER.info {
-                "Barn ${barn.kravhaver} har manuelt vedtak opprettet $sisteManuelleVedtakTidspunkt etter cutoff tidspunkt $cutoffTidspunktForManueltVedtak. Oppretter ikke revurdering av forskudd."
+                "Sak ${barn.first().saksnummer} har manuelt vedtak opprettet $sisteManuelleVedtakTidspunkt etter cutoff tidspunkt $cutoffTidspunktForManueltVedtak. Oppretter ikke revurdering av forskudd."
             }
             return null
         }
 
-        if (erBarnAttenFørNesteMåned(barn, inneværendeMåned)) {
+        val barnFiltrert = barn.filterNot { erBarnAttenFørNesteMåned(it, inneværendeMåned) }.toMutableList()
+        if (barnFiltrert.isEmpty()) {
             LOGGER.info {
-                "Barn ${barn.kravhaver} er over 18 år eller fyller 18 inneværende måned. Oppretter ikke revurdering av forskudd."
+                "Sak ${barn.first().saksnummer} har ingen barn som ikke er over 18 år eller fyller 18 inneværende måned. Oppretter ikke revurdering av forskudd."
             }
             return null
         }
         return RevurderingForskudd(
             forMåned = inneværendeMåned.toString(),
             batchId = batchId,
-            barn = barn,
+            barn = barnFiltrert,
+            saksnummer = barnFiltrert.first().saksnummer,
             status = Status.UBEHANDLET,
         ).also {
             LOGGER.info {
-                "Opprettet revurdering forskudd for barn med id ${barn.id}. $it"
+                "Opprettet revurdering forskudd for sak ${barnFiltrert.first().saksnummer}. $it"
             }
         }
     }
@@ -69,12 +72,20 @@ class OpprettRevurderForskuddService(
     private fun erBarnAttenFørNesteMåned(
         barn: Barn,
         inneværendeMåned: YearMonth,
-    ): Boolean = barn.fødselsdato?.plusYears(18)?.isBefore(inneværendeMåned.toLocalDate().plusMonths(1)) == true
+    ): Boolean {
+        val erAttenFørNesteMåned = barn.fødselsdato?.plusYears(18)?.isBefore(inneværendeMåned.toLocalDate().plusMonths(1)) == true
+        if (erAttenFørNesteMåned) {
+            LOGGER.info {
+                "Barn ${barn.kravhaver} er over 18 år eller fyller 18 inneværende måned. Tar ikke med barn."
+            }
+        }
+        return erAttenFørNesteMåned
+    }
 
     private fun finnesEksisterendeRevurderingForskudd(
-        barn: Barn,
+        saksnummer: String,
         inneværendeMåned: YearMonth,
-    ): Boolean = revurderForskuddRepository.findAllByBarnIdAndForMåned(barn.id!!, inneværendeMåned.toString()) != null
+    ): Boolean = revurderForskuddRepository.existsBySaksnummerAndForMåned(saksnummer, inneværendeMåned.toString())
 
     private fun harÅpentForskuddssak(barn: Barn): Boolean {
         val hentÅpneBehandlingerRespons = bidragBehandlingConsumer.hentÅpneBehandlingerForBarn(barn.kravhaver)

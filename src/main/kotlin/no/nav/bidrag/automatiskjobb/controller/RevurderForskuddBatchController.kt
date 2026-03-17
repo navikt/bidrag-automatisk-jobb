@@ -11,7 +11,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.evaluer.EvaluerRevurderForskuddBatch
 import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.fattvedtak.FatteVedtakRevurderForskuddBatch
-import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.oppgave.OppgaveRevurderForskuddBatch
 import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.opprett.OpprettRevurderForskuddBatch
 import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.revurderingslenke.RevurderingslenkeRevurderForskuddBatch
 import no.nav.bidrag.automatiskjobb.service.RevurderForskuddService
@@ -21,6 +20,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RestController
+import java.time.LocalDate
 import java.time.YearMonth
 
 @Protected
@@ -30,7 +30,6 @@ class RevurderForskuddBatchController(
     private val opprettRevurderForskuddBatch: OpprettRevurderForskuddBatch,
     private val evaluerRevurderForskuddBatch: EvaluerRevurderForskuddBatch,
     private val fatteVedtakRevurderForskuddBatch: FatteVedtakRevurderForskuddBatch,
-    private val opprettOppgaveRevurderForskuddBatch: OppgaveRevurderForskuddBatch,
     private val revurderingslenkeRevurderForskuddBatch: RevurderingslenkeRevurderForskuddBatch,
     private val revurderForskuddService: RevurderForskuddService,
 ) {
@@ -118,12 +117,24 @@ class RevurderForskuddBatchController(
     @Operation(
         summary = "Resetter evaluering for revurdering av forskudd etter simulering.",
         description =
-            "Resetter evaluerer om forskudd skal revurderes så alle innslag er ubehandlede.",
+            "Resetter status til UBEHANDLET for alle revurdering som er simulerte.",
         security = [SecurityRequirement(name = "bearer-key")],
     )
     fun evaluerRevurderForskudd(): ResponseEntity<Void> {
         revurderForskuddService.resetEvalueringEtterSimuering()
-        return ResponseEntity.status(HttpStatus.CREATED).build()
+        return ResponseEntity.status(HttpStatus.OK).build()
+    }
+
+    @PostMapping("/revurderforskudd/batch/evaluer/resetFeilede")
+    @Operation(
+        summary = "Resetter evaluering for feilede revurderinger av forskudd.",
+        description =
+            "Setter status til UBEHANDLET for alle revurderinger av forskudd som har feilet i evaluering.",
+        security = [SecurityRequirement(name = "bearer-key")],
+    )
+    fun resetFeiledeRevurderForskudd(): ResponseEntity<Void> {
+        revurderForskuddService.resetFeiledeRevurderinger()
+        return ResponseEntity.status(HttpStatus.OK).build()
     }
 
     @PostMapping("/revurderforskudd/batch/fattevedtak")
@@ -139,26 +150,16 @@ class RevurderForskuddBatchController(
         return ResponseEntity.status(HttpStatus.CREATED).build()
     }
 
-    @Deprecated("Bruk revurderingslenke i stedet")
-    @PostMapping("/revurderforskudd/batch/opprettoppgaver")
-    @Operation(
-        summary = "Starter batch: Opprett oppgaver for revurder forskudd i tilfeller hvor det skal tilbakekreves forskudd.",
-        description = "Oppretter oppgaver for saksbehandling i de tilfeller hvor revurdering av forskudd medfører tilbakekreving.",
-        security = [SecurityRequirement(name = "bearer-key")],
-    )
-    fun opprettOppgaverForRevurderForskudd(): ResponseEntity<Void> {
-        opprettOppgaveRevurderForskuddBatch.start()
-        return ResponseEntity.status(HttpStatus.CREATED).build()
-    }
-
     @PostMapping("/revurderforskudd/batch/revurderingslenke")
     @Operation(
         summary = "Starter batch: Opprett revurderingslenke for revurder forskudd i tilfeller hvor det skal tilbakekreves forskudd.",
         description = "Oppretter revurderingslenke for saksbehandling i de tilfeller hvor revurdering av forskudd medfører tilbakekreving.",
         security = [SecurityRequirement(name = "bearer-key")],
     )
-    fun opprettRevurderingslengeForRevurderForskudd(): ResponseEntity<Void> {
-        revurderingslenkeRevurderForskuddBatch.start()
+    fun opprettRevurderingslengeForRevurderForskudd(
+        @Parameter(required = false, description = "Settes default til 12 måneder tilbake.") søktFraDato: LocalDate,
+    ): ResponseEntity<Void> {
+        revurderingslenkeRevurderForskuddBatch.start(søktFraDato)
         return ResponseEntity.status(HttpStatus.CREATED).build()
     }
 }

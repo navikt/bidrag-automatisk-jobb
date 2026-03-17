@@ -13,7 +13,6 @@ import no.nav.bidrag.commons.web.DefaultCorsFilter
 import no.nav.bidrag.commons.web.MdcFilter
 import no.nav.security.token.support.client.spring.oauth2.EnableOAuth2Client
 import no.nav.security.token.support.spring.api.EnableJwtTokenValidation
-import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.EnableAspectJAutoProxy
 import org.springframework.context.annotation.Import
@@ -30,7 +29,6 @@ import org.springframework.retry.annotation.EnableRetry
 @EnableOAuth2Client(cacheEnabled = true)
 @EnableSaksbehandlernavnProvider
 @EnableRetry
-@EnableBatchProcessing
 @EnableSjekkForNyIdent
 @EnableUnleashFeatures
 @Import(DefaultCorsFilter::class, MdcFilter::class, AldersjusteringOrchestrator::class)

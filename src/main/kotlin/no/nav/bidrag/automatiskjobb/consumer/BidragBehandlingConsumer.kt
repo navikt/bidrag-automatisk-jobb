@@ -58,29 +58,35 @@ class BidragBehandlingConsumer(
         revurderingForskudd: RevurderingForskudd,
         bm: Personident?,
         enhetsnummer: Enhetsnummer,
+        søktFraDato: LocalDate,
     ): OpprettBehandlingResponse {
         val opprettBehandlingRequest =
             OpprettBehandlingRequest(
                 behandlingstema = Behandlingstema.FORSKUDD,
                 vedtakstype = Vedtakstype.REVURDERING,
-                søktFomDato = LocalDate.now().minusMonths(6).withDayOfMonth(1),
+                søktFomDato = søktFraDato,
                 mottattdato = LocalDate.now(),
                 søknadFra = SøktAvType.NAV_BIDRAG,
-                saksnummer = revurderingForskudd.barn.saksnummer,
+                saksnummer = revurderingForskudd.saksnummer,
                 behandlerenhet = enhetsnummer.verdi,
                 roller =
-                    setOf(
-                        OpprettRolleDto(
-                            rolletype = Rolletype.BIDRAGSMOTTAKER,
-                            ident = bm,
-                            fødselsdato = null,
+                    revurderingForskudd.barn
+                        .map { barn ->
+                            OpprettRolleDto(
+                                rolletype = Rolletype.BARN,
+                                ident = Personident(barn.kravhaver),
+                                fødselsdato = null,
+                            )
+                        }.toSet() +
+                        setOfNotNull(
+                            bm?.let {
+                                OpprettRolleDto(
+                                    rolletype = Rolletype.BIDRAGSMOTTAKER,
+                                    ident = it,
+                                    fødselsdato = null,
+                                )
+                            },
                         ),
-                        OpprettRolleDto(
-                            rolletype = Rolletype.BARN,
-                            ident = Personident(revurderingForskudd.barn.kravhaver),
-                            fødselsdato = null,
-                        ),
-                    ),
                 stønadstype = Stønadstype.FORSKUDD,
                 søknadsid = null,
                 opprettSøknad = true,

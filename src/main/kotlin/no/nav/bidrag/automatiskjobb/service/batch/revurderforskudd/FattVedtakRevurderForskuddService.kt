@@ -22,15 +22,16 @@ class FattVedtakRevurderForskuddService(
         revurderingForskudd: RevurderingForskudd,
         simuler: Boolean,
     ) {
+        val barnKravhavere = revurderingForskudd.barn.joinToString { it.kravhaver }
         if (simuler) {
             LOGGER.info {
-                "Simulering: Fatter vedtak om revurdering av forskudd for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer}."
+                "Simulering: Fatter vedtak om revurdering av forskudd for barn $barnKravhavere i sak ${revurderingForskudd.saksnummer}."
             }
             return
         }
 
         LOGGER.info {
-            "Fatter vedtak om revurdering av forskudd for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer}."
+            "Fatter vedtak om revurdering av forskudd for barn $barnKravhavere i sak ${revurderingForskudd.saksnummer}."
         }
         try {
             bidragVedtakConsumer.fatteVedtaksforslag(
@@ -40,7 +41,7 @@ class FattVedtakRevurderForskuddService(
             revurderingForskudd.fattetTidspunkt = Timestamp(System.currentTimeMillis())
         } catch (e: Exception) {
             LOGGER.error(e) {
-                "Feil ved fatting av vedtak om revurdering av forskudd for barn ${revurderingForskudd.barn.kravhaver} i sak ${revurderingForskudd.barn.saksnummer}."
+                "Feil ved fatting av vedtak om revurdering av forskudd for barn $barnKravhavere i sak ${revurderingForskudd.saksnummer}."
             }
             revurderingForskudd.status = Status.FATTE_VEDTAK_FEILET
             revurderForskuddRepository.save(revurderingForskudd)

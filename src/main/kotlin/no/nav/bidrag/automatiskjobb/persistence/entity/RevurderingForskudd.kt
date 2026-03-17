@@ -4,12 +4,15 @@ import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
+import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
-import jakarta.persistence.ManyToOne
+import jakarta.persistence.JoinTable
+import jakarta.persistence.ManyToMany
 import jakarta.persistence.OneToMany
+import jakarta.persistence.OrderBy
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
@@ -29,9 +32,16 @@ data class RevurderingForskudd(
     val forMåned: String,
     @Column(name = "batch_id", nullable = false)
     override val batchId: String,
-    @ManyToOne
-    @JoinColumn(name = "barn_id")
-    override val barn: Barn,
+    @field:ManyToMany(fetch = FetchType.EAGER)
+    @field:JoinTable(
+        name = "revurdering_forskudd_barn",
+        joinColumns = [JoinColumn(name = "revurdering_forskudd_id")],
+        inverseJoinColumns = [JoinColumn(name = "barn_id")],
+    )
+    @field:OrderBy("id")
+    val barn: MutableList<Barn>,
+    @Column(nullable = false)
+    val saksnummer: String,
     var begrunnelse: List<String> = emptyList(),
     @Enumerated(EnumType.STRING)
     var status: Status,
@@ -52,14 +62,16 @@ data class RevurderingForskudd(
     @JoinColumn(name = "revurdering_forskudd_id")
     override val forsendelseBestilling: MutableList<ForsendelseBestilling> = mutableListOf(),
 ) : ForsendelseEntity {
-    override val unikReferanse get() = "revurdering_forskudd_${batchId}_${tilStønadsid().toReferanse()}"
+    override val unikReferanse get() = "revurdering_forskudd_${batchId}_${tilStønadsid(
+        barn.joinToString(separator = "-") { it.kravhaver },
+    ).toReferanse()}"
 
-    fun tilStønadsid(): Stønadsid =
+    fun tilStønadsid(kravhaver: String): Stønadsid =
         Stønadsid(
             Stønadstype.FORSKUDD,
-            Personident(barn.kravhaver),
+            Personident(kravhaver),
             personidentNav,
-            Saksnummer(barn.saksnummer),
+            Saksnummer(saksnummer),
         )
 
     val begrunnelseVisningsnavn
@@ -90,6 +102,7 @@ data class RevurderingForskudd(
             "forMåned = $forMåned, " +
             "batchId = $batchId, " +
             "barn = $barn, " +
+            "saksnummer = $saksnummer, " +
             "begrunnelse = $begrunnelse, " +
             "status = $status, " +
             "behandlingstype = $behandlingstype, " +

@@ -1,7 +1,7 @@
 package no.nav.bidrag.automatiskjobb.persistence.entity.enums
 
 private const val DOKUMENTMAL_ALDERSJUSTERING_BI01B05 = "BI01B05"
-private const val DOKUMENTMAL_REVURDERING_FORSKUDD_BI01A04 = "BI01A04"
+private const val DOKUMENTMAL_REVURDERING_FORSKUDD_BI01A08 = "BI01A08"
 
 enum class Forsendelsestype(
     val dokumentmal: String,
@@ -10,5 +10,5 @@ enum class Forsendelsestype(
 ) {
     ALDERSJUSTERING_BIDRAG(DOKUMENTMAL_ALDERSJUSTERING_BI01B05, true, true),
     ALDERSJUSTERING_FORSKUDD("", true, false), // TODO(Legg litt alderjustering for forskudd her senere)
-    REVURDERING_FORSKUDD(DOKUMENTMAL_REVURDERING_FORSKUDD_BI01A04, true, false),
+    REVURDERING_FORSKUDD(DOKUMENTMAL_REVURDERING_FORSKUDD_BI01A08, true, false),
 }

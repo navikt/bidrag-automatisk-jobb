@@ -6,9 +6,11 @@ import no.nav.bidrag.automatiskjobb.consumer.BidragPersonConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragSamhandlerConsumer
 import no.nav.bidrag.automatiskjobb.mapper.ForsendelseMapper
+import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.entity.ForsendelseBestilling
 import no.nav.bidrag.automatiskjobb.persistence.entity.ForsendelseEntity
+import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Forsendelsestype
 import no.nav.bidrag.automatiskjobb.persistence.repository.ForsendelseBestillingRepository
 import no.nav.bidrag.automatiskjobb.utils.bidragsmottaker
@@ -47,7 +49,14 @@ class ForsendelseBestillingService(
         forsendelseEntity: ForsendelseEntity,
         forsendelsestype: Forsendelsestype,
     ): MutableList<ForsendelseBestilling> {
-        val sak = bidragSakConsumer.hentSak(forsendelseEntity.barn.saksnummer)
+        val barnSaksnummer =
+            when (forsendelseEntity) {
+                is Aldersjustering -> forsendelseEntity.barn.saksnummer
+                is RevurderingForskudd -> forsendelseEntity.saksnummer
+                else -> error("Ukjent ForsendelseEntity type")
+            }
+
+        val sak = bidragSakConsumer.hentSak(barnSaksnummer)
         if (sak.bidragspliktig == null || erPersonDød(sak.bidragspliktig!!.fødselsnummer!!)) {
             LOGGER.warn {
                 "Bidragspliktig finnes ikke eller er død. Oppretter ikke forsendelse. Gjelder ${forsendelseEntity.id}"
@@ -57,11 +66,29 @@ class ForsendelseBestillingService(
         slettEksisterendeBestillingerSomIkkeErOpprettet(forsendelseEntity)
 
         val forsendelseBestillinger = mutableListOf<ForsendelseBestilling>()
-        if (forsendelsestype.forsendelseTilBp) {
-            forsendelseBestillinger.add(opprettBestillingForBidragspliktig(forsendelseEntity, sak, forsendelsestype))
-        }
-        if (forsendelsestype.forsendelseTilBm) {
-            forsendelseBestillinger.add(opprettBestillingForBidragsmottaker(forsendelseEntity, sak, forsendelsestype))
+
+        when (forsendelseEntity) {
+            is RevurderingForskudd -> {
+                forsendelseEntity.barn.forEach { barn ->
+                    forsendelseBestillinger.add(
+                        // TODO(Samle alle barna i samme forsendelse)
+                        opprettBestillingForBidragsmottakerMedBarn(forsendelseEntity, barn, sak, forsendelsestype),
+                    )
+                }
+            }
+
+            is Aldersjustering -> {
+                if (forsendelsestype.forsendelseTilBp) {
+                    forsendelseBestillinger.add(
+                        opprettBestillingForBidragspliktigMedBarn(forsendelseEntity, forsendelseEntity.barn, sak, forsendelsestype),
+                    )
+                }
+                if (forsendelsestype.forsendelseTilBm) {
+                    forsendelseBestillinger.add(
+                        opprettBestillingForBidragsmottakerMedBarn(forsendelseEntity, forsendelseEntity.barn, sak, forsendelsestype),
+                    )
+                }
+            }
         }
         return forsendelseBestillinger
     }
@@ -180,14 +207,16 @@ class ForsendelseBestillingService(
         forsendelseEntity.forsendelseBestilling.removeIf { skalSlettes(it) }
     }
 
-    private fun opprettBestillingForBidragspliktig(
+    private fun opprettBestillingForBidragspliktigMedBarn(
         forsendelseEntity: ForsendelseEntity,
+        barn: Barn, // TODO(Samle alle barna i samme forsendelse)
         sak: BidragssakDto,
         forsendelsestype: Forsendelsestype,
     ): ForsendelseBestilling {
         val bp = sak.bidragspliktig!!
         return opprettForsendelseBestilling(
             forsendelseEntity = forsendelseEntity,
+            barn = barn,
             gjelderIdent = bp.fødselsnummer!!.verdi,
             mottakerident = bp.fødselsnummer!!.verdi,
             rolletype = Rolletype.BIDRAGSPLIKTIG,
@@ -197,6 +226,7 @@ class ForsendelseBestillingService(
 
     private fun opprettForsendelseBestilling(
         forsendelseEntity: ForsendelseEntity,
+        barn: Barn, // TODO(Samle alle barna i samme forsendelse)
         forsendelsestype: Forsendelsestype,
         gjelderIdent: String?,
         mottakerident: String?,
@@ -214,7 +244,7 @@ class ForsendelseBestillingService(
                 unikReferanse = forsendelseEntity.unikReferanse,
                 vedtak = forsendelseEntity.vedtak!!,
                 stønadstype = forsendelseEntity.stønadstype,
-                barn = forsendelseEntity.barn,
+                barn = barn,
                 batchId = forsendelseEntity.batchId,
                 forsendelsestype = forsendelsestype,
             )
@@ -227,14 +257,16 @@ class ForsendelseBestillingService(
         return forsendelseBestilling
     }
 
-    private fun opprettBestillingForBidragsmottaker(
+    private fun opprettBestillingForBidragsmottakerMedBarn(
         forsendelseEntity: ForsendelseEntity,
+        barn: Barn, // TODO(Samle alle barna i samme forsendelse)
         sak: BidragssakDto,
         forsendelsestype: Forsendelsestype,
     ): ForsendelseBestilling {
-        val mottakerIdent = finnMottakerIdent(forsendelseEntity.barn, sak)
+        val mottakerIdent = finnMottakerIdent(barn, sak)
         return opprettForsendelseBestilling(
             forsendelseEntity = forsendelseEntity,
+            barn = barn,
             gjelderIdent = mottakerIdent.gjelder,
             mottakerident = mottakerIdent.mottakerIdent,
             rolletype = mottakerIdent.mottakerRolle,

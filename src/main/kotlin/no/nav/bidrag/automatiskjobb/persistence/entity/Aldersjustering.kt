@@ -27,7 +27,7 @@ data class Aldersjustering(
     var vedtaksidBeregning: Int? = null,
     @ManyToOne
     @JoinColumn(name = "barn_id")
-    override val barn: Barn,
+    val barn: Barn,
     val aldersgruppe: Int,
     var lopendeBelop: BigDecimal? = null,
     var begrunnelse: List<String> = emptyList(),
