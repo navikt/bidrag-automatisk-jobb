@@ -23,10 +23,15 @@ import no.nav.bidrag.automatiskjobb.utils.oppgaveAldersjusteringBeskrivelse
 import no.nav.bidrag.automatiskjobb.utils.oppgaveTilbakekrevingForskudd
 import no.nav.bidrag.automatiskjobb.utils.revurderForskuddBeskrivelseAdresseendring
 import no.nav.bidrag.automatiskjobb.utils.tilOppgaveBeskrivelse
+import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.domene.enums.vedtak.Vedtakskilde
 import no.nav.bidrag.domene.felles.enhet_farskap
 import no.nav.bidrag.transport.behandling.vedtak.VedtakHendelse
+import no.nav.bidrag.transport.felles.toLocalDate
 import org.springframework.stereotype.Service
+import java.time.YearMonth
+import java.time.format.DateTimeFormatter
+import kotlin.text.format
 
 private val LOGGER = KotlinLogging.logger {}
 
@@ -252,7 +257,8 @@ class OppgaveService(
         val revurderForskuddOppgave = oppgaver.oppgaver.find { it.beskrivelse!!.contains(forskuddRedusertResultat.tilOppgaveBeskrivelse()) }
         if (revurderForskuddOppgave != null) {
             LOGGER.info {
-                "Fant revurder forskudd oppgave $revurderForskuddOppgave for sak ${forskuddRedusertResultat.saksnummer} og bidragsmottaker ${forskuddRedusertResultat.bidragsmottaker}. Oppretter ikke ny oppgave"
+                "Fant revurder forskudd oppgave $revurderForskuddOppgave for sak ${forskuddRedusertResultat.saksnummer} og " +
+                    "bidragsmottaker ${forskuddRedusertResultat.bidragsmottaker}. Oppretter ikke ny oppgave"
             }
             return true
         }
@@ -264,4 +270,64 @@ class OppgaveService(
             "{}",
             begrunnelseVisningsnavn.firstOrNull() ?: "",
         )
+
+    fun opprettRevurderForskuddOgBidragOppgave(
+        saksnummer: String,
+        mottaker: String,
+        kravhaver: String,
+        fom: YearMonth,
+    ) {
+        val enhet = finnEierfogd(saksnummer)
+        val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
+        val formatertDato = fom.toLocalDate().withDayOfMonth(1).format(formatter)
+        val beskrivelse = (
+            "Barnetrygd er opphørt eller redusert manuelt fra og med " +
+                formatertDato +
+                " i denne saken " +
+                "for barnet med fødselsnummer " +
+                kravhaver +
+                ". " +
+                "Vurder om bidrag eller forskudd også skal stoppes."
+        )
+
+        if (!oppgaveFinnesFraFør(saksnummer, beskrivelse)) {
+            val oppgaveResponse =
+                oppgaveConsumer.opprettOppgave(
+                    OpprettOppgaveRequest(
+                        beskrivelse = beskrivelse,
+                        oppgavetype = OppgaveType.GEN,
+                        tema = "BID",
+                        saksreferanse = saksnummer,
+                        tildeltEnhetsnr = enhet,
+                        personident = mottaker,
+                    ),
+                )
+
+            secureLogger.info {
+                "Opprettet oppgave for å revurdere forskudd/bidrag for sak $saksnummer, enhet $enhet og bidragsmottaker $mottaker. " +
+                    "Respons fra Oppgave: $oppgaveResponse "
+            }
+        }
+    }
+
+    fun oppgaveFinnesFraFør(
+        saksnummer: String,
+        beskrivelse: String,
+    ): Boolean {
+        val oppgaver =
+            oppgaveConsumer.hentOppgave(
+                OppgaveSokRequest()
+                    .søkForGenerellOppgave()
+                    .leggTilSaksreferanse(saksnummer),
+            )
+        val revurderForskuddOppgave = oppgaver.oppgaver.find { it.beskrivelse!!.contains(beskrivelse) }
+        if (revurderForskuddOppgave != null) {
+            secureLogger.info {
+                "Fant eksisterende oppgave for å revurdere forskudd og barnebidrag etter opphør av barnetrygd. " +
+                    "Oppgave: $revurderForskuddOppgave, sak: $saksnummer. Oppretter ikke ny oppgave"
+            }
+            return true
+        }
+        return false
+    }
 }

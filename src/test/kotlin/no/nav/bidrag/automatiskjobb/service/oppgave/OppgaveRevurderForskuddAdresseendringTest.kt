@@ -75,7 +75,7 @@ class OppgaveRevurderForskuddAdresseendringTest {
                 eierfogd = Enhetsnummer("4806"),
                 saksnummer = Saksnummer("123213"),
                 saksstatus = Bidragssakstatus.IN,
-                kategori = Sakskategori.N,
+                kategori = Sakskategori.NASJONAL,
                 opprettetDato = LocalDate.now(),
                 levdeAdskilt = false,
                 ukjentPart = false,
