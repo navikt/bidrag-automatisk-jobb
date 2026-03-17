@@ -35,12 +35,12 @@ class BaksOpphørBarnetrygdService(
                         "${barnhendelse.ident}, hendelse: $hendelse"
                 }
                 // lag oppgave for å revurdere forskudd og bidrag for barnet
-//                oppgaveService.opprettRevurderForskuddOgBidragOppgave(
-//                    saksnummer = barnMedForskudd?.saksnummer ?: barnMedBidrag!!.saksnummer,
-//                    mottaker = hendelse.søker,
-//                    kravhaver = barnhendelse.ident,
-//                    fom = barnhendelse.fom,
-//                )
+                oppgaveService.opprettRevurderForskuddOgBidragOppgave(
+                    saksnummer = barnMedForskudd?.saksnummer ?: barnMedBidrag!!.saksnummer,
+                    mottaker = hendelse.søker,
+                    kravhaver = barnhendelse.ident,
+                    fom = barnhendelse.fom,
+                )
             }
         }
     }
