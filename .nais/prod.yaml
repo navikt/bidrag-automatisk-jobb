@@ -43,6 +43,8 @@ env:
   BIDRAG_ORGANISASJON_URL: https://bidrag-organisasjon.prod-fss-pub.nais.io/bidrag-organisasjon
   KAFKA_VEDTAK_TOPIC: bidrag.vedtak
   KAFKA_PERSON_HENDELSE_TOPIC: bidrag.personhendelse.v1
+  KAFKA_BAKS_OPPHOER_BARNETRYGD_TOPIC: teamfamilie.aapen-familie-ba-sak-opphoer-barnetrygd
+  BAKS_OPPHOER_BARNETRYGD_KAFKA_GROUP_ID: bidrag-automatisk-jobb
   VEDTAK_KAFKA_GROUP_ID_SISTE: bidrag-automatisk-jobb-siste
   VEDTAK_KAFKA_GROUP_ID_START: bidrag-automatisk-jobb-start-6
   PERSON_HENDELSE_KAFKA_GROUP_ID: bidrag-automatisk-jobb

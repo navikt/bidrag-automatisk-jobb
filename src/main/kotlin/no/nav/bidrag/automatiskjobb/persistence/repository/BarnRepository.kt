@@ -44,4 +44,24 @@ interface BarnRepository : JpaRepository<Barn, Int> {
         @Param("forskuddDato") forskuddDato: LocalDate,
         pageable: Pageable,
     ): Page<Barn>
+
+    @Query(
+        "SELECT b FROM barn b WHERE b.forskuddFra IS NOT NULL " +
+            "AND (b.forskuddTil IS NULL OR b.forskuddTil > :dato)" +
+            "AND b.kravhaver = :kravhaver",
+    )
+    fun finnLøpendeForskuddForBarn(
+        @Param("dato") dato: LocalDate,
+        @Param("kravhaver") kravhaver: String,
+    ): List<Barn>
+
+    @Query(
+        "SELECT b FROM barn b WHERE b.bidragFra IS NOT NULL " +
+            "AND (b.bidragTil IS NULL OR b.bidragTil > :dato)" +
+            "AND b.kravhaver = :kravhaver",
+    )
+    fun finnLøpendeBidragForBarn(
+        @Param("dato") dato: LocalDate,
+        @Param("kravhaver") kravhaver: String,
+    ): List<Barn>
 }
