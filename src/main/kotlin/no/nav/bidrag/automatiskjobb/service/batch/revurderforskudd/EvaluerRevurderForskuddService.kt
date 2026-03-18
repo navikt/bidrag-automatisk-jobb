@@ -92,7 +92,10 @@ class EvaluerRevurderForskuddService(
         val grunnlagsliste = mutableListOf<GrunnlagDto>()
         val stønadsendringer = mutableListOf<OpprettStønadsendringRequestDto>()
 
-        LOGGER.info { "Starter evaluering av revudering forskuydd for sak ${revurderingForskudd.saksnummer} med barn ${revurderingForskudd.barn.joinToString(separator = ", ") { it.kravhaver }}" }
+        LOGGER.info {
+            "Starter evaluering av revudering forskuydd for sak ${revurderingForskudd.saksnummer} " +
+                "med barn ${revurderingForskudd.barn.joinToString(separator = ", ") { it.kravhaver }}"
+        }
 
         revurderingForskudd.barn.forEach { barn ->
             val sisteManuelleVedtak = finnSisteManuelleVedtak(barn)
