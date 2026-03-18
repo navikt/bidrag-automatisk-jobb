@@ -3,7 +3,8 @@ management:
     web:
       exposure:
         include: "prometheus,health"
-
+logging.level.secureLogger: DEBUG
+logging.level.no.nav.bidrag: DEBUG
 springdoc:
   packages-to-scan: no.nav.bidrag.automatiskjobb.controller
   swagger-ui:
