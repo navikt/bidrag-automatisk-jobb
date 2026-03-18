@@ -209,9 +209,10 @@ class EvaluerRevurderForskuddService(
             }
 
             // Legger til INNHETET_INNTEKT_AINNTEKT på grunnlaget
+            val hentetTidspunkt = LocalDateTime.now()
             val innhentetGrunnlagForBM =
                 grunnlag.ainntektListe.tilGrunnlagsobjekt(
-                    LocalDateTime.now(),
+                    hentetTidspunkt,
                     bmGrunnlagReferanse,
                 )
             relevantGrunnlag.add(innhentetGrunnlagForBM)
@@ -520,7 +521,7 @@ class EvaluerRevurderForskuddService(
 
     private fun beregnNyttForskudd(
         grunnlag: MutableList<GrunnlagDto>,
-        `beregnFraMåned`: YearMonth,
+        beregnFraMåned: YearMonth,
         barnGrunnlagReferanse: String,
         bmGrunnlagReferanse: String,
         inntekt: BigDecimal,
@@ -595,7 +596,7 @@ class EvaluerRevurderForskuddService(
     )
 
     private fun List<AinntektGrunnlagDto>.tilGrunnlagsobjekt(
-        hentetTidspunkt: LocalDateTime = LocalDateTime.now(),
+        hentetTidspunkt: LocalDateTime,
         gjelderReferanse: String,
     ) = GrunnlagDto(
         referanse = opprettAinntektGrunnlagsreferanse(gjelderReferanse),
