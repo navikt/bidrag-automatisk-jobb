@@ -13,6 +13,7 @@ import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.evaluer.EvaluerRevurd
 import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.fattvedtak.FatteVedtakRevurderForskuddBatch
 import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.opprett.OpprettRevurderForskuddBatch
 import no.nav.bidrag.automatiskjobb.batch.revurderforskudd.revurderingslenke.RevurderingslenkeRevurderForskuddBatch
+import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
 import no.nav.bidrag.automatiskjobb.service.RevurderForskuddService
 import no.nav.security.token.support.core.api.Protected
 import org.springframework.http.HttpStatus
@@ -103,6 +104,49 @@ class RevurderForskuddBatchController(
     ): ResponseEntity<Void> {
         evaluerRevurderForskuddBatch.start(simuler, antallMånederForBeregning, beregnFraMåned, forMåned)
         return ResponseEntity.status(HttpStatus.CREATED).build()
+    }
+
+    @PostMapping("/revurderforskudd/batch/evaluer/{saksnummer}")
+    @Operation(
+        summary = "Starter evaluering revurdering av forskudd for en sak.",
+        security = [SecurityRequirement(name = "bearer-key")],
+    )
+    fun evaluerRevuderForskuddForSak(
+        @Parameter(
+            required = true,
+            example = "true",
+            description = "Avgjør om batchen skal kjøres i simuleringsmodus.",
+        ) simuler: Boolean = true,
+        @Parameter(
+            required = true,
+            example = "3",
+            description = "Avgjør hvor mange måneder som skal brukes tilbake i tid for beregning av månedsinntekt.",
+        ) antallMånederForBeregning: Long,
+        @Parameter(
+            required = false,
+            description = "Kan settes for å endre hvilken måned beregningen skal gjelde fra. Default er en måned frem i tid.",
+        ) beregnFraMåned: YearMonth = YearMonth.now().plusMonths(1),
+        @Parameter(
+            required = false,
+            description =
+                "Kan settes for å endre hvilken måned av revurdering forskudd innslag som skal behandles. " +
+                    "Default er innværende måned.",
+        ) forMåned: YearMonth = YearMonth.now(),
+        @Parameter(
+            required = true,
+            description = "Saksnummeret for saken som skal evalueres.",
+            example = "2600001",
+        ) saksnummer: String,
+    ): ResponseEntity<RevurderingForskudd?> {
+        val revurderingForskudd =
+            revurderForskuddService.evaluerRevurderForskuddForSak(
+                simuler,
+                antallMånederForBeregning,
+                beregnFraMåned,
+                forMåned,
+                saksnummer,
+            )
+        return ResponseEntity.status(HttpStatus.OK).body(revurderingForskudd)
     }
 
     @PostMapping("/revurderforskudd/batch/reskontroVurderTilbakekreving")

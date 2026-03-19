@@ -40,6 +40,11 @@ interface RevurderForskuddRepository : JpaRepository<RevurderingForskudd, Int> {
         pageable: Pageable,
     ): Page<RevurderingForskudd>
 
+    fun findBySaksnummerAndForMåned(
+        saksnummer: String,
+        forMåned: String,
+    ): RevurderingForskudd?
+
     fun findAllByBehandlingstypeIs(behandlingstype: Behandlingstype): List<RevurderingForskudd>
 
     @Modifying

@@ -7,9 +7,11 @@ import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer
 import no.nav.bidrag.automatiskjobb.mapper.GrunnlagMapper
 import no.nav.bidrag.automatiskjobb.mapper.erBidrag
+import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import no.nav.bidrag.automatiskjobb.persistence.repository.RevurderForskuddRepository
+import no.nav.bidrag.automatiskjobb.service.batch.revurderforskudd.EvaluerRevurderForskuddService
 import no.nav.bidrag.automatiskjobb.service.model.AdresseEndretResultat
 import no.nav.bidrag.automatiskjobb.service.model.ForskuddRedusertResultat
 import no.nav.bidrag.automatiskjobb.service.model.StønadEngangsbeløpId
@@ -61,7 +63,7 @@ private val LOGGER = KotlinLogging.logger { }
 @Service
 @Import(BeregnForskuddApi::class, Vedtaksfiltrering::class)
 class RevurderForskuddService(
-    private val `bidragBeløpshistorikkConsumer`: BidragBeløpshistorikkConsumer,
+    private val bidragBeløpshistorikkConsumer: BidragBeløpshistorikkConsumer,
     private val bidragVedtakConsumer: BidragVedtakConsumer,
     private val bidragSakConsumer: BidragSakConsumer,
     private val bidragPersonConsumer: BidragPersonConsumer,
@@ -69,6 +71,7 @@ class RevurderForskuddService(
     private val vedtaksFilter: Vedtaksfiltrering,
     private val revurderForskuddRepository: RevurderForskuddRepository,
     private val reskontroService: ReskontroService,
+    private val evaluerRevurderForskuddService: EvaluerRevurderForskuddService,
 ) {
     fun skalBMFortsattMottaForskuddForSøknadsbarnEtterAdresseendring(aktørId: String): List<AdresseEndretResultat> {
         val person = bidragPersonConsumer.hentPerson(Personident(aktørId))
@@ -428,5 +431,28 @@ class RevurderForskuddService(
             it.vurdereTilbakekreving = finnesForskuddForSakPeriode
         }
         fattedeForslag.forEach { revurderForskuddRepository.save(it) }
+    }
+
+    fun evaluerRevurderForskuddForSak(
+        simuler: Boolean = true,
+        antallMånederForBeregning: Long,
+        beregnFraMåned: YearMonth,
+        forMåned: YearMonth,
+        saksnummer: String,
+    ): RevurderingForskudd? {
+        val revurderingForskudd = revurderForskuddRepository.findBySaksnummerAndForMåned(saksnummer, forMåned.toString())
+        if (revurderingForskudd == null) {
+            LOGGER.error { "Fant ikke noen revurdering for $saksnummer for måned $forMåned." }
+        }
+        val evaluertRevurderingForskudd =
+            evaluerRevurderForskuddService.evaluerRevurderForskudd(
+                revurderingForskudd!!,
+                simuler,
+                antallMånederForBeregning,
+                beregnFraMåned,
+            )
+        LOGGER.info { "Evaluering av revurdering forskudd er kjørt ferdig for sak $saksnummer. Resultat: $evaluertRevurderingForskudd" }
+        evaluertRevurderingForskudd?.let { revurderForskuddRepository.save(it) }
+        return revurderingForskudd
     }
 }

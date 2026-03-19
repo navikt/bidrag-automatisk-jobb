@@ -30,7 +30,9 @@ class EvaluerRevurderForskuddBatchProcessor(
             .getString("antallManederForBeregning")
             ?.toLong()
             ?.let { antallMånederForBeregning = it }
-        stepExecution.jobParameters.getString("beregnFraManed")?.let { beregnFraMåned = YearMonth.parse(it) }
+        stepExecution.jobParameters
+            .getString("beregnFraManed")
+            ?.let { beregnFraMåned = YearMonth.parse(it) }
     }
 
     override fun process(revurderingForskudd: RevurderingForskudd): RevurderingForskudd? {

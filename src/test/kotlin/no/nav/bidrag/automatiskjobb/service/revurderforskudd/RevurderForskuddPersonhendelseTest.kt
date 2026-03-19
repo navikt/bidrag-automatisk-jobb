@@ -13,6 +13,7 @@ import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer
 import no.nav.bidrag.automatiskjobb.persistence.repository.RevurderForskuddRepository
 import no.nav.bidrag.automatiskjobb.service.ReskontroService
 import no.nav.bidrag.automatiskjobb.service.RevurderForskuddService
+import no.nav.bidrag.automatiskjobb.service.batch.revurderforskudd.EvaluerRevurderForskuddService
 import no.nav.bidrag.automatiskjobb.testdata.opprettSakRespons
 import no.nav.bidrag.automatiskjobb.testdata.opprettStønadDto
 import no.nav.bidrag.automatiskjobb.testdata.opprettStønadPeriodeDto
@@ -64,6 +65,9 @@ class RevurderForskuddPersonhendelseTest {
     @MockK
     lateinit var reskontroService: ReskontroService
 
+    @MockK(relaxed = true)
+    lateinit var evaluerRevurderForskuddService: EvaluerRevurderForskuddService
+
     @BeforeEach
     fun initMocks() {
         // commonObjectmapper.readValue(hentFil("/__files/vedtak_forskudd.json"))
@@ -107,6 +111,7 @@ class RevurderForskuddPersonhendelseTest {
                 Vedtaksfiltrering(),
                 revurderForskuddRepository,
                 reskontroService,
+                evaluerRevurderForskuddService,
             )
     }
 
