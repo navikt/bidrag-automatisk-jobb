@@ -86,11 +86,11 @@ class EvaluerRevurderForskuddService(
     fun evaluerRevurderForskudd(
         revurderingForskudd: RevurderingForskudd,
         simuler: Boolean,
-        antallMånederForBeregning: Long,
         beregnFraMåned: YearMonth,
     ): RevurderingForskudd? {
         val grunnlagsliste = mutableListOf<GrunnlagDto>()
         val stønadsendringer = mutableListOf<OpprettStønadsendringRequestDto>()
+        var grunnlag: HentGrunnlagDto? = null
 
         LOGGER.info {
             "Starter evaluering av revudering forskuydd for sak ${revurderingForskudd.saksnummer} " +
@@ -119,6 +119,8 @@ class EvaluerRevurderForskuddService(
                 revurderingForskudd.begrunnelse = listOf("FORSKUDD_IKKE_LØPENDE")
                 return revurderingForskudd
             }
+
+            val løpendeBeløp = forskudd.periodeListe.hentSisteLøpendePeriode()!!.beløp!!
 
             val barnGrunnlagReferanse =
                 sisteManuelleVedtak.vedtak.grunnlagListe
@@ -200,9 +202,10 @@ class EvaluerRevurderForskuddService(
             relevantGrunnlag.add(opprettVirkningstidspunkt(forskudd.mottaker.verdi, beregnFraMåned))
 
             // Henter inntektsgrunnlaget for forskuddet
-            var grunnlag: HentGrunnlagDto
             try {
-                grunnlag = hentInntektsGrunnlagForForskudd(forskudd)
+                if (grunnlag == null) { // Henter grunnlaget for inntekt på BM kun en gang per sak
+                    grunnlag = hentInntektsGrunnlagForForskudd(forskudd)
+                }
             } catch (e: Exception) {
                 LOGGER.warn(e) {
                     "Feil ved henting av inntektsgrunnlag for revurdering av forskudd for barn ${barn.kravhaver} i sak ${barn.saksnummer}"
@@ -225,41 +228,16 @@ class EvaluerRevurderForskuddService(
             // Finner inntekter for forskuddsmottaker fra grunnlaget
             val transformerteInntekter = finnInntekterForForskuddFraGrunnlaget(grunnlag)
 
-            // Finn laveste summert månedsinntekt for måneder i perioden ganget med 12
-            val lavesteMånedsinntekt =
-                (antallMånederForBeregning downTo 1)
-                    .mapNotNull { i ->
-                        val måned = YearMonth.now().minusMonths(i)
-                        transformerteInntekter.summertMånedsinntektListe
-                            .find { måned.equals(it.gjelderÅrMåned) }
-                            ?.sumInntekt
-                    }.minOrNull()
-                    ?.multiply(BigDecimal(12))
-
             //  Finner summert årsintekt basert på siste 12 månedsinntekter
             val årsinntekt =
                 transformerteInntekter.summertÅrsinntektListe
                     .find {
                         it.inntektRapportering == Inntektsrapportering.AINNTEKT_BEREGNET_12MND
                     }?.sumInntekt
-                    ?: beregn12MånedsInntekt(transformerteInntekter)
+                    ?: beregn12MånedsInntekt(transformerteInntekter) // Fallback om årsinntekt er null (skal ikke skje)
 
-            var beregnetForskuddÅrsinntekt: BeregnetForskuddResultat
-            var beregnetForskuddLavesteMånedsinntekt: BeregnetForskuddResultat?
-
-            try {
-                beregnetForskuddLavesteMånedsinntekt =
-                    lavesteMånedsinntekt?.let {
-                        beregnNyttForskudd(
-                            relevantGrunnlag,
-                            beregnFraMåned,
-                            barnGrunnlagReferanse,
-                            bmGrunnlagReferanse,
-                            it,
-                            innhentetGrunnlagForBM.referanse,
-                        )
-                    }
-                beregnetForskuddÅrsinntekt =
+            val beregnetForskudd: BeregnetForskuddResultat =
+                try {
                     beregnNyttForskudd(
                         relevantGrunnlag,
                         beregnFraMåned,
@@ -268,40 +246,34 @@ class EvaluerRevurderForskuddService(
                         årsinntekt,
                         innhentetGrunnlagForBM.referanse,
                     )
-            } catch (e: IllegalArgumentException) {
-                LOGGER.error(e) {
-                    "Feil ved beregning av revurdering forskudd for barn ${barn.kravhaver} i sak ${barn.saksnummer}"
+                } catch (e: IllegalArgumentException) {
+                    LOGGER.error(e) {
+                        "Feil ved beregning av revurdering forskudd for barn ${barn.kravhaver} i sak ${barn.saksnummer}"
+                    }
+                    revurderingForskudd.behandlingstype = Behandlingstype.FEILET
+                    revurderingForskudd.status = if (simuler) Status.SIMULERT else Status.FEILET
+                    revurderingForskudd.begrunnelse = listOf("FEIL_VED_BEREGNING: ${e.message}")
+                    return revurderingForskudd
+                } catch (e: UgyldigInputException) {
+                    LOGGER.error(e) {
+                        "Ugyldig input ved beregning av revurdering forskudd for barn ${barn.kravhaver} i sak ${barn.saksnummer}"
+                    }
+                    revurderingForskudd.behandlingstype = Behandlingstype.FEILET
+                    revurderingForskudd.status = if (simuler) Status.SIMULERT else Status.FEILET
+                    revurderingForskudd.begrunnelse = listOf("UGYLDIG_INPUT_VED_BEREGNING: ${e.message}")
+                    return revurderingForskudd
+                } catch (e: Exception) {
+                    LOGGER.error(e) {
+                        "Ukjent feil ved beregning av revurdering forskudd for barn ${barn.kravhaver} i sak ${barn.saksnummer}"
+                    }
+                    revurderingForskudd.behandlingstype = Behandlingstype.FEILET
+                    revurderingForskudd.status = if (simuler) Status.SIMULERT else Status.FEILET
+                    revurderingForskudd.begrunnelse = listOf("UKJENT_FEIL_VED_BEREGNING: ${e.message}")
+                    return revurderingForskudd
                 }
-                revurderingForskudd.behandlingstype = Behandlingstype.FEILET
-                revurderingForskudd.status = if (simuler) Status.SIMULERT else Status.FEILET
-                revurderingForskudd.begrunnelse = listOf("FEIL_VED_BEREGNING: ${e.message}")
-                return revurderingForskudd
-            } catch (e: UgyldigInputException) {
-                LOGGER.error(e) {
-                    "Ugyldig input ved beregning av revurdering forskudd for barn ${barn.kravhaver} i sak ${barn.saksnummer}"
-                }
-                revurderingForskudd.behandlingstype = Behandlingstype.FEILET
-                revurderingForskudd.status = if (simuler) Status.SIMULERT else Status.FEILET
-                revurderingForskudd.begrunnelse = listOf("UGYLDIG_INPUT_VED_BEREGNING: ${e.message}")
-                return revurderingForskudd
-            } catch (e: Exception) {
-                LOGGER.error(e) {
-                    "Ukjent feil ved beregning av revurdering forskudd for barn ${barn.kravhaver} i sak ${barn.saksnummer}"
-                }
-                revurderingForskudd.behandlingstype = Behandlingstype.FEILET
-                revurderingForskudd.status = if (simuler) Status.SIMULERT else Status.FEILET
-                revurderingForskudd.begrunnelse = listOf("UKJENT_FEIL_VED_BEREGNING: ${e.message}")
-                return revurderingForskudd
-            }
-
-            val løpendeBeløp = forskudd.periodeListe.hentSisteLøpendePeriode()!!.beløp!!
-
-            val skalSetteNedForskuddÅrsinntekt = skalForskuddSettesNed(løpendeBeløp, beregnetForskuddÅrsinntekt)
-            val skalSetteNedForskuddMånedsinntekt =
-                skalForskuddSettesNed(løpendeBeløp, beregnetForskuddLavesteMånedsinntekt)
 
             // Ingen endring i forskudd skal gjøres
-            if (!skalSetteNedForskuddMånedsinntekt && !skalSetteNedForskuddÅrsinntekt) {
+            if (!skalForskuddSettesNed(løpendeBeløp, beregnetForskudd)) {
                 LOGGER.info {
                     "Forskudd for barn ${barn.kravhaver} i sak ${barn.saksnummer} skal ikke settes ned etter revurdering."
                 }
@@ -340,15 +312,8 @@ class EvaluerRevurderForskuddService(
             val sakrolleBarn = vedtakMapper.hentBarn(sak, barn.kravhaver)
             val mottaker = vedtakMapper.reellMottakerEllerBidragsmottaker(sakrolleBarn, sak.roller)!!
 
-            val beregnetForskuddResultat =
-                if (skalSetteNedForskuddÅrsinntekt) {
-                    beregnetForskuddÅrsinntekt
-                } else {
-                    beregnetForskuddLavesteMånedsinntekt!!
-                }
-
             grunnlagsliste.addAll(relevantGrunnlag)
-            grunnlagsliste.addAll(beregnetForskuddResultat.grunnlagListe)
+            grunnlagsliste.addAll(beregnetForskudd.grunnlagListe)
 
             stønadsendringer.add(
                 OpprettStønadsendringRequestDto(
@@ -366,7 +331,7 @@ class EvaluerRevurderForskuddService(
                         ),
                     førsteIndeksreguleringsår = YearMonth.now().plusYears(1).year,
                     periodeListe =
-                        beregnetForskuddResultat.beregnetForskuddPeriodeListe.map {
+                        beregnetForskudd.beregnetForskuddPeriodeListe.map {
                             OpprettPeriodeRequestDto(
                                 periode = it.periode,
                                 beløp = it.resultat.belop,

@@ -87,11 +87,6 @@ class RevurderForskuddBatchController(
             description = "Avgjør om batchen skal kjøres i simuleringsmodus.",
         ) simuler: Boolean = true,
         @Parameter(
-            required = true,
-            example = "3",
-            description = "Avgjør hvor mange måneder som skal brukes tilbake i tid for beregning av månedsinntekt.",
-        ) antallMånederForBeregning: Long = 3,
-        @Parameter(
             required = false,
             description = "Kan settes for å endre hvilken måned beregningen skal gjelde fra. Default er en måned frem i tid.",
         ) beregnFraMåned: YearMonth? = null,
@@ -102,7 +97,7 @@ class RevurderForskuddBatchController(
                     "Default er innværende måned.",
         ) forMåned: YearMonth? = null,
     ): ResponseEntity<Void> {
-        evaluerRevurderForskuddBatch.start(simuler, antallMånederForBeregning, beregnFraMåned, forMåned)
+        evaluerRevurderForskuddBatch.start(simuler, beregnFraMåned, forMåned)
         return ResponseEntity.status(HttpStatus.CREATED).build()
     }
 
@@ -117,11 +112,6 @@ class RevurderForskuddBatchController(
             example = "true",
             description = "Avgjør om batchen skal kjøres i simuleringsmodus.",
         ) simuler: Boolean = true,
-        @Parameter(
-            required = true,
-            example = "3",
-            description = "Avgjør hvor mange måneder som skal brukes tilbake i tid for beregning av månedsinntekt.",
-        ) antallMånederForBeregning: Long,
         @Parameter(
             required = false,
             description = "Kan settes for å endre hvilken måned beregningen skal gjelde fra. Default er en måned frem i tid.",
@@ -141,7 +131,6 @@ class RevurderForskuddBatchController(
         val revurderingForskudd =
             revurderForskuddService.evaluerRevurderForskuddForSak(
                 simuler,
-                antallMånederForBeregning,
                 beregnFraMåned,
                 forMåned,
                 saksnummer,

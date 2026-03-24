@@ -435,7 +435,6 @@ class RevurderForskuddService(
 
     fun evaluerRevurderForskuddForSak(
         simuler: Boolean = true,
-        antallMånederForBeregning: Long,
         beregnFraMåned: YearMonth,
         forMåned: YearMonth,
         saksnummer: String,
@@ -448,7 +447,6 @@ class RevurderForskuddService(
             evaluerRevurderForskuddService.evaluerRevurderForskudd(
                 revurderingForskudd!!,
                 simuler,
-                antallMånederForBeregning,
                 beregnFraMåned,
             )
         LOGGER.info { "Evaluering av revurdering forskudd er kjørt ferdig for sak $saksnummer. Resultat: $evaluertRevurderingForskudd" }
