@@ -55,7 +55,7 @@ class RevurderingslenkeRevurderForskuddBatchConfiguration {
     fun revurderingslenkeRevurderForskuddBatchReader(
         revurderForskuddRepository: RevurderForskuddRepository,
         @Value("#{jobParameters['forManed']}") forMånedString: String?,
-        ): RepositoryItemReader<RevurderingForskudd> {
+    ): RepositoryItemReader<RevurderingForskudd> {
         val forMåned = forMånedString?.let { YearMonth.parse(it) } ?: YearMonth.now()
 
         return RepositoryItemReaderBuilder<RevurderingForskudd>()

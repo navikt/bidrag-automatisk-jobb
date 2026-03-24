@@ -192,13 +192,13 @@ class RevurderForskuddBatchController(
     fun opprettRevurderingslengeForRevurderForskudd(
         @Parameter(
             required = false,
-            description = "Settes default til 12 måneder tilbake."
+            description = "Settes default til 12 måneder tilbake.",
         ) søktFraDato: LocalDate,
         @Parameter(
             required = false,
             description =
                 "Kan settes for å endre hvilken måned av revurdering forskudd innslag som skal behandles. " +
-                        "Default er innværende måned.",
+                    "Default er innværende måned.",
         ) forMåned: YearMonth? = null,
     ): ResponseEntity<Void> {
         revurderingslenkeRevurderForskuddBatch.start(søktFraDato, forMåned)
