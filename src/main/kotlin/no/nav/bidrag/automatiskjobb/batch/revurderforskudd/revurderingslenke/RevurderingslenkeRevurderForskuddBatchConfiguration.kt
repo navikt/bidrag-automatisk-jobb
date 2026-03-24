@@ -35,7 +35,6 @@ class RevurderingslenkeRevurderForskuddBatchConfiguration {
 
     @Bean
     fun revurderingslenkeRevurderForskuddStep(
-        @Qualifier("batchTaskExecutor") taskExecutor: TaskExecutor,
         jobRepository: JobRepository,
         transactionManager: PlatformTransactionManager,
         revurderingslenkeRevurderForskuddBatchReader: RepositoryItemReader<RevurderingForskudd>,
@@ -47,7 +46,6 @@ class RevurderingslenkeRevurderForskuddBatchConfiguration {
             .reader(revurderingslenkeRevurderForskuddBatchReader)
             .processor(revurderingslenkeRevurderForskuddBatchProcessor)
             .writer(dummyItemWriter)
-            .taskExecutor(taskExecutor)
             .faultTolerant()
             .skip(Exception::class.java)
             .skipLimit(CHUNK_SIZE)
