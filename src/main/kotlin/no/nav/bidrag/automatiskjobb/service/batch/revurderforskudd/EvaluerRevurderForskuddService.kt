@@ -93,7 +93,7 @@ class EvaluerRevurderForskuddService(
         var grunnlag: HentGrunnlagDto? = null
 
         LOGGER.info {
-            "Starter evaluering av revudering forskuydd for sak ${revurderingForskudd.saksnummer} " +
+            "Starter evaluering av revudering forskudd for sak ${revurderingForskudd.saksnummer} " +
                 "med barn ${revurderingForskudd.barn.joinToString(separator = ", ") { it.kravhaver }}"
         }
 
