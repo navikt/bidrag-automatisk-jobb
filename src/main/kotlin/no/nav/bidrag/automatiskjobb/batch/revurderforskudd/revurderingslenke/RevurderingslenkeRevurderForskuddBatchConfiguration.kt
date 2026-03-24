@@ -13,10 +13,12 @@ import org.springframework.batch.core.repository.JobRepository
 import org.springframework.batch.core.step.builder.StepBuilder
 import org.springframework.batch.item.data.RepositoryItemReader
 import org.springframework.batch.item.data.builder.RepositoryItemReaderBuilder
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.domain.Sort
 import org.springframework.transaction.PlatformTransactionManager
+import java.time.YearMonth
 
 @Configuration
 class RevurderingslenkeRevurderForskuddBatchConfiguration {
@@ -52,14 +54,18 @@ class RevurderingslenkeRevurderForskuddBatchConfiguration {
     @Bean
     fun revurderingslenkeRevurderForskuddBatchReader(
         revurderForskuddRepository: RevurderForskuddRepository,
-    ): RepositoryItemReader<RevurderingForskudd> =
-        RepositoryItemReaderBuilder<RevurderingForskudd>()
+        @Value("#{jobParameters['forManed']}") forMånedString: String?,
+        ): RepositoryItemReader<RevurderingForskudd> {
+        val forMåned = forMånedString?.let { YearMonth.parse(it) } ?: YearMonth.now()
+
+        return RepositoryItemReaderBuilder<RevurderingForskudd>()
             .name("revurderingslenkeRevurderForskuddBatchReader")
             .repository(revurderForskuddRepository)
-            .methodName("findAllByStatusIsAndVurdereTilbakekrevingIsTrueAndOppgaveIsNull")
-            .arguments(listOf(Status.FATTET))
+            .methodName("findAllByStatusIsAndForMånedIsAndVurdereTilbakekrevingIsTrueAndOppgaveIsNull")
+            .arguments(listOf(Status.FATTET, forMåned.toString()))
             .saveState(false)
             .pageSize(CHUNK_SIZE)
             .sorts(mapOf("id" to Sort.Direction.ASC))
             .build()
+    }
 }

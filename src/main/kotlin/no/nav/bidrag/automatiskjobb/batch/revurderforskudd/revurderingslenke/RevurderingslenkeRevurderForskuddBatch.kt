@@ -8,6 +8,7 @@ import org.springframework.batch.core.repository.JobExecutionAlreadyRunningExcep
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Component
 import java.time.LocalDate
+import java.time.YearMonth
 import java.util.UUID
 
 private val LOGGER = KotlinLogging.logger { }
@@ -17,7 +18,10 @@ class RevurderingslenkeRevurderForskuddBatch(
     @param:Qualifier("asyncJobLauncher") private val jobLauncher: JobLauncher,
     private val revurderingslenkeRevurderForskuddJob: Job,
 ) {
-    fun start(søktFraDato: LocalDate?) {
+    fun start(
+        søktFraDato: LocalDate?,
+        forMåned: YearMonth?,
+    ) {
         try {
             jobLauncher.run(
                 revurderingslenkeRevurderForskuddJob,
@@ -25,6 +29,7 @@ class RevurderingslenkeRevurderForskuddBatch(
                     .addString("batchId", UUID.randomUUID().toString())
                     .apply {
                         søktFraDato?.let { addString("soktFraDato", søktFraDato.toString()) }
+                        forMåned?.let { addString("forManed", forMåned.toString()) }
                     }.toJobParameters(),
             )
         } catch (_: JobExecutionAlreadyRunningException) {
