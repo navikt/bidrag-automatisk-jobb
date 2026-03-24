@@ -31,31 +31,52 @@ class CacheConfiguration {
         val caffeineCacheManager = CaffeineCacheManager()
         caffeineCacheManager.registerCustomCache(
             PERSON_FØDSELSDATO_CACHE,
-            Caffeine.newBuilder().expireAfter(InvaliderCacheFørStartenAvArbeidsdag()).build(),
+            Caffeine.newBuilder()
+                .recordStats()
+                .expireAfter(InvaliderCacheFørStartenAvArbeidsdag())
+                .build(),
         )
         caffeineCacheManager.registerCustomCache(
             SAMHANDLER_CACHE,
-            Caffeine.newBuilder().expireAfter(InvaliderCacheFørStartenAvArbeidsdag()).build(),
+            Caffeine.newBuilder()
+                .recordStats()
+                .expireAfter(InvaliderCacheFørStartenAvArbeidsdag())
+                .build(),
         )
         caffeineCacheManager.registerCustomCache(
             PERSON_HUSTANDSMEDLEMMER_CACHE,
-            Caffeine.newBuilder().expireAfter(InvaliderCacheFørStartenAvArbeidsdag()).build(),
+            Caffeine.newBuilder()
+                .recordStats()
+                .expireAfter(InvaliderCacheFørStartenAvArbeidsdag())
+                .build(),
         )
         caffeineCacheManager.registerCustomCache(
             SAKER_PERSON_CACHE,
-            Caffeine.newBuilder().expireAfter(InvaliderCacheFørStartenAvArbeidsdag()).build(),
+            Caffeine.newBuilder()
+                .recordStats()
+                .expireAfter(InvaliderCacheFørStartenAvArbeidsdag())
+                .build(),
         )
         caffeineCacheManager.registerCustomCache(
             PERSON_CACHE,
-            Caffeine.newBuilder().expireAfter(InvaliderCacheFørStartenAvArbeidsdag()).build(),
+            Caffeine.newBuilder()
+                .recordStats()
+                .expireAfter(InvaliderCacheFørStartenAvArbeidsdag())
+                .build(),
         )
         caffeineCacheManager.registerCustomCache(
             VEDTAK_CACHE,
-            Caffeine.newBuilder().expireAfterWrite(Duration.ofMinutes(10)).build(),
+            Caffeine.newBuilder()
+                .recordStats()
+                .expireAfterWrite(Duration.ofMinutes(10))
+                .build(),
         )
         caffeineCacheManager.registerCustomCache(
             SAK_CACHE,
-            Caffeine.newBuilder().expireAfter(InvaliderCacheFørStartenAvArbeidsdag()).build(),
+            Caffeine.newBuilder()
+                .recordStats()
+                .expireAfter(InvaliderCacheFørStartenAvArbeidsdag())
+                .build(),
         )
         return caffeineCacheManager
     }
