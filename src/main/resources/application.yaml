@@ -142,7 +142,6 @@ spring:
     enabled: true
     locations: classpath:/db/migration
   jpa:
-    database: postgresql
     open-in-view: false
     properties:
       hibernate:
