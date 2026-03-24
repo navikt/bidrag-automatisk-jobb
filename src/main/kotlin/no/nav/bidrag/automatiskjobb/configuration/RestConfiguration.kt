@@ -26,7 +26,6 @@ import java.time.temporal.ChronoUnit
 @EnableSecurityConfiguration
 @Import(RestOperationsAzure::class)
 class RestConfiguration {
-
     @Bean
     @Primary
     fun restTemplateBuilder(restTemplate: RestTemplateBuilder): RestTemplateBuilder =
