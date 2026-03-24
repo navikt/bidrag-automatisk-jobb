@@ -23,8 +23,9 @@ interface RevurderForskuddRepository : JpaRepository<RevurderingForskudd, Int> {
     ): Page<RevurderingForskudd>
 
     @Suppress("Unused")
-    fun findAllByStatusIsAndVurdereTilbakekrevingIsTrueAndOppgaveIsNull(
+    fun findAllByStatusIsAndForMånedIsAndVurdereTilbakekrevingIsTrueAndOppgaveIsNull(
         status: Status,
+        forMåned: String,
         pageable: Pageable,
     ): Page<RevurderingForskudd>
 
@@ -39,6 +40,11 @@ interface RevurderForskuddRepository : JpaRepository<RevurderingForskudd, Int> {
         forMåned: String,
         pageable: Pageable,
     ): Page<RevurderingForskudd>
+
+    fun findBySaksnummerAndForMåned(
+        saksnummer: String,
+        forMåned: String,
+    ): RevurderingForskudd?
 
     fun findAllByBehandlingstypeIs(behandlingstype: Behandlingstype): List<RevurderingForskudd>
 

@@ -14,13 +14,11 @@ import no.nav.bidrag.automatiskjobb.domene.Endringsmelding
 import no.nav.bidrag.automatiskjobb.domene.erAdresseendring
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
-import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
 import no.nav.bidrag.automatiskjobb.service.model.AdresseEndretResultat
 import no.nav.bidrag.automatiskjobb.service.model.ForskuddRedusertResultat
 import no.nav.bidrag.automatiskjobb.utils.UnleashFeatures
 import no.nav.bidrag.automatiskjobb.utils.erForskudd
 import no.nav.bidrag.automatiskjobb.utils.oppgaveAldersjusteringBeskrivelse
-import no.nav.bidrag.automatiskjobb.utils.oppgaveTilbakekrevingForskudd
 import no.nav.bidrag.automatiskjobb.utils.revurderForskuddBeskrivelseAdresseendring
 import no.nav.bidrag.automatiskjobb.utils.tilOppgaveBeskrivelse
 import no.nav.bidrag.commons.util.secureLogger
@@ -31,7 +29,6 @@ import no.nav.bidrag.transport.felles.toLocalDate
 import org.springframework.stereotype.Service
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
-import kotlin.text.format
 
 private val LOGGER = KotlinLogging.logger {}
 
@@ -102,11 +99,6 @@ class OppgaveService(
         }
     }
 
-    private fun finnEksisterendeOppgaveForTilbakekrevingForskudd(revurderingForskudd: RevurderingForskudd): OppgaveDto? {
-        val oppgaver = hentOppgave(revurderingForskudd.barn.first()) // TODO(Per barn?)
-        return oppgaver.oppgaver.find { it.beskrivelse!!.contains(oppgaveTilbakekrevingForskudd) }
-    }
-
     private fun finnEksisterendeOppgaveForManuellAldersjusteringISak(aldersjustering: Aldersjustering): OppgaveDto? {
         val oppgaver =
             hentOppgave(aldersjustering.barn)
@@ -130,39 +122,6 @@ class OppgaveService(
         val slettetOppgave = oppgaveConsumer.slettOppgave(oppgaveId, oppgave.versjon)
         LOGGER.info { "Slettet oppgave med id $oppgaveId: $slettetOppgave" }
         return slettetOppgave.id
-    }
-
-    fun opprettOppgaveForTilbakekrevingAvForskudd(revurderingForskudd: RevurderingForskudd): Int {
-//        val eksisterendeOppgave = finnEksisterendeOppgaveForTilbakekrevingForskudd(revurderingForskudd)
-//        if (eksisterendeOppgave != null) {
-//            LOGGER.info {
-//                "Fant eksisterende oppgave $eksisterendeOppgave for " +
-//                    "tilbakekreving av forskudd ${revurderingForskudd.id} i sak ${revurderingForskudd.saksnummer} " +
-//                    "og barn ${revurderingForskudd.barn.joinToString { it.kravhaver }}. " +
-//                    "Oppretter ikke ny oppgave."
-//            // TODO(Flytte til finnEksisterendeOppgaveForTilbakekrevingForskudd og spesifisere per barn?)
-//            }
-//            return eksisterendeOppgave.id.toInt()
-//        }
-//
-//        val barn = revurderingForskudd.barn.first() // TODO(Per barn?)
-//        val enhet = finnEierfogd(revurderingForskudd.saksnummer)
-//        val oppgaveResponse =
-//            oppgaveConsumer.opprettOppgave(
-//                OpprettOppgaveRequest(
-//                    beskrivelse =
-//                        lagBeskrivelseHeaderAutomatiskJobb() + oppgaveTilbakekrevingForskudd,
-//                    oppgavetype = OppgaveType.GEN,
-//                    saksreferanse = revurderingForskudd.saksnummer,
-//                    tema = if (enhet_farskap == enhet) "FAR" else "BID",
-//                    tildeltEnhetsnr = enhet,
-//                    personident = barn.kravhaver,
-//                ),
-//            )
-//        LOGGER.info { "Opprettet oppgave $oppgaveResponse for barn $barn, enhet $enhet." }
-
-//        return oppgaveResponse.id.toInt()
-        TODO("Ikke implementert ennå, da det ikke er avklart om det skal opprettes oppgave for tilbakekreving av forskudd ved revurdering")
     }
 
     fun opprettOppgaveForManuellAldersjustering(aldersjustering: Aldersjustering): Int {

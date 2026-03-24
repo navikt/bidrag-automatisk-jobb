@@ -51,6 +51,7 @@ class EvaluerRevurderForskuddBatchConfiguration {
             .taskExecutor(taskExecutor)
             .faultTolerant()
             .skipLimit(CHUNK_SIZE)
+            .skip(Exception::class.java)
             .build()
 
     @Bean

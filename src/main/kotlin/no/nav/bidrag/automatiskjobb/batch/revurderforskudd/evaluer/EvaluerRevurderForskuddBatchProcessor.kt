@@ -17,7 +17,6 @@ class EvaluerRevurderForskuddBatchProcessor(
     private val evaluerRevurderForskuddService: EvaluerRevurderForskuddService,
 ) : ItemProcessor<RevurderingForskudd, RevurderingForskudd> {
     private var simuler: Boolean = true
-    private var antallMånederForBeregning: Long = 3
     private var beregnFraMåned: YearMonth = YearMonth.now().plusMonths(1)
 
     @BeforeStep
@@ -27,10 +26,8 @@ class EvaluerRevurderForskuddBatchProcessor(
             ?.toBoolean()
             ?.let { simuler = it }
         stepExecution.jobParameters
-            .getString("antallManederForBeregning")
-            ?.toLong()
-            ?.let { antallMånederForBeregning = it }
-        stepExecution.jobParameters.getString("beregnFraManed")?.let { beregnFraMåned = YearMonth.parse(it) }
+            .getString("beregnFraManed")
+            ?.let { beregnFraMåned = YearMonth.parse(it) }
     }
 
     override fun process(revurderingForskudd: RevurderingForskudd): RevurderingForskudd? {
@@ -43,7 +40,6 @@ class EvaluerRevurderForskuddBatchProcessor(
         return evaluerRevurderForskuddService.evaluerRevurderForskudd(
             revurderingForskudd,
             simuler,
-            antallMånederForBeregning,
             beregnFraMåned,
         )
     }

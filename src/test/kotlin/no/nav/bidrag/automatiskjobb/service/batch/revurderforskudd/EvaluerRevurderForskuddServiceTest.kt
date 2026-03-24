@@ -89,7 +89,6 @@ class EvaluerRevurderForskuddServiceTest {
             evaluerRevurderForskuddService.evaluerRevurderForskudd(
                 revurderingForskudd,
                 simuler = false,
-                antallMånederForBeregning = 12,
                 beregnFraMåned = YearMonth.now(),
             )
 
@@ -113,7 +112,6 @@ class EvaluerRevurderForskuddServiceTest {
             evaluerRevurderForskuddService.evaluerRevurderForskudd(
                 revurderingForskudd,
                 simuler = false,
-                antallMånederForBeregning = 6,
                 beregnFraMåned = YearMonth.now(),
             )
 
@@ -141,7 +139,6 @@ class EvaluerRevurderForskuddServiceTest {
             evaluerRevurderForskuddService.evaluerRevurderForskudd(
                 revurderingForskudd,
                 simuler = false,
-                antallMånederForBeregning = 12,
                 beregnFraMåned = YearMonth.now(),
             )
 
@@ -238,7 +235,6 @@ class EvaluerRevurderForskuddServiceTest {
         evaluerRevurderForskuddService.evaluerRevurderForskudd(
             revurderingForskudd,
             simuler = true,
-            antallMånederForBeregning = 12,
             beregnFraMåned = YearMonth.now(),
         )
 
@@ -351,7 +347,6 @@ class EvaluerRevurderForskuddServiceTest {
         evaluerRevurderForskuddService.evaluerRevurderForskudd(
             revurderingForskudd,
             simuler = false,
-            antallMånederForBeregning = 12,
             beregnFraMåned = YearMonth.now(),
         )
 
@@ -498,7 +493,6 @@ class EvaluerRevurderForskuddServiceTest {
         evaluerRevurderForskuddService.evaluerRevurderForskudd(
             revurderingForskudd,
             simuler = false,
-            antallMånederForBeregning = 12,
             beregnFraMåned = YearMonth.now(),
         )
 
@@ -645,7 +639,6 @@ class EvaluerRevurderForskuddServiceTest {
         evaluerRevurderForskuddService.evaluerRevurderForskudd(
             revurderingForskudd,
             simuler = true,
-            antallMånederForBeregning = 12,
             beregnFraMåned = YearMonth.now(),
         )
 

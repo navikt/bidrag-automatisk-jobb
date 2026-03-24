@@ -56,6 +56,7 @@ class OppgaveAldersjusteringerBidragBatchReader(
             this.setDataSource(dataSource)
             this.setRowMapper(AlderjusteringRowMapper(barnRepository))
             this.setParameterValues(parameterValues)
+            this.isSaveState = false
         } catch (e: Exception) {
             throw RuntimeException("Failed to create JdbcPagingItemReader", e)
         }
