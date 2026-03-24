@@ -38,6 +38,7 @@ class SlettForsendelserSomSkalSlettesBatchReader(
             this.setFetchSize(PAGE_SIZE)
             this.setDataSource(dataSource)
             this.setRowMapper(ForsendelseBestillingRowMapper(barnRepository))
+            this.isSaveState = false
         } catch (e: Exception) {
             throw RuntimeException("Failed to create JdbcPagingItemReader", e)
         }

@@ -50,6 +50,7 @@ class OppdaterBarnBatchReader(
             this.setDataSource(dataSource)
             this.setRowMapper(BarnRowMapper())
             this.setParameterValues(parameterValues)
+            this.isSaveState = false
         } catch (e: Exception) {
             throw RuntimeException("Failed to create JdbcPagingItemReader", e)
         }

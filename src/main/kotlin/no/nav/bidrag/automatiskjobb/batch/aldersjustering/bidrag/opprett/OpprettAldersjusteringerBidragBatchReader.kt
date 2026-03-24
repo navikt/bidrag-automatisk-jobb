@@ -52,6 +52,7 @@ class OpprettAldersjusteringerBidragBatchReader(
                 ),
             )
             this.setRowMapper(BarnRowMapper())
+            this.isSaveState = false
         } catch (e: Exception) {
             throw RuntimeException("Failed to create JdbcPagingItemReader", e)
         }
