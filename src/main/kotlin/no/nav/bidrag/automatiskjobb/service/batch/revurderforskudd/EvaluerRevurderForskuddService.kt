@@ -354,8 +354,21 @@ class EvaluerRevurderForskuddService(
                 stønadsendringer,
                 grunnlagsliste,
             )
-        val vedtakId =
-            if (simuler) null else bidragVedtakConsumer.opprettEllerOppdaterVedtaksforslag(opprettVedtakRequestDto)
+        val vedtakId = if (simuler) {
+            null
+        } else {
+            try {
+                bidragVedtakConsumer.opprettEllerOppdaterVedtaksforslag(opprettVedtakRequestDto)
+            } catch (e: Exception) {
+                LOGGER.error(e) {
+                    "Feil ved oppretting av vedtaksforslag for revurdering av forskudd for sak ${revurderingForskudd.saksnummer}"
+                }
+                revurderingForskudd.behandlingstype = Behandlingstype.FEILET
+                revurderingForskudd.status = Status.FEILET
+                revurderingForskudd.begrunnelse = listOf("FEIL_VED_OPPRETTING_AV_VEDTAKSFORSLAG: ${e.message}")
+                return revurderingForskudd
+            }
+        }
         revurderingForskudd.vedtak = vedtakId
         revurderingForskudd.status = if (simuler) Status.SIMULERT else Status.BEHANDLET
         revurderingForskudd.behandlingstype = Behandlingstype.FATTET_FORSLAG
