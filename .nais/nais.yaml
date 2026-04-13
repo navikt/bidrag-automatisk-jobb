@@ -75,6 +75,7 @@ spec:
     min: {{replicas.min}}
   envFrom:
     - secret: {{unleash.secret_name}}
+    - secret: bidrag-bot-slack-oauth-token
   gcp:
     sqlInstances:
       - name: {{ database.navn }}
