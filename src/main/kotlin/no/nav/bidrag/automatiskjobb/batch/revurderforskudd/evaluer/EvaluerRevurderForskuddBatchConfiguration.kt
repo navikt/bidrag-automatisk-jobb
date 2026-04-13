@@ -22,7 +22,9 @@ import org.springframework.transaction.PlatformTransactionManager
 import java.time.YearMonth
 
 @Configuration
-class EvaluerRevurderForskuddBatchConfiguration {
+class EvaluerRevurderForskuddBatchConfiguration(
+    @param:Value($$"${NAIS_CLUSTER_NAME}") private val clusterName: String,
+    ) {
     @Bean
     fun evaluerRevurderForskuddJob(
         jobRepository: JobRepository,
@@ -50,7 +52,7 @@ class EvaluerRevurderForskuddBatchConfiguration {
             .writer(evaluerRevurderForskuddBatchWriter)
             .taskExecutor(taskExecutor)
             .faultTolerant()
-            .skipLimit(CHUNK_SIZE)
+            .skipLimit(finnSkipLimit())
             .skip(Exception::class.java)
             .build()
 
@@ -67,9 +69,20 @@ class EvaluerRevurderForskuddBatchConfiguration {
             .repository(revurderForskuddRepository)
             .methodName("findAllByForMåned")
             .arguments(listOf(forMåned.toString()))
-            .pageSize(CHUNK_SIZE)
+            .pageSize(finnSkipLimit())
             .sorts(mapOf("id" to Sort.Direction.ASC))
             .saveState(false)
             .build()
+    }
+
+    /**
+     * Denne metoden er tiltenkt for å unngå at vi når skipLimit i dev-miljøet hvor det kan være mange tusen
+     * revurderinger for en gitt måned. Det er heller ingen garanti på at grunnlag eksisterer korrekt i dev.
+     *
+     * I prod skal skipLimit være lik chunkSize slik at vi får en feilmelding relativt raskt og kan undersøke nærmere.
+     */
+    private fun finnSkipLimit(): Int {
+        val skipLimit = if(clusterName == "dev-gcp") CHUNK_SIZE * 100 else CHUNK_SIZE
+        return skipLimit
     }
 }
