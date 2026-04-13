@@ -24,7 +24,7 @@ import java.time.YearMonth
 @Configuration
 class EvaluerRevurderForskuddBatchConfiguration(
     @param:Value($$"${NAIS_CLUSTER_NAME}") private val clusterName: String,
-    ) {
+) {
     @Bean
     fun evaluerRevurderForskuddJob(
         jobRepository: JobRepository,
@@ -82,7 +82,7 @@ class EvaluerRevurderForskuddBatchConfiguration(
      * I prod skal skipLimit være lik chunkSize slik at vi får en feilmelding relativt raskt og kan undersøke nærmere.
      */
     private fun finnSkipLimit(): Int {
-        val skipLimit = if(clusterName == "dev-gcp") CHUNK_SIZE * 100 else CHUNK_SIZE
+        val skipLimit = if (clusterName == "dev-gcp") CHUNK_SIZE * 100 else CHUNK_SIZE
         return skipLimit
     }
 }
