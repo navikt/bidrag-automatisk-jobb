@@ -1,7 +1,7 @@
 package no.nav.bidrag.automatiskjobb.batch.revurderforskudd.opprett
 
-import no.nav.bidrag.automatiskjobb.batch.utils.varsling.BatchCompletionNotificationListener
 import no.nav.bidrag.automatiskjobb.batch.utils.BatchConfiguration.Companion.CHUNK_SIZE
+import no.nav.bidrag.automatiskjobb.batch.utils.varsling.BatchCompletionNotificationListener
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository

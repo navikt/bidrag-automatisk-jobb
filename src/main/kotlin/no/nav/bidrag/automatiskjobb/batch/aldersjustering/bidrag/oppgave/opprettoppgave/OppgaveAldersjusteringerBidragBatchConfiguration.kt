@@ -1,8 +1,8 @@
 package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.oppgave.opprettoppgave
 
-import no.nav.bidrag.automatiskjobb.batch.utils.varsling.BatchCompletionNotificationListener
 import no.nav.bidrag.automatiskjobb.batch.utils.BatchConfiguration.Companion.CHUNK_SIZE
 import no.nav.bidrag.automatiskjobb.batch.utils.DummyItemWriter
+import no.nav.bidrag.automatiskjobb.batch.utils.varsling.BatchCompletionNotificationListener
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.Step

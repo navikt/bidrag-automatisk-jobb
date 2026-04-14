@@ -18,5 +18,3 @@ class EvaluerRevurderForskuddScheduler(
         evaluerRevurderForskuddBatch.start(simuler = false, beregnFraMåned = null, forMåned = null)
     }
 }
-
-

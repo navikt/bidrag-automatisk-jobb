@@ -12,8 +12,8 @@ import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.fattvedtak.Fatt
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.oppgave.opprettoppgave.OppgaveAldersjusteringBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.oppgave.slettoppgave.SlettOppgaveAldersjusteringBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.opprett.OpprettAldersjusteringerBidragBatch
-import no.nav.bidrag.automatiskjobb.batch.utils.slettvedtaksforslag.SlettVedtaksforslagBatch
 import no.nav.bidrag.automatiskjobb.batch.utils.slettallevedtaksforslag.SlettAlleVedtaksforslagBatch
+import no.nav.bidrag.automatiskjobb.batch.utils.slettvedtaksforslag.SlettVedtaksforslagBatch
 import no.nav.security.token.support.core.api.Protected
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping

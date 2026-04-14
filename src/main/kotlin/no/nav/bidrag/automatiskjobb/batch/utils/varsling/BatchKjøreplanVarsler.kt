@@ -27,8 +27,10 @@ class BatchKjøreplanVarsler(
 
         val header = "* Planlagte automatiske batch-kjøringer i ${nå.format(månedÅrFormat)} *"
 
-        val kategorier = batchKategorier.joinToString("\n\n") { kategori ->
-                val batchLinjer = kategori.batcher.joinToString("\n") { oppføring ->
+        val kategorier =
+            batchKategorier.joinToString("\n\n") { kategori ->
+                val batchLinjer =
+                    kategori.batcher.joinToString("\n") { oppføring ->
                         "    ∙ ${oppføring.navn} - ${formaterKjøredato(oppføring.cron, nå)}"
                     }
                 "* ${kategori.navn} *\n$batchLinjer"
@@ -48,4 +50,3 @@ class BatchKjøreplanVarsler(
 
     private fun erDeaktivert(cron: String): Boolean = cron.isBlank() || cron.trim() == "-"
 }
-

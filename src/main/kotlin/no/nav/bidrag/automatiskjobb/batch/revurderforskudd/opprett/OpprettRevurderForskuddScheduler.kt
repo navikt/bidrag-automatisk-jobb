@@ -18,5 +18,3 @@ class OpprettRevurderForskuddScheduler(
         opprettRevurderForskuddBatch.start()
     }
 }
-
-

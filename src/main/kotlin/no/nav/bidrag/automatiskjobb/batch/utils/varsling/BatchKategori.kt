@@ -9,4 +9,3 @@ data class Batch(
     val navn: String,
     val cron: String,
 )
-

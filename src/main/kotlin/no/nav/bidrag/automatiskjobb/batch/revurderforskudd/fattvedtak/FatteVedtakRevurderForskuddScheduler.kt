@@ -18,5 +18,3 @@ class FatteVedtakRevurderForskuddScheduler(
         fatteVedtakRevurderForskuddBatch.start(simuler = false)
     }
 }
-
-

@@ -222,4 +222,3 @@ class BatchKjøreplanVarslerTest {
         melding shouldNotContain "ikke satt opp til å kjøre automatisk"
     }
 }
-
