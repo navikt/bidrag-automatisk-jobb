@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 /**
- * Denne klassen angir hvilke batcher for revurdering forskudd som blir lagt til i den månedlige slack-varslingen.
+ * Denne klassen angir hvilke batcher for aldersjustering av bidrag som blir lagt til i den månedlige slack-varslingen.
  * Cron-uttrykk for hver batch settes som miljøvariabler i nais-config.
  */
 @Configuration
