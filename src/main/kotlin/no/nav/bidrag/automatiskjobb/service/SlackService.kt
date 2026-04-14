@@ -6,14 +6,15 @@ import org.springframework.stereotype.Service
 
 @Service
 class SlackService(
-    @param:Value("\${BIDRAG_BOT_SLACK_OAUTH_TOKEN}") private val oauthToken: String,
-    @param:Value("\${SLACK_CHANNEL_ID}") private val channel: String,
+    @param:Value($$"${BIDRAG_BOT_SLACK_OAUTH_TOKEN}") private val oauthToken: String,
+    @param:Value($$"${SLACK_CHANNEL_ID}") private val channel: String,
 ) {
-    fun sendMelding(message: String) {
+    fun sendMelding(melding: String, tråd: String? = null) {
         Slack.getInstance().methods(oauthToken).chatPostMessage {
             it
                 .channel(channel)
-                .text(message)
+                .threadTs(tråd)
+                .text(melding)
         }
     }
 }
