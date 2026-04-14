@@ -22,7 +22,7 @@ class AldersjusteringBidragBatchVarslingConfiguration {
         @Value($$"${ALDERSJUSTERING_BIDRAG_OPPRETT_OPPGAVE_CRON:-}") opprettOppgaveCron: String,
     ): BatchKategori =
         BatchKategori(
-            navn = "Revurder forskudd",
+            navn = "Aldersjustering bidrag",
             batcher =
                 listOf(
                     Batch("Opprett aldersjustering bidrag", opprettCron),
