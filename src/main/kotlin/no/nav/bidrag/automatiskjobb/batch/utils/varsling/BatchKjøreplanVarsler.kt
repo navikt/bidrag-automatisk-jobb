@@ -31,9 +31,9 @@ class BatchKjøreplanVarsler(
             batchKategorier.joinToString("\n\n") { kategori ->
                 val batchLinjer =
                     kategori.batcher.joinToString("\n") { oppføring ->
-                        "    :black_small_square: ${oppføring.navn} - ${formaterKjøredato(oppføring.cron, nå)}"
+                        "    — ${oppføring.navn} - ${formaterKjøredato(oppføring.cron, nå)}"
                     }
-                ":small_blue_diamond: ${kategori.navn} *\n$batchLinjer"
+                ":small_blue_diamond: ${kategori.navn}\n$batchLinjer"
             }
 
         slackService.sendMelding("$header\n\n$kategorier")
