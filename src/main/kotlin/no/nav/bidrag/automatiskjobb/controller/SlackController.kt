@@ -9,11 +9,12 @@ import org.springframework.web.bind.annotation.RestController
 @Protected
 @RestController
 class SlackController(
-    private val slackService: SlackService
+    private val slackService: SlackService,
 ) {
-
     @PostMapping("/slack/melding")
-    fun sendMelding(@RequestBody melding: String) {
+    fun sendMelding(
+        @RequestBody melding: String,
+    ) {
         slackService.sendMelding(melding)
     }
 }
