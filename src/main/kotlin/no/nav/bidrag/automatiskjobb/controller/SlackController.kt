@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 class SlackController(
     private val slackService: SlackService,
-    private val batchKjøreplanVarsler: BatchKjøreplanVarsler
+    private val batchKjøreplanVarsler: BatchKjøreplanVarsler,
 ) {
     @PostMapping("/slack/melding")
     fun sendMelding(melding: String) {
