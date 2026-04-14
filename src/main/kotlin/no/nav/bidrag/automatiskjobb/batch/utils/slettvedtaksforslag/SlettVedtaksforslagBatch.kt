@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.batch.aldersjustering.slettvedtaksforslag
+package no.nav.bidrag.automatiskjobb.batch.utils.slettvedtaksforslag
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.batch.core.Job
