@@ -1,6 +1,6 @@
-package no.nav.bidrag.automatiskjobb.batch.oppdaterbarn
+package no.nav.bidrag.automatiskjobb.batch.utils.oppdaterbarn
 
-import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.PAGE_SIZE
+import no.nav.bidrag.automatiskjobb.batch.utils.BatchConfiguration.Companion.PAGE_SIZE
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.rowmapper.BarnRowMapper
 import org.springframework.batch.core.configuration.annotation.StepScope

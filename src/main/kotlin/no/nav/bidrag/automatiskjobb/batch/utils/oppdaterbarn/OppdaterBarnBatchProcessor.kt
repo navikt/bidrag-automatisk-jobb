@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.batch.oppdaterbarn
+package no.nav.bidrag.automatiskjobb.batch.utils.oppdaterbarn
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn

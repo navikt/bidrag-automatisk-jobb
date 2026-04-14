@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.batch
+package no.nav.bidrag.automatiskjobb.batch.utils
 
 import org.springframework.batch.core.launch.JobLauncher
 import org.springframework.batch.core.launch.support.TaskExecutorJobLauncher

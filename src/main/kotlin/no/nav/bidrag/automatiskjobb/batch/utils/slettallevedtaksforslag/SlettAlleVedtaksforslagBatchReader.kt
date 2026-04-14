@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.batch.slettallevedtaksforslag
+package no.nav.bidrag.automatiskjobb.batch.utils.slettallevedtaksforslag
 
 import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer
 import org.springframework.batch.core.configuration.annotation.StepScope

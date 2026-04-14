@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.batch.forsendelse.distribuer
+package no.nav.bidrag.automatiskjobb.batch.utils.oppdaterbarn
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.batch.core.Job
@@ -12,20 +12,25 @@ import java.util.UUID
 private val LOGGER = KotlinLogging.logger { }
 
 @Component
-class DistribuerForsendelseBidragBatch(
+class OppdaterBarnBatch(
     @param:Qualifier("asyncJobLauncher") private val jobLauncher: JobLauncher,
-    private val distribuerForsendelseJob: Job,
+    private val oppdaterBarnJob: Job,
 ) {
-    fun start() {
+    fun startOppdaterBarnBatch(
+        barnId: String? = "",
+        simuler: Boolean,
+    ) {
         try {
             jobLauncher.run(
-                distribuerForsendelseJob,
+                oppdaterBarnJob,
                 JobParametersBuilder()
+                    .addString("simuler", simuler.toString())
+                    .addString("barn", barnId ?: "")
                     .addString("runId", UUID.randomUUID().toString())
                     .toJobParameters(),
             )
         } catch (_: JobExecutionAlreadyRunningException) {
-            LOGGER.warn { "Batch distribuerForsendelse kjører allerede. Ignorerer ny forespørsel." }
+            LOGGER.warn { "Batch oppdaterBarn kjører allerede. Ignorerer ny forespørsel." }
         }
     }
 }

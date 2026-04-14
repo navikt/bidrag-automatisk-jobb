@@ -1,8 +1,8 @@
 package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.opprett
 
-import no.nav.bidrag.automatiskjobb.batch.BatchCompletionNotificationListener
-import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.CHUNK_SIZE
-import no.nav.bidrag.automatiskjobb.batch.DummyItemWriter
+import no.nav.bidrag.automatiskjobb.batch.utils.varsling.BatchCompletionNotificationListener
+import no.nav.bidrag.automatiskjobb.batch.utils.BatchConfiguration.Companion.CHUNK_SIZE
+import no.nav.bidrag.automatiskjobb.batch.utils.DummyItemWriter
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import org.springframework.batch.core.Job

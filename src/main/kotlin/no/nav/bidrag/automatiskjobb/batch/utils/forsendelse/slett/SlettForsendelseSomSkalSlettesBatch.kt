@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.batch.forsendelse.opprett
+package no.nav.bidrag.automatiskjobb.batch.utils.forsendelse.slett
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.batch.core.Job
@@ -12,21 +12,20 @@ import java.util.UUID
 private val LOGGER = KotlinLogging.logger { }
 
 @Component
-class OpprettForsendelseBatch(
+class SlettForsendelseSomSkalSlettesBatch(
     @param:Qualifier("asyncJobLauncher") private val jobLauncher: JobLauncher,
-    private val opprettForsendelseJob: Job,
+    private val slettForsendelserSomSkalSlettesJob: Job,
 ) {
-    fun start(prosesserFeilet: Boolean = false) {
+    fun start() {
         try {
             jobLauncher.run(
-                opprettForsendelseJob,
+                slettForsendelserSomSkalSlettesJob,
                 JobParametersBuilder()
-                    .addString("prosesserFeilet", prosesserFeilet.toString())
                     .addString("runId", UUID.randomUUID().toString())
                     .toJobParameters(),
             )
         } catch (_: JobExecutionAlreadyRunningException) {
-            LOGGER.warn { "Batch opprettForsendelse kjører allerede. Ignorerer ny forespørsel." }
+            LOGGER.warn { "Batch slettForsendelseSomSkalSlettes kjører allerede. Ignorerer ny forespørsel." }
         }
     }
 }

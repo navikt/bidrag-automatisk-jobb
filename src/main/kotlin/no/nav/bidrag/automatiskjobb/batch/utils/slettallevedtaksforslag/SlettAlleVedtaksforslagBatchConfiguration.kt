@@ -1,7 +1,7 @@
-package no.nav.bidrag.automatiskjobb.batch.slettallevedtaksforslag
+package no.nav.bidrag.automatiskjobb.batch.utils.slettallevedtaksforslag
 
-import no.nav.bidrag.automatiskjobb.batch.BatchCompletionNotificationListener
-import no.nav.bidrag.automatiskjobb.batch.DummyItemWriter
+import no.nav.bidrag.automatiskjobb.batch.utils.varsling.BatchCompletionNotificationListener
+import no.nav.bidrag.automatiskjobb.batch.utils.DummyItemWriter
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.Step
 import org.springframework.batch.core.job.builder.JobBuilder

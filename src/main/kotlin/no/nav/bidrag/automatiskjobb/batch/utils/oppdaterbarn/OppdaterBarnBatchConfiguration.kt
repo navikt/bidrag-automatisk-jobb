@@ -1,8 +1,8 @@
-package no.nav.bidrag.automatiskjobb.batch.oppdaterbarn
+package no.nav.bidrag.automatiskjobb.batch.utils.oppdaterbarn
 
-import no.nav.bidrag.automatiskjobb.batch.BatchCompletionNotificationListener
-import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.CHUNK_SIZE
-import no.nav.bidrag.automatiskjobb.batch.DummyItemWriter
+import no.nav.bidrag.automatiskjobb.batch.utils.varsling.BatchCompletionNotificationListener
+import no.nav.bidrag.automatiskjobb.batch.utils.BatchConfiguration.Companion.CHUNK_SIZE
+import no.nav.bidrag.automatiskjobb.batch.utils.DummyItemWriter
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.Step

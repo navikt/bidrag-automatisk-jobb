@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.batch.forsendelse.distribuer
+package no.nav.bidrag.automatiskjobb.batch.utils.forsendelse.distribuer
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.automatiskjobb.persistence.entity.ForsendelseBestilling

@@ -1,6 +1,6 @@
-package no.nav.bidrag.automatiskjobb.batch.forsendelse.opprett
+package no.nav.bidrag.automatiskjobb.batch.utils.forsendelse.distribuer
 
-import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.PAGE_SIZE
+import no.nav.bidrag.automatiskjobb.batch.utils.BatchConfiguration.Companion.PAGE_SIZE
 import no.nav.bidrag.automatiskjobb.persistence.entity.ForsendelseBestilling
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
 import no.nav.bidrag.automatiskjobb.persistence.rowmapper.ForsendelseBestillingRowMapper
@@ -13,7 +13,7 @@ import javax.sql.DataSource
 
 @Component
 @StepScope
-class OpprettForsendelseBatchReader(
+class DistribuerForsendelseBatchReader(
     private val dataSource: DataSource,
     barnRepository: BarnRepository,
 ) : JdbcPagingItemReader<ForsendelseBestilling>() {
@@ -24,8 +24,10 @@ class OpprettForsendelseBatchReader(
                 setSelectClause("SELECT *")
                 setFromClause("FROM forsendelse_bestilling")
                 setWhereClause(
-                    "WHERE slettet_tidspunkt IS NULL " +
-                        "AND forsendelse_id IS NULL AND skal_slettes = false",
+                    "WHERE forsendelse_id IS NOT NULL " +
+                        "AND forsendelse_opprettet_tidspunkt IS NOT NULL " +
+                        "AND slettet_tidspunkt IS NULL and skal_slettes = false " +
+                        "AND distribuert_tidspunkt IS NULL",
                 )
                 setSortKeys(mapOf("id" to Order.ASCENDING))
             }

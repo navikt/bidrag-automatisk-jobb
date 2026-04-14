@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.batch.slettallevedtaksforslag
+package no.nav.bidrag.automatiskjobb.batch.utils.slettallevedtaksforslag
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer

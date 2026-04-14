@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.batch
+package no.nav.bidrag.automatiskjobb.batch.utils.varsling
 
 import org.slf4j.LoggerFactory
 import org.springframework.batch.core.BatchStatus

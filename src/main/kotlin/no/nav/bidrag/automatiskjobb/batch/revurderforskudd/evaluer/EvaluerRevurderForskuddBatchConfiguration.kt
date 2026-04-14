@@ -1,7 +1,7 @@
 package no.nav.bidrag.automatiskjobb.batch.revurderforskudd.evaluer
 
-import no.nav.bidrag.automatiskjobb.batch.BatchCompletionNotificationListener
-import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.CHUNK_SIZE
+import no.nav.bidrag.automatiskjobb.batch.utils.varsling.BatchCompletionNotificationListener
+import no.nav.bidrag.automatiskjobb.batch.utils.BatchConfiguration.Companion.CHUNK_SIZE
 import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
 import no.nav.bidrag.automatiskjobb.persistence.repository.RevurderForskuddRepository
 import org.springframework.batch.core.Job

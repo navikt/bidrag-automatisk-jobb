@@ -1,6 +1,6 @@
-package no.nav.bidrag.automatiskjobb.batch.forsendelse.slett
+package no.nav.bidrag.automatiskjobb.batch.utils.forsendelse.slett
 
-import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.PAGE_SIZE
+import no.nav.bidrag.automatiskjobb.batch.utils.BatchConfiguration.Companion.PAGE_SIZE
 import no.nav.bidrag.automatiskjobb.persistence.entity.ForsendelseBestilling
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
 import no.nav.bidrag.automatiskjobb.persistence.rowmapper.ForsendelseBestillingRowMapper

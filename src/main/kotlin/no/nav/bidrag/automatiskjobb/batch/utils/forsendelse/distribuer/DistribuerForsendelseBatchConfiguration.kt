@@ -1,8 +1,8 @@
-package no.nav.bidrag.automatiskjobb.batch.forsendelse.slett
+package no.nav.bidrag.automatiskjobb.batch.utils.forsendelse.distribuer
 
-import no.nav.bidrag.automatiskjobb.batch.BatchCompletionNotificationListener
-import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.CHUNK_SIZE
-import no.nav.bidrag.automatiskjobb.batch.DummyItemWriter
+import no.nav.bidrag.automatiskjobb.batch.utils.varsling.BatchCompletionNotificationListener
+import no.nav.bidrag.automatiskjobb.batch.utils.BatchConfiguration.Companion.CHUNK_SIZE
+import no.nav.bidrag.automatiskjobb.batch.utils.DummyItemWriter
 import no.nav.bidrag.automatiskjobb.persistence.entity.ForsendelseBestilling
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.Step
@@ -16,31 +16,31 @@ import org.springframework.core.task.TaskExecutor
 import org.springframework.transaction.PlatformTransactionManager
 
 @Configuration
-class SlettForsendelserSomSkalSlettesBatchConfiguration {
+class DistribuerForsendelseBatchConfiguration {
     @Bean
-    fun slettForsendelserSomSkalSlettesJob(
+    fun distribuerForsendelseJob(
         jobRepository: JobRepository,
-        slettForsendelseSomSkalSlettesBidragStep: Step,
+        distribuerForsendelseStep: Step,
         listener: BatchCompletionNotificationListener,
     ): Job =
-        JobBuilder("slettForsendelserSomSkalSlettesJob", jobRepository)
+        JobBuilder("distribuerForsendelseJob", jobRepository)
             .listener(listener)
-            .start(slettForsendelseSomSkalSlettesBidragStep)
+            .start(distribuerForsendelseStep)
             .build()
 
     @Bean
-    fun slettForsendelseSomSkalSlettesBidragStep(
+    fun distribuerForsendelseStep(
         @Qualifier("batchTaskExecutor") taskExecutor: TaskExecutor,
         jobRepository: JobRepository,
         transactionManager: PlatformTransactionManager,
-        slettForsendelserSomSkalSlettesBatchReader: SlettForsendelserSomSkalSlettesBatchReader,
-        slettForsendelserSomSkalSlettesProcessor: SlettForsendelserSomSkalSlettesProcessor,
+        distribuerForsendelseBatchReader: DistribuerForsendelseBatchReader,
+        distribuerForsendelseBatchProcessor: DistribuerForsendelseBatchProcessor,
         dummyItemWriter: DummyItemWriter,
     ): Step =
-        StepBuilder("slettForsendelseSomSkalSlettesBidragStep", jobRepository)
+        StepBuilder("distribuerForsendelseStep", jobRepository)
             .chunk<ForsendelseBestilling, Unit>(CHUNK_SIZE, transactionManager)
-            .reader(slettForsendelserSomSkalSlettesBatchReader)
-            .processor(slettForsendelserSomSkalSlettesProcessor)
+            .reader(distribuerForsendelseBatchReader)
+            .processor(distribuerForsendelseBatchProcessor)
             .writer(dummyItemWriter)
             .taskExecutor(taskExecutor)
             .build()

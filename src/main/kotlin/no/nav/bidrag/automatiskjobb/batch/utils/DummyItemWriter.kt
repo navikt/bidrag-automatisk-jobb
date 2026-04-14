@@ -1,4 +1,4 @@
-package no.nav.bidrag.automatiskjobb.batch
+package no.nav.bidrag.automatiskjobb.batch.utils
 
 import org.springframework.batch.item.Chunk
 import org.springframework.batch.item.ItemWriter
