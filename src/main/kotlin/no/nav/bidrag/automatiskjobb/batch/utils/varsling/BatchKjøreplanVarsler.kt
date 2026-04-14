@@ -25,15 +25,15 @@ class BatchKjøreplanVarsler(
         LOGGER.info { "Sender Slack-melding om planlagte batch-kjøringer denne måneden" }
         val nå = LocalDate.now()
 
-        val header = "* Planlagte automatiske batch-kjøringer i ${nå.format(månedÅrFormat)} *"
+        val header = ":calendar:  Planlagte automatiske batch-kjøringer i ${nå.format(månedÅrFormat)}"
 
         val kategorier =
             batchKategorier.joinToString("\n\n") { kategori ->
                 val batchLinjer =
                     kategori.batcher.joinToString("\n") { oppføring ->
-                        "    ∙ ${oppføring.navn} - ${formaterKjøredato(oppføring.cron, nå)}"
+                        "    :black_small_square: ${oppføring.navn} - ${formaterKjøredato(oppføring.cron, nå)}"
                     }
-                "* ${kategori.navn} *\n$batchLinjer"
+                ":small_blue_diamond: ${kategori.navn} *\n$batchLinjer"
             }
 
         slackService.sendMelding("$header\n\n$kategorier")
