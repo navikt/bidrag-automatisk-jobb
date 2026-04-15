@@ -21,6 +21,7 @@ class EvaluerRevurderForskuddBatch(
         simuler: Boolean,
         beregnFraMåned: YearMonth?,
         forMåned: YearMonth?,
+        antallMånederForBeregning: Long,
     ) {
         try {
             jobLauncher.run(
@@ -28,6 +29,7 @@ class EvaluerRevurderForskuddBatch(
                 JobParametersBuilder()
                     .addString("simuler", simuler.toString())
                     .addString("batchId", UUID.randomUUID().toString())
+                    .addString("antallManederForBeregning", antallMånederForBeregning.toString())
                     .apply {
                         beregnFraMåned?.let { addString("beregnFraManed", beregnFraMåned.toString()) }
                         forMåned?.let { addString("forManed", forMåned.toString()) }

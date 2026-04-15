@@ -87,6 +87,7 @@ class EvaluerRevurderForskuddService(
         revurderingForskudd: RevurderingForskudd,
         simuler: Boolean,
         beregnFraMåned: YearMonth,
+        antallMånederForBeregning: Long,
     ): RevurderingForskudd? {
         val grunnlagsliste = mutableListOf<GrunnlagDto>()
         val stønadsendringer = mutableListOf<OpprettStønadsendringRequestDto>()
@@ -228,6 +229,16 @@ class EvaluerRevurderForskuddService(
             // Finner inntekter for forskuddsmottaker fra grunnlaget
             val transformerteInntekter = finnInntekterForForskuddFraGrunnlaget(grunnlag)
 
+            val månedsinntektGangetTolv =
+                (antallMånederForBeregning downTo 1)
+                    .mapNotNull { i ->
+                        val måned = YearMonth.now().minusMonths(i)
+                        transformerteInntekter.summertMånedsinntektListe
+                            .find { måned.equals(it.gjelderÅrMåned) }
+                            ?.sumInntekt
+                    }.minOrNull()
+                    ?.multiply(BigDecimal(12))
+
             //  Finner summert årsintekt basert på siste 12 månedsinntekter
             val årsinntekt =
                 transformerteInntekter.summertÅrsinntektListe
@@ -236,6 +247,19 @@ class EvaluerRevurderForskuddService(
                     }?.sumInntekt
                     ?: beregn12MånedsInntekt(transformerteInntekter) // Fallback om årsinntekt er null (skal ikke skje)
 
+            var inntekt: BigDecimal
+            var inntektsrapportering: Inntektsrapportering
+
+            if (årsinntekt > (månedsinntektGangetTolv ?: BigDecimal.ZERO)) {
+                inntekt = årsinntekt
+                inntektsrapportering = Inntektsrapportering.AINNTEKT_BEREGNET_12MND
+            } else {
+                inntekt = månedsinntektGangetTolv!!
+                inntektsrapportering = Inntektsrapportering.AINNTEKT_BEREGNET_LAVESTE_MÅNEDSINNTEKT_SISTE_3MND_GANGET_TOLV
+            }
+
+            // TODO(Barnetrygd, utvidet barnetrygd, småbarnstillegg og kontaktstøtte?)
+
             val beregnetForskudd: BeregnetForskuddResultat =
                 try {
                     beregnNyttForskudd(
@@ -243,7 +267,8 @@ class EvaluerRevurderForskuddService(
                         beregnFraMåned,
                         barnGrunnlagReferanse,
                         bmGrunnlagReferanse,
-                        årsinntekt,
+                        inntekt,
+                        inntektsrapportering,
                         innhentetGrunnlagForBM.referanse,
                     )
                 } catch (e: IllegalArgumentException) {
@@ -374,6 +399,7 @@ class EvaluerRevurderForskuddService(
         revurderingForskudd.vedtak = vedtakId
         revurderingForskudd.status = if (simuler) Status.SIMULERT else Status.BEHANDLET
         revurderingForskudd.behandlingstype = Behandlingstype.FATTET_FORSLAG
+        revurderingForskudd.begrunnelse = emptyList() // Tømmer, kan være fylt pga tidligere barn
 
         return revurderingForskudd
     }
@@ -510,6 +536,7 @@ class EvaluerRevurderForskuddService(
         barnGrunnlagReferanse: String,
         bmGrunnlagReferanse: String,
         inntekt: BigDecimal,
+        inntektsrapportering: Inntektsrapportering,
         innhentetGrunnlagReferanse: String,
     ): BeregnetForskuddResultat {
         val periode = ÅrMånedsperiode(beregnFraMåned, null)
@@ -522,7 +549,7 @@ class EvaluerRevurderForskuddService(
                         InntektsrapporteringPeriode(
                             periode = periode,
                             manueltRegistrert = false,
-                            inntektsrapportering = Inntektsrapportering.AINNTEKT_BEREGNET_12MND,
+                            inntektsrapportering = inntektsrapportering,
                             beløp = inntekt,
                             opprinneligPeriode = ÅrMånedsperiode(LocalDate.now().minusYears(1), null),
                             gjelderBarn = barnGrunnlagReferanse,
