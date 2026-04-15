@@ -13,6 +13,9 @@ UNLEASH_SERVER_API_TOKEN: some_token
 UNLEASH_SERVER_API_TYPE: CLIENT
 UNLEASH_FETCH_SYNC: false
 UNLEASH_SERVER_API_URL: http://localhost:${mock-oauth2-server.port}/unleash
+BIDRAG_BOT_SLACK_OAUTH_TOKEN: ikkeGyldigToken
+SLACK_CHANNEL_ID: IKKE_GYLDIG_CHANNEL_ID
+
 no.nav.security.jwt:
   client:
     registration:

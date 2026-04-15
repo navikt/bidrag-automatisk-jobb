@@ -55,7 +55,7 @@ class ForsendelseMapper(
 
         return OpprettForsendelseForespørsel(
             unikReferanse = unikReferanse,
-            gjelderIdent = forsendelseBestilling.gjelder,
+            gjelderIdent = forsendelseBestilling.gjelder!!,
             mottaker = mottaker,
             saksnummer = saksnummer,
             enhet = enhet,

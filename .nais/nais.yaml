@@ -39,6 +39,8 @@ spec:
         {{#each outbound-access-hosts}}
             - host: {{this}}
         {{/each}}
+            - host: slack.com
+            - host: api.slack.com
         rules:
         {{#each outbound-access-apps}}
             - application: {{this}}
@@ -75,6 +77,7 @@ spec:
     min: {{replicas.min}}
   envFrom:
     - secret: {{unleash.secret_name}}
+    - secret: bidrag-bot-slack-oauth-token
   gcp:
     sqlInstances:
       - name: {{ database.navn }}
