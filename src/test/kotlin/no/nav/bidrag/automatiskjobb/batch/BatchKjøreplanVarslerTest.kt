@@ -10,7 +10,7 @@ import io.mockk.verify
 import no.nav.bidrag.automatiskjobb.batch.utils.varsling.Batch
 import no.nav.bidrag.automatiskjobb.batch.utils.varsling.BatchKategori
 import no.nav.bidrag.automatiskjobb.batch.utils.varsling.BatchKjøreplanVarsler
-import no.nav.bidrag.automatiskjobb.service.SlackService
+import no.nav.bidrag.commons.service.slack.SlackService
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDate
@@ -25,7 +25,15 @@ class BatchKjøreplanVarslerTest {
     private val dagFormatter = DateTimeFormatter.ofPattern("d. MMMM", Locale.forLanguageTag("nb"))
     private val månedÅrFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.forLanguageTag("nb"))
 
+    /** Referansedato i starten av måneden slik at dag 5, 6 og 25 alle er fremtidige */
+    private val referanseDato = LocalDate.of(2026, 4, 1)
+
     private fun lagScheduler(kategorier: List<BatchKategori>) = BatchKjøreplanVarsler(slackService, kategorier)
+
+    private fun kjørScheduler(
+        kategorier: List<BatchKategori>,
+        nå: LocalDate = referanseDato,
+    ) = lagScheduler(kategorier).genererOgSendVarsel(nå)
 
     private fun fangetMelding(): String {
         val slot = slot<String>()
@@ -35,59 +43,52 @@ class BatchKjøreplanVarslerTest {
 
     @Test
     fun `skal sende melding med korrekte datoer når alle batcher er aktive`() {
-        val scheduler =
-            lagScheduler(
-                listOf(
-                    BatchKategori(
-                        navn = "Revurder forskudd",
-                        batcher =
-                            listOf(
-                                Batch("Opprett", "0 0 0 5 * *"),
-                                Batch("Evaluer", "0 0 0 6 * *"),
-                                Batch("Fatte vedtak", "0 0 0 25 * *"),
-                                Batch("Revurderingslenke", "0 0 0 25 * *"),
-                            ),
-                    ),
+        kjørScheduler(
+            listOf(
+                BatchKategori(
+                    navn = "Revurder forskudd",
+                    batcher =
+                        listOf(
+                            Batch("Opprett", "0 0 0 5 * *"),
+                            Batch("Evaluer", "0 0 0 6 * *"),
+                            Batch("Fatte vedtak", "0 0 0 25 * *"),
+                            Batch("Revurderingslenke", "0 0 0 25 * *"),
+                        ),
                 ),
-            )
+            ),
+        )
 
-        scheduler.sendBatchKjøreplanVarsel()
-
-        val nå = LocalDate.now()
         val melding = fangetMelding()
 
         println(melding)
-        melding shouldContain nå.format(månedÅrFormatter)
+        melding shouldContain referanseDato.format(månedÅrFormatter)
         melding shouldContain "Revurder forskudd"
         melding shouldContain "Opprett"
-        melding shouldContain nå.withDayOfMonth(5).format(dagFormatter)
+        melding shouldContain referanseDato.withDayOfMonth(5).format(dagFormatter)
         melding shouldContain "Evaluer"
-        melding shouldContain nå.withDayOfMonth(6).format(dagFormatter)
+        melding shouldContain referanseDato.withDayOfMonth(6).format(dagFormatter)
         melding shouldContain "Fatte vedtak"
         melding shouldContain "Revurderingslenke"
-        melding shouldContain nå.withDayOfMonth(25).format(dagFormatter)
+        melding shouldContain referanseDato.withDayOfMonth(25).format(dagFormatter)
         melding shouldNotContain "ikke satt opp til å kjøre automatisk"
     }
 
     @Test
     fun `skal vise deaktivert-tekst for alle batcher når cron er satt til minus`() {
-        val scheduler =
-            lagScheduler(
-                listOf(
-                    BatchKategori(
-                        navn = "Revurder forskudd",
-                        batcher =
-                            listOf(
-                                Batch("Opprett", "-"),
-                                Batch("Evaluer", "-"),
-                                Batch("Fatte vedtak", "-"),
-                                Batch("Revurderingslenke", "-"),
-                            ),
-                    ),
+        kjørScheduler(
+            listOf(
+                BatchKategori(
+                    navn = "Revurder forskudd",
+                    batcher =
+                        listOf(
+                            Batch("Opprett", "-"),
+                            Batch("Evaluer", "-"),
+                            Batch("Fatte vedtak", "-"),
+                            Batch("Revurderingslenke", "-"),
+                        ),
                 ),
-            )
-
-        scheduler.sendBatchKjøreplanVarsel()
+            ),
+        )
 
         val melding = fangetMelding()
         println(melding)
@@ -98,17 +99,14 @@ class BatchKjøreplanVarslerTest {
 
     @Test
     fun `skal vise deaktivert-tekst for tom streng i cron`() {
-        val scheduler =
-            lagScheduler(
-                listOf(
-                    BatchKategori(
-                        navn = "Revurder forskudd",
-                        batcher = listOf(Batch("Opprett", "")),
-                    ),
+        kjørScheduler(
+            listOf(
+                BatchKategori(
+                    navn = "Revurder forskudd",
+                    batcher = listOf(Batch("Opprett", "")),
                 ),
-            )
-
-        scheduler.sendBatchKjøreplanVarsel()
+            ),
+        )
 
         val melding = fangetMelding()
         println(melding)
@@ -117,108 +115,214 @@ class BatchKjøreplanVarslerTest {
 
     @Test
     fun `skal håndtere blanding av aktive og deaktiverte batcher`() {
-        val scheduler =
-            lagScheduler(
-                listOf(
-                    BatchKategori(
-                        navn = "Revurder forskudd",
-                        batcher =
-                            listOf(
-                                Batch("Opprett", "0 0 0 5 * *"),
-                                Batch("Evaluer", "-"),
-                                Batch("Fatte vedtak", "0 0 0 25 * *"),
-                                Batch("Revurderingslenke", "-"),
-                            ),
-                    ),
+        kjørScheduler(
+            listOf(
+                BatchKategori(
+                    navn = "Revurder forskudd",
+                    batcher =
+                        listOf(
+                            Batch("Opprett", "0 0 0 5 * *"),
+                            Batch("Evaluer", "-"),
+                            Batch("Fatte vedtak", "0 0 0 25 * *"),
+                            Batch("Revurderingslenke", "-"),
+                        ),
                 ),
-            )
+            ),
+        )
 
-        scheduler.sendBatchKjøreplanVarsel()
-
-        val nå = LocalDate.now()
         val melding = fangetMelding()
         println(melding)
 
-        melding shouldContain nå.withDayOfMonth(5).format(dagFormatter)
-        melding shouldContain nå.withDayOfMonth(25).format(dagFormatter)
+        melding shouldContain referanseDato.withDayOfMonth(5).format(dagFormatter)
+        melding shouldContain referanseDato.withDayOfMonth(25).format(dagFormatter)
         melding.split("ikke satt opp til å kjøre automatisk").size - 1 shouldBe 2
     }
 
     @Test
     fun `skal sende melding med alle kategorier når det finnes flere`() {
-        val scheduler =
-            lagScheduler(
-                listOf(
-                    BatchKategori(
-                        navn = "Revurder forskudd",
-                        batcher =
-                            listOf(
-                                Batch("Opprett", "0 0 0 5 * *"),
-                                Batch("Evaluer", "0 0 0 6 * *"),
-                            ),
-                    ),
-                    BatchKategori(
-                        navn = "Aldersjustering",
-                        batcher =
-                            listOf(
-                                Batch("Kjør", "0 0 0 10 * *"),
-                            ),
-                    ),
-                    BatchKategori(
-                        navn = "Forsendelse",
-                        batcher =
-                            listOf(
-                                Batch("Send", "-"),
-                            ),
-                    ),
+        kjørScheduler(
+            listOf(
+                BatchKategori(
+                    navn = "Revurder forskudd",
+                    batcher =
+                        listOf(
+                            Batch("Opprett", "0 0 0 5 * *"),
+                            Batch("Evaluer", "0 0 0 6 * *"),
+                        ),
                 ),
-            )
+                BatchKategori(
+                    navn = "Aldersjustering",
+                    batcher =
+                        listOf(
+                            Batch("Kjør", "0 0 0 10 * *"),
+                        ),
+                ),
+                BatchKategori(
+                    navn = "Forsendelse",
+                    batcher =
+                        listOf(
+                            Batch("Send", "-"),
+                        ),
+                ),
+            ),
+        )
 
-        scheduler.sendBatchKjøreplanVarsel()
-
-        val nå = LocalDate.now()
         val melding = fangetMelding()
         println(melding)
 
         melding shouldContain "Revurder forskudd"
-        melding shouldContain nå.withDayOfMonth(5).format(dagFormatter)
-        melding shouldContain nå.withDayOfMonth(6).format(dagFormatter)
+        melding shouldContain referanseDato.withDayOfMonth(5).format(dagFormatter)
+        melding shouldContain referanseDato.withDayOfMonth(6).format(dagFormatter)
         melding shouldContain "Aldersjustering"
-        melding shouldContain nå.withDayOfMonth(10).format(dagFormatter)
+        melding shouldContain referanseDato.withDayOfMonth(10).format(dagFormatter)
         melding shouldContain "Forsendelse"
         melding shouldContain "ikke satt opp til å kjøre automatisk"
     }
 
     @Test
     fun `skal korrekt parse tosifret dag i cron-uttrykk`() {
-        val scheduler =
-            lagScheduler(
-                listOf(
-                    BatchKategori(
-                        navn = "Revurder forskudd",
-                        batcher = listOf(Batch("Fatte vedtak", "0 0 0 25 * *")),
-                    ),
+        kjørScheduler(
+            listOf(
+                BatchKategori(
+                    navn = "Revurder forskudd",
+                    batcher = listOf(Batch("Fatte vedtak", "0 0 0 25 * *")),
                 ),
-            )
-
-        scheduler.sendBatchKjøreplanVarsel()
+            ),
+        )
 
         val melding = fangetMelding()
         println(melding)
 
-        melding shouldContain LocalDate.now().withDayOfMonth(25).format(dagFormatter)
+        melding shouldContain referanseDato.withDayOfMonth(25).format(dagFormatter)
     }
 
     @Test
     fun `skal sende melding selv når kategori-listen er tom`() {
-        val scheduler = lagScheduler(emptyList())
-
-        scheduler.sendBatchKjøreplanVarsel()
+        kjørScheduler(emptyList())
 
         val melding = fangetMelding()
         println(melding)
 
-        melding shouldContain LocalDate.now().format(månedÅrFormatter)
+        melding shouldContain referanseDato.format(månedÅrFormatter)
         melding shouldNotContain "ikke satt opp til å kjøre automatisk"
+    }
+
+    @Test
+    fun `skal vise ingen kjøring inneværende måned når måntlig kjøring allerede er passert`() {
+        // referanseDato er 1. april – dag 10 er fremdeles fremtidig, men test med dag 31 (finnes ikke i april)
+        val nå = LocalDate.of(2026, 4, 20)
+        kjørScheduler(
+            listOf(
+                BatchKategori(
+                    navn = "Batch",
+                    batcher = listOf(Batch("Kjør", "0 0 0 10 * *")),
+                ),
+            ),
+            nå = nå,
+        )
+
+        val melding = fangetMelding()
+        println(melding)
+
+        melding shouldContain "ingen kjøring inneværende måned"
+        melding shouldContain "Neste kjøring er 10. mai"
+    }
+
+    @Test
+    fun `skal vise neste kjøring med år når månedlig kjøring krysser årsskiftet`() {
+        val nå = LocalDate.of(2026, 12, 20)
+        kjørScheduler(
+            listOf(
+                BatchKategori(
+                    navn = "Batch",
+                    batcher = listOf(Batch("Kjør", "0 0 0 10 * *")),
+                ),
+            ),
+            nå = nå,
+        )
+
+        val melding = fangetMelding()
+        println(melding)
+
+        melding shouldContain "ingen kjøring inneværende måned"
+        melding shouldContain "10. januar 2027"
+    }
+
+    @Test
+    fun `skal vise dato uten år for yearly cron som ennå ikke har kjørt i år`() {
+        // Cron kjører 15. juni hvert år – referansedato er 1. april
+        kjørScheduler(
+            listOf(
+                BatchKategori(
+                    navn = "Batch",
+                    batcher = listOf(Batch("Kjør", "0 0 0 15 6 *")),
+                ),
+            ),
+        )
+
+        val melding = fangetMelding()
+        println(melding)
+
+        melding shouldContain "ingen kjøring inneværende måned"
+        melding shouldContain "Neste kjøring er 15. juni"
+        melding shouldNotContain "2027"
+    }
+
+    @Test
+    fun `skal vise dato med år for årlig jobb som allerede har kjørt i år`() {
+        // Cron kjører 15. januar hvert år – referansedato er 1. april (januar er passert)
+        kjørScheduler(
+            listOf(
+                BatchKategori(
+                    navn = "Batch",
+                    batcher = listOf(Batch("Kjør", "0 0 0 15 1 *")),
+                ),
+            ),
+        )
+
+        val melding = fangetMelding()
+        println(melding)
+
+        melding shouldContain "ingen kjøring inneværende måned"
+        melding shouldContain "Neste kjøring er 15. januar 2027"
+    }
+
+    @Test
+    fun `skal vise dato normalt for årlig kjøring som er planlagt i inneværende måned og ennå ikke er passert`() {
+        // Cron kjører 15. april hvert år – referansedato er 1. april
+        kjørScheduler(
+            listOf(
+                BatchKategori(
+                    navn = "Batch",
+                    batcher = listOf(Batch("Kjør", "0 0 0 15 4 *")),
+                ),
+            ),
+        )
+
+        val melding = fangetMelding()
+        println(melding)
+
+        melding shouldContain "15. april"
+        melding shouldNotContain "ingen kjøring inneværende måned"
+    }
+
+    @Test
+    fun `skal vise neste år for yearly cron der måneden er inneværende men dagen er passert`() {
+        // Cron kjører 5. april hvert år – referansedato er 20. april (dagen er passert)
+        kjørScheduler(
+            listOf(
+                BatchKategori(
+                    navn = "Batch",
+                    batcher = listOf(Batch("Kjør", "0 0 0 5 4 *")),
+                ),
+            ),
+            nå = LocalDate.of(2026, 4, 20),
+        )
+
+        val melding = fangetMelding()
+        println(melding)
+
+        melding shouldContain "ingen kjøring inneværende måned"
+        melding shouldContain "Neste kjøring er 5. april 2027"
     }
 }
