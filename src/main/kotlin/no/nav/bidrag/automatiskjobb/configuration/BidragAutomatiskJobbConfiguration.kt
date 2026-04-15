@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.security.SecurityScheme
 import no.nav.bidrag.beregn.barnebidrag.service.orkestrering.AldersjusteringOrchestrator
 import no.nav.bidrag.commons.service.organisasjon.EnableSaksbehandlernavnProvider
+import no.nav.bidrag.commons.service.slack.SlackService
 import no.nav.bidrag.commons.unleash.EnableUnleashFeatures
 import no.nav.bidrag.commons.util.EnableSjekkForNyIdent
 import no.nav.bidrag.commons.web.DefaultCorsFilter
@@ -31,5 +32,5 @@ import org.springframework.retry.annotation.EnableRetry
 @EnableRetry
 @EnableSjekkForNyIdent
 @EnableUnleashFeatures
-@Import(DefaultCorsFilter::class, MdcFilter::class, AldersjusteringOrchestrator::class)
+@Import(DefaultCorsFilter::class, MdcFilter::class, AldersjusteringOrchestrator::class, SlackService::class)
 class BidragAutomatiskJobbConfiguration
