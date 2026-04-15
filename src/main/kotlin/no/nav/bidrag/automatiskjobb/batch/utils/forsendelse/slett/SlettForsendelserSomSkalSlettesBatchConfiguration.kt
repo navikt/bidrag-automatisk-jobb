@@ -2,7 +2,7 @@ package no.nav.bidrag.automatiskjobb.batch.utils.forsendelse.slett
 
 import no.nav.bidrag.automatiskjobb.batch.utils.BatchConfiguration.Companion.CHUNK_SIZE
 import no.nav.bidrag.automatiskjobb.batch.utils.DummyItemWriter
-import no.nav.bidrag.automatiskjobb.batch.utils.varsling.BatchCompletionNotificationListener
+import no.nav.bidrag.automatiskjobb.batch.utils.varsling.BatchListener
 import no.nav.bidrag.automatiskjobb.persistence.entity.ForsendelseBestilling
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.Step
@@ -21,7 +21,7 @@ class SlettForsendelserSomSkalSlettesBatchConfiguration {
     fun slettForsendelserSomSkalSlettesJob(
         jobRepository: JobRepository,
         slettForsendelseSomSkalSlettesBidragStep: Step,
-        listener: BatchCompletionNotificationListener,
+        listener: BatchListener,
     ): Job =
         JobBuilder("slettForsendelserSomSkalSlettesJob", jobRepository)
             .listener(listener)

@@ -1,7 +1,7 @@
 package no.nav.bidrag.automatiskjobb.batch.utils.slettallevedtaksforslag
 
 import no.nav.bidrag.automatiskjobb.batch.utils.DummyItemWriter
-import no.nav.bidrag.automatiskjobb.batch.utils.varsling.BatchCompletionNotificationListener
+import no.nav.bidrag.automatiskjobb.batch.utils.varsling.BatchListener
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.Step
 import org.springframework.batch.core.job.builder.JobBuilder
@@ -17,7 +17,7 @@ class SlettAlleVedtaksforslagBatchConfiguration {
     fun slettAlleVedtaksforslagJob(
         jobRepository: JobRepository,
         slettAlleVedtaksforslagStep: Step,
-        listener: BatchCompletionNotificationListener,
+        listener: BatchListener,
     ): Job =
         JobBuilder("slettAlleVedtaksforslagJob", jobRepository)
             .listener(listener)

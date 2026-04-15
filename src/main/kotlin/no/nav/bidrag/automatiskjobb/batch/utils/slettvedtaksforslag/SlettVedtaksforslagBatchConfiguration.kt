@@ -2,7 +2,7 @@ package no.nav.bidrag.automatiskjobb.batch.utils.slettvedtaksforslag
 
 import no.nav.bidrag.automatiskjobb.batch.utils.BatchConfiguration.Companion.CHUNK_SIZE
 import no.nav.bidrag.automatiskjobb.batch.utils.DummyItemWriter
-import no.nav.bidrag.automatiskjobb.batch.utils.varsling.BatchCompletionNotificationListener
+import no.nav.bidrag.automatiskjobb.batch.utils.varsling.BatchListener
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.Step
@@ -21,7 +21,7 @@ class SlettVedtaksforslagBatchConfiguration {
     fun slettVedtaksforslagJob(
         jobRepository: JobRepository,
         slettVedtaksforslagStep: Step,
-        listener: BatchCompletionNotificationListener,
+        listener: BatchListener,
     ): Job =
         JobBuilder("slettVedtaksforslagJob", jobRepository)
             .listener(listener)
