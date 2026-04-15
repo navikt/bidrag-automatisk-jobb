@@ -21,7 +21,7 @@ class EvaluerRevurderForskuddBatch(
         simuler: Boolean,
         beregnFraMåned: YearMonth?,
         forMåned: YearMonth?,
-        antallMånederForBeregning: Long,
+        antallMånederForBeregning: Long = 3,
     ) {
         try {
             jobLauncher.run(
