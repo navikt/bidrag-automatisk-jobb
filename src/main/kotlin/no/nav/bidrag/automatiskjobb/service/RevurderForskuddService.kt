@@ -438,6 +438,7 @@ class RevurderForskuddService(
         beregnFraMåned: YearMonth,
         forMåned: YearMonth,
         saksnummer: String,
+        antallMånederForBeregning: Long,
     ): RevurderingForskudd? {
         val revurderingForskudd = revurderForskuddRepository.findBySaksnummerAndForMåned(saksnummer, forMåned.toString())
         if (revurderingForskudd == null) {
@@ -448,6 +449,7 @@ class RevurderForskuddService(
                 revurderingForskudd!!,
                 simuler,
                 beregnFraMåned,
+                antallMånederForBeregning,
             )
         LOGGER.info { "Evaluering av revurdering forskudd er kjørt ferdig for sak $saksnummer. Resultat: $evaluertRevurderingForskudd" }
         evaluertRevurderingForskudd?.let { revurderForskuddRepository.save(it) }
