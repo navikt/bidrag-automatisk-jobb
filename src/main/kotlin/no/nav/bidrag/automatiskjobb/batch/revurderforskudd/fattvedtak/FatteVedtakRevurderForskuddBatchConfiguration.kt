@@ -1,8 +1,8 @@
 package no.nav.bidrag.automatiskjobb.batch.revurderforskudd.fattvedtak
 
-import no.nav.bidrag.automatiskjobb.batch.BatchCompletionNotificationListener
-import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.CHUNK_SIZE
-import no.nav.bidrag.automatiskjobb.batch.DummyItemWriter
+import no.nav.bidrag.automatiskjobb.batch.utils.BatchConfiguration.Companion.CHUNK_SIZE
+import no.nav.bidrag.automatiskjobb.batch.utils.DummyItemWriter
+import no.nav.bidrag.automatiskjobb.batch.utils.varsling.BatchListener
 import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import no.nav.bidrag.automatiskjobb.persistence.repository.RevurderForskuddRepository
@@ -26,7 +26,7 @@ class FatteVedtakRevurderForskuddBatchConfiguration {
     fun fatteVedtakRevurderForskuddJob(
         jobRepository: JobRepository,
         fatteVedtakRevurderForskuddStep: Step,
-        listener: BatchCompletionNotificationListener,
+        listener: BatchListener,
     ): Job =
         JobBuilder("fatteVedtakRevurderForskuddJob", jobRepository)
             .listener(listener)

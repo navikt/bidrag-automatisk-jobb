@@ -1,8 +1,8 @@
 package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.beregn
 
-import no.nav.bidrag.automatiskjobb.batch.BatchCompletionNotificationListener
-import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.CHUNK_SIZE
-import no.nav.bidrag.automatiskjobb.batch.DummyItemWriter
+import no.nav.bidrag.automatiskjobb.batch.utils.BatchConfiguration.Companion.CHUNK_SIZE
+import no.nav.bidrag.automatiskjobb.batch.utils.DummyItemWriter
+import no.nav.bidrag.automatiskjobb.batch.utils.varsling.BatchListener
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import no.nav.bidrag.transport.automatiskjobb.AldersjusteringResultat
 import org.springframework.batch.core.Job
@@ -22,7 +22,7 @@ class BeregnAldersjusteringerBidragBatchConfiguration {
     fun beregnAldersjusteringerBidragJob(
         jobRepository: JobRepository,
         beregnAldersjusteringerBidragStep: Step,
-        listener: BatchCompletionNotificationListener,
+        listener: BatchListener,
     ): Job =
         JobBuilder("beregnAldersjusteringerBidragJob", jobRepository)
             .listener(listener)

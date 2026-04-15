@@ -8,6 +8,8 @@ NAIS_APP_NAME: bidrag-automatisk-jobb
 KAFKA_PERSON_HENDELSE_TOPIC: bidrag.personhendelse.v1-test
 KAFKA_VEDTAK_TOPIC: bidrag.vedtak-test
 KAFKA_BROKERS: localhost:9092
+BIDRAG_BOT_SLACK_OAUTH_TOKEN: ikkeGyldigToken
+SLACK_CHANNEL_ID: IKKE_GYLDIG_CHANNEL_ID
 
 spring:
   flyway:

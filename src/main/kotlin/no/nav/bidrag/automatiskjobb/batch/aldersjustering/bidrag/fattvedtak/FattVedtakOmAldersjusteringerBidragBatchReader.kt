@@ -1,6 +1,6 @@
 package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.fattvedtak
 
-import no.nav.bidrag.automatiskjobb.batch.BatchConfiguration.Companion.PAGE_SIZE
+import no.nav.bidrag.automatiskjobb.batch.utils.BatchConfiguration.Companion.PAGE_SIZE
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
 import no.nav.bidrag.automatiskjobb.persistence.rowmapper.AlderjusteringRowMapper
