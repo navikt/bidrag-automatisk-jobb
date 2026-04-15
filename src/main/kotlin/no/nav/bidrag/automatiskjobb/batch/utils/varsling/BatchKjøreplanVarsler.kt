@@ -87,12 +87,14 @@ class BatchKjøreplanVarsler(
 
         return when {
             // Kjøringen er denne måneden og har ikke passert
-            kjøringDetteÅr.month == nå.month && !kjøringDetteÅr.isBefore(nå) ->
+            kjøringDetteÅr.month == nå.month && !kjøringDetteÅr.isBefore(nå) -> {
                 kjøringDetteÅr.format(dagFormat)
+            }
 
             // Kjøringen er ikke denne måneden og har ikke passert
-            !kjøringDetteÅr.isBefore(nå) ->
+            !kjøringDetteÅr.isBefore(nå) -> {
                 "ingen kjøring inneværende måned. Neste kjøring er ${kjøringDetteÅr.format(dagFormat)}"
+            }
 
             // Kjøringen har allerede vært i år, viser med årstall for neste kjøring
             else -> {
