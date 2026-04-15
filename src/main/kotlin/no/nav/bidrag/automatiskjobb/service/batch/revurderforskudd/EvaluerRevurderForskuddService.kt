@@ -250,7 +250,7 @@ class EvaluerRevurderForskuddService(
             var inntekt: BigDecimal
             var inntektsrapportering: Inntektsrapportering
 
-            if (årsinntekt > (månedsinntektGangetTolv ?: BigDecimal.ZERO)) {
+            if (årsinntekt >= (månedsinntektGangetTolv ?: BigDecimal.ZERO)) {
                 inntekt = årsinntekt
                 inntektsrapportering = Inntektsrapportering.AINNTEKT_BEREGNET_12MND
             } else {
