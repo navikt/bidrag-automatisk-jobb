@@ -258,7 +258,9 @@ class EvaluerRevurderForskuddService(
                 inntektsrapportering = Inntektsrapportering.AINNTEKT_BEREGNET_LAVESTE_MÅNEDSINNTEKT_SISTE_3MND_GANGET_TOLV
             }
 
-            // TODO(Barnetrygd, utvidet barnetrygd, småbarnstillegg og kontaktstøtte?)
+            //TODO(Kontantstøtte og utvidet barnetrygd og småbarnstillegg skal hentes fra bidrag-grunnlag og legges på grunnlaget)
+
+            // TODO(Barnstillegg trekkes fra inntekten fra a-ordningen og legge til det ene barnetillegg for gjeldende barn. Hentes fra bidrag-grunnlag.)
 
             val beregnetForskudd: BeregnetForskuddResultat =
                 try {
