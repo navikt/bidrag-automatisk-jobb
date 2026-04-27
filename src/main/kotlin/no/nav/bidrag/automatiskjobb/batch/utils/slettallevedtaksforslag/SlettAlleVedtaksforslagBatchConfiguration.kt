@@ -1,11 +1,10 @@
 package no.nav.bidrag.automatiskjobb.batch.utils.slettallevedtaksforslag
 
-import no.nav.bidrag.automatiskjobb.batch.utils.DummyItemWriter
 import no.nav.bidrag.automatiskjobb.batch.utils.varsling.BatchListener
-import org.springframework.batch.core.Job
-import org.springframework.batch.core.Step
+import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.builder.JobBuilder
 import org.springframework.batch.core.repository.JobRepository
+import org.springframework.batch.core.step.Step
 import org.springframework.batch.core.step.builder.StepBuilder
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -30,12 +29,12 @@ class SlettAlleVedtaksforslagBatchConfiguration {
         transactionManager: PlatformTransactionManager,
         slettVedtaksforslagBatchReader: SlettAlleVedtaksforslagBatchReader,
         slettAlleVedtaksforslagBatchProcessor: SlettAlleVedtaksforslagBatchProcessor,
-        dummyItemWriter: DummyItemWriter,
     ): Step =
         StepBuilder("slettAlleVedtaksforslagStep", jobRepository)
-            .chunk<List<Int>, List<Int>>(1, transactionManager)
+            .chunk<List<Int>, List<Int>>(1)
+            .transactionManager(transactionManager)
             .reader(slettVedtaksforslagBatchReader)
             .processor(slettAlleVedtaksforslagBatchProcessor)
-            .writer(dummyItemWriter)
+            .writer { }
             .build()
 }

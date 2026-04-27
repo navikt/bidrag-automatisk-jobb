@@ -43,7 +43,7 @@ class KafkaConfiguration {
 class KafkaRetryListener : RetryListener {
     override fun failedDelivery(
         record: ConsumerRecord<*, *>,
-        exception: Exception,
+        exception: Exception?,
         deliveryAttempt: Int,
     ) {
         LOGGER.error(
@@ -55,7 +55,7 @@ class KafkaRetryListener : RetryListener {
 
     override fun recovered(
         record: ConsumerRecord<*, *>,
-        exception: java.lang.Exception,
+        exception: Exception?,
     ) {
         LOGGER.error(
             exception,
@@ -66,8 +66,8 @@ class KafkaRetryListener : RetryListener {
 
     override fun recoveryFailed(
         record: ConsumerRecord<*, *>,
-        original: java.lang.Exception,
-        failure: java.lang.Exception,
+        original: Exception?,
+        failure: Exception,
     ) {
     }
 }

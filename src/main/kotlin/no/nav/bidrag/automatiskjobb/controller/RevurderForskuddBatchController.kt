@@ -19,6 +19,7 @@ import no.nav.security.token.support.core.api.Protected
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RestController
 import java.time.LocalDate
@@ -127,7 +128,7 @@ class RevurderForskuddBatchController(
                 "Kan settes for å endre hvilken måned av revurdering forskudd innslag som skal behandles. " +
                     "Default er innværende måned.",
         ) forMåned: YearMonth = YearMonth.now(),
-        @Parameter(
+        @PathVariable @Parameter(
             required = true,
             description = "Saksnummeret for saken som skal evalueres.",
             example = "2600001",
@@ -137,7 +138,7 @@ class RevurderForskuddBatchController(
             example = "3",
             description = "Avgjør hvor mange måneder som skal brukes tilbake i tid for beregning av månedsinntekt.",
         ) antallMånederForBeregning: Long = 3,
-    ): ResponseEntity<RevurderingForskudd?> {
+    ): ResponseEntity<RevurderingForskudd> {
         val revurderingForskudd =
             revurderForskuddService.evaluerRevurderForskuddForSak(
                 simuler,

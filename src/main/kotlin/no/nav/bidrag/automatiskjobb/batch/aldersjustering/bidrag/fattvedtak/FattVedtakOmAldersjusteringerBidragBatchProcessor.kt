@@ -3,10 +3,10 @@ package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.fattvedtak
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import no.nav.bidrag.automatiskjobb.service.AldersjusteringService
-import org.springframework.batch.core.StepExecution
 import org.springframework.batch.core.annotation.BeforeStep
 import org.springframework.batch.core.configuration.annotation.StepScope
-import org.springframework.batch.item.ItemProcessor
+import org.springframework.batch.core.step.StepExecution
+import org.springframework.batch.infrastructure.item.ItemProcessor
 import org.springframework.stereotype.Component
 
 private val log = KotlinLogging.logger {}

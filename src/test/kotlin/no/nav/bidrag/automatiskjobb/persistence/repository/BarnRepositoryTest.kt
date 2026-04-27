@@ -4,8 +4,8 @@ import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldHaveSize
 import no.nav.bidrag.automatiskjobb.BidragAutomatiskJobb
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
+import no.nav.bidrag.commons.unleash.UnleashFeaturesProvider
 import no.nav.security.token.support.spring.test.EnableMockOAuth2Server
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
@@ -14,8 +14,9 @@ import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.transaction.annotation.Transactional
-import org.testcontainers.containers.PostgreSQLContainer
+import org.testcontainers.postgresql.PostgreSQLContainer
 import java.time.LocalDate
 
 @Transactional
@@ -24,7 +25,6 @@ import java.time.LocalDate
 @EnableMockOAuth2Server
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest(classes = [BidragAutomatiskJobb::class])
-@Disabled
 class BarnRepositoryTest {
     companion object {
         private var postgreSqlDb =
@@ -44,19 +44,54 @@ class BarnRepositoryTest {
         }
     }
 
+    @MockitoBean
+    lateinit var unleashFeaturesProvider: UnleashFeaturesProvider
+
     @Autowired
     private lateinit var barnRepository: BarnRepository
 
     @Test
     fun skalHenteUtBarnSomSkalAldersjusteresFor2024() {
-        val barn2024 = Barn(fødselsdato = LocalDate.of(2024, 1, 1))
-        val barn2018 = Barn(fødselsdato = LocalDate.of(2018, 1, 1))
-        val barn2016 = Barn(fødselsdato = LocalDate.of(2016, 3, 3))
-        val barn2013 = Barn(fødselsdato = LocalDate.of(2013, 12, 31))
-        val barn2011 = Barn(fødselsdato = LocalDate.of(2011, 9, 27))
-        val barn2009 = Barn(fødselsdato = LocalDate.of(2009, 6, 15))
-        val barn2006 = Barn(fødselsdato = LocalDate.of(2006, 4, 8))
-        val barn2001 = Barn(fødselsdato = LocalDate.of(2001, 2, 24))
+        val barn2024 =
+            Barn(
+                fødselsdato = LocalDate.of(2024, 1, 1),
+                bidragFra = LocalDate.of(2017, 1, 1),
+            )
+        val barn2018 =
+            Barn(
+                fødselsdato = LocalDate.of(2018, 1, 1),
+                bidragFra = LocalDate.of(2017, 1, 1),
+            )
+        val barn2016 =
+            Barn(
+                fødselsdato = LocalDate.of(2016, 3, 3),
+                bidragFra = LocalDate.of(2017, 1, 1),
+            )
+        val barn2013 =
+            Barn(
+                fødselsdato = LocalDate.of(2013, 12, 31),
+                bidragFra = LocalDate.of(2017, 1, 1),
+            )
+        val barn2011 =
+            Barn(
+                fødselsdato = LocalDate.of(2011, 9, 27),
+                bidragFra = LocalDate.of(2017, 1, 1),
+            )
+        val barn2009 =
+            Barn(
+                fødselsdato = LocalDate.of(2009, 6, 15),
+                bidragFra = LocalDate.of(2017, 1, 1),
+            )
+        val barn2006 =
+            Barn(
+                fødselsdato = LocalDate.of(2006, 4, 8),
+                bidragFra = LocalDate.of(2017, 1, 1),
+            )
+        val barn2001 =
+            Barn(
+                fødselsdato = LocalDate.of(2001, 2, 24),
+                bidragFra = LocalDate.of(2017, 1, 1),
+            )
         barnRepository.saveAll(
             listOf(
                 barn2024,

@@ -4,9 +4,9 @@ import no.nav.bidrag.automatiskjobb.batch.utils.BatchConfiguration.Companion.PAG
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.rowmapper.BarnRowMapper
 import org.springframework.batch.core.configuration.annotation.StepScope
-import org.springframework.batch.item.database.JdbcPagingItemReader
-import org.springframework.batch.item.database.Order
-import org.springframework.batch.item.database.support.SqlPagingQueryProviderFactoryBean
+import org.springframework.batch.infrastructure.item.database.JdbcPagingItemReader
+import org.springframework.batch.infrastructure.item.database.Order
+import org.springframework.batch.infrastructure.item.database.support.SqlPagingQueryProviderFactoryBean
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import javax.sql.DataSource
@@ -16,7 +16,30 @@ import javax.sql.DataSource
 class OppdaterBarnBatchReader(
     private val dataSource: DataSource,
     @Value("#{jobParameters['barn']}") barn: String? = "",
-) : JdbcPagingItemReader<Barn>() {
+) : JdbcPagingItemReader<Barn>(
+        dataSource,
+        SqlPagingQueryProviderFactoryBean()
+            .apply {
+                setDataSource(dataSource)
+                setSelectClause("SELECT *")
+                setFromClause("FROM barn")
+                val barnListe =
+                    barn
+                        ?.takeIf { it.isNotEmpty() }
+                        ?.split(",")
+                        ?.map { it.trim() }
+                        ?.map { Integer.valueOf(it) } ?: emptyList()
+                val whereClause = StringBuilder()
+                if (barnListe.isEmpty()) {
+                    whereClause.append("(TRUE")
+                } else {
+                    whereClause.append("(id IN (:barnIds)")
+                }
+                whereClause.append(")")
+                setWhereClause(whereClause.toString())
+                setSortKeys(mapOf("id" to Order.ASCENDING))
+            }.`object`,
+    ) {
     init {
         val barnListe =
             barn
@@ -24,30 +47,15 @@ class OppdaterBarnBatchReader(
                 ?.split(",")
                 ?.map { it.trim() }
                 ?.map { Integer.valueOf(it) } ?: emptyList()
-        val whereClause = StringBuilder()
         val parameterValues = HashMap<String, Any>()
 
-        if (barnListe.isEmpty()) {
-            whereClause.append("(TRUE")
-        } else {
-            whereClause.append("(id IN (:barnIds)")
+        if (barnListe.isNotEmpty()) {
             parameterValues["barnIds"] = barnListe
         }
-        whereClause.append(")")
 
-        val sqlPagingQuaryPoviderFactoryBean =
-            SqlPagingQueryProviderFactoryBean().apply {
-                setDataSource(dataSource)
-                setSelectClause("SELECT *")
-                setFromClause("FROM barn")
-                setWhereClause(whereClause.toString())
-                setSortKeys(mapOf("id" to Order.ASCENDING))
-            }
         try {
-            this.setQueryProvider(sqlPagingQuaryPoviderFactoryBean.`object`)
             this.pageSize = PAGE_SIZE
             this.setFetchSize(PAGE_SIZE)
-            this.setDataSource(dataSource)
             this.setRowMapper(BarnRowMapper())
             this.setParameterValues(parameterValues)
             this.isSaveState = false

@@ -28,6 +28,7 @@ data class Aldersjustering(
     @ManyToOne
     @JoinColumn(name = "barn_id")
     val barn: Barn,
+    @Column(columnDefinition = "NUMERIC")
     val aldersgruppe: Int,
     var lopendeBelop: BigDecimal? = null,
     var begrunnelse: List<String> = emptyList(),

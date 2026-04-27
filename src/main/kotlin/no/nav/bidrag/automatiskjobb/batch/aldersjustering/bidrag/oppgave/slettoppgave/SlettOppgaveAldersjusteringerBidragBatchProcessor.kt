@@ -4,7 +4,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import no.nav.bidrag.automatiskjobb.service.AldersjusteringService
 import org.springframework.batch.core.configuration.annotation.StepScope
-import org.springframework.batch.item.ItemProcessor
+import org.springframework.batch.infrastructure.item.ItemProcessor
 import org.springframework.stereotype.Component
 
 private val log = KotlinLogging.logger {}
@@ -13,7 +13,7 @@ private val log = KotlinLogging.logger {}
 @StepScope
 class SlettOppgaveAldersjusteringerBidragBatchProcessor(
     private val aldersjusteringService: AldersjusteringService,
-) : ItemProcessor<Aldersjustering, Int?> {
+) : ItemProcessor<Aldersjustering, Int> {
     override fun process(aldersjustering: Aldersjustering): Int? =
         try {
             aldersjusteringService.slettOppgaveForAldersjustering(aldersjustering)
