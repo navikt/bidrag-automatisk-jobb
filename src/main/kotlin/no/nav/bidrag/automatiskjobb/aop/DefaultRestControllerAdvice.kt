@@ -24,7 +24,6 @@ class DefaultRestControllerAdvice {
         LOGGER.warn(errorMessage, exception)
         return ResponseEntity
             .status(exception.statusCode)
-            .header(HttpHeaders.WARNING, errorMessage)
             .build<Any>()
     }
 
@@ -48,7 +47,7 @@ class DefaultRestControllerAdvice {
         LOGGER.warn("Det skjedde en ukjent feil", exception)
         return ResponseEntity
             .status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .header(HttpHeaders.WARNING, "Det skjedde en ukjent feil: ${exception.message}")
+            .header(HttpHeaders.WARNING, "Det skjedde en ukjent feil")
             .build<Any>()
     }
 
@@ -65,10 +64,10 @@ class DefaultRestControllerAdvice {
     @ResponseBody
     @ExceptionHandler(PSQLException::class)
     fun handlePSQLException(exception: PSQLException): ResponseEntity<*> {
-        LOGGER.warn("Brudd på constraint ved insert i database", exception)
+        LOGGER.error("Brudd på constraint ved insert i database", exception)
         return ResponseEntity
             .status(HttpStatus.BAD_REQUEST)
-            .header(HttpHeaders.WARNING, "Brudd på constraint ved insert i database: ${exception.message}")
+            .header(HttpHeaders.WARNING, "Brudd på constraint ved insert i database, se logger for mer info.")
             .build<Any>()
     }
 }
