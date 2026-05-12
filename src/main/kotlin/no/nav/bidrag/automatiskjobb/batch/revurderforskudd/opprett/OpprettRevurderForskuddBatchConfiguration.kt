@@ -5,10 +5,10 @@ import no.nav.bidrag.automatiskjobb.batch.utils.varsling.BatchListener
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
-import org.springframework.batch.core.Job
-import org.springframework.batch.core.Step
+import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.builder.JobBuilder
 import org.springframework.batch.core.repository.JobRepository
+import org.springframework.batch.core.step.Step
 import org.springframework.batch.core.step.builder.StepBuilder
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -41,13 +41,14 @@ class OpprettRevurderForskuddBatchConfiguration {
         opprettRevurderForskuddBatchWriter: OpprettRevurderForskuddBatchWriter,
     ): Step =
         StepBuilder("opprettRevurderForskuddStep", jobRepository)
-            .chunk<List<Barn>, RevurderingForskudd>(CHUNK_SIZE, transactionManager)
+            .chunk<List<Barn>, RevurderingForskudd>(CHUNK_SIZE)
+            .transactionManager(transactionManager)
             .reader(opprettRevurderForskuddBatchReader)
             .processor(opprettRevurderForskuddBatchProcessor)
             .writer(opprettRevurderForskuddBatchWriter)
             .faultTolerant()
             .skip(Exception::class.java)
-            .skipLimit(CHUNK_SIZE)
+            .skipLimit(CHUNK_SIZE.toLong())
             .build()
 
     @Bean

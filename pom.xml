@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.7</version>
+        <version>4.0.6</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>no.nav</groupId>
@@ -15,17 +15,19 @@
     <properties>
         <java.version>21</java.version>
         <kotlin.version>2.2.21</kotlin.version>
-        <bidrag-felles.version>2026.04.15.145729</bidrag-felles.version>
+        <bidrag-felles.version>2026.04.23.071531-SB4</bidrag-felles.version>
         <logback-encoder.version>9.0</logback-encoder.version>
         <springdoc-openapi-ui.version>2.8.13</springdoc-openapi-ui.version>
         <springframework-cloud.version>4.3.0</springframework-cloud.version>
-        <token-support.version>5.0.37</token-support.version>
+        <token-support.version>6.0.5</token-support.version>
         <kotest.version>5.9.1</kotest.version>
         <mockk.version>1.14.6</mockk.version>
         <ktlint.version>1.8.0</ktlint.version>
-        <shedlock.version>6.10.0</shedlock.version>
+        <shedlock.version>7.5.0</shedlock.version>
         <bidrag-beregn-felles.version>2026.01.05.150751</bidrag-beregn-felles.version>
-        <slack-api.version>1.48.0</slack-api.version>
+        <slack-api.version>1.48.1</slack-api.version>
+        <okhttp.version>5.2.1</okhttp.version>
+        <unleash.version>11.2.1</unleash.version>
     </properties>
 
     <repositories>
@@ -91,29 +93,27 @@
             <artifactId>spring-boot-starter-web-services</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-kafka</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-kafka-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-flyway</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.session</groupId>
             <artifactId>spring-session-core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-aop</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-cache</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.retry</groupId>
-            <artifactId>spring-retry</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.kafka</groupId>
-            <artifactId>spring-kafka</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.kafka</groupId>
-            <artifactId>spring-kafka-test</artifactId>
-        </dependency>
+
 
         <dependency>
             <groupId>no.nav.bidrag</groupId>
@@ -187,10 +187,6 @@
         </dependency>
         <dependency>
             <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.flywaydb</groupId>
             <artifactId>flyway-database-postgresql</artifactId>
         </dependency>
         <dependency>
@@ -207,7 +203,7 @@
         <dependency>
             <groupId>io.getunleash</groupId>
             <artifactId>unleash-client-java</artifactId>
-            <version>10.2.2</version>
+            <version>${unleash.version}</version>
         </dependency>
         <!--Sikkerhet-->
         <dependency>
@@ -243,6 +239,17 @@
             <groupId>com.slack.api</groupId>
             <artifactId>slack-api-client</artifactId>
             <version>${slack-api.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.squareup.okhttp3</groupId>
+                    <artifactId>okhttp</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp-jvm</artifactId>
+            <version>${okhttp.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
@@ -260,10 +267,6 @@
         <dependency>
             <groupId>com.github.ben-manes.caffeine</groupId>
             <artifactId>caffeine</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
         </dependency>
 
         <!--Logging-->
@@ -335,7 +338,7 @@
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
-            <artifactId>postgresql</artifactId>
+            <artifactId>testcontainers-postgresql</artifactId>
             <version>${testcontainers.version}</version>
             <scope>test</scope>
         </dependency>

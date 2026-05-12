@@ -4,26 +4,26 @@ import no.nav.bidrag.automatiskjobb.batch.utils.BatchConfiguration.Companion.CHU
 import no.nav.bidrag.automatiskjobb.batch.utils.varsling.BatchListener
 import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
 import no.nav.bidrag.automatiskjobb.persistence.repository.RevurderForskuddRepository
-import org.springframework.batch.core.Job
-import org.springframework.batch.core.Step
 import org.springframework.batch.core.configuration.annotation.StepScope
+import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.builder.JobBuilder
 import org.springframework.batch.core.repository.JobRepository
+import org.springframework.batch.core.step.Step
 import org.springframework.batch.core.step.builder.StepBuilder
-import org.springframework.batch.item.data.RepositoryItemReader
-import org.springframework.batch.item.data.builder.RepositoryItemReaderBuilder
+import org.springframework.batch.infrastructure.item.data.RepositoryItemReader
+import org.springframework.batch.infrastructure.item.data.builder.RepositoryItemReaderBuilder
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.core.task.TaskExecutor
+import org.springframework.core.task.AsyncTaskExecutor
 import org.springframework.data.domain.Sort
 import org.springframework.transaction.PlatformTransactionManager
 import java.time.YearMonth
 
 @Configuration
 class EvaluerRevurderForskuddBatchConfiguration(
-    @param:Value($$"${NAIS_CLUSTER_NAME}") private val clusterName: String,
+    @param:Value($$"${NAIS_CLUSTER_NAME:clusterName}") private val clusterName: String,
 ) {
     @Bean
     fun evaluerRevurderForskuddJob(
@@ -38,7 +38,7 @@ class EvaluerRevurderForskuddBatchConfiguration(
 
     @Bean
     fun evaluerRevurderForskuddStep(
-        @Qualifier("batchTaskExecutor") taskExecutor: TaskExecutor,
+        @Qualifier("batchTaskExecutor") taskExecutor: AsyncTaskExecutor,
         jobRepository: JobRepository,
         transactionManager: PlatformTransactionManager,
         evaluerRevurderForskuddBatchReader: RepositoryItemReader<RevurderingForskudd>,
@@ -46,7 +46,8 @@ class EvaluerRevurderForskuddBatchConfiguration(
         evaluerRevurderForskuddBatchWriter: EvaluerRevurderForskuddBatchWriter,
     ): Step =
         StepBuilder("evaluerRevurderForskuddStep", jobRepository)
-            .chunk<RevurderingForskudd, RevurderingForskudd>(CHUNK_SIZE, transactionManager)
+            .chunk<RevurderingForskudd, RevurderingForskudd>(CHUNK_SIZE)
+            .transactionManager(transactionManager)
             .reader(evaluerRevurderForskuddBatchReader)
             .processor(evaluerRevurderForskuddBatchProcessor)
             .writer(evaluerRevurderForskuddBatchWriter)
@@ -69,7 +70,7 @@ class EvaluerRevurderForskuddBatchConfiguration(
             .repository(revurderForskuddRepository)
             .methodName("findAllByForMåned")
             .arguments(listOf(forMåned.toString()))
-            .pageSize(finnSkipLimit())
+            .pageSize(CHUNK_SIZE)
             .sorts(mapOf("id" to Sort.Direction.ASC))
             .saveState(false)
             .build()
@@ -81,8 +82,8 @@ class EvaluerRevurderForskuddBatchConfiguration(
      *
      * I prod skal skipLimit være lik chunkSize slik at vi får en feilmelding relativt raskt og kan undersøke nærmere.
      */
-    private fun finnSkipLimit(): Int {
+    private fun finnSkipLimit(): Long {
         val skipLimit = if (clusterName == "dev-gcp") CHUNK_SIZE * 100 else CHUNK_SIZE
-        return skipLimit
+        return skipLimit.toLong()
     }
 }

@@ -2,9 +2,9 @@ package no.nav.bidrag.automatiskjobb.batch.revurderforskudd.opprett
 
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
-import org.springframework.batch.item.ItemReader
-import org.springframework.batch.item.data.RepositoryItemReader
-import org.springframework.batch.item.data.builder.RepositoryItemReaderBuilder
+import org.springframework.batch.infrastructure.item.ItemReader
+import org.springframework.batch.infrastructure.item.data.RepositoryItemReader
+import org.springframework.batch.infrastructure.item.data.builder.RepositoryItemReaderBuilder
 import org.springframework.data.domain.Sort
 
 /**

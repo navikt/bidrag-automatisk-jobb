@@ -5,9 +5,9 @@ import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
 import no.nav.bidrag.automatiskjobb.persistence.rowmapper.AlderjusteringRowMapper
 import org.springframework.batch.core.configuration.annotation.StepScope
-import org.springframework.batch.item.database.JdbcPagingItemReader
-import org.springframework.batch.item.database.Order
-import org.springframework.batch.item.database.support.SqlPagingQueryProviderFactoryBean
+import org.springframework.batch.infrastructure.item.database.JdbcPagingItemReader
+import org.springframework.batch.infrastructure.item.database.Order
+import org.springframework.batch.infrastructure.item.database.support.SqlPagingQueryProviderFactoryBean
 import org.springframework.stereotype.Component
 import javax.sql.DataSource
 
@@ -16,21 +16,21 @@ import javax.sql.DataSource
 class SlettVedtaksforslagBatchReader(
     private val dataSource: DataSource,
     barnRepository: BarnRepository,
-) : JdbcPagingItemReader<Aldersjustering>() {
-    init {
-        val sqlPagingQuaryPoviderFactoryBean =
-            SqlPagingQueryProviderFactoryBean().apply {
+) : JdbcPagingItemReader<Aldersjustering>(
+        dataSource,
+        SqlPagingQueryProviderFactoryBean()
+            .apply {
                 setDataSource(dataSource)
                 setSelectClause("SELECT *")
                 setFromClause("FROM aldersjustering")
                 setWhereClause("WHERE status = 'SLETTES'")
                 setSortKeys(mapOf("id" to Order.ASCENDING))
-            }
+            }.`object`,
+    ) {
+    init {
         try {
-            this.setQueryProvider(sqlPagingQuaryPoviderFactoryBean.`object`)
             this.pageSize = PAGE_SIZE
             this.setFetchSize(PAGE_SIZE)
-            this.setDataSource(dataSource)
             this.isSaveState = false
             this.setRowMapper(AlderjusteringRowMapper(barnRepository))
         } catch (e: Exception) {

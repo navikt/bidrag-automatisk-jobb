@@ -2,9 +2,9 @@ package no.nav.bidrag.automatiskjobb.batch.revurderforskudd.fattvedtak
 
 import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
 import no.nav.bidrag.automatiskjobb.service.batch.revurderforskudd.FattVedtakRevurderForskuddService
-import org.springframework.batch.core.StepExecution
 import org.springframework.batch.core.annotation.BeforeStep
-import org.springframework.batch.item.ItemProcessor
+import org.springframework.batch.core.step.StepExecution
+import org.springframework.batch.infrastructure.item.ItemProcessor
 import org.springframework.stereotype.Component
 
 @Component

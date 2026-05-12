@@ -6,7 +6,7 @@ AZURE_APP_CLIENT_SECRET: asdasdsad214123sadas
 NAIS_APP_NAME: bidrag-automatisk-jobb
 KAFKA_PERSON_HENDELSE_TOPIC: bidrag.personhendelse.v1-test
 KAFKA_VEDTAK_TOPIC: bidrag.vedtak-test
-KAFKA_BROKERS: localhost:9092
+KAFKA_BROKERS: localhost:9093
 UNLEASH_SERVER_API_ENV: development
 UNLEASH_SERVER_API_PROJECTS: default
 UNLEASH_SERVER_API_TOKEN: some_token
@@ -15,6 +15,19 @@ UNLEASH_FETCH_SYNC: false
 UNLEASH_SERVER_API_URL: http://localhost:${mock-oauth2-server.port}/unleash
 BIDRAG_BOT_SLACK_OAUTH_TOKEN: ikkeGyldigToken
 SLACK_CHANNEL_ID: IKKE_GYLDIG_CHANNEL_ID
+BIDRAG_VEDTAK_URL: vedtak
+BIDRAG_BELOPSHISTORIKK_URL: belopshistorikk
+BIDRAG_RESKONTRO_URL: reskontro
+BIDRAG_SAK_URL: sak
+BIDRAG_GRUNNLAG_URL: grunnlag
+BIDRAG_DOKUMENT_FORSENDELSE_URL: dokument-forsendelse
+BIDRAG_SAMHANDLER_URL: samhandler
+BIDRAG_BEHANDLING_URL: behandling
+BIDRAG_ORGANISASJON_URL: organisasjon
+BIDRAG_SJABLON_URL: sjablon
+OPPGAVE_URL: oppgave
+KODEVERK_URL: kodeverk
+KAFKA_BAKS_OPPHOER_BARNETRYGD_TOPIC: bidrag.baks.opphoer.barnetrygd-test
 
 no.nav.security.jwt:
   client:

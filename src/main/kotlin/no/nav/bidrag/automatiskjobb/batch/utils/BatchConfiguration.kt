@@ -1,11 +1,14 @@
 package no.nav.bidrag.automatiskjobb.batch.utils
 
-import org.springframework.batch.core.launch.JobLauncher
-import org.springframework.batch.core.launch.support.TaskExecutorJobLauncher
+import org.springframework.batch.core.configuration.JobRegistry
+import org.springframework.batch.core.configuration.support.MapJobRegistry
+import org.springframework.batch.core.launch.JobOperator
+import org.springframework.batch.core.launch.support.TaskExecutorJobOperator
 import org.springframework.batch.core.repository.JobRepository
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
+import org.springframework.core.task.AsyncTaskExecutor
 import org.springframework.core.task.TaskExecutor
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 
@@ -18,7 +21,7 @@ class BatchConfiguration {
     }
 
     @Bean
-    fun batchTaskExecutor(): TaskExecutor =
+    fun batchTaskExecutor(): AsyncTaskExecutor =
         ThreadPoolTaskExecutor().apply {
             corePoolSize = GRID_SIZE
             maxPoolSize = 30
@@ -39,10 +42,15 @@ class BatchConfiguration {
     fun asyncJobLauncher(
         jobRepository: JobRepository,
         batchTaskExecutor: TaskExecutor,
-    ): JobLauncher =
-        TaskExecutorJobLauncher().apply {
+        jobRegistry: JobRegistry,
+    ): JobOperator =
+        TaskExecutorJobOperator().apply {
             setJobRepository(jobRepository)
             setTaskExecutor(batchTaskExecutor)
+            setJobRegistry(jobRegistry)
             afterPropertiesSet()
         }
+
+    @Bean
+    fun jobRegistry(): JobRegistry = MapJobRegistry()
 }

@@ -1,10 +1,10 @@
 package no.nav.bidrag.automatiskjobb.batch.utils.oppdaterbarn
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.springframework.batch.core.Job
-import org.springframework.batch.core.JobParametersBuilder
-import org.springframework.batch.core.launch.JobLauncher
-import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException
+import org.springframework.batch.core.job.Job
+import org.springframework.batch.core.job.parameters.JobParametersBuilder
+import org.springframework.batch.core.launch.JobExecutionAlreadyRunningException
+import org.springframework.batch.core.launch.JobOperator
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Component
 import java.util.UUID
@@ -13,7 +13,7 @@ private val LOGGER = KotlinLogging.logger { }
 
 @Component
 class OppdaterBarnBatch(
-    @param:Qualifier("asyncJobLauncher") private val jobLauncher: JobLauncher,
+    @param:Qualifier("asyncJobLauncher") private val jobOperator: JobOperator,
     private val oppdaterBarnJob: Job,
 ) {
     fun startOppdaterBarnBatch(
@@ -21,7 +21,7 @@ class OppdaterBarnBatch(
         simuler: Boolean,
     ) {
         try {
-            jobLauncher.run(
+            jobOperator.start(
                 oppdaterBarnJob,
                 JobParametersBuilder()
                     .addString("simuler", simuler.toString())

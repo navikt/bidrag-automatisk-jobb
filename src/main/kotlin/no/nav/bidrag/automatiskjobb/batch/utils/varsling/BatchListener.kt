@@ -4,8 +4,8 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.commons.service.slack.SlackMelding
 import no.nav.bidrag.commons.service.slack.SlackService
 import org.springframework.batch.core.BatchStatus
-import org.springframework.batch.core.JobExecution
-import org.springframework.batch.core.JobExecutionListener
+import org.springframework.batch.core.job.JobExecution
+import org.springframework.batch.core.listener.JobExecutionListener
 import org.springframework.stereotype.Component
 import java.util.concurrent.ConcurrentHashMap
 

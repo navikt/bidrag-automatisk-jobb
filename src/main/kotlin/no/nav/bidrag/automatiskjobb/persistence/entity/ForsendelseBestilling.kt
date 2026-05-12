@@ -23,6 +23,7 @@ data class ForsendelseBestilling(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     override val id: Int? = null,
+    @Enumerated(EnumType.STRING)
     val forsendelsestype: Forsendelsestype,
     var forsendelseId: Long? = null,
     var journalpostId: Long? = null,

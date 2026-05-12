@@ -1,10 +1,10 @@
 package no.nav.bidrag.automatiskjobb.batch.revurderforskudd.evaluer
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.springframework.batch.core.Job
-import org.springframework.batch.core.JobParametersBuilder
-import org.springframework.batch.core.launch.JobLauncher
-import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException
+import org.springframework.batch.core.job.Job
+import org.springframework.batch.core.job.parameters.JobParametersBuilder
+import org.springframework.batch.core.launch.JobExecutionAlreadyRunningException
+import org.springframework.batch.core.launch.JobOperator
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Component
 import java.time.YearMonth
@@ -14,7 +14,7 @@ private val LOGGER = KotlinLogging.logger { }
 
 @Component
 class EvaluerRevurderForskuddBatch(
-    @param:Qualifier("asyncJobLauncher") private val jobLauncher: JobLauncher,
+    @param:Qualifier("asyncJobLauncher") private val jobLauncher: JobOperator,
     private val evaluerRevurderForskuddJob: Job,
 ) {
     fun start(
@@ -24,7 +24,7 @@ class EvaluerRevurderForskuddBatch(
         antallMånederForBeregning: Long = 3,
     ) {
         try {
-            jobLauncher.run(
+            jobLauncher.start(
                 evaluerRevurderForskuddJob,
                 JobParametersBuilder()
                     .addString("simuler", simuler.toString())

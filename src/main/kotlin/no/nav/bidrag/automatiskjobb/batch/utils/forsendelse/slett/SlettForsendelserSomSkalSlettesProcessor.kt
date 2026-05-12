@@ -5,7 +5,7 @@ import no.nav.bidrag.automatiskjobb.persistence.entity.ForsendelseBestilling
 import no.nav.bidrag.automatiskjobb.persistence.repository.ForsendelseBestillingRepository
 import no.nav.bidrag.automatiskjobb.service.ForsendelseBestillingService
 import org.springframework.batch.core.configuration.annotation.StepScope
-import org.springframework.batch.item.ItemProcessor
+import org.springframework.batch.infrastructure.item.ItemProcessor
 import org.springframework.stereotype.Component
 
 private val log = KotlinLogging.logger {}

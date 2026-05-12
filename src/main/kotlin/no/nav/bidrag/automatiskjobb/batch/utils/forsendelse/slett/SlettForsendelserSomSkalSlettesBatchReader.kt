@@ -5,9 +5,9 @@ import no.nav.bidrag.automatiskjobb.persistence.entity.ForsendelseBestilling
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
 import no.nav.bidrag.automatiskjobb.persistence.rowmapper.ForsendelseBestillingRowMapper
 import org.springframework.batch.core.configuration.annotation.StepScope
-import org.springframework.batch.item.database.JdbcPagingItemReader
-import org.springframework.batch.item.database.Order
-import org.springframework.batch.item.database.support.SqlPagingQueryProviderFactoryBean
+import org.springframework.batch.infrastructure.item.database.JdbcPagingItemReader
+import org.springframework.batch.infrastructure.item.database.Order
+import org.springframework.batch.infrastructure.item.database.support.SqlPagingQueryProviderFactoryBean
 import org.springframework.stereotype.Component
 import javax.sql.DataSource
 
@@ -16,10 +16,10 @@ import javax.sql.DataSource
 class SlettForsendelserSomSkalSlettesBatchReader(
     private val dataSource: DataSource,
     barnRepository: BarnRepository,
-) : JdbcPagingItemReader<ForsendelseBestilling>() {
-    init {
-        val sqlPagingQuaryPoviderFactoryBean =
-            SqlPagingQueryProviderFactoryBean().apply {
+) : JdbcPagingItemReader<ForsendelseBestilling>(
+        dataSource,
+        SqlPagingQueryProviderFactoryBean()
+            .apply {
                 setDataSource(dataSource)
                 setSelectClause("SELECT *")
                 setFromClause("FROM forsendelse_bestilling")
@@ -31,12 +31,12 @@ class SlettForsendelserSomSkalSlettesBatchReader(
                         "AND slettet_tidspunkt IS NULL ",
                 )
                 setSortKeys(mapOf("id" to Order.ASCENDING))
-            }
+            }.`object`,
+    ) {
+    init {
         try {
-            this.setQueryProvider(sqlPagingQuaryPoviderFactoryBean.`object`)
             this.pageSize = PAGE_SIZE
             this.setFetchSize(PAGE_SIZE)
-            this.setDataSource(dataSource)
             this.setRowMapper(ForsendelseBestillingRowMapper(barnRepository))
             this.isSaveState = false
         } catch (e: Exception) {
