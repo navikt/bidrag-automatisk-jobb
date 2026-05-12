@@ -57,6 +57,7 @@ class OppgaveService(
                 }
             } catch (e: Exception) {
                 LOGGER.error(e) { "Det skjedde en feil ved sjekk om BM fortsatt skal motta forskudd for barn fra hendelse $hendelse" }
+                throw e
             }
         }
     }
@@ -77,6 +78,7 @@ class OppgaveService(
                 }
         } catch (e: Exception) {
             LOGGER.error(e) { "Det skjedde en feil ved sjekk for om det skal opprettes revurder forskudd oppgave" }
+            throw e
         }
     }
 
