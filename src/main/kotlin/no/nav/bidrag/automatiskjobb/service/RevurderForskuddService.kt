@@ -44,9 +44,11 @@ import no.nav.bidrag.transport.behandling.vedtak.request.HentVedtakForStønadReq
 import no.nav.bidrag.transport.behandling.vedtak.response.VedtakDto
 import no.nav.bidrag.transport.behandling.vedtak.response.erDelvedtak
 import no.nav.bidrag.transport.behandling.vedtak.response.erOrkestrertVedtak
+import no.nav.bidrag.transport.behandling.vedtak.response.finnSøknadGrunnlag
 import no.nav.bidrag.transport.behandling.vedtak.response.referertVedtaksid
 import no.nav.bidrag.transport.behandling.vedtak.saksnummer
 import no.nav.bidrag.transport.felles.ifTrue
+import no.nav.bidrag.transport.felles.toYearMonth
 import org.springframework.context.annotation.Import
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -245,6 +247,10 @@ class RevurderForskuddService(
                 ?: return null
         val (beregnetForskudd, grunnlagsliste) = beregnForskudd(vedtakFattet.vedtak, vedtakForskudd.vedtak, gjelderBarn)
 
+        if (beregnetForskudd == null) {
+            return null
+        }
+
         val beregnetResultat = beregnetForskudd.resultat
         val beløpLøpende = sistePeriode.beløp!!
         val erForskuddRedusert = beløpLøpende > beregnetResultat.belop
@@ -353,12 +359,28 @@ class RevurderForskuddService(
         return vedtak
     }
 
-    private fun beregnForskudd(
+    fun beregnForskudd(
         vedtakBidrag: VedtakDto,
         vedtakLøpendeForskudd: VedtakDto,
         gjelderBarn: Personident,
-    ): Pair<ResultatPeriode, List<GrunnlagDto>> {
+    ): Pair<ResultatPeriode?, List<GrunnlagDto>> {
         val grunnlag = GrunnlagMapper.byggGrunnlagForBeregning(vedtakBidrag, vedtakLøpendeForskudd, gjelderBarn)
+        val søknad = grunnlag.finnSøknadGrunnlag()
+        if (søknad != null && søknad.søktFraDato.toYearMonth() > YearMonth.now()) {
+            // Forskuddsvedtak har virkning fra fram i tid.
+            // Da er det ikke nødvendig å revurdere forskudd da forskudd fra vedtaket ikke løper enda
+            LOGGER.info {
+                """Forskudd ble ikke beregnet basert på siste forskuddsvedtak ${vedtakLøpendeForskudd.vedtaksid} for barn ${gjelderBarn.verdi} 
+                    da vedtaket har søkt fra dato fra frem i tid (${søknad.søktFraDato}). 
+                   Det er ikke nødvendig å revurdere forskudd fordi forskudd fra vedtaket ikke løper enda.
+                """.trimMargin()
+                    .trimIndent()
+                    .trimIndent()
+                    .replace("\t", "")
+                    .replace("  ", "")
+            }
+            return null to emptyList()
+        }
         val resultat =
             beregning.beregn(
                 BeregnGrunnlag(
