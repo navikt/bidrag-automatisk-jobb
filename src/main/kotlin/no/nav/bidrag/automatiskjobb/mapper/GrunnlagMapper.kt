@@ -104,7 +104,7 @@ object GrunnlagMapper {
         engangsbeløpSærbidrag: EngangsbeløpDto,
     ): List<GrunnlagDto> {
         val bidragsmottaker = vedtak.grunnlagListe.bidragsmottaker!!
-        val søknadsbarn = vedtak.grunnlagListe.hentPersonMedIdent(gjelderBarn.verdi)!!
+        val søknadsbarn = vedtak.grunnlagListe.hentPersonMedIdent(gjelderBarn.verdi) ?: return emptyList()
         val inntekter =
             vedtak.grunnlagListe.hentInntekter(
                 engangsbeløpSærbidrag.grunnlagReferanseListe,
