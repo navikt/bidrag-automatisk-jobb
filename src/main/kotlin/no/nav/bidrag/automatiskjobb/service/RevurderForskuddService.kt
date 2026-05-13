@@ -248,6 +248,7 @@ class RevurderForskuddService(
         val (beregnetForskudd, grunnlagsliste) = beregnForskudd(vedtakFattet.vedtak, vedtakForskudd.vedtak, gjelderBarn)
 
         if (beregnetForskudd == null) {
+            // Ingen beregning er utført pga kritier for å utføre beregning ikke er oppfylt fra siste vedtak
             return null
         }
 
@@ -359,7 +360,7 @@ class RevurderForskuddService(
         return vedtak
     }
 
-    fun beregnForskudd(
+    private fun beregnForskudd(
         vedtakBidrag: VedtakDto,
         vedtakLøpendeForskudd: VedtakDto,
         gjelderBarn: Personident,
