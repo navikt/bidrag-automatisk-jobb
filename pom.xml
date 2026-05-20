@@ -28,6 +28,7 @@
         <slack-api.version>1.48.1</slack-api.version>
         <okhttp.version>5.2.1</okhttp.version>
         <unleash.version>11.2.1</unleash.version>
+        <coroutines.version>1.11.0</coroutines.version>
     </properties>
 
     <repositories>
@@ -48,12 +49,12 @@
         <dependency>
             <groupId>org.jetbrains.kotlinx</groupId>
             <artifactId>kotlinx-coroutines-core</artifactId>
-            <version>1.10.2</version>
+            <version>${coroutines.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlinx</groupId>
             <artifactId>kotlinx-coroutines-reactor</artifactId>
-            <version>1.10.2</version>
+            <version>${coroutines.version}</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
