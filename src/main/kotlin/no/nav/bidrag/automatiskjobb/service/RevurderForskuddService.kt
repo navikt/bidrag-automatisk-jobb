@@ -24,6 +24,7 @@ import no.nav.bidrag.beregn.forskudd.BeregnForskuddApi
 import no.nav.bidrag.beregn.vedtak.Vedtaksfiltrering
 import no.nav.bidrag.domene.enums.beregning.Resultatkode.Companion.erDirekteAvslag
 import no.nav.bidrag.domene.enums.rolle.Rolletype
+import no.nav.bidrag.domene.enums.vedtak.Beslutningstype
 import no.nav.bidrag.domene.enums.vedtak.Engangsbeløptype
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.enums.vedtak.Vedtakstype
@@ -217,7 +218,8 @@ class RevurderForskuddService(
                 } else {
                     true
                 }
-            }.groupBy { it.sak }
+            }.filter { it.beslutning != Beslutningstype.AVVIST }
+            .groupBy { it.sak }
             .flatMap { (sak, stønader) ->
                 val stønad = stønader.first()
                 val sak = bidragSakConsumer.hentSak(sak.verdi)
