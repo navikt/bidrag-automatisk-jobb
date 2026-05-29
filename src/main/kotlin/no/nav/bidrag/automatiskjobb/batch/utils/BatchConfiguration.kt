@@ -1,10 +1,13 @@
 package no.nav.bidrag.automatiskjobb.batch.utils
 
 import org.springframework.batch.core.configuration.JobRegistry
+import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing
+import org.springframework.batch.core.configuration.annotation.EnableJdbcJobRepository
 import org.springframework.batch.core.configuration.support.MapJobRegistry
 import org.springframework.batch.core.launch.JobOperator
 import org.springframework.batch.core.launch.support.TaskExecutorJobOperator
 import org.springframework.batch.core.repository.JobRepository
+import org.springframework.batch.core.repository.support.SimpleJobRepository
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
@@ -13,6 +16,8 @@ import org.springframework.core.task.TaskExecutor
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 
 @Configuration
+@EnableBatchProcessing
+@EnableJdbcJobRepository
 class BatchConfiguration {
     companion object {
         const val CHUNK_SIZE = 100
