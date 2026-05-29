@@ -24,7 +24,7 @@
         <mockk.version>1.14.6</mockk.version>
         <ktlint.version>1.8.0</ktlint.version>
         <shedlock.version>7.5.0</shedlock.version>
-        <bidrag-beregn-felles.version>2026.05.13.091343</bidrag-beregn-felles.version>
+        <bidrag-beregn-felles.version>2026.05.29.122025</bidrag-beregn-felles.version>
         <slack-api.version>1.48.1</slack-api.version>
         <okhttp.version>5.2.1</okhttp.version>
         <unleash.version>11.2.1</unleash.version>

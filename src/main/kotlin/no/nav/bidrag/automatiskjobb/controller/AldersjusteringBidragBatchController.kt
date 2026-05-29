@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.transaction.Transactional
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.beregn.BeregnAldersjusteringerBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.fattvedtak.FattVedtakOmAldersjusteringerBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.oppgave.opprettoppgave.OppgaveAldersjusteringBidragBatch
@@ -49,6 +50,7 @@ class AldersjusteringBidragBatchController(
             ),
         ],
     )
+    @Transactional
     fun startSlettVedtaksforslagBatch(): ResponseEntity<Any> {
         slettVedtaksforslagBatch.startSlettVedtaksforslagBatch()
         return ResponseEntity.ok().build()
@@ -69,6 +71,7 @@ class AldersjusteringBidragBatchController(
             ),
         ],
     )
+    @Transactional
     fun startSlettAlleedtaksforslagBatch(): ResponseEntity<Any> {
         slettVedtaksforslagAlleBatch.startAlleSlettVedtaksforslagBatch()
         return ResponseEntity.ok().build()
@@ -107,6 +110,7 @@ class AldersjusteringBidragBatchController(
             ),
         ],
     )
+    @Transactional
     fun startOpprettAldersjusteringBidragBatch(
         @RequestParam(required = true, name = "aar") år: Long,
         @RequestParam(required = false) aldersjusteringsdato: LocalDate?,
@@ -123,7 +127,7 @@ class AldersjusteringBidragBatchController(
         summary = "Start kjøring av batch for å fatte vedtak om aldersjusteringer.",
         description =
             "Operasjon for å starte kjøring av batch som fatter vedtak om aldersjusteringer. " +
-                "Fatter vedtak for alle aldersjusteringer som det er opprettet vedtakforslag på. ",
+                "Fatter vedtak for alle aldersjusteringer som det er opprettet vedtaksforslag på. ",
         security = [SecurityRequirement(name = "bearer-key")],
     )
     @ApiResponses(
@@ -153,6 +157,7 @@ class AldersjusteringBidragBatchController(
             ),
         ],
     )
+    @Transactional
     fun startFattVedtakAldersjusteringBidragBatch(
         @RequestParam barn: String?,
         @RequestParam simuler: Boolean = true,
@@ -197,6 +202,7 @@ class AldersjusteringBidragBatchController(
             ),
         ],
     )
+    @Transactional
     fun startBeregnAldersjusteringBidragBatch(
         @RequestParam simuler: Boolean = true,
         @RequestParam barn: String? = null,
@@ -233,6 +239,7 @@ class AldersjusteringBidragBatchController(
             ),
         ],
     )
+    @Transactional
     fun startOppgaveAldersjusteringBidragBatch(
         @RequestParam barn: String?,
     ): ResponseEntity<Any> {
@@ -274,6 +281,7 @@ class AldersjusteringBidragBatchController(
             ),
         ],
     )
+    @Transactional
     fun startSlettOppgaveAldersjusteringBidragBatch(
         @RequestParam barn: String?,
         @RequestParam batchId: String,
