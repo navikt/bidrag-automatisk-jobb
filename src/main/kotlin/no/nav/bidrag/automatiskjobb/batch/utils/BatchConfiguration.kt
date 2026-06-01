@@ -12,7 +12,6 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 import org.springframework.core.task.AsyncTaskExecutor
-import org.springframework.core.task.TaskExecutor
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 
 @Configuration
@@ -33,7 +32,7 @@ class BatchConfiguration {
             queueCapacity = 200
             setThreadNamePrefix("batch-")
             setWaitForTasksToCompleteOnShutdown(true)
-            setAwaitTerminationSeconds(60)
+            setAwaitTerminationSeconds(120)
         }
 
     /**
@@ -46,7 +45,7 @@ class BatchConfiguration {
     @Primary
     fun asyncJobLauncher(
         jobRepository: JobRepository,
-        batchTaskExecutor: TaskExecutor,
+        batchTaskExecutor: AsyncTaskExecutor,
         jobRegistry: JobRegistry,
     ): JobOperator =
         TaskExecutorJobOperator().apply {
