@@ -90,12 +90,12 @@ interface AldersjusteringRepository : JpaRepository<Aldersjustering, Int> {
     @Query(
         "SELECT a FROM aldersjustering a left join fetch a.barn " +
             "WHERE a.behandlingstype = :behandlingstype " +
-            "AND a.status = :status " +
+            "AND a.status in :status " +
             "AND a.oppgave IS NULL",
     )
     fun finnAlleForBehandlingstypeOgStatus(
         @Param("behandlingstype") behandlingstyper: Behandlingstype,
-        @Param("status") status: Status,
+        @Param("status") status: List<Status>,
         pageable: Pageable = Pageable.ofSize(100),
     ): Page<Aldersjustering>
 }
