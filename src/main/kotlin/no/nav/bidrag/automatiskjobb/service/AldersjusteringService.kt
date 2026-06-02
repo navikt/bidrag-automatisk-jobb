@@ -1,9 +1,15 @@
 package no.nav.bidrag.automatiskjobb.service
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
 import no.nav.bidrag.automatiskjobb.consumer.BidragPersonConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer
+import no.nav.bidrag.automatiskjobb.controller.AldersjusteringerHvorBeløpBleRedusertRespons
 import no.nav.bidrag.automatiskjobb.mapper.VedtakMapper
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
@@ -18,6 +24,8 @@ import no.nav.bidrag.automatiskjobb.utils.ugyldigForespørsel
 import no.nav.bidrag.beregn.barnebidrag.service.orkestrering.AldersjusteresManueltException
 import no.nav.bidrag.beregn.barnebidrag.service.orkestrering.AldersjusteringOrchestrator
 import no.nav.bidrag.beregn.barnebidrag.service.orkestrering.SkalIkkeAldersjusteresException
+import no.nav.bidrag.commons.util.RequestContextAsyncContext
+import no.nav.bidrag.commons.util.SecurityCoroutineContext
 import no.nav.bidrag.domene.enums.rolle.Rolletype
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.ident.Personident
@@ -416,6 +424,46 @@ class AldersjusteringService(
 
         LOGGER.info { "Antall barn ${result.getLengths()}" }
         return result
+    }
+
+    suspend fun hentAlleAldersjusteringerHvorBeløpErRedusert(): AldersjusteringerHvorBeløpBleRedusertRespons {
+        val aldersjusteringer =
+            withContext(Dispatchers.IO) {
+                alderjusteringRepository
+                    .finnAlleForBehandlingstypeOgStatus(
+                        Behandlingstype.FATTET_FORSLAG,
+                        Status.BEHANDLET,
+                        Pageable.unpaged(),
+                    )
+            }.toList()
+
+        return coroutineScope {
+            val deferredResults =
+                aldersjusteringer
+                    .map { a ->
+                        async(Dispatchers.IO + SecurityCoroutineContext() + RequestContextAsyncContext()) {
+                            try {
+                                val vedtak = vedtakConsumer.hentVedtak(a.vedtak!!)
+                                val stønadsendring = vedtak!!.stønadsendringListe.find { it.kravhaver.verdi == a.barn.kravhaver }
+                                val sisteBeløp = stønadsendring!!.periodeListe.maxBy { it.periode.fom }.beløp
+                                if (a.lopendeBelop!! > sisteBeløp) {
+                                    mapOf(
+                                        "saksnummer" to a.barn.saksnummer,
+                                        "løpendeBeløp" to a.lopendeBelop,
+                                        "aldersjustertBeløp" to sisteBeløp,
+                                    )
+                                } else {
+                                    null
+                                }
+                            } catch (e: Exception) {
+                                LOGGER.error(e) { "Feil ved henting av aldersjusterte beløp for aldersjustering ${a.id}" }
+                                null
+                            }
+                        }
+                    }
+            val resultat = deferredResults.awaitAll().filterNotNull()
+            AldersjusteringerHvorBeløpBleRedusertRespons(resultat.size, resultat)
+        }
     }
 
     fun hentAntallBarnSomSkalAldersjusteresForÅr(år: Int): Map<Int, Int> =
