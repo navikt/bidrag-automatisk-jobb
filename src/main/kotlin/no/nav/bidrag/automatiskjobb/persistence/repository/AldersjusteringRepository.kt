@@ -85,4 +85,17 @@ interface AldersjusteringRepository : JpaRepository<Aldersjustering, Int> {
     fun finnBarnAldersjustert(
         @Param("barnid") barn: Int,
     ): Aldersjustering?
+
+    @Suppress("unused")
+    @Query(
+        "SELECT a FROM aldersjustering a left join fetch a.barn " +
+            "WHERE a.behandlingstype = :behandlingstype " +
+            "AND a.status = :status " +
+            "AND a.oppgave IS NULL",
+    )
+    fun finnAlleForBehandlingstypeOgStatus(
+        @Param("behandlingstype") behandlingstyper: Behandlingstype,
+        @Param("status") status: Status,
+        pageable: Pageable = Pageable.ofSize(100),
+    ): Page<Aldersjustering>
 }
