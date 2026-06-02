@@ -199,7 +199,7 @@ class AldersjusteringService(
     }
 
     fun resetAldersjustering(aldersjustering: Aldersjustering) {
-        // Sett status til ubehandlet. Ved neste kjøring så vil den slette eksisterende forslag og fatte på nytt
+        // Sett status til ubehandlet. Ved neste kjøring så vil den slette eksisterende forslag og opprette vedtaksforslag på nytt
         aldersjustering.status = Status.UBEHANDLET
         alderjusteringRepository.save(aldersjustering)
     }
