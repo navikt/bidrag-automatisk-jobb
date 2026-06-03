@@ -45,6 +45,7 @@ class BeregnAldersjusteringerBidragBatchReader(
                 }
                 val statusString = statusList.joinToString("', '", "'", "'")
                 whereClause.append("AND status IN ($statusString)")
+                whereClause.append("AND fattet_tidspunkt is null")
                 setWhereClause(whereClause.toString())
                 setSortKeys(mapOf("id" to Order.ASCENDING))
             }.`object`,
