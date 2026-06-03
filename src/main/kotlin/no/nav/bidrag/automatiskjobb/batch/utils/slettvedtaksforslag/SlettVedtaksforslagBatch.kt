@@ -16,11 +16,13 @@ class SlettVedtaksforslagBatch(
     @param:Qualifier("asyncJobLauncher") private val jobOperator: JobOperator,
     private val slettVedtaksforslagJob: Job,
 ) {
-    fun startSlettVedtaksforslagBatch() {
+    fun startSlettVedtaksforslagBatch(inkluderBehandlet: Boolean = false, barn: String? = null) {
         try {
             jobOperator.start(
                 slettVedtaksforslagJob,
                 JobParametersBuilder()
+                    .addString("inkluderBehandlet", inkluderBehandlet.toString())
+                    .addString("barn", barn ?: "")
                     .addString("runId", UUID.randomUUID().toString())
                     .toJobParameters(),
             )

@@ -12,7 +12,6 @@ import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.fattvedtak.Fatt
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.oppgave.opprettoppgave.OppgaveAldersjusteringBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.oppgave.slettoppgave.SlettOppgaveAldersjusteringBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.opprett.OpprettAldersjusteringerBidragBatch
-import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.reset.ResetAldersjusteringerBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.utils.slettallevedtaksforslag.SlettAlleVedtaksforslagBatch
 import no.nav.bidrag.automatiskjobb.batch.utils.slettvedtaksforslag.SlettVedtaksforslagBatch
 import no.nav.security.token.support.core.api.Protected
@@ -33,7 +32,6 @@ class AldersjusteringBidragBatchController(
     private val oppgaveAldersjusteringBidragBatch: OppgaveAldersjusteringBidragBatch,
     private val slettOppgaveAldersjusteringBidragBatch: SlettOppgaveAldersjusteringBidragBatch,
     private val beregnAldersjusteringerBidragBatch: BeregnAldersjusteringerBidragBatch,
-    private val resetAldersjusteringerBidragBatch: ResetAldersjusteringerBidragBatch,
 ) {
     @PostMapping("/aldersjustering/batch/slettvedtaksforslag")
     @Operation(
@@ -51,8 +49,31 @@ class AldersjusteringBidragBatchController(
             ),
         ],
     )
-    fun startSlettVedtaksforslagBatch(): ResponseEntity<Any> {
-        slettVedtaksforslagBatch.startSlettVedtaksforslagBatch()
+    @Parameters(
+        value = [
+            Parameter(
+                name = "inkluderBehandlet",
+                example = "false",
+                description =
+                    "Beregner behandlet aldersjusteringer på nytt. " +
+                        "Da vil eksisterende vedtaksforslag bli slettet og det vil opprettet nytt vedtaksforslag. " +
+                        "Dette vil ikke gjøre noe endringer på aldersjusteringer hvor vedtak er fattet",
+                required = false,
+            ),
+            Parameter(
+                name = "barn",
+                example = "1,2,3",
+                description =
+                    "Liste over barn som det skal slettes vedtaksforslag for. Om ingen er sendt kjøres alle. Maks lengde på input er 250 tegn!",
+                required = false,
+            ),
+        ],
+    )
+    fun startSlettVedtaksforslagBatch(
+        @RequestParam inkluderBehandlet: Boolean = true,
+        @RequestParam barn: String? = null,
+    ): ResponseEntity<Any> {
+        slettVedtaksforslagBatch.startSlettVedtaksforslagBatch(inkluderBehandlet, barn)
         return ResponseEntity.ok().build()
     }
 
@@ -185,6 +206,15 @@ class AldersjusteringBidragBatchController(
     @Parameters(
         value = [
             Parameter(
+                name = "inkluderBehandlet",
+                example = "false",
+                description =
+                    "Beregner behandlet aldersjusteringer på nytt. " +
+                        "Da vil eksisterende vedtaksforslag bli slettet og det vil opprettet nytt vedtaksforslag. " +
+                        "Dette vil ikke gjøre noe endringer på aldersjusteringer hvor vedtak er fattet",
+                required = false,
+            ),
+            Parameter(
                 name = "simuler",
                 example = "true",
                 description = "Simuleringsmodus for aldersjustering. Default er true.",
@@ -200,49 +230,15 @@ class AldersjusteringBidragBatchController(
         ],
     )
     fun startBeregnAldersjusteringBidragBatch(
+        @RequestParam inkluderBehandlet: Boolean = true,
         @RequestParam simuler: Boolean = true,
         @RequestParam barn: String? = null,
     ): ResponseEntity<Any> {
         beregnAldersjusteringerBidragBatch.startBeregnAldersjusteringBidragBatch(
             simuler,
+            inkluderBehandlet,
             barn,
         )
-        return ResponseEntity.ok().build()
-    }
-
-    @PostMapping("/aldersjustering/batch/bidrag/reset")
-    @Operation(
-        summary = "Reset aldersjustering for bidrag slik at beregning kan kjøres på nytt.",
-        description =
-            "Operasjon for å resette kjøring av batch som beregner aldersjusteringer hvor vedtaksforslag ble opprettet. " +
-                "Status på aldersjusteringene settes til UBEHANDLET slik at ved neste kjøring av beregn vil " +
-                "erstatte forrige vedtaksforslag. " +
-                "Batchen gjør ingen endring på aldersjustering hvor vedtak er fattet",
-        security = [SecurityRequirement(name = "bearer-key")],
-    )
-    @ApiResponses(
-        value = [
-            ApiResponse(
-                responseCode = "200",
-                description = "Batch for resetting av aldersjusteringer ble startet.",
-            ),
-        ],
-    )
-    @Parameters(
-        value = [
-            Parameter(
-                name = "barn",
-                example = "",
-                description =
-                    "Liste over barn som det skal resettes for",
-                required = false,
-            ),
-        ],
-    )
-    fun resetAldersjusteringBidragBatch(
-        @RequestParam barn: String? = null,
-    ): ResponseEntity<Any> {
-        resetAldersjusteringerBidragBatch.startResetAldersjusteringBidragBatch(barn)
         return ResponseEntity.ok().build()
     }
 
