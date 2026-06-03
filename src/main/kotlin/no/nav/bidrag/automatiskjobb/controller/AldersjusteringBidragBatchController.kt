@@ -213,6 +213,13 @@ class AldersjusteringBidragBatchController(
                 required = false,
             ),
             Parameter(
+                name = "inkluderSlettet",
+                example = "false",
+                description =
+                    "Beregner slettet aldersjusteringer på nytt.",
+                required = false,
+            ),
+            Parameter(
                 name = "simuler",
                 example = "true",
                 description = "Simuleringsmodus for aldersjustering. Default er true.",
@@ -229,12 +236,14 @@ class AldersjusteringBidragBatchController(
     )
     fun startBeregnAldersjusteringBidragBatch(
         @RequestParam inkluderBehandlet: Boolean = false,
+        @RequestParam inkluderSlettet: Boolean = false,
         @RequestParam simuler: Boolean = true,
         @RequestParam barn: String? = null,
     ): ResponseEntity<Any> {
         beregnAldersjusteringerBidragBatch.startBeregnAldersjusteringBidragBatch(
             simuler,
             inkluderBehandlet,
+            inkluderSlettet,
             barn,
         )
         return ResponseEntity.ok().build()

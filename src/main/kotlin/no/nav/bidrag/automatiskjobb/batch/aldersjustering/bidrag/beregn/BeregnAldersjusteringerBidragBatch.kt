@@ -19,6 +19,7 @@ class BeregnAldersjusteringerBidragBatch(
     fun startBeregnAldersjusteringBidragBatch(
         simuler: Boolean,
         inkluderBehandlet: Boolean,
+        inkluderSlettet: Boolean,
         barn: String?,
     ) {
         try {
@@ -27,6 +28,7 @@ class BeregnAldersjusteringerBidragBatch(
                 JobParametersBuilder()
                     .addString("barn", barn ?: "")
                     .addString("inkluderBehandlet", inkluderBehandlet.toString())
+                    .addString("inkluderSlettet", inkluderSlettet.toString())
                     .addString("simuler", simuler.toString())
                     .addString("runId", UUID.randomUUID().toString())
                     .toJobParameters(),
