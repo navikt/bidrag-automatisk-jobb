@@ -432,7 +432,7 @@ class AldersjusteringService(
                 alderjusteringRepository
                     .finnAlleForBehandlingstypeOgStatus(
                         Behandlingstype.FATTET_FORSLAG,
-                        Status.BEHANDLET,
+                        listOf(Status.BEHANDLET),
                         Pageable.unpaged(),
                     )
             }.toList()

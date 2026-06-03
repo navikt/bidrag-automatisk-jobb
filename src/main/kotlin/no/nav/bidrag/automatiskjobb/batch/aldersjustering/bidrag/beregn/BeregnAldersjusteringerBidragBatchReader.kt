@@ -18,6 +18,7 @@ class BeregnAldersjusteringerBidragBatchReader(
     barnRepository: BarnRepository,
     private val dataSource: DataSource,
     @Value("#{jobParameters['barn']}") barn: String? = "",
+    @Value("#{jobParameters['inkluderBehandlet']}") inkluderBehandlet: Boolean = false,
 ) : JdbcPagingItemReader<Aldersjustering>(
         dataSource,
         SqlPagingQueryProviderFactoryBean()
@@ -38,7 +39,13 @@ class BeregnAldersjusteringerBidragBatchReader(
                     whereClause.append("(barn_id IN (:barnIds)")
                 }
                 whereClause.append(")")
-                whereClause.append("AND status IN ('SLETTET', 'UBEHANDLET', 'FEILET', 'SIMULERT')")
+                val statusList = mutableListOf("SLETTET", "UBEHANDLET", "FEILET", "SIMULERT")
+                if (inkluderBehandlet) {
+                    statusList.add("BEHANDLET")
+                }
+                val statusString = statusList.joinToString("', '", "'", "'")
+                whereClause.append("AND status IN ($statusString)")
+                whereClause.append("AND fattet_tidspunkt is null")
                 setWhereClause(whereClause.toString())
                 setSortKeys(mapOf("id" to Order.ASCENDING))
             }.`object`,

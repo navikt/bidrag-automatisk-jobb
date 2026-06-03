@@ -49,8 +49,29 @@ class AldersjusteringBidragBatchController(
             ),
         ],
     )
-    fun startSlettVedtaksforslagBatch(): ResponseEntity<Any> {
-        slettVedtaksforslagBatch.startSlettVedtaksforslagBatch()
+    @Parameters(
+        value = [
+            Parameter(
+                name = "inkluderBehandlet",
+                example = "false",
+                description =
+                    "Sletter også behandlet aldersjusteringer som ikke er fattet",
+                required = false,
+            ),
+            Parameter(
+                name = "barn",
+                example = "1,2,3",
+                description =
+                    "Liste over barn som det skal slettes vedtaksforslag for. Om ingen er sendt kjøres alle. Maks lengde på input er 250 tegn!",
+                required = false,
+            ),
+        ],
+    )
+    fun startSlettVedtaksforslagBatch(
+        @RequestParam inkluderBehandlet: Boolean = false,
+        @RequestParam barn: String? = null,
+    ): ResponseEntity<Any> {
+        slettVedtaksforslagBatch.startSlettVedtaksforslagBatch(inkluderBehandlet, barn)
         return ResponseEntity.ok().build()
     }
 
@@ -183,6 +204,15 @@ class AldersjusteringBidragBatchController(
     @Parameters(
         value = [
             Parameter(
+                name = "inkluderBehandlet",
+                example = "false",
+                description =
+                    "Beregner behandlet aldersjusteringer på nytt. " +
+                        "Da vil eksisterende vedtaksforslag bli slettet og det vil opprettet nytt vedtaksforslag. " +
+                        "Dette vil ikke gjøre noe endringer på aldersjusteringer hvor vedtak er fattet",
+                required = false,
+            ),
+            Parameter(
                 name = "simuler",
                 example = "true",
                 description = "Simuleringsmodus for aldersjustering. Default er true.",
@@ -198,11 +228,13 @@ class AldersjusteringBidragBatchController(
         ],
     )
     fun startBeregnAldersjusteringBidragBatch(
+        @RequestParam inkluderBehandlet: Boolean = false,
         @RequestParam simuler: Boolean = true,
         @RequestParam barn: String? = null,
     ): ResponseEntity<Any> {
         beregnAldersjusteringerBidragBatch.startBeregnAldersjusteringBidragBatch(
             simuler,
+            inkluderBehandlet,
             barn,
         )
         return ResponseEntity.ok().build()
