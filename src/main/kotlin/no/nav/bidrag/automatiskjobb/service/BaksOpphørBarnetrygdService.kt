@@ -34,7 +34,7 @@ class BaksOpphørBarnetrygdService(
                 barnhendelse.årsakskode in listOf(BarnetrygdEndretType.RO, BarnetrygdEndretType.RR)
             ) {
                 // Kall bidragSakConsumer for å sjekke om hendelse.søker har rollen BM i barnets sak.
-                val søkerErbMbPISak =
+                val søkerErBmBpISak =
                     bidragSakConsumer
                         .hentSak(
                             barnMedForskudd?.saksnummer ?: barnMedBidrag!!.saksnummer,
@@ -42,7 +42,7 @@ class BaksOpphørBarnetrygdService(
                         .filter { it.type == Rolletype.BIDRAGSMOTTAKER || it.type == Rolletype.BIDRAGSPLIKTIG }
                         .any { it.fødselsnummer?.verdi == hendelse.søker }
 
-                if (søkerErbMbPISak) {
+                if (søkerErBmBpISak) {
                     secureLogger.info {
                         "Vedtak om reduksjon/opphør av barnetrygd mottatt for barn med forskudd eller bidrag: " +
                             "${barnhendelse.ident}, hendelse: $hendelse"
