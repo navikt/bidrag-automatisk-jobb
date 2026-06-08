@@ -19,14 +19,20 @@ import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
 import no.nav.bidrag.automatiskjobb.service.BaksOpphørBarnetrygdService
 import no.nav.bidrag.automatiskjobb.service.OppgaveService
 import no.nav.bidrag.automatiskjobb.service.RevurderForskuddService
+import no.nav.bidrag.automatiskjobb.testdata.opprettSakRespons
 import no.nav.bidrag.automatiskjobb.testdata.personIdentBidragsmottaker
+import no.nav.bidrag.automatiskjobb.testdata.personIdentBidragspliktig
 import no.nav.bidrag.automatiskjobb.testdata.personIdentSøknadsbarn1
+import no.nav.bidrag.automatiskjobb.testdata.personIdentSøknadsbarn2
 import no.nav.bidrag.automatiskjobb.testdata.saksnummer
+import no.nav.bidrag.domene.enums.rolle.Rolletype
 import no.nav.bidrag.domene.enums.sak.Bidragssakstatus
 import no.nav.bidrag.domene.enums.sak.Sakskategori
+import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.domene.organisasjon.Enhetsnummer
 import no.nav.bidrag.domene.sak.Saksnummer
 import no.nav.bidrag.transport.sak.BidragssakDto
+import no.nav.bidrag.transport.sak.RolleDto
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -51,14 +57,16 @@ class OppgaveRevurderForskuddOgBidragTest {
     @MockK
     lateinit var barnRepository: BarnRepository
 
-//    @MockK
+    //    @MockK
     lateinit var baksOpphørBarnetrygdService: BaksOpphørBarnetrygdService
 
     val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
     val beskrivelse =
-        "Barnetrygd er opphørt eller redusert manuelt fra og med ${LocalDate.now().withDayOfMonth(
-            1,
-        ).format(formatter)} i denne saken for " +
+        "Barnetrygd er opphørt eller redusert manuelt fra og med ${
+            LocalDate.now().withDayOfMonth(
+                1,
+            ).format(formatter)
+        } i denne saken for " +
             "barnet med fødselsnummer " +
             "$personIdentSøknadsbarn1. Vurder om bidrag eller forskudd også skal stoppes."
 
@@ -76,10 +84,9 @@ class OppgaveRevurderForskuddOgBidragTest {
             )
 
         oppgaveService = OppgaveService(oppgaveConsumer, bidragSakConsumer, revurderForskuddService)
-        baksOpphørBarnetrygdService = BaksOpphørBarnetrygdService(barnRepository, oppgaveService)
+        baksOpphørBarnetrygdService = BaksOpphørBarnetrygdService(barnRepository, oppgaveService, bidragSakConsumer)
     }
 
-    @Disabled
     @Test
     fun `skal opprette oppgave for å revurdere forskudd og bidrag etter opphør av barnetrygd`() {
         every { oppgaveConsumer.opprettOppgave(any()) } returns OppgaveDto(1)
@@ -139,12 +146,35 @@ class OppgaveRevurderForskuddOgBidragTest {
         }
     }
 
-    @Disabled
     @Test
     fun `skal opprette oppgave for å revurdere forskudd og bidrag hvis det finnes forskudd eller bidrag for barn`() {
         every { oppgaveConsumer.opprettOppgave(any()) } returns OppgaveDto(1)
         every { oppgaveConsumer.hentOppgave(any()) } returns OppgaveSokResponse()
         every { barnRepository.finnLøpendeForskuddForBarn(any(), any()) } returns emptyList()
+        every { bidragSakConsumer.hentSak(any()) } returns
+            opprettSakRespons()
+                .copy(
+                    roller =
+                        listOf(
+                            RolleDto(
+                                Personident(personIdentBidragsmottaker),
+                                type = Rolletype.BIDRAGSMOTTAKER,
+                            ),
+                            RolleDto(
+                                Personident(personIdentBidragspliktig),
+                                type = Rolletype.BIDRAGSPLIKTIG,
+                            ),
+                            RolleDto(
+                                Personident(personIdentSøknadsbarn2),
+                                type = Rolletype.BARN,
+                            ),
+                            RolleDto(
+                                Personident(personIdentSøknadsbarn1),
+                                type = Rolletype.BARN,
+                            ),
+                        ),
+                )
+
         every { barnRepository.finnLøpendeBidragForBarn(any(), any()) } returns
             listOf(
                 Barn(
@@ -209,6 +239,71 @@ class OppgaveRevurderForskuddOgBidragTest {
 
         verify(exactly = 0) {
             oppgaveConsumer.opprettOppgave(any())
+        }
+    }
+
+    @Test
+    fun `skal ikke opprette oppgave for å revurdere hvis barnetrygdhendelse gjelder en person som ikke har en rolle i barnets sak`() {
+        every { oppgaveConsumer.opprettOppgave(any()) } returns OppgaveDto(1)
+        every { oppgaveConsumer.hentOppgave(any()) } returns OppgaveSokResponse()
+        every { barnRepository.finnLøpendeForskuddForBarn(any(), any()) } returns emptyList()
+        every { bidragSakConsumer.hentSak(any()) } returns
+            opprettSakRespons()
+                .copy(
+                    roller =
+                        listOf(
+                            RolleDto(
+                                Personident(personIdentBidragspliktig),
+                                type = Rolletype.BIDRAGSPLIKTIG,
+                            ),
+                            RolleDto(
+                                Personident(personIdentSøknadsbarn2),
+                                type = Rolletype.BARN,
+                            ),
+                            RolleDto(
+                                Personident(personIdentSøknadsbarn1),
+                                type = Rolletype.BARN,
+                            ),
+                        ),
+                )
+
+        every { barnRepository.finnLøpendeBidragForBarn(any(), any()) } returns
+            listOf(
+                Barn(
+                    id = 1,
+                    kravhaver = personIdentSøknadsbarn1,
+                    saksnummer = saksnummer,
+                    forskuddFra = LocalDate.now().minusMonths(1),
+                    forskuddTil = null,
+                ),
+            )
+
+        val melding =
+            BarnetrygdBisysMelding(
+                søker = personIdentBidragsmottaker,
+                barn =
+                    listOf(
+                        BarnEndretOpplysning(
+                            ident = personIdentSøknadsbarn1,
+                            årsakskode = BarnetrygdEndretType.RO,
+                            fom = YearMonth.now(),
+                        ),
+                    ),
+            )
+
+        baksOpphørBarnetrygdService.behandleBarnetrygdHendelse(melding)
+
+        verify(exactly = 0) {
+            oppgaveConsumer.opprettOppgave(
+                withArg {
+                    it.saksreferanse shouldBe saksnummer
+                    it.tema shouldBe "BID"
+                    it.personident shouldBe personIdentBidragsmottaker
+                    it.oppgavetype shouldBe OppgaveType.GEN
+                    it.tildeltEnhetsnr shouldBe "4806"
+                    it.beskrivelse.shouldContain(beskrivelse)
+                },
+            )
         }
     }
 }

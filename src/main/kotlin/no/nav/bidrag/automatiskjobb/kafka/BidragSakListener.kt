@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component
 private val LOGGER = KotlinLogging.logger {}
 
 @Component
-class BaksOpphørBarnetrygdListener(
+class BidragSakListener(
     private val baksOpphørBarnetrygdService: BaksOpphørBarnetrygdService,
 ) {
     @KafkaListener(
