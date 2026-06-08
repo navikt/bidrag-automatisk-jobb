@@ -13,12 +13,12 @@ import org.springframework.stereotype.Component
 private val LOGGER = KotlinLogging.logger {}
 
 @Component
-class BaksOpphørBarnetrygdListener(
+class BidragSakListener(
     private val baksOpphørBarnetrygdService: BaksOpphørBarnetrygdService,
 ) {
     @KafkaListener(
         topics = ["\${KAFKA_BAKS_OPPHOER_BARNETRYGD_TOPIC}"],
-        groupId = "\${BAKS_OPPHOER_BARNETRYGD_KAFKA_GROUP_ID:bidrag-automatisk-jobb-v2}",
+        groupId = "\${BAKS_OPPHOER_BARNETRYGD_KAFKA_GROUP_ID}",
         properties = ["auto.offset.reset=earliest"],
     )
     fun behandleBarnetrygdHendelse(
