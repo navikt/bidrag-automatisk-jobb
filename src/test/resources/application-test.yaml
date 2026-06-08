@@ -28,6 +28,7 @@ BIDRAG_SJABLON_URL: sjablon
 OPPGAVE_URL: oppgave
 KODEVERK_URL: kodeverk
 KAFKA_BAKS_OPPHOER_BARNETRYGD_TOPIC: bidrag.baks.opphoer.barnetrygd-test
+BAKS_OPPHOER_BARNETRYGD_KAFKA_GROUP_ID: bidrag-automatisk-jobb-test
 
 no.nav.security.jwt:
   client:
