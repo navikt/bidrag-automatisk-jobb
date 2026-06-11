@@ -19,6 +19,8 @@ class FattVedtakOmAldersjusteringerBidragBatch(
     fun startFattVedtakOmAldersjusteringBidragBatch(
         barnId: String? = "",
         simuler: Boolean,
+        behandlingstyper: String = "MANUELL,FATTET_FORSLAG,INGEN",
+        kunRedusertBidrag: Boolean = false,
     ) {
         try {
             jobOperator.start(
@@ -26,6 +28,8 @@ class FattVedtakOmAldersjusteringerBidragBatch(
                 JobParametersBuilder()
                     .addString("simuler", simuler.toString())
                     .addString("barn", barnId ?: "")
+                    .addString("behandlingstyper", behandlingstyper)
+                    .addString("kunRedusertBidrag", kunRedusertBidrag.toString())
                     .addString("runId", UUID.randomUUID().toString())
                     .toJobParameters(),
             )

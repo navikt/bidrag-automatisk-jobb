@@ -172,15 +172,33 @@ class AldersjusteringBidragBatchController(
                         "ikke fattes vedtak men det vil opprettes forsendelse bestilling",
                 required = false,
             ),
+            Parameter(
+                name = "behandlingstyper",
+                example = "MANUELL,FATTET_FORSLAG,INGEN",
+                description =
+                    "Kommaseparert liste over behandlingstyper som skal fattes vedtak for.",
+                required = false,
+            ),
+            Parameter(
+                name = "kunRedusertBidrag",
+                example = "false",
+                description =
+                    "Når true fattes vedtak kun for aldersjusteringer der aldersjustert beløp er lavere enn løpende beløp.",
+                required = false,
+            ),
         ],
     )
     fun startFattVedtakAldersjusteringBidragBatch(
         @RequestParam barn: String?,
         @RequestParam simuler: Boolean = true,
+        @RequestParam behandlingstyper: String = "MANUELL,FATTET_FORSLAG,INGEN",
+        @RequestParam kunRedusertBidrag: Boolean = false,
     ): ResponseEntity<Any> {
         fattVedtakOmAldersjusteringerBidragBatch.startFattVedtakOmAldersjusteringBidragBatch(
             barn,
             simuler,
+            behandlingstyper,
+            kunRedusertBidrag,
         )
         return ResponseEntity.ok().build()
     }

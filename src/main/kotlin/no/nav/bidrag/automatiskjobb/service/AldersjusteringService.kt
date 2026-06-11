@@ -426,6 +426,8 @@ class AldersjusteringService(
         return result
     }
 
+    fun erBidragRedusert(aldersjustering: Aldersjustering): Boolean = hentRedusertBeløpSak(aldersjustering) != null
+
     suspend fun hentAlleAldersjusteringerHvorBeløpErRedusert(): AldersjusteringerHvorBeløpBleRedusertRespons {
         val aldersjusteringer =
             withContext(Dispatchers.IO) {
@@ -442,29 +444,34 @@ class AldersjusteringService(
                 aldersjusteringer
                     .map { a ->
                         async(Dispatchers.IO + SecurityCoroutineContext() + RequestContextAsyncContext()) {
-                            try {
-                                val vedtak = vedtakConsumer.hentVedtak(a.vedtak!!)
-                                val stønadsendring = vedtak!!.stønadsendringListe.find { it.kravhaver.verdi == a.barn.kravhaver }
-                                val sisteBeløp = stønadsendring!!.periodeListe.maxBy { it.periode.fom }.beløp
-                                if (a.lopendeBelop!! > sisteBeløp) {
-                                    mapOf(
-                                        "saksnummer" to a.barn.saksnummer,
-                                        "løpendeBeløp" to a.lopendeBelop,
-                                        "aldersjustertBeløp" to sisteBeløp,
-                                    )
-                                } else {
-                                    null
-                                }
-                            } catch (e: Exception) {
-                                LOGGER.error(e) { "Feil ved henting av aldersjusterte beløp for aldersjustering ${a.id}" }
-                                null
-                            }
+                            hentRedusertBeløpSak(a)
                         }
                     }
             val resultat = deferredResults.awaitAll().filterNotNull()
             AldersjusteringerHvorBeløpBleRedusertRespons(resultat.size, resultat)
         }
     }
+
+    private fun hentRedusertBeløpSak(aldersjustering: Aldersjustering): Map<String, Any?>? =
+        try {
+            val vedtak = vedtakConsumer.hentVedtak(aldersjustering.vedtak ?: return null) ?: return null
+            val stønadsendring = vedtak.stønadsendringListe.find { it.kravhaver.verdi == aldersjustering.barn.kravhaver } ?: return null
+            val sisteBeløp = stønadsendring.periodeListe.maxByOrNull { it.periode.fom }?.beløp ?: return null
+            val løpendeBeløp = aldersjustering.lopendeBelop ?: return null
+
+            if (løpendeBeløp > sisteBeløp) {
+                mapOf(
+                    "saksnummer" to aldersjustering.barn.saksnummer,
+                    "løpendeBeløp" to løpendeBeløp,
+                    "aldersjustertBeløp" to sisteBeløp,
+                )
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            LOGGER.error(e) { "Feil ved henting av aldersjusterte beløp for aldersjustering ${aldersjustering.id}" }
+            null
+        }
 
     fun hentAntallBarnSomSkalAldersjusteresForÅr(år: Int): Map<Int, Int> =
         barnRepository
