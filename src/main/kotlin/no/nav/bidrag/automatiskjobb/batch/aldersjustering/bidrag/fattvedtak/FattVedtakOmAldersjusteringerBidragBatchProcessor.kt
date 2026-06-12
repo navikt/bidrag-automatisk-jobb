@@ -17,15 +17,21 @@ class FattVedtakOmAldersjusteringerBidragBatchProcessor(
     private val aldersjusteringService: AldersjusteringService,
 ) : ItemProcessor<Aldersjustering, Unit> {
     private var simuler: Boolean = true
+    private var kunRedusertBidrag: Boolean = false
 
     @BeforeStep
     fun beforeStep(stepExecution: StepExecution) {
         simuler = stepExecution.jobParameters.getString("simuler").toBoolean()
+        kunRedusertBidrag = stepExecution.jobParameters.getString("kunRedusertBidrag").toBoolean()
     }
 
-    override fun process(aldersjustering: Aldersjustering) =
+    override fun process(aldersjustering: Aldersjustering): Unit? =
         try {
-            aldersjusteringService.fattVedtakOmAldersjustering(aldersjustering, simuler)
+            if (kunRedusertBidrag && !aldersjusteringService.erBidragRedusert(aldersjustering)) {
+                null
+            } else {
+                aldersjusteringService.fattVedtakOmAldersjustering(aldersjustering, simuler)
+            }
         } catch (e: Exception) {
             log.error(e) { "Det skjedde en feil ved fatting av vedtak for aldersjustering ${aldersjustering.id}" }
             null
