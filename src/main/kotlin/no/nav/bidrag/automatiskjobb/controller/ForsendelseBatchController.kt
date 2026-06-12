@@ -1,6 +1,7 @@
 package no.nav.bidrag.automatiskjobb.controller
 
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
@@ -36,6 +37,9 @@ class ForsendelseBatchController(
                 responseCode = "200",
                 description = "Batch for sletting av forsendelser ble startet",
             ),
+            ApiResponse(responseCode = "401", description = "Ikke autentisert."),
+            ApiResponse(responseCode = "403", description = "Ikke autorisert."),
+            ApiResponse(responseCode = "500", description = "Intern serverfeil."),
         ],
     )
     fun starSlettForsendelserSomSkalSlettesBatch(): ResponseEntity<Any> {
@@ -55,10 +59,17 @@ class ForsendelseBatchController(
                 responseCode = "200",
                 description = "Batch for oppretting av forsendelser for aldersjusteringer ble startet.",
             ),
+            ApiResponse(responseCode = "401", description = "Ikke autentisert."),
+            ApiResponse(responseCode = "403", description = "Ikke autorisert."),
+            ApiResponse(responseCode = "500", description = "Intern serverfeil."),
         ],
     )
     fun startOpprettForsendelseAldersjusteringBidragBatch(
-        @RequestParam prosesserFeilet: Boolean = false,
+        @RequestParam @Parameter(
+            description = "Dersom true behandles forsendelser som tidligere har feilet. Default er false.",
+            example = "false",
+            required = false,
+        ) prosesserFeilet: Boolean = false,
     ): ResponseEntity<Any> {
         opprettForsendelseBatch.start(prosesserFeilet)
         return ResponseEntity.ok().build()
@@ -76,6 +87,9 @@ class ForsendelseBatchController(
                 responseCode = "200",
                 description = "Batch for distrubisjon av forsendelser for aldersjusteringer ble startet.",
             ),
+            ApiResponse(responseCode = "401", description = "Ikke autentisert."),
+            ApiResponse(responseCode = "403", description = "Ikke autorisert."),
+            ApiResponse(responseCode = "500", description = "Intern serverfeil."),
         ],
     )
     fun startDistribuerForsendelseAldersjusteringBidragBatch(): ResponseEntity<Any> {

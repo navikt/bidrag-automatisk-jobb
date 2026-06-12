@@ -30,9 +30,15 @@ class VedtakController(
                 responseCode = "200",
                 description = "Vedtak opprettet.",
             ),
+            ApiResponse(responseCode = "400", description = "Ugyldig vedtakshendelse i request body."),
+            ApiResponse(responseCode = "401", description = "Ikke autentisert."),
+            ApiResponse(responseCode = "403", description = "Ikke autorisert."),
+            ApiResponse(responseCode = "500", description = "Intern serverfeil."),
         ],
     )
-    suspend fun opprettVedtak(vedtakHendelse: VedtakHendelse): ResponseEntity<Any> {
+    suspend fun opprettVedtak(
+        @org.springframework.web.bind.annotation.RequestBody vedtakHendelse: VedtakHendelse,
+    ): ResponseEntity<Any> {
         vedtakService.behandleVedtak(vedtakHendelse)
         return ResponseEntity.ok().build()
     }

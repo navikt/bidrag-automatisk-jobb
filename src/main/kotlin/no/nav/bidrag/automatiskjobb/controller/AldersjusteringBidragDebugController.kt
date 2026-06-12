@@ -1,6 +1,9 @@
 package no.nav.bidrag.automatiskjobb.controller
 
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
@@ -26,20 +29,44 @@ data class AldersjusteringerHvorBeløpBleRedusertRespons(
 
 @Protected
 @RestController
-@Tag(name = "Debug aldersjustering bidrag")
+@Tag(
+    name = "Debug aldersjustering bidrag",
+    description = "Debug-endepunkter for aldersjustering av bidrag. Returnerer detaljert informasjon til bruk ved feilsøking.",
+)
 class AldersjusteringBidragDebugController(
     private val aldersjusteringService: AldersjusteringService,
 ) {
     @PostMapping("/aldersjustering/bidrag/saker/debug")
     @Operation(
-        summary = "Start kjøring av aldersjustering batch for bidrag.",
-        description = "Operasjon for å starte kjøring av aldersjustering batch for bidrag for et gitt år.",
+        summary = "Kjør aldersjustering i debug-modus for flere bidragssaker",
+        description =
+            "Kjører aldersjustering i debug-modus for en liste med bidragssaker. " +
+                "Returnerer detaljert informasjon om aldersjusteringsgrunnlag og beregninger til bruk ved feilsøking. " +
+                "Dersom simuler=true fattes det ikke vedtak.",
         security = [SecurityRequirement(name = "bearer-key")],
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Debug-kjøring gjennomført. Returnerer map fra saksnummer til detaljert aldersjusteringsresultat per sak.",
+            ),
+            ApiResponse(responseCode = "401", description = "Ikke autentisert."),
+            ApiResponse(responseCode = "403", description = "Ikke autorisert."),
+            ApiResponse(responseCode = "500", description = "Intern serverfeil."),
+        ],
     )
     fun aldersjusterBidragSakerDebug(
         @RequestBody saksnummere: List<Saksnummer>,
-        @RequestParam(required = false) år: Int?,
-        @RequestParam(required = false) simuler: Boolean = true,
+        @RequestParam(
+            required = false,
+        ) @Parameter(description = "Årstallet aldersjusteringen gjelder for. Default er inneværende år.", example = "2025") år: Int?,
+        @RequestParam(
+            required = false,
+        ) @Parameter(
+            description = "Dersom true simuleres aldersjusteringen uten å fatte vedtak. Default er true.",
+            example = "true",
+        ) simuler: Boolean = true,
     ): Map<Saksnummer, AldersjusteringResponse> =
         saksnummere.associateWith {
             aldersjusteringService.kjørAldersjusteringForSakDebug(
@@ -59,14 +86,37 @@ class AldersjusteringBidragDebugController(
 
     @PostMapping("/aldersjustering/bidrag/{saksnummer}/debug")
     @Operation(
-        summary = "Start kjøring av aldersjustering batch for bidrag.",
-        description = "Operasjon for å starte kjøring av aldersjustering batch for bidrag for et gitt år.",
+        summary = "Kjør aldersjustering i debug-modus for én bidragssak",
+        description =
+            "Kjører aldersjustering i debug-modus for én spesifikk bidragssak. " +
+                "Returnerer detaljert informasjon om aldersjusteringsgrunnlag og beregninger til bruk ved feilsøking. " +
+                "Dersom simuler=true fattes det ikke vedtak.",
         security = [SecurityRequirement(name = "bearer-key")],
     )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Debug-kjøring gjennomført. Returnerer detaljert aldersjusteringsresultat for saken.",
+                content = [Content(schema = Schema(implementation = AldersjusteringResponse::class))],
+            ),
+            ApiResponse(responseCode = "401", description = "Ikke autentisert."),
+            ApiResponse(responseCode = "403", description = "Ikke autorisert."),
+            ApiResponse(responseCode = "500", description = "Intern serverfeil."),
+        ],
+    )
     fun aldersjusterBidragSakDebug(
-        @PathVariable saksnummer: Saksnummer,
-        @RequestParam(required = false) år: Int?,
-        @RequestParam(required = false) simuler: Boolean = true,
+        @PathVariable @Parameter(description = "Saksnummeret for bidragssaken.", example = "2600001", required = true) saksnummer:
+            Saksnummer,
+        @RequestParam(
+            required = false,
+        ) @Parameter(description = "Årstallet aldersjusteringen gjelder for. Default er inneværende år.", example = "2025") år: Int?,
+        @RequestParam(
+            required = false,
+        ) @Parameter(
+            description = "Dersom true simuleres aldersjusteringen uten å fatte vedtak. Default er true.",
+            example = "true",
+        ) simuler: Boolean = true,
     ): AldersjusteringResponse =
         aldersjusteringService.kjørAldersjusteringForSakDebug(saksnummer, år ?: YearMonth.now().year, simuler, Stønadstype.BIDRAG)
 }

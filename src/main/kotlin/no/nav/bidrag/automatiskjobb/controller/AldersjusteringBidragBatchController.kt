@@ -47,6 +47,9 @@ class AldersjusteringBidragBatchController(
                 responseCode = "200",
                 description = "Aldersjustering batch ble startet.",
             ),
+            ApiResponse(responseCode = "401", description = "Ikke autentisert."),
+            ApiResponse(responseCode = "403", description = "Ikke autorisert."),
+            ApiResponse(responseCode = "500", description = "Intern serverfeil."),
         ],
     )
     @Parameters(
@@ -88,6 +91,9 @@ class AldersjusteringBidragBatchController(
                 responseCode = "200",
                 description = "Aldersjustering batch ble startet.",
             ),
+            ApiResponse(responseCode = "401", description = "Ikke autentisert."),
+            ApiResponse(responseCode = "403", description = "Ikke autorisert."),
+            ApiResponse(responseCode = "500", description = "Intern serverfeil."),
         ],
     )
     fun startSlettAlleedtaksforslagBatch(): ResponseEntity<Any> {
@@ -107,6 +113,9 @@ class AldersjusteringBidragBatchController(
                 responseCode = "200",
                 description = "Batch for oppretting av aldersjusteringer ble startet.",
             ),
+            ApiResponse(responseCode = "401", description = "Ikke autentisert."),
+            ApiResponse(responseCode = "403", description = "Ikke autorisert."),
+            ApiResponse(responseCode = "500", description = "Intern serverfeil."),
         ],
     )
     @Parameters(
@@ -153,6 +162,9 @@ class AldersjusteringBidragBatchController(
                 responseCode = "200",
                 description = "Batch for fatting av vedtak om aldersjusteringer ble startet.",
             ),
+            ApiResponse(responseCode = "401", description = "Ikke autentisert."),
+            ApiResponse(responseCode = "403", description = "Ikke autorisert."),
+            ApiResponse(responseCode = "500", description = "Intern serverfeil."),
         ],
     )
     @Parameters(
@@ -199,6 +211,9 @@ class AldersjusteringBidragBatchController(
                 responseCode = "200",
                 description = "Batch for beregning av aldersjusteringer ble startet.",
             ),
+            ApiResponse(responseCode = "401", description = "Ikke autentisert."),
+            ApiResponse(responseCode = "403", description = "Ikke autorisert."),
+            ApiResponse(responseCode = "500", description = "Intern serverfeil."),
         ],
     )
     @Parameters(
@@ -261,6 +276,9 @@ class AldersjusteringBidragBatchController(
                 responseCode = "200",
                 description = "Batch for oppretting av oppgaver for aldersjusteringer ble startet.",
             ),
+            ApiResponse(responseCode = "401", description = "Ikke autentisert."),
+            ApiResponse(responseCode = "403", description = "Ikke autorisert."),
+            ApiResponse(responseCode = "500", description = "Intern serverfeil."),
         ],
     )
     @Parameters(
@@ -295,6 +313,9 @@ class AldersjusteringBidragBatchController(
                 responseCode = "200",
                 description = "Batch for sletter av oppgaver for aldersjusteringer ble startet.",
             ),
+            ApiResponse(responseCode = "401", description = "Ikke autentisert."),
+            ApiResponse(responseCode = "403", description = "Ikke autorisert."),
+            ApiResponse(responseCode = "500", description = "Intern serverfeil."),
         ],
     )
     @Parameters(
