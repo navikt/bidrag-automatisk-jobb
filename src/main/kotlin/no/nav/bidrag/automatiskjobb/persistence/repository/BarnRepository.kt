@@ -64,4 +64,26 @@ interface BarnRepository : JpaRepository<Barn, Int> {
         @Param("dato") dato: LocalDate,
         @Param("kravhaver") kravhaver: String,
     ): List<Barn>
+
+    @Query(
+        "SELECT b FROM barn b WHERE b.bidragFra IS NOT NULL " +
+            "AND (b.bidragTil IS NULL OR b.bidragTil > :bidragDato) " +
+            "ORDER BY b.saksnummer, b.id",
+    )
+    fun findBarnSomSkalIndeksregulereBidrag(
+        @Param("bidragDato") bidragDato: LocalDate,
+        pageable: Pageable,
+    ): Page<Barn>
+
+    @Query(
+        "SELECT b FROM barn b WHERE b.bidragFra IS NOT NULL " +
+            "AND (b.bidragTil IS NULL OR b.bidragTil > :bidragDato) " +
+            "AND b.saksnummer IN :saksnummer " +
+            "ORDER BY b.saksnummer, b.id",
+    )
+    fun finnBarnMedLøpendeBidragForSaksnummer(
+        @Param("bidragDato") bidragDato: LocalDate,
+        @Param("saksnummer") saksnummer: List<String>,
+        pageable: Pageable,
+    ): Page<Barn>
 }
