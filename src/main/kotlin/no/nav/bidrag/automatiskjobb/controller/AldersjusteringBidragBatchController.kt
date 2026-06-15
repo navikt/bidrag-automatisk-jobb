@@ -14,6 +14,7 @@ import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.oppgave.slettop
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.opprett.OpprettAldersjusteringerBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.utils.slettallevedtaksforslag.SlettAlleVedtaksforslagBatch
 import no.nav.bidrag.automatiskjobb.batch.utils.slettvedtaksforslag.SlettVedtaksforslagBatch
+import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
 import no.nav.security.token.support.core.api.Protected
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
@@ -176,7 +177,7 @@ class AldersjusteringBidragBatchController(
                 name = "behandlingstyper",
                 example = "MANUELL,FATTET_FORSLAG,INGEN",
                 description =
-                    "Kommaseparert liste over behandlingstyper som skal fattes vedtak for.",
+                    "Liste over behandlingstyper som skal fattes vedtak for.",
                 required = false,
             ),
             Parameter(
@@ -191,7 +192,8 @@ class AldersjusteringBidragBatchController(
     fun startFattVedtakAldersjusteringBidragBatch(
         @RequestParam barn: String?,
         @RequestParam simuler: Boolean = true,
-        @RequestParam behandlingstyper: String = "MANUELL,FATTET_FORSLAG,INGEN",
+        @RequestParam behandlingstyper: List<Behandlingstype> =
+            listOf(Behandlingstype.MANUELL, Behandlingstype.FATTET_FORSLAG, Behandlingstype.INGEN),
         @RequestParam kunRedusertBidrag: Boolean = false,
     ): ResponseEntity<Any> {
         fattVedtakOmAldersjusteringerBidragBatch.startFattVedtakOmAldersjusteringBidragBatch(
