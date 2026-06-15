@@ -14,6 +14,7 @@ import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.oppgave.slettop
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.opprett.OpprettAldersjusteringerBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.utils.slettallevedtaksforslag.SlettAlleVedtaksforslagBatch
 import no.nav.bidrag.automatiskjobb.batch.utils.slettvedtaksforslag.SlettVedtaksforslagBatch
+import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
 import no.nav.security.token.support.core.api.Protected
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
@@ -172,15 +173,34 @@ class AldersjusteringBidragBatchController(
                         "ikke fattes vedtak men det vil opprettes forsendelse bestilling",
                 required = false,
             ),
+            Parameter(
+                name = "behandlingstyper",
+                example = "MANUELL,FATTET_FORSLAG,INGEN",
+                description =
+                    "Liste over behandlingstyper som skal fattes vedtak for.",
+                required = false,
+            ),
+            Parameter(
+                name = "kunRedusertBidrag",
+                example = "false",
+                description =
+                    "Når true fattes vedtak kun for aldersjusteringer der aldersjustert beløp er lavere enn løpende beløp.",
+                required = false,
+            ),
         ],
     )
     fun startFattVedtakAldersjusteringBidragBatch(
         @RequestParam barn: String?,
         @RequestParam simuler: Boolean = true,
+        @RequestParam behandlingstyper: List<Behandlingstype> =
+            listOf(Behandlingstype.MANUELL, Behandlingstype.FATTET_FORSLAG, Behandlingstype.INGEN),
+        @RequestParam kunRedusertBidrag: Boolean = false,
     ): ResponseEntity<Any> {
         fattVedtakOmAldersjusteringerBidragBatch.startFattVedtakOmAldersjusteringBidragBatch(
             barn,
             simuler,
+            behandlingstyper,
+            kunRedusertBidrag,
         )
         return ResponseEntity.ok().build()
     }
