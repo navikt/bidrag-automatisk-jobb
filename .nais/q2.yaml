@@ -61,6 +61,9 @@ env:
   REVURDER_FORSKUDD_OPPRETT_FORSENDELSE_CRON: "-"
   REVURDER_FORSKUDD_DISTRUBUER_FORSENDELSE_CRON: "-"
   ALDERSJUSTERING_BIDRAG_OPPRETT_OPPGAVE_CRON: "-"
+  INDEKSREGULERING_FORSKUDD_OPPRETT_CRON: "-"
+  INDEKSREGULERING_BIDRAG_OPPRETT_CRON: "-"
+  INDEKSREGULERING_BIDRAG_GJENNOMFOR_CRON: "-"
   JAVA_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -XX:MaxRAMPercentage=80.0
 outbound-access-apps:
   - bidrag-belopshistorikk-q2

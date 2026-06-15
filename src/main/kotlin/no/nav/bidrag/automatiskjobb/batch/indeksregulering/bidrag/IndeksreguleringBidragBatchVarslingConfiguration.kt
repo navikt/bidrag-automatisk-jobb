@@ -15,14 +15,14 @@ class IndeksreguleringBidragBatchVarslingConfiguration {
     @Bean
     fun indeksreguleringBidragBatchKategori(
         @Value($$"${INDEKSREGULERING_BIDRAG_OPPRETT_CRON:-}") opprettCron: String,
-        @Value($$"${GJENNOMFOR_INDEKSREGULERING_BIDRAG_CRON:-}") gjennomforCron: String,
+        @Value($$"${INDEKSREGULERING_BIDRAG_GJENNOMFOR_CRON:-}") gjennomførCron: String,
     ): BatchKategori =
         BatchKategori(
             navn = "Indeksregulering bidrag",
             batcher =
                 listOf(
                     Batch("Opprett indeksregulering bidrag", opprettCron),
-                    Batch("Gjennomfør indeksregulering bidrag", gjennomforCron),
+                    Batch("Gjennomfør indeksregulering bidrag", gjennomførCron),
                 ),
         )
 }
