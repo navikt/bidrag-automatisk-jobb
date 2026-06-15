@@ -47,6 +47,18 @@ interface BarnRepository : JpaRepository<Barn, Int> {
 
     @Query(
         "SELECT b FROM barn b WHERE b.forskuddFra IS NOT NULL " +
+            "AND (b.forskuddTil IS NULL OR b.forskuddTil > :forskuddDato) " +
+            "AND b.saksnummer IN :saksnummer " +
+            "ORDER BY b.saksnummer, b.id",
+    )
+    fun finnBarnMedLøpendeForskuddForSaksnummer(
+        @Param("forskuddDato") forskuddDato: LocalDate,
+        @Param("saksnummer") saksnummer: List<String>,
+        pageable: Pageable,
+    ): Page<Barn>
+
+    @Query(
+        "SELECT b FROM barn b WHERE b.forskuddFra IS NOT NULL " +
             "AND (b.forskuddTil IS NULL OR b.forskuddTil > :dato)" +
             "AND b.kravhaver = :kravhaver",
     )
