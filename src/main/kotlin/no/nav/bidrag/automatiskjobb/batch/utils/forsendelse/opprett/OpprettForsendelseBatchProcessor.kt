@@ -19,15 +19,17 @@ class OpprettForsendelseBatchProcessor(
     private val forsendelseBestillingRepository: ForsendelseBestillingRepository,
 ) : ItemProcessor<ForsendelseBestilling, Unit> {
     private var prosesserFeilet: Boolean = false
+    private var tvingReopprett: Boolean = false
 
     @BeforeStep
     fun beforeStep(stepExecution: StepExecution) {
         prosesserFeilet = stepExecution.jobParameters.getString("prosesserFeilet").toBoolean()
+        tvingReopprett = !stepExecution.jobParameters.getString("bestillingIds").isNullOrEmpty()
     }
 
     override fun process(forsendelseBestilling: ForsendelseBestilling) =
         try {
-            forsendelseBestillingService.opprettForsendelse(forsendelseBestilling, prosesserFeilet)
+            forsendelseBestillingService.opprettForsendelse(forsendelseBestilling, prosesserFeilet, tvingReopprett)
         } catch (e: Exception) {
             log.error(e) { "Det skjedde en feil ved opprettelse av forsendelse for bestilling ${forsendelseBestilling.id}" }
             forsendelseBestilling.feilBegrunnelse = e.message

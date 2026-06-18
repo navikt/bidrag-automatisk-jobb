@@ -75,3 +75,50 @@ Start grunnlagsoverføringsbatchen med følgende kommando:
 ```bash
 sudo start-batch -f GB513 saksnr="¤FILE:/tmp/grunnlagsoverforing/saker_aldersjustering_<årstall>.txt" modus=OVERFOR grid=10 overskrivOverfortGrunnlag=true
 ```
+
+#### Del 2 - Beregning av aldersjustering
+Denne kan trigges ved å kalle ``/aldersjustering/batch/bidrag/beregn``
+Med parametere:
+- ``simuler`` - Simuler aldersjustering beregning uten å opprette vedtaksforslag. Dette kan brukes til å hente utrekk over antall barn som skal aldersjusteres og som må behandles manuelt.
+- ``inkluderBehandlet`` - Rekjør beregning på aldersjusteringer som allerede er behandlet og har blitt opprettet vedtaksforslag. (status = `UBEHANDLET`)
+- ``barn`` - liste over barnider som det ønskes å beregnes for. Hvis det ikke er satt så beregnes det for alle med status ``UBEHANDLET``
+
+Andre fase er å kjøre beregning av aldersjustering.
+I denne kjøringen beregnes aldersjustering for alle barn som ble opprettet i fase 1.
+
+Aldersjutering beregning kan føre til følgende utfall
+
+Status:
+ - UBEHANDLET -> Aldersjustering er opprettet men ingen beregning er utført
+ - SIMULERT -> Aldersjusteringen ble behandlet med sukssess men det ble ikke opprettet en vedtaksforslag
+ - BEHANDLET -> Aldersjusteringen ble behandlet med sukssess og det ble opprettet en vedtaksforslag
+ - FEILET -> Det skjedde en feil under beregning av aldersjusteringen. Feil begrunnelsen er lagret i ``begrunnelse`` kolonnen i aldersjustering tabellen
+
+Behandlingstype
+- FATTET_FORSLAG -> Det ble opprettet vedtaksforslag og kan åpnes via Sakshistorikken for saken
+- MANUELL -> Det ble opprettet vedtaksforslag som krever manuell behandling av aldersjusteringen
+- INGEN -> Det ble opprettet vedtaksforslag med beslutningstype AVVIST. Det bet
+
+Hent utrekk over saker med følgende kommando
+
+```sql
+select a.id, b.id, b.saksnummer,a.status,a.begrunnelse from aldersjustering a 
+    inner join public.barn b on b.id = a.barn_id where a.behandlingstype = 'FATTET_FORSLAG';
+```
+
+#### Del 3 - Fatte vedtak
+I denne fasen fattes det vedtak for alle vedtaksforslagene som ble opprettet i Del 2.<br/>
+Da endres vedtakforslag til en vedtak
+
+Denne kan trigges ved å kalle ``/aldersjustering/batch/bidrag/fattVedtak``
+Med parametere:
+ - `barn` - liste over barnider som det ønskes å fattes vedtak for. Hvis det ikke er satt så fattes det vedtak for alle
+ - `behandlingstyper` - Liste over behandlingstyper det skal fattes vedtak for. Det kan brukes for å begynne med å fatte vedtak for de som aldersjusteres og ta de manuelle/ingen senere
+ - `simuler` - Fattes ingen vedtak men det opprettes en forsendelse for vedtak. Dette kan brukes til å teste forsendelse/brev før det fattes vedtak
+ - `kunRedusertBidrag` - Fatte kun vedtak for casene hvor aldersjusteringen fører til at bidraget reduseres. Dette kan brukes for å fatte vedtak for å unngå B4.
+
+#### Del 4 - Opprett forsendelse
+I denne fasen opprettes forsendelse for alle vedtak som ble fattet i Del 3.
+For å kunne teste forsendelse kan Del 3 kjøres med parameteren `simuler=true` slik at forsendelse kan opprettes uten at det fattes vedtak.
+
+

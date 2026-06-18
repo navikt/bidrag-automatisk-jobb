@@ -6,6 +6,7 @@ import no.nav.bidrag.automatiskjobb.persistence.repository.AldersjusteringReposi
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
 import no.nav.bidrag.domene.enums.diverse.Språk
 import no.nav.bidrag.domene.enums.rolle.Rolletype
+import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import org.springframework.jdbc.core.RowMapper
 import java.sql.ResultSet
 
@@ -31,14 +32,15 @@ class ForsendelseBestillingRowMapper(
             slettetTidspunkt = rs.getTimestamp("slettet_tidspunkt"),
             skalSlettes = rs.getBoolean("skal_slettes"),
             feilBegrunnelse = rs.getString("feil_begrunnelse"),
-            forsendelsestype = rs.getString("forsendelsestype").let { Forsendelsestype.valueOf(it) },
-            unikReferanse = rs.getString("unik_referanse"),
+            forsendelsestype =
+                rs.getString("forsendelsestype")?.let { Forsendelsestype.valueOf(it) } ?: Forsendelsestype.ALDERSJUSTERING_BIDRAG,
+            unikReferanse = rs.getString("unik_referanse") ?: "",
             vedtak = rs.getInt("vedtak"),
             stønadstype =
-                rs.getString("stonadstype").let {
-                    no.nav.bidrag.domene.enums.vedtak.Stønadstype
+                rs.getString("stonadstype")?.let {
+                    Stønadstype
                         .valueOf(it)
-                },
+                } ?: Stønadstype.BIDRAG,
             barn = barnRepository.findById(rs.getInt("barn_id")).get(),
             batchId = rs.getString("batch_id"),
         )

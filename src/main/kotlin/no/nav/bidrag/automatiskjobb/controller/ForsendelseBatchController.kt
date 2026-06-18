@@ -24,10 +24,11 @@ class ForsendelseBatchController(
 ) {
     @PostMapping("/batch/forsendelse/slett")
     @Operation(
-        summary = "Start kjøring av batch som sletter alle forsendelser som har blitt satt til skalSlettes=true.",
+        summary = "Start kjøring av batch som sletter forsendelser med skal_slettes=true, eller en spesifikk bestilling etter ID.",
         description =
             "Operasjon for å starte kjøring av batch som skal slette alle forsendelser " +
-                "som er satt til skal slettes med kolonnen skal_slettes=true",
+                "som er satt til skal slettes med kolonnen skal_slettes=true. " +
+                "Dersom bestillingIds er angitt, slettes kun forsendelsene for de angitte bestillingene.",
         security = [SecurityRequirement(name = "bearer-key")],
     )
     @ApiResponses(
@@ -38,15 +39,19 @@ class ForsendelseBatchController(
             ),
         ],
     )
-    fun starSlettForsendelserSomSkalSlettesBatch(): ResponseEntity<Any> {
-        slettForsendelseSomSkalSlettesBatch.start()
+    fun starSlettForsendelserSomSkalSlettesBatch(
+        @RequestParam bestillingIds: List<Int>? = null,
+    ): ResponseEntity<Any> {
+        slettForsendelseSomSkalSlettesBatch.start(bestillingIds)
         return ResponseEntity.ok().build()
     }
 
     @PostMapping("/batch/forsendelse/opprett")
     @Operation(
         summary = "Start kjøring av batch for å opprette forsendelse for aldersjusteringer.",
-        description = "Operasjon for å starte kjøring av batch som oppretter forsendelse for aldersjusteringer.",
+        description =
+            "Operasjon for å starte kjøring av batch som oppretter forsendelse for aldersjusteringer. " +
+                "Dersom bestillingIds er angitt, slettes og gjennopprettes forsendelsene for de angitte bestillingene.",
         security = [SecurityRequirement(name = "bearer-key")],
     )
     @ApiResponses(
@@ -59,15 +64,18 @@ class ForsendelseBatchController(
     )
     fun startOpprettForsendelseAldersjusteringBidragBatch(
         @RequestParam prosesserFeilet: Boolean = false,
+        @RequestParam bestillingIds: List<Int>? = null,
     ): ResponseEntity<Any> {
-        opprettForsendelseBatch.start(prosesserFeilet)
+        opprettForsendelseBatch.start(prosesserFeilet, bestillingIds)
         return ResponseEntity.ok().build()
     }
 
     @PostMapping("/batch/forsendelse/distribuer")
     @Operation(
         summary = "Start kjøring av batch for å distribuere forsendelse for aldersjusteringer.",
-        description = "Operasjon for å starte kjøring av batch som distribuerer forsendelser for aldersjusteringer.",
+        description =
+            "Operasjon for å starte kjøring av batch som distribuerer forsendelser for aldersjusteringer. " +
+                "Dersom bestillingIds er angitt, distribueres kun forsendelsene for de angitte bestillingene.",
         security = [SecurityRequirement(name = "bearer-key")],
     )
     @ApiResponses(
@@ -78,8 +86,10 @@ class ForsendelseBatchController(
             ),
         ],
     )
-    fun startDistribuerForsendelseAldersjusteringBidragBatch(): ResponseEntity<Any> {
-        distribuerForsendelseBidragBatch.start()
+    fun startDistribuerForsendelseAldersjusteringBidragBatch(
+        @RequestParam bestillingIds: List<Int>? = null,
+    ): ResponseEntity<Any> {
+        distribuerForsendelseBidragBatch.start(bestillingIds)
         return ResponseEntity.ok().build()
     }
 }

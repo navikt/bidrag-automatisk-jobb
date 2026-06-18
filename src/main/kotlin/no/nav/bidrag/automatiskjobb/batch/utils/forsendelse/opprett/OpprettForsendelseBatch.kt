@@ -16,14 +16,21 @@ class OpprettForsendelseBatch(
     @param:Qualifier("asyncJobLauncher") private val jobOperator: JobOperator,
     private val opprettForsendelseJob: Job,
 ) {
-    fun start(prosesserFeilet: Boolean = false) {
+    fun start(
+        prosesserFeilet: Boolean = false,
+        bestillingIds: List<Int>? = null,
+    ) {
         try {
-            jobOperator.start(
-                opprettForsendelseJob,
+            val paramsBuilder =
                 JobParametersBuilder()
                     .addString("prosesserFeilet", prosesserFeilet.toString())
                     .addString("runId", UUID.randomUUID().toString())
-                    .toJobParameters(),
+            if (!bestillingIds.isNullOrEmpty()) {
+                paramsBuilder.addString("bestillingIds", bestillingIds.joinToString(","))
+            }
+            jobOperator.start(
+                opprettForsendelseJob,
+                paramsBuilder.toJobParameters(),
             )
         } catch (_: JobExecutionAlreadyRunningException) {
             LOGGER.warn { "Batch opprettForsendelse kjører allerede. Ignorerer ny forespørsel." }
