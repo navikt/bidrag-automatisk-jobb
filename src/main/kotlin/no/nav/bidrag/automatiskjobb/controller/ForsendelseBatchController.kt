@@ -40,7 +40,7 @@ class ForsendelseBatchController(
         ],
     )
     fun starSlettForsendelserSomSkalSlettesBatch(
-        @RequestParam bestillingIds: List<Int>? = null,
+        @RequestParam bestillingIds: String? = null,
     ): ResponseEntity<Any> {
         slettForsendelseSomSkalSlettesBatch.start(bestillingIds)
         return ResponseEntity.ok().build()
@@ -64,7 +64,7 @@ class ForsendelseBatchController(
     )
     fun startOpprettForsendelseAldersjusteringBidragBatch(
         @RequestParam prosesserFeilet: Boolean = false,
-        @RequestParam bestillingIds: List<Int>? = null,
+        @RequestParam bestillingIds: String? = null,
     ): ResponseEntity<Any> {
         opprettForsendelseBatch.start(prosesserFeilet, bestillingIds)
         return ResponseEntity.ok().build()
@@ -87,7 +87,7 @@ class ForsendelseBatchController(
         ],
     )
     fun startDistribuerForsendelseAldersjusteringBidragBatch(
-        @RequestParam bestillingIds: List<Int>? = null,
+        @RequestParam bestillingIds: String? = null,
     ): ResponseEntity<Any> {
         distribuerForsendelseBidragBatch.start(bestillingIds)
         return ResponseEntity.ok().build()

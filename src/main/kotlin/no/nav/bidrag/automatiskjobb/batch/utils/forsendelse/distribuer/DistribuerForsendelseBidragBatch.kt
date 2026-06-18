@@ -16,13 +16,13 @@ class DistribuerForsendelseBidragBatch(
     @param:Qualifier("asyncJobLauncher") private val jobOperator: JobOperator,
     private val distribuerForsendelseJob: Job,
 ) {
-    fun start(bestillingIds: List<Int>? = null) {
+    fun start(bestillingIds: String? = null) {
         try {
             val paramsBuilder =
                 JobParametersBuilder()
                     .addString("runId", UUID.randomUUID().toString())
             if (!bestillingIds.isNullOrEmpty()) {
-                paramsBuilder.addString("bestillingIds", bestillingIds.joinToString(","))
+                paramsBuilder.addString("bestillingIds", bestillingIds)
             }
             jobOperator.start(
                 distribuerForsendelseJob,
