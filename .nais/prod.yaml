@@ -14,6 +14,8 @@ database:
   tier: db-custom-1-3840
   size: 25
   auditlog: "on"
+buckets:
+  - navn: bidrag-automatisk-jobb-rapporter-prod
 kafka:
   pool: nav-prod
 env:
@@ -63,6 +65,8 @@ env:
   INDEKSREGULERING_FORSKUDD_OPPRETT_CRON: "-"
   INDEKSREGULERING_BIDRAG_OPPRETT_CRON: "-"
   INDEKSREGULERING_BIDRAG_GJENNOMFOR_CRON: "-"
+  INDEKSREGULERING_BIDRAG_RAPPORTER_CRON: "-"
+  BUCKET_NAME: bidrag-automatisk-jobb-rapporter-prod
   JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -XX:MaxRAMPercentage=80.0
 outbound-access-apps:
   - bidrag-belopshistorikk

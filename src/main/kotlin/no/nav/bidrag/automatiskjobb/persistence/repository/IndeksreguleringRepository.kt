@@ -31,4 +31,9 @@ interface IndeksreguleringRepository : JpaRepository<Indeksregulering, Int> {
         år: Int,
         pageable: Pageable,
     ): Page<Indeksregulering>
+
+    fun findAllByGjennomfortTrueAndStønadstypeAndÅr(
+        stønadstype: Stønadstype,
+        år: Int,
+    ): List<Indeksregulering>
 }

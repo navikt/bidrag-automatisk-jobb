@@ -94,6 +94,10 @@ spec:
             value: "write,ddl,role"
           - name: "pgaudit.log_parameter"
             value: "on"
+    buckets:
+    {{#each buckets as |bucket|}}
+      - name: {{bucket.navn}}
+    {{/each}}
   ingresses:
   {{#each ingresses as |url|}}
     - {{url}}

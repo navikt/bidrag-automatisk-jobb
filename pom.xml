@@ -28,6 +28,7 @@
         <slack-api.version>1.48.1</slack-api.version>
         <okhttp.version>5.2.1</okhttp.version>
         <unleash.version>11.2.1</unleash.version>
+        <google-cloud-storage.version>2.68.0</google-cloud-storage.version>
     </properties>
 
     <repositories>
@@ -201,6 +202,11 @@
             <groupId>io.getunleash</groupId>
             <artifactId>unleash-client-java</artifactId>
             <version>${unleash.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.cloud</groupId>
+            <artifactId>google-cloud-storage</artifactId>
+            <version>${google-cloud-storage.version}</version>
         </dependency>
         <!--Sikkerhet-->
         <dependency>
