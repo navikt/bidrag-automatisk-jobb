@@ -256,7 +256,7 @@ class ForsendelseBestillingService(
                 dokumentmal = forsendelsestype.dokumentmal,
                 språkkode = Språk.NB,
                 feilBegrunnelse = feilBegrunnelse,
-                unikReferanse = forsendelseEntity.unikReferanse,
+                unikReferanse = forsendelseEntity.unikReferanse + "_mottaker_" + mottakerident,
                 vedtak = forsendelseEntity.vedtak!!,
                 stønadstype = forsendelseEntity.stønadstype,
                 barn = barn,
