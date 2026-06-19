@@ -55,7 +55,6 @@ Deretter må det hentes ut et uttrekk over saker som skal aldersjusteres. Sakene
 
 Utrekk over saker hvor det finnes barn som skal aldersjusteres
 ```sql
-select * from aldersjustering;
 SELECT distinct b.saksnummer
 FROM barn b
 WHERE :år - EXTRACT(YEAR from b.fodselsdato) IN (6, 11, 15)
@@ -77,48 +76,69 @@ sudo start-batch -f GB513 saksnr="¤FILE:/tmp/grunnlagsoverforing/saker_aldersju
 ```
 
 #### Del 2 - Beregning av aldersjustering
-Denne kan trigges ved å kalle ``/aldersjustering/batch/bidrag/beregn``
+Denne kan trigges ved å kalle `POST /aldersjustering/batch/bidrag/beregn`
+
 Med parametere:
-- ``simuler`` - Simuler aldersjustering beregning uten å opprette vedtaksforslag. Dette kan brukes til å hente utrekk over antall barn som skal aldersjusteres og som må behandles manuelt.
-- ``inkluderBehandlet`` - Rekjør beregning på aldersjusteringer som allerede er behandlet og har blitt opprettet vedtaksforslag. (status = `UBEHANDLET`)
-- ``barn`` - liste over barnider som det ønskes å beregnes for. Hvis det ikke er satt så beregnes det for alle med status ``UBEHANDLET``
+- `simuler` - Simuler aldersjustering beregning uten å opprette vedtaksforslag. Dette kan brukes til å hente utrekk over antall barn som skal aldersjusteres og som må behandles manuelt.
+- `inkluderBehandlet` - Rekjør beregning på aldersjusteringer som allerede er behandlet og har blitt opprettet vedtaksforslag. (status = `UBEHANDLET`)
+- `barn` - liste over barnider som det ønskes å beregnes for. Hvis det ikke er satt så beregnes det for alle med status `UBEHANDLET`
 
 Andre fase er å kjøre beregning av aldersjustering.
 I denne kjøringen beregnes aldersjustering for alle barn som ble opprettet i fase 1.
 
-Aldersjutering beregning kan føre til følgende utfall
+Aldersjustering beregning kan føre til følgende utfall:
 
 Status:
- - UBEHANDLET -> Aldersjustering er opprettet men ingen beregning er utført
- - SIMULERT -> Aldersjusteringen ble behandlet med sukssess men det ble ikke opprettet en vedtaksforslag
- - BEHANDLET -> Aldersjusteringen ble behandlet med sukssess og det ble opprettet en vedtaksforslag
- - FEILET -> Det skjedde en feil under beregning av aldersjusteringen. Feil begrunnelsen er lagret i ``begrunnelse`` kolonnen i aldersjustering tabellen
+- `UBEHANDLET` - Aldersjustering er opprettet men ingen beregning er utført
+- `SIMULERT` - Aldersjusteringen ble behandlet med suksess men det ble ikke opprettet en vedtaksforslag
+- `BEHANDLET` - Aldersjusteringen ble behandlet med suksess og det ble opprettet en vedtaksforslag
+- `FEILET` - Det skjedde en feil under beregning av aldersjusteringen. Feil begrunnelsen er lagret i `begrunnelse` kolonnen i aldersjustering tabellen
 
-Behandlingstype
-- FATTET_FORSLAG -> Det ble opprettet vedtaksforslag og kan åpnes via Sakshistorikken for saken
-- MANUELL -> Det ble opprettet vedtaksforslag som krever manuell behandling av aldersjusteringen
-- INGEN -> Det ble opprettet vedtaksforslag med beslutningstype AVVIST. Det bet
+Behandlingstype:
+- `FATTET_FORSLAG` - Det ble opprettet vedtaksforslag og kan åpnes via Sakshistorikken for saken
+- `MANUELL` - Det ble opprettet vedtaksforslag som krever manuell behandling av aldersjusteringen
+- `INGEN` - Det ble opprettet vedtaksforslag med beslutningstype AVVIST
 
-Hent utrekk over saker med følgende kommando
+Hent utrekk over saker med følgende kommando:
 
 ```sql
-select a.id, b.id, b.saksnummer,a.status,a.begrunnelse from aldersjustering a 
-    inner join public.barn b on b.id = a.barn_id where a.behandlingstype = 'FATTET_FORSLAG';
+SELECT a.id, b.id, b.saksnummer, a.status, a.begrunnelse 
+FROM aldersjustering a 
+INNER JOIN barn b ON b.id = a.barn_id 
+WHERE a.behandlingstype = 'FATTET_FORSLAG';
 ```
 
 #### Del 3 - Fatte vedtak
-I denne fasen fattes det vedtak for alle vedtaksforslagene som ble opprettet i Del 2.<br/>
-Da endres vedtakforslag til en vedtak
+I denne fasen fattes det vedtak for alle vedtaksforslagene som ble opprettet i Del 2.
+Da endres vedtaksforslag til et vedtak.
 
-Denne kan trigges ved å kalle ``/aldersjustering/batch/bidrag/fattVedtak``
+Denne kan trigges ved å kalle `POST /aldersjustering/batch/bidrag/fattVedtak`
+
 Med parametere:
- - `barn` - liste over barnider som det ønskes å fattes vedtak for. Hvis det ikke er satt så fattes det vedtak for alle
- - `behandlingstyper` - Liste over behandlingstyper det skal fattes vedtak for. Det kan brukes for å begynne med å fatte vedtak for de som aldersjusteres og ta de manuelle/ingen senere
- - `simuler` - Fattes ingen vedtak men det opprettes en forsendelse for vedtak. Dette kan brukes til å teste forsendelse/brev før det fattes vedtak
- - `kunRedusertBidrag` - Fatte kun vedtak for casene hvor aldersjusteringen fører til at bidraget reduseres. Dette kan brukes for å fatte vedtak for å unngå B4.
+- `barn` - liste over barnider som det ønskes å fattes vedtak for. Hvis det ikke er satt så fattes det vedtak for alle
+- `behandlingstyper` - Liste over behandlingstyper det skal fattes vedtak for. Det kan brukes for å begynne med å fatte vedtak for de som aldersjusteres og ta de manuelle/ingen senere
+- `simuler` - Fattes ingen vedtak men det opprettes en forsendelse for vedtak. Dette kan brukes til å teste forsendelse/brev før det fattes vedtak
+- `kunRedusertBidrag` - Fatte kun vedtak for casene hvor aldersjusteringen fører til at bidraget reduseres. Dette kan brukes for å fatte vedtak for å unngå B4
+
+NB!: Viktig at for de manuelle så må vedtak fattes etter 1. Juli. Det er fordi det opprettes en søknad med mottatt dato 1. Juli. og Bisys har begrensning at det ikke kan opprettes mottatt dato frem i tid.
 
 #### Del 4 - Opprett forsendelse
 I denne fasen opprettes forsendelse for alle vedtak som ble fattet i Del 3.
 For å kunne teste forsendelse kan Del 3 kjøres med parameteren `simuler=true` slik at forsendelse kan opprettes uten at det fattes vedtak.
 
+Denne kan trigges ved å kalle `POST /batch/forsendelse/opprett`
 
+Med parametere:
+- `prosesserFeilet` - Rekjør oppretting for forsendelser som tidligere har feilet
+- `bestillingIds` - Komma-separert liste over `forsendelse_bestilling` id-er som skal slettes og gjennopprettes. Hvis det ikke er satt så opprettes det for alle `forsendelse_bestilling` uten `forsendelse_id`
+
+NB!: Det er viktig at det gjøres stikkprøver ved å sjekke innhold på noen av brevene før distribusjon bestilles i neste fase.
+
+#### Del 5 - Distribuer forsendelse
+I denne fasen distribueres forsendelsene som ble opprettet i Del 4 til mottakerne (bidragspliktig og/eller bidragsmottaker).
+Distribuering arkiverer forsendelsen i Joark og bestiller distribusjon av forsendelsen
+
+Denne kan trigges ved å kalle `POST /batch/forsendelse/distribuer`
+
+Med parametere:
+- `bestillingIds` - Komma-separert liste over `forsendelse_bestilling` id-er som skal distribueres. Hvis det ikke er satt så distribueres det for alle `forsendelse_bestilling` som er opprettet og ikke distribuert
