@@ -36,17 +36,28 @@ kubectl exec --tty deployment/bidrag-automatisk-jobb-q1 -- printenv | grep -e AZ
 ### Alderjustering
 
 #### Del 1 - Klargjøring av aldersjustering-batchkjøring
-Første fase er å hente ut et uttrekk over barn som potensielt skal aldersjusteres.
-Uttrekket lagres i `aldersjustering`-tabellen i databasen. Dette gjøres ved å kjøre batchen `OpprettAldersjusteringerBidragBatch`.
+Første fase er å kjøre batchen `OpprettAldersjusteringerBidragBatch`, som oppretter grunnlaget i `aldersjustering`-tabellen.
 
-`batch_id` i `aldersjustering`-tabellen lagres med formatet `aldersjustering_bidrag_<årstall aldersjustering kjøres for>`.
-Hvis det er feil i uttrekket, kan alle rader med årets `batch_id` slettes. Deretter kan opprett-batchen kjøres på nytt.
+Batchen leser barn fra `barn`-tabellen for valgt år (`aar`) med følgende utvalg:
+- `:år - EXTRACT(YEAR FROM fodselsdato) IN (6, 11, 15)`
+- `bidrag_fra <= aldersjusteringsdato`
+- `bidrag_til IS NULL OR bidrag_til > aldersjusteringsdato`
+
+For hvert treff opprettes en aldersjustering med status `UBEHANDLET` (dersom den ikke allerede finnes for samme barn og aldersgruppe).
+
+`batch_id` settes til `aldersjustering_bidrag_<årstall>`.
+Hvis det er feil i uttrekket, kan rader med årets `batch_id` slettes og batchen kjøres på nytt.
 **NB: Ikke slett rader fra eldre batchkjøringer.**
 
-Denne kan trigges ved å kalle POST: `https://bidrag-automatisk-jobb-q1.intern.dev.nav.no/aldersjustering/batch/bidrag/opprett?aar=<årstall aldersjustering>`
+Batchen trigges med:
+`POST /aldersjustering/batch/bidrag/opprett?aar=<årstall>`
 
-Status på kjøringen kan sjekkes i `batch_job_execution`-tabellen i databasen.
-Hvis status = 'COMPLETED', er kjøringen ferdig.
+Støttet parameter:
+- `aar` (påkrevd): året det skal aldersjusteres for.
+- `aldersjusteringsdato` (valgfri): cutoff-dato for uttrekket. Hvis ikke satt, brukes `01.07.<aar>`.
+
+Status på kjøringen kan sjekkes i `batch_job_execution`-tabellen (jobbnavn `opprettAldersjusteringerBidragJob`).
+Når status er `COMPLETED`, er kjøringen ferdig.
 
 #### Grunnlagsoverføring
 Før alle grunnlag fra vedtak fattet i BBM er overført til bidrag-vedtak, må grunnlagsoverføring kjøres for alle saker som skal aldersjusteres.
@@ -80,7 +91,7 @@ Denne kan trigges ved å kalle `POST /aldersjustering/batch/bidrag/beregn`
 
 Med parametere:
 - `simuler` - Simuler aldersjustering beregning uten å opprette vedtaksforslag. Dette kan brukes til å hente utrekk over antall barn som skal aldersjusteres og som må behandles manuelt.
-- `inkluderBehandlet` - Rekjør beregning på aldersjusteringer som allerede er behandlet og har blitt opprettet vedtaksforslag. (status = `UBEHANDLET`)
+- `inkluderBehandlet` - Rekjør beregning på aldersjusteringer som allerede er behandlet og har blitt opprettet vedtaksforslag. (status = `BEHANDLET`). Beregning vil ikke ble kjørt for aldersjusteringer hvor vedtak er fattet.
 - `barn` - liste over barnider som det ønskes å beregnes for. Hvis det ikke er satt så beregnes det for alle med status `UBEHANDLET`
 
 Andre fase er å kjøre beregning av aldersjustering.
@@ -89,7 +100,6 @@ I denne kjøringen beregnes aldersjustering for alle barn som ble opprettet i fa
 Aldersjustering beregning kan føre til følgende utfall:
 
 Status:
-- `UBEHANDLET` - Aldersjustering er opprettet men ingen beregning er utført
 - `SIMULERT` - Aldersjusteringen ble behandlet med suksess men det ble ikke opprettet en vedtaksforslag
 - `BEHANDLET` - Aldersjusteringen ble behandlet med suksess og det ble opprettet en vedtaksforslag
 - `FEILET` - Det skjedde en feil under beregning av aldersjusteringen. Feil begrunnelsen er lagret i `begrunnelse` kolonnen i aldersjustering tabellen
@@ -114,31 +124,67 @@ Da endres vedtaksforslag til et vedtak.
 
 Denne kan trigges ved å kalle `POST /aldersjustering/batch/bidrag/fattVedtak`
 
+Batchen behandler kun aldersjusteringer som oppfyller:
+- `status = BEHANDLET`
+- `behandlingstype IN (MANUELL, FATTET_FORSLAG, INGEN)` (kan overstyres med parameter)
+- `vedtak ikke fattet`
+
 Med parametere:
 - `barn` - liste over barnider som det ønskes å fattes vedtak for. Hvis det ikke er satt så fattes det vedtak for alle
-- `behandlingstyper` - Liste over behandlingstyper det skal fattes vedtak for. Det kan brukes for å begynne med å fatte vedtak for de som aldersjusteres og ta de manuelle/ingen senere
-- `simuler` - Fattes ingen vedtak men det opprettes en forsendelse for vedtak. Dette kan brukes til å teste forsendelse/brev før det fattes vedtak
-- `kunRedusertBidrag` - Fatte kun vedtak for casene hvor aldersjusteringen fører til at bidraget reduseres. Dette kan brukes for å fatte vedtak for å unngå B4
+- `behandlingstyper` - Liste over behandlingstyper det skal fattes vedtak for. Default: `MANUELL,FATTET_FORSLAG,INGEN`
+- `simuler` - Default er `true`. Når `true` fattes ingen vedtak, men batchen kan fortsatt oppretter forsendelse bestilling (se under)
+- `kunRedusertBidrag` - Fatte kun vedtak for casene hvor aldersjusteringen fører til at bidraget reduseres. Dette kan brukes for å fatte vedtak for å unngå B4 i regnskapet.
+
+Resultat av kjøring:
+- `simuler=false`: vedtak fattes, og status settes til `FATTET` ved suksess (eller `FATTE_VEDTAK_FEILET` ved feil)
+- `simuler=true`: vedtak fattes ikke men det opprettes en bestilling av forsendelse for vedtak
+
+Forsendelsebestilling i Del 3:
+- Forsendelsebestilling opprettes kun for aldersjusteringer med `behandlingstype = FATTET_FORSLAG`
+- Det opprettes bestilling i `forsendelse_bestilling` for både BP og BM (`ALDERSJUSTERING_BIDRAG`)
+- Dette gjelder også når `simuler=true`, og kan brukes for å teste brev/forsendelse før det fattes vedtak
 
 NB!: Viktig at for de manuelle så må vedtak fattes etter 1. Juli. Det er fordi det opprettes en søknad med mottatt dato 1. Juli. og Bisys har begrensning at det ikke kan opprettes mottatt dato frem i tid.
+#### Testing av forsendelse
+Kall `POST /aldersjustering/batch/bidrag/fattVedtak`
+
+Med parameter:
+- `simuler=true`
+
+Det fattes ingen vedtak men det **opprettes en bestilling av forsendelse for vedtak** hvor det opprettes rad i `forsendelse_bestilling`-tabellen med bestilling for BM og BP (for `behandlingstype = FATTET_FORSLAG`).
+Dette kan brukes til å teste forsendelse/brev før det fattes vedtak.
 
 #### Del 4 - Opprett forsendelse
-I denne fasen opprettes forsendelse for alle vedtak som ble fattet i Del 3.
-For å kunne teste forsendelse kan Del 3 kjøres med parameteren `simuler=true` slik at forsendelse kan opprettes uten at det fattes vedtak.
+I denne fasen opprettes forsendelse i bidrag-dokument-forsendelse for forsendelsebestillinger fra Del 3.
+For å kunne teste forsendelse kan Del 3 kjøres med parameteren `simuler=true`, slik at forsendelse kan opprettes uten at vedtak fattes.
 
 Denne kan trigges ved å kalle `POST /batch/forsendelse/opprett`
 
+Uten parametere:
+- Batchen finner alle aktive bestillinger som mangler opprettet forsendelse, og oppretter forsendelse for disse.
+
 Med parametere:
-- `prosesserFeilet` - Rekjør oppretting for forsendelser som tidligere har feilet
-- `bestillingIds` - Komma-separert liste over `forsendelse_bestilling` id-er som skal slettes og gjennopprettes. Hvis det ikke er satt så opprettes det for alle `forsendelse_bestilling` uten `forsendelse_id`
+- `prosesserFeilet` (default `false`) - bestemmer om bestillinger som tidligere har feilet skal forsøkes på nytt
+- `bestillingIder` - komma-separert liste over bestillinger som skal kjøres på nytt. For disse slettes eventuell eksisterende forsendelse før ny opprettes
+
+Når `bestillingIder` er satt:
+- Batchen begandler kun disse bestillingene.
+- Brukes typisk ved feilretting eller når enkeltbrev må opprettes på nytt.
 
 NB!: Det er viktig at det gjøres stikkprøver ved å sjekke innhold på noen av brevene før distribusjon bestilles i neste fase.
 
 #### Del 5 - Distribuer forsendelse
-I denne fasen distribueres forsendelsene som ble opprettet i Del 4 til mottakerne (bidragspliktig og/eller bidragsmottaker).
-Distribuering arkiverer forsendelsen i Joark og bestiller distribusjon av forsendelsen
+I denne fasen distribueres forsendelsene som ble opprettet i Del 4.
+Distribuering arkiverer forsendelsen i Joark og bestiller distribusjon.
 
 Denne kan trigges ved å kalle `POST /batch/forsendelse/distribuer`
 
+Uten parametere:
+- Batchen distribuerer alle opprettede og aktive forsendelser som ikke allerede er distribuert.
+
 Med parametere:
-- `bestillingIds` - Komma-separert liste over `forsendelse_bestilling` id-er som skal distribueres. Hvis det ikke er satt så distribueres det for alle `forsendelse_bestilling` som er opprettet og ikke distribuert
+- `bestillingIder` - komma-separert liste over `forsendelse_bestilling`-id-er som skal distribueres
+
+Når `bestillingIder` er satt:
+- Batchen distribuerer kun de angitte bestillingene.
+- Dette er nyttig ved kontrollert distribusjon av enkelte forsendelser.
