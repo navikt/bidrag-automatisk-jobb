@@ -18,15 +18,15 @@ class OpprettForsendelseBatch(
 ) {
     fun start(
         prosesserFeilet: Boolean = false,
-        bestillingIds: String? = null,
+        bestillingIder: String? = null,
     ) {
         try {
             val paramsBuilder =
                 JobParametersBuilder()
                     .addString("prosesserFeilet", prosesserFeilet.toString())
                     .addString("runId", UUID.randomUUID().toString())
-            if (!bestillingIds.isNullOrEmpty()) {
-                paramsBuilder.addString("bestillingIds", bestillingIds)
+            if (!bestillingIder.isNullOrEmpty()) {
+                paramsBuilder.addString("bestillingIds", bestillingIder)
             }
             jobOperator.start(
                 opprettForsendelseJob,

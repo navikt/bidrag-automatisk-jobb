@@ -1,6 +1,7 @@
 package no.nav.bidrag.automatiskjobb.controller
 
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
@@ -24,11 +25,11 @@ class ForsendelseBatchController(
 ) {
     @PostMapping("/batch/forsendelse/slett")
     @Operation(
-        summary = "Start kjøring av batch som sletter forsendelser med skal_slettes=true, eller en spesifikk bestilling etter ID.",
+        summary = "Start kjøring av batch som sletter forsendelser med skal_slettes=true eller spesifikke forsendelse bestillinger.",
         description =
-            "Operasjon for å starte kjøring av batch som skal slette alle forsendelser " +
-                "som er satt til skal slettes med kolonnen skal_slettes=true. " +
-                "Dersom bestillingIds er angitt, slettes kun forsendelsene for de angitte bestillingene.",
+            "Sletter forsendelser basert på kriterier. " +
+                "Uten parametere slettes alle forsendelser som er markert med skal_slettes=true. " +
+                "Med bestillingIder slettes kun forsendelsene for de angitte IDene fra forsendelse_bestilling tabellen.",
         security = [SecurityRequirement(name = "bearer-key")],
     )
     @ApiResponses(
@@ -40,56 +41,78 @@ class ForsendelseBatchController(
         ],
     )
     fun starSlettForsendelserSomSkalSlettesBatch(
-        @RequestParam bestillingIds: String? = null,
+        @RequestParam
+        @Parameter(
+            description =
+                "Komma-separert liste over ID fra forsendelse_bestilling tabellen som skal slettes. " +
+                    "Eksempel: 1,2,3. Hvis ikke angitt slettes alle forsendelser med skal_slettes=true",
+        )
+        bestillingIder: String? = null,
     ): ResponseEntity<Any> {
-        slettForsendelseSomSkalSlettesBatch.start(bestillingIds)
+        slettForsendelseSomSkalSlettesBatch.start(bestillingIder)
         return ResponseEntity.ok().build()
     }
 
     @PostMapping("/batch/forsendelse/opprett")
     @Operation(
-        summary = "Start kjøring av batch for å opprette forsendelse for aldersjusteringer.",
+        summary = "Start kjøring av batch for å opprette forsendelser.",
         description =
-            "Operasjon for å starte kjøring av batch som oppretter forsendelse for aldersjusteringer. " +
-                "Dersom bestillingIds er angitt, slettes og gjennopprettes forsendelsene for de angitte bestillingene.",
+            "Oppretter forsendelser for vedtak. " +
+                "Uten bestillingIder opprettes forsendelser for alle vedtak som ikke har forsendelse opprettet. " +
+                "Med bestillingIder slettes og gjennopprettes forsendelsene for de IDene fra forsendelse_bestilling tabellen.",
         security = [SecurityRequirement(name = "bearer-key")],
     )
     @ApiResponses(
         value = [
             ApiResponse(
                 responseCode = "200",
-                description = "Batch for oppretting av forsendelser for aldersjusteringer ble startet.",
+                description = "Batch for oppretting av forsendelser ble startet.",
             ),
         ],
     )
     fun startOpprettForsendelseAldersjusteringBidragBatch(
-        @RequestParam prosesserFeilet: Boolean = false,
-        @RequestParam bestillingIds: String? = null,
+        @RequestParam
+        @Parameter(description = "Prosessér forsendelser som tidligere har feilet")
+        prosesserFeilet: Boolean = false,
+        @RequestParam
+        @Parameter(
+            description =
+                "Komma-separert liste over ID fra forsendelse_bestilling tabellen som skal slettes og gjennopprettes. " +
+                    "Eksempel: 1,2,3. Hvis ikke angitt opprettes det for alle forsendelsebestillinger uten forsendelse_id",
+        )
+        bestillingIder: String? = null,
     ): ResponseEntity<Any> {
-        opprettForsendelseBatch.start(prosesserFeilet, bestillingIds)
+        opprettForsendelseBatch.start(prosesserFeilet, bestillingIder)
         return ResponseEntity.ok().build()
     }
 
     @PostMapping("/batch/forsendelse/distribuer")
     @Operation(
-        summary = "Start kjøring av batch for å distribuere forsendelse for aldersjusteringer.",
+        summary = "Start kjøring av batch for å distribuere forsendelser.",
         description =
-            "Operasjon for å starte kjøring av batch som distribuerer forsendelser for aldersjusteringer. " +
-                "Dersom bestillingIds er angitt, distribueres kun forsendelsene for de angitte bestillingene.",
+            "Distribuerer forsendelser til mottakerne (bidragspliktig og/eller bidragsmottaker). " +
+                "Uten bestillingIder distribueres alle forsendelser som er opprettet men ikke distribuert. " +
+                "Med bestillingIder distribueres kun forsendelsene for de angitte IDene fra forsendelse_bestilling tabellen.",
         security = [SecurityRequirement(name = "bearer-key")],
     )
     @ApiResponses(
         value = [
             ApiResponse(
                 responseCode = "200",
-                description = "Batch for distrubisjon av forsendelser for aldersjusteringer ble startet.",
+                description = "Batch for distribusjon av forsendelser ble startet.",
             ),
         ],
     )
     fun startDistribuerForsendelseAldersjusteringBidragBatch(
-        @RequestParam bestillingIds: String? = null,
+        @RequestParam
+        @Parameter(
+            description =
+                "Komma-separert liste over ID fra forsendelse_bestilling tabellen som skal distribueres. " +
+                    "Eksempel: 1,2,3. Hvis ikke angitt distribueres alle opprettede forsendelser som ikke er distribuert",
+        )
+        bestillingIder: String? = null,
     ): ResponseEntity<Any> {
-        distribuerForsendelseBidragBatch.start(bestillingIds)
+        distribuerForsendelseBidragBatch.start(bestillingIder)
         return ResponseEntity.ok().build()
     }
 }

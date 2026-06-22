@@ -16,13 +16,13 @@ class SlettForsendelseSomSkalSlettesBatch(
     @param:Qualifier("asyncJobLauncher") private val jobOperator: JobOperator,
     private val slettForsendelserSomSkalSlettesJob: Job,
 ) {
-    fun start(bestillingIds: String? = null) {
+    fun start(bestillingIder: String? = null) {
         try {
             val paramsBuilder =
                 JobParametersBuilder()
                     .addString("runId", UUID.randomUUID().toString())
-            if (!bestillingIds.isNullOrEmpty()) {
-                paramsBuilder.addString("bestillingIds", bestillingIds)
+            if (!bestillingIder.isNullOrEmpty()) {
+                paramsBuilder.addString("bestillingIds", bestillingIder)
             }
             jobOperator.start(
                 slettForsendelserSomSkalSlettesJob,

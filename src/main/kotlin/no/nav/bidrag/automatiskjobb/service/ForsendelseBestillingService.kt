@@ -213,7 +213,7 @@ class ForsendelseBestillingService(
 
         fun skalSlettes(bestilling: ForsendelseBestilling): Boolean =
             (bestilling.skalSlettes && bestilling.slettetTidspunkt == null) ||
-                (bestilling.forsendelseId == null && bestilling.distribuertTidspunkt == null)
+                (bestilling.distribuertTidspunkt == null)
 
         eksisterende
             .filter { skalSlettes(it) }
