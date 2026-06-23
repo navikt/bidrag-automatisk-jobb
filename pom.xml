@@ -23,7 +23,7 @@
         <kotest.version>5.9.1</kotest.version>
         <mockk.version>1.14.6</mockk.version>
         <ktlint.version>1.8.0</ktlint.version>
-        <shedlock.version>7.5.0</shedlock.version>
+        <shedlock.version>7.7.0</shedlock.version>
         <bidrag-beregn-felles.version>2026.06.23.143935</bidrag-beregn-felles.version>
         <slack-api.version>1.48.1</slack-api.version>
         <okhttp.version>5.2.1</okhttp.version>
