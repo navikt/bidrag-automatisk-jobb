@@ -118,6 +118,50 @@ INNER JOIN barn b ON b.id = a.barn_id
 WHERE a.behandlingstype = 'FATTET_FORSLAG';
 ```
 
+Eller for mer detaljert utrekk for testing
+
+```sql
+SELECT
+a.status,
+saksnummer,
+a.behandlingstype,
+b.fodselsdato as fødselsdato,
+resultat_siste_vedtak,
+fattet_tidspunkt,
+CASE
+    WHEN array_length(begrunnelse, 1) IS NULL THEN ''
+    ELSE string_agg(
+            CONCAT(
+                    UPPER(LEFT(REPLACE(begrunnelse_item, '_', ' '), 1)),
+                    LOWER(SUBSTRING(REPLACE(begrunnelse_item, '_', ' '), 2))
+            ), ', '
+         )
+    END AS begrunnelser,
+
+CASE
+    WHEN behandlingstype = 'MANUELL' THEN 'Ja'
+    ELSE 'Nei'
+    END AS skal_behandles_manuelt,
+CASE
+    WHEN behandlingstype = 'FATTET_FORSLAG' THEN 'Ja'
+    ELSE 'Nei'
+END AS fattes_vedtak,
+a.vedtak as vedtak_id,
+a.vedtaksid_beregning
+FROM aldersjustering a
+         INNER JOIN public.barn b ON b.id = a.barn_id
+         LEFT JOIN LATERAL unnest(
+        CASE
+            WHEN array_length(begrunnelse, 1) > 0 THEN begrunnelse
+            ELSE ARRAY[NULL]::text[]
+            END
+                           ) AS t(begrunnelse_item) ON array_length(begrunnelse, 1) > 0
+WHERE a.status = 'BEHANDLET' and a.batch_id = 'aldersjustering_bidrag_2026'
+GROUP BY b.id, a.id, a.oppgave, vedtak, vedtaksid_beregning, b.fodselsdato, b.kravhaver, saksnummer, begrunnelse, resultat_siste_vedtak, behandlingstype,b.skyldner
+ORDER BY begrunnelser;
+
+```
+
 #### Del 3 - Fatte vedtak
 I denne fasen fattes det vedtak for alle vedtaksforslagene som ble opprettet i Del 2.
 Da endres vedtaksforslag til et vedtak.
