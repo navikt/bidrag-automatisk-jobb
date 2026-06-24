@@ -466,11 +466,6 @@ class AldersjusteringService(
                     "saksnummer" to aldersjustering.barn.saksnummer,
                     "løpendeBeløp" to løpendeBeløp,
                     "aldersjustertBeløp" to sisteBeløp,
-                    "opphørsdato" to (
-                        sistePeriode.periode.til
-                            .toCompactString()
-                            .takeIf { it.isNotEmpty() } ?: "Ingen opphør"
-                    ),
                     "skalBehandlesManuelt" to if (aldersjustering.behandlingstype == Behandlingstype.MANUELL) "Ja" else "Nei",
                 )
             } else {
