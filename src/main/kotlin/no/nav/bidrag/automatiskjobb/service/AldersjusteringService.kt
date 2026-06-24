@@ -36,6 +36,7 @@ import no.nav.bidrag.transport.automatiskjobb.AldersjusteringIkkeAldersjustertRe
 import no.nav.bidrag.transport.automatiskjobb.AldersjusteringResultat
 import no.nav.bidrag.transport.automatiskjobb.AldersjusteringResultatlisteResponse
 import no.nav.bidrag.transport.automatiskjobb.HentAldersjusteringStatusRequest
+import no.nav.bidrag.transport.felles.toCompactString
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClientResponseException
@@ -433,7 +434,7 @@ class AldersjusteringService(
             withContext(Dispatchers.IO) {
                 alderjusteringRepository
                     .finnAlleForBehandlingstypeOgStatus(
-                        Behandlingstype.FATTET_FORSLAG,
+                        listOf(Behandlingstype.FATTET_FORSLAG, Behandlingstype.MANUELL),
                         listOf(Status.BEHANDLET),
                         Pageable.unpaged(),
                     )
@@ -456,7 +457,8 @@ class AldersjusteringService(
         try {
             val vedtak = vedtakConsumer.hentVedtak(aldersjustering.vedtak ?: return null) ?: return null
             val stønadsendring = vedtak.stønadsendringListe.find { it.kravhaver.verdi == aldersjustering.barn.kravhaver } ?: return null
-            val sisteBeløp = stønadsendring.periodeListe.maxByOrNull { it.periode.fom }?.beløp ?: return null
+            val sistePeriode = stønadsendring.periodeListe.maxByOrNull { it.periode.fom }
+            val sisteBeløp = sistePeriode?.beløp ?: return null
             val løpendeBeløp = aldersjustering.lopendeBelop ?: return null
 
             if (løpendeBeløp > sisteBeløp) {
@@ -464,6 +466,12 @@ class AldersjusteringService(
                     "saksnummer" to aldersjustering.barn.saksnummer,
                     "løpendeBeløp" to løpendeBeløp,
                     "aldersjustertBeløp" to sisteBeløp,
+                    "opphørsdato" to (
+                        sistePeriode.periode.til
+                            .toCompactString()
+                            .takeIf { it.isNotEmpty() } ?: "Ingen opphør"
+                    ),
+                    "skalBehandlesManuelt" to if (aldersjustering.behandlingstype == Behandlingstype.MANUELL) "Ja" else "Nei",
                 )
             } else {
                 null
