@@ -36,8 +36,9 @@ class DistribuerForsendelseBatchReader(
                     } else {
                         "WHERE forsendelse_id IS NOT NULL " +
                             "AND forsendelse_opprettet_tidspunkt IS NOT NULL " +
-                            "AND slettet_tidspunkt IS NULL and skal_slettes = false " +
-                            "AND distribuert_tidspunkt IS NULL"
+                            "AND slettet_tidspunkt IS NULL AND skal_slettes = false " +
+                            "AND distribuert_tidspunkt IS NULL " +
+                            "AND EXTRACT(YEAR FROM opprettet_tidspunkt) = EXTRACT(YEAR FROM CURRENT_DATE)"
                     }
                 setWhereClause(whereClause)
                 setSortKeys(mapOf("id" to Order.ASCENDING))
