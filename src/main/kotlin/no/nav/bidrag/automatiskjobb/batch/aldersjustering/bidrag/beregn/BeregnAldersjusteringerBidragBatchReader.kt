@@ -2,6 +2,7 @@ package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.beregn
 
 import no.nav.bidrag.automatiskjobb.batch.utils.BatchConfiguration.Companion.PAGE_SIZE
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
+import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
 import no.nav.bidrag.automatiskjobb.persistence.rowmapper.AlderjusteringRowMapper
 import org.springframework.batch.core.configuration.annotation.StepScope
@@ -18,8 +19,7 @@ class BeregnAldersjusteringerBidragBatchReader(
     barnRepository: BarnRepository,
     private val dataSource: DataSource,
     @Value("#{jobParameters['barn']}") barn: String? = "",
-    @Value("#{jobParameters['inkluderBehandlet']}") inkluderBehandlet: Boolean = false,
-    @Value("#{jobParameters['inkluderSlettet']}") inkluderSlettet: Boolean = false,
+    @Value("#{jobParameters['statuser']}") statuser: String? = "UBEHANDLET,FEILET,SIMULERT",
 ) : JdbcPagingItemReader<Aldersjustering>(
         dataSource,
         SqlPagingQueryProviderFactoryBean()
@@ -40,16 +40,10 @@ class BeregnAldersjusteringerBidragBatchReader(
                     whereClause.append("(barn_id IN (:barnIds)")
                 }
                 whereClause.append(")")
-                val statusList = mutableListOf("UBEHANDLET", "FEILET", "SIMULERT")
-                if (inkluderBehandlet) {
-                    statusList.add("BEHANDLET")
-                }
-                if (inkluderSlettet) {
-                    statusList.add("SLETTET")
-                }
-                val statusString = statusList.joinToString("', '", "'", "'")
-                whereClause.append("AND status IN ($statusString)")
-                whereClause.append("AND fattet_tidspunkt is null")
+                val statusListe = parseStatuser(statuser)
+                val statusString = statusListe.joinToString("', '", "'", "'") { it.name }
+                whereClause.append(" AND status IN ($statusString)")
+                whereClause.append(" AND fattet_tidspunkt is null")
                 setWhereClause(whereClause.toString())
                 setSortKeys(mapOf("id" to Order.ASCENDING))
             }.`object`,
@@ -73,6 +67,25 @@ class BeregnAldersjusteringerBidragBatchReader(
             this.isSaveState = false
         } catch (e: Exception) {
             throw RuntimeException("Failed to create JdbcPagingItemReader", e)
+        }
+    }
+
+    private companion object {
+        val DEFAULT_STATUSER = listOf(Status.UBEHANDLET, Status.FEILET, Status.SIMULERT)
+
+        fun parseStatuser(statuser: String?): List<Status> {
+            if (statuser.isNullOrBlank()) return DEFAULT_STATUSER
+            val navn = statuser.split(",").map { it.trim() }.filter { it.isNotBlank() }
+            if (navn.isEmpty()) return DEFAULT_STATUSER
+            return navn.map {
+                try {
+                    Status.valueOf(it.uppercase())
+                } catch (_: IllegalArgumentException) {
+                    throw IllegalArgumentException(
+                        "Ugyldig status '$it'. Gyldige verdier er: ${Status.entries.joinToString { s -> s.name }}.",
+                    )
+                }
+            }
         }
     }
 }

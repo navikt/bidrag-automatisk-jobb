@@ -1,6 +1,7 @@
 package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.beregn
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.parameters.JobParametersBuilder
 import org.springframework.batch.core.launch.JobExecutionAlreadyRunningException
@@ -18,8 +19,7 @@ class BeregnAldersjusteringerBidragBatch(
 ) {
     fun startBeregnAldersjusteringBidragBatch(
         simuler: Boolean,
-        inkluderBehandlet: Boolean,
-        inkluderSlettet: Boolean,
+        statuser: List<Status>,
         barn: String?,
     ) {
         try {
@@ -27,8 +27,7 @@ class BeregnAldersjusteringerBidragBatch(
                 beregnAldersjusteringerBidragJob,
                 JobParametersBuilder()
                     .addString("barn", barn ?: "")
-                    .addString("inkluderBehandlet", inkluderBehandlet.toString())
-                    .addString("inkluderSlettet", inkluderSlettet.toString())
+                    .addString("statuser", statuser.joinToString(",") { it.name })
                     .addString("simuler", simuler.toString())
                     .addString("runId", UUID.randomUUID().toString())
                     .toJobParameters(),
