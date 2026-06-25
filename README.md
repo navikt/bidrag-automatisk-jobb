@@ -91,18 +91,21 @@ Denne kan trigges ved å kalle `POST /aldersjustering/batch/bidrag/beregn`
 
 Med parametere:
 - `simuler` - Simuler aldersjustering beregning uten å opprette vedtaksforslag. Dette kan brukes til å hente utrekk over antall barn som skal aldersjusteres og som må behandles manuelt.
-- `inkluderBehandlet` - Rekjør beregning på aldersjusteringer som allerede er behandlet og har blitt opprettet vedtaksforslag. (status = `BEHANDLET`). Beregning vil ikke ble kjørt for aldersjusteringer hvor vedtak er fattet.
-- `barn` - liste over barnider som det ønskes å beregnes for. Hvis det ikke er satt så beregnes det for alle med status `UBEHANDLET`
+- `statuser` - Kommaseparert liste over statuser som skal inkluderes i kjøringen. Default er `UBEHANDLET,FEILET,SIMULERT`. Se statusbeskrivelser under.
+- `barn` - liste over barnider som det ønskes å beregnes for. Hvis det ikke er satt så beregnes det for alle.
 
 Andre fase er å kjøre beregning av aldersjustering.
 I denne kjøringen beregnes aldersjustering for alle barn som ble opprettet i fase 1.
 
 Aldersjustering beregning kan føre til følgende utfall:
 
-Status:
-- `SIMULERT` - Aldersjusteringen ble behandlet med suksess men det ble ikke opprettet en vedtaksforslag
-- `BEHANDLET` - Aldersjusteringen ble behandlet med suksess og det ble opprettet en vedtaksforslag
-- `FEILET` - Det skjedde en feil under beregning av aldersjusteringen. Feil begrunnelsen er lagret i `begrunnelse` kolonnen i aldersjustering tabellen
+Status etter beregning:
+- `UBEHANDLET` - Ny aldersjustering som ikke er beregnet ennå (startverdi fra Del 1).
+- `SIMULERT` - Aldersjusteringen ble behandlet med suksess men det ble ikke opprettet en vedtaksforslag (simuleringsmodus).
+- `BEHANDLET` - Aldersjusteringen ble behandlet med suksess og det ble opprettet et vedtaksforslag. Beregning vil ikke kjøres på nytt med mindre `BEHANDLET` er eksplisitt inkludert i `statuser`. Eksisterende vedtaksforslag slettes og nytt opprettes — vedtak som allerede er fattet påvirkes ikke.
+- `FEILET` - Det skjedde en feil under beregning av aldersjusteringen. Feil begrunnelsen er lagret i `begrunnelse` kolonnen i aldersjustering tabellen.
+- `FATTE_VEDTAK_FEILET` - Et tidligere forsøk på å fatte vedtak (Del 3) feilet, typisk fordi saksbehandler fattet vedtak manuelt etter at beregningen ble utført. Disse kan rekjøres ved å inkludere `FATTE_VEDTAK_FEILET` i `statuser`.
+- `SLETTET` - Aldersjusteringen er markert som slettet. Kan rekjøres ved å inkludere `SLETTET` i `statuser`.
 
 Behandlingstype:
 - `FATTET_FORSLAG` - Det ble opprettet vedtaksforslag og kan åpnes via Sakshistorikken for saken
@@ -159,7 +162,25 @@ FROM aldersjustering a
 WHERE a.status = 'BEHANDLET' and a.batch_id = 'aldersjustering_bidrag_2026'
 GROUP BY b.id, a.id, a.oppgave, vedtak, vedtaksid_beregning, b.fodselsdato, b.kravhaver, saksnummer, begrunnelse, resultat_siste_vedtak, behandlingstype,b.skyldner
 ORDER BY begrunnelser;
+```
 
+For statistikk
+```sql
+SELECT
+    behandlingstype,
+    CASE behandlingstype
+        WHEN 'FATTET_FORSLAG' THEN 'Vedtak fattes automatisk'
+        WHEN 'MANUELL'        THEN 'Skal behandles manuelt'
+        WHEN 'INGEN'          THEN 'Ingen aldersjustering'
+        WHEN 'FEILET'         THEN 'Feilet'
+        ELSE                       'Ukjent / ikke beregnet'
+    END                          AS beskrivelse,
+    COUNT(*)                     AS totalt
+FROM aldersjustering a
+         INNER JOIN barn b ON b.id = a.barn_id
+WHERE a.batch_id = 'aldersjustering_bidrag_2026'
+GROUP BY behandlingstype
+ORDER BY totalt DESC;
 ```
 
 #### Del 3 - Fatte vedtak
@@ -180,8 +201,12 @@ Med parametere:
 - `kunRedusertBidrag` - Fatte kun vedtak for casene hvor aldersjusteringen fører til at bidraget reduseres. Dette kan brukes for å fatte vedtak for å unngå B4 i regnskapet.
 
 Resultat av kjøring:
-- `simuler=false`: vedtak fattes, og status settes til `FATTET` ved suksess (eller `FATTE_VEDTAK_FEILET` ved feil)
-- `simuler=true`: vedtak fattes ikke men det opprettes en bestilling av forsendelse for vedtak
+- `simuler=false`: vedtak fattes, og status settes til `FATTET` ved suksess eller `FATTE_VEDTAK_FEILET` ved feil.
+- `simuler=true`: vedtak fattes ikke men det opprettes en bestilling av forsendelse for vedtak.
+
+> **Merk:** Status `FATTE_VEDTAK_FEILET` kan oppstå dersom saksbehandler har fattet vedtak manuelt i perioden etter at beregningen i Del 2 ble utført.
+> I slike tilfeller vil batchen forsøke å fatte vedtak på et grunnlag som ikke lenger er gyldig.
+> Disse sakene kan rekjøres fra Del 2 ved å inkludere `FATTE_VEDTAK_FEILET` i `statuser`-parameteren.
 
 Forsendelsebestilling i Del 3:
 - Forsendelsebestilling opprettes kun for aldersjusteringer med `behandlingstype = FATTET_FORSLAG`
@@ -215,7 +240,7 @@ Når `bestillingIder` er satt:
 - Batchen begandler kun disse bestillingene.
 - Brukes typisk ved feilretting eller når enkeltbrev må opprettes på nytt.
 
-NB!: Det er viktig at det gjøres stikkprøver ved å sjekke innhold på noen av brevene før distribusjon bestilles i neste fase.
+> **NB!:** Det er viktig at det gjøres stikkprøver ved å sjekke innhold på noen av brevene før distribusjon bestilles i neste fase.
 
 #### Del 5 - Distribuer forsendelse
 I denne fasen distribueres forsendelsene som ble opprettet i Del 4.
@@ -232,3 +257,5 @@ Med parametere:
 Når `bestillingIder` er satt:
 - Batchen distribuerer kun de angitte bestillingene.
 - Dette er nyttig ved kontrollert distribusjon av enkelte forsendelser.
+
+> **NB!:** Husk å varsle i slack kanalen [#team-dokumenthåndtering](https://nav-it.slack.com/archives/C6W9E5GPJ) at det skal kjøres batch med opprettelse og distribusjon av vedtaksbrev for aldersjustering av barnebidrag

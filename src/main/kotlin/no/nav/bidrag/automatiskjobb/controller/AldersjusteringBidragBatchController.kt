@@ -15,6 +15,7 @@ import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.opprett.Opprett
 import no.nav.bidrag.automatiskjobb.batch.utils.slettallevedtaksforslag.SlettAlleVedtaksforslagBatch
 import no.nav.bidrag.automatiskjobb.batch.utils.slettvedtaksforslag.SlettVedtaksforslagBatch
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
+import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import no.nav.security.token.support.core.api.Protected
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
@@ -210,7 +211,8 @@ class AldersjusteringBidragBatchController(
         summary = "Start kjøring av batch for å beregne aldersjusteringer.",
         description =
             "Operasjon for å starte kjøring av batch som beregner aldersjusteringer og oppretter vedtaksforslag. " +
-                "Det opprettes også vedtaksforslag for saker som også ikke aldersjusteres med beslutningstype=AVVIST",
+                "Det opprettes også vedtaksforslag for saker som ikke aldersjusteres, med beslutningstype=AVVIST. " +
+                "Standard kjøring inkluderer statuser UBEHANDLET, FEILET og SIMULERT.",
         security = [SecurityRequirement(name = "bearer-key")],
     )
     @ApiResponses(
@@ -224,19 +226,20 @@ class AldersjusteringBidragBatchController(
     @Parameters(
         value = [
             Parameter(
-                name = "inkluderBehandlet",
-                example = "false",
+                name = "statuser",
+                example = "UBEHANDLET,FEILET,SIMULERT",
                 description =
-                    "Beregner behandlet aldersjusteringer på nytt. " +
-                        "Da vil eksisterende vedtaksforslag bli slettet og det vil opprettet nytt vedtaksforslag. " +
-                        "Dette vil ikke gjøre noe endringer på aldersjusteringer hvor vedtak er fattet",
-                required = false,
-            ),
-            Parameter(
-                name = "inkluderSlettet",
-                example = "false",
-                description =
-                    "Beregner slettet aldersjusteringer på nytt.",
+                    "Kommaseparert liste over statuser som skal inkluderes i kjøringen. " +
+                        "Default er UBEHANDLET,FEILET,SIMULERT. " +
+                        "Mulige verdier:\n" +
+                        "- UBEHANDLET: Nye aldersjusteringer som ikke er beregnet ennå.\n" +
+                        "- FEILET: Aldersjusteringer der beregningen feilet og må kjøres på nytt.\n" +
+                        "- SIMULERT: Aldersjusteringer som er beregnet i simuleringsmodus og ikke har vedtaksforslag.\n" +
+                        "- BEHANDLET: Aldersjusteringer som allerede er beregnet og har vedtaksforslag. " +
+                        "Eksisterende vedtaksforslag slettes og det opprettes nytt. Påvirker ikke fattet vedtak.\n" +
+                        "- FATTE_VEDTAK_FEILET: Aldersjusteringer der et tidligere forsøk på å fatte vedtak feilet. " +
+                        "Nyttig for å rekjøre uten å inkludere alle behandlede poster.\n" +
+                        "- SLETTET: Aldersjusteringer som er slettet og skal beregnes på nytt.",
                 required = false,
             ),
             Parameter(
@@ -249,21 +252,19 @@ class AldersjusteringBidragBatchController(
                 name = "barn",
                 example = "1,2,3",
                 description =
-                    "Liste over barn som det skal opprettes oppgaver for. Om ingen er sendt kjøres alle. Maks lengde på input er 250 tegn!",
+                    "Liste over barn som det skal beregnes aldersjusteringer for. Om ingen er sendt kjøres alle. Maks lengde på input er 250 tegn!",
                 required = false,
             ),
         ],
     )
     fun startBeregnAldersjusteringBidragBatch(
-        @RequestParam inkluderBehandlet: Boolean = false,
-        @RequestParam inkluderSlettet: Boolean = false,
+        @RequestParam statuser: List<Status> = listOf(Status.UBEHANDLET, Status.FEILET, Status.SIMULERT),
         @RequestParam simuler: Boolean = true,
         @RequestParam barn: String? = null,
     ): ResponseEntity<Any> {
         beregnAldersjusteringerBidragBatch.startBeregnAldersjusteringBidragBatch(
             simuler,
-            inkluderBehandlet,
-            inkluderSlettet,
+            statuser,
             barn,
         )
         return ResponseEntity.ok().build()
