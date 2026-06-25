@@ -88,6 +88,20 @@ interface AldersjusteringRepository : JpaRepository<Aldersjustering, Int> {
 
     @Suppress("unused")
     @Query(
+        "SELECT a FROM aldersjustering a " +
+            "WHERE a.status = 'FATTET' " +
+            "AND EXTRACT(YEAR FROM a.fattetTidspunkt) = :aar " +
+            "AND a.b4Beløp IS NULL " +
+            "AND (:#{#barnIds.isEmpty()} = true OR a.barn.id IN :barnIds)",
+    )
+    fun finnFattetForÅrUtenB4Beløp(
+        @Param("aar") fattetÅr: Int,
+        @Param("barnIds") barnIds: List<Int>,
+        pageable: Pageable,
+    ): Page<Aldersjustering>
+
+    @Suppress("unused")
+    @Query(
         "SELECT a FROM aldersjustering a left join fetch a.barn " +
             "WHERE a.behandlingstype in :behandlingstype " +
             "AND a.status in :status " +
