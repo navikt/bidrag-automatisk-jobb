@@ -41,6 +41,7 @@ data class Aldersjustering(
     @Column(name = "opprettet_tidspunkt", nullable = false, updatable = false)
     val opprettetTidspunkt: Timestamp = Timestamp(System.currentTimeMillis()),
     var fattetTidspunkt: Timestamp? = null,
+    var b4Beløp: BigDecimal? = null,
     @Column(name = "stonadstype")
     @Enumerated(EnumType.STRING)
     override val stønadstype: Stønadstype = Stønadstype.BIDRAG,

@@ -1,0 +1,1 @@
+ALTER TABLE aldersjustering ADD COLUMN IF NOT EXISTS b4_belop NUMERIC;

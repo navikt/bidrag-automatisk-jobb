@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.beregn.BeregnAldersjusteringerBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.fattvedtak.FattVedtakOmAldersjusteringerBidragBatch
+import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.lagreb4.LagreB4InformasjonBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.oppgave.opprettoppgave.OppgaveAldersjusteringBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.oppgave.slettoppgave.SlettOppgaveAldersjusteringBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.opprett.OpprettAldersjusteringerBidragBatch
@@ -34,6 +35,7 @@ class AldersjusteringBidragBatchController(
     private val oppgaveAldersjusteringBidragBatch: OppgaveAldersjusteringBidragBatch,
     private val slettOppgaveAldersjusteringBidragBatch: SlettOppgaveAldersjusteringBidragBatch,
     private val beregnAldersjusteringerBidragBatch: BeregnAldersjusteringerBidragBatch,
+    private val lagreB4InformasjonBidragBatch: LagreB4InformasjonBidragBatch,
 ) {
     @PostMapping("/aldersjustering/batch/slettvedtaksforslag")
     @Operation(
@@ -344,6 +346,53 @@ class AldersjusteringBidragBatchController(
             barn,
             batchId,
         )
+        return ResponseEntity.ok().build()
+    }
+
+    @PostMapping("/aldersjustering/batch/bidrag/lagreB4Informasjon")
+    @Operation(
+        summary = "Start kjøring av batch for å lagre B4-beløp for aldersjusteringer.",
+        description =
+            "Operasjon for å starte kjøring av batch som henter B4-avregningsbeløp fra reskontro " +
+                "for alle aldersjusteringer som er fattet i et gitt år, og lagrer beløpet i `b4_belop`-kolonnen. " +
+                "B4-beløpet representerer avregning der BM skylder BP (transaksjonskode B4/D4) og oppstår " +
+                "typisk når aldersjustert bidrag er lavere enn utbetalt bidrag. " +
+                "Kun beløp større enn null lagres. Batchen er idempotent og kan kjøres på nytt.",
+        security = [SecurityRequirement(name = "bearer-key")],
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Batch for lagring av B4-informasjon ble startet.",
+            ),
+        ],
+    )
+    @Parameters(
+        value = [
+            Parameter(
+                name = "fattetÅr",
+                example = "2026",
+                description =
+                    "Årstall for når aldersjustering vedtaket ble fattet. " +
+                        "Settes for å unngå at eldre aldersjusteringen også dras med i batch-kjøringen",
+                required = true,
+            ),
+            Parameter(
+                name = "barn",
+                example = "1,2,3",
+                description =
+                    "Liste over barn-ider som det skal hentes B4-informasjon for. " +
+                        "Om ingen er sendt kjøres alle fattet aldersjusteringer for angitt år. Maks lengde på input er 250 tegn!",
+                required = false,
+            ),
+        ],
+    )
+    fun startLagreB4InformasjonBidragBatch(
+        @RequestParam(required = true) fattetÅr: Long,
+        @RequestParam barn: String? = null,
+    ): ResponseEntity<Any> {
+        lagreB4InformasjonBidragBatch.startLagreB4InformasjonBidragBatch(fattetÅr, barn)
         return ResponseEntity.ok().build()
     }
 }
