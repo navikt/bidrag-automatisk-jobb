@@ -223,6 +223,30 @@ Med parameter:
 Det fattes ingen vedtak men det **opprettes en bestilling av forsendelse for vedtak** hvor det opprettes rad i `forsendelse_bestilling`-tabellen med bestilling for BM og BP (for `behandlingstype = FATTET_FORSLAG`).
 Dette kan brukes til å teste forsendelse/brev før det fattes vedtak.
 
+#### Del 3b - Lagre B4-informasjon
+Denne fasen henter og lagrer B4-avregningsbeløp fra reskontro for alle aldersjusteringer som ble fattet i Del 3.
+Den **bør kjøres etter Del 3** og kan kjøres én eller flere ganger — rader der `b4_belop` allerede er satt hoppes automatisk over.
+
+Denne kan trigges ved å kalle `POST /aldersjustering/batch/bidrag/lagreB4Informasjon`
+
+B4-beløpet (transaksjonskode `B4`/`D4`) oppstår når BM skylder BP penger — typisk fordi aldersjustert bidrag er lavere enn allerede utbetalt bidrag for gjeldende periode.
+Kun beløp større enn null lagres i `b4_belop`-kolonnen i `aldersjustering`-tabellen.
+
+Med parametere:
+- `aar` (påkrevd) - årstall som filtrerer på `fattet_tidspunkt`. Skal samsvare med året Del 3 ble kjørt.
+- `barn` (valgfri) - komma-separert liste over barn-id-er. Hvis ikke satt kjøres alle fatlede aldersjusteringer for angitt år.
+
+Hent oversikt over lagrede B4-beløp:
+
+```sql
+SELECT b.saksnummer, b.kravhaver, b.skyldner, a.b4_belop
+FROM aldersjustering a
+INNER JOIN barn b ON b.id = a.barn_id
+WHERE a.b4_belop IS NOT NULL
+  AND a.batch_id = 'aldersjustering_bidrag_2026'
+ORDER BY a.b4_belop DESC;
+```
+
 #### Del 4 - Opprett forsendelse
 I denne fasen opprettes forsendelse i bidrag-dokument-forsendelse for forsendelsebestillinger fra Del 3.
 For å kunne teste forsendelse kan Del 3 kjøres med parameteren `simuler=true`, slik at forsendelse kan opprettes uten at vedtak fattes.
@@ -259,3 +283,4 @@ Når `bestillingIder` er satt:
 - Dette er nyttig ved kontrollert distribusjon av enkelte forsendelser.
 
 > **NB!:** Husk å varsle i slack kanalen [#team-dokumenthåndtering](https://nav-it.slack.com/archives/C6W9E5GPJ) at det skal kjøres batch med opprettelse og distribusjon av vedtaksbrev for aldersjustering av barnebidrag
+> Hvis distribusjon feiler fordi alle dokumenter ikke er ferdigstilt, må man enten vente til dokumentene er klare, eller opprette forsendelsen på nytt i Del 4 ved å legge inn `forsendelse_bestilling`-id, og deretter kjøre distribusjon på nytt.
