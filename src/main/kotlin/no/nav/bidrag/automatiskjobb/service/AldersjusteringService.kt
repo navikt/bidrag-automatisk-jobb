@@ -696,10 +696,13 @@ class AldersjusteringService(
                 val antallFeilet = resultater.count { it.feilet }
                 LOGGER.info {
                     "Verifisering fullført for år $år — totalt=${resultater.size} avvik=${avvik.size} feilet=$antallFeilet. " +
-                        "Avvik: ${avvik.joinToString { "sak=${it.saksnummer} kravhaver=${it.kravhaver}" }}"
+                        "Avvik: ${avvik.joinToString {
+                            "sak=${it.saksnummer} samværsklasseEndringer=${it.samværsklasseEndringer} " +
+                                "underholdskostnadEndringer=${it.underholdskostnadEndringer}"
+                        }} }"
                 }
             } catch (e: Exception) {
-                LOGGER.error(e) { "Verifisering av aldersjusteringer for år $år feilet" }
+                LOGGER.warn(e) { "Verifisering av aldersjusteringer for år $år feilet" }
             }
         }
     }
