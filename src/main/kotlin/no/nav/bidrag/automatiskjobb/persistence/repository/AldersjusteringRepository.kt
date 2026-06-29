@@ -100,6 +100,16 @@ interface AldersjusteringRepository : JpaRepository<Aldersjustering, Int> {
         pageable: Pageable,
     ): Page<Aldersjustering>
 
+    @Query(
+        "SELECT a FROM aldersjustering a left join fetch a.barn " +
+            "WHERE a.status = 'FATTET' " +
+            "AND EXTRACT(YEAR FROM a.fattetTidspunkt) = :aar",
+    )
+    fun finnAlleFattetForÅr(
+        @Param("aar") fattetÅr: Int,
+        pageable: Pageable = Pageable.unpaged(),
+    ): Page<Aldersjustering>
+
     @Suppress("unused")
     @Query(
         "SELECT a FROM aldersjustering a left join fetch a.barn " +
