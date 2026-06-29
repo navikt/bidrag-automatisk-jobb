@@ -49,6 +49,7 @@ import no.nav.bidrag.transport.behandling.felles.grunnlag.GrunnlagDto
 import no.nav.bidrag.transport.behandling.felles.grunnlag.KopiDelberegningUnderholdskostnad
 import no.nav.bidrag.transport.behandling.felles.grunnlag.KopiSamværsperiodeGrunnlag
 import no.nav.bidrag.transport.behandling.felles.grunnlag.innholdTilObjekt
+import no.nav.bidrag.transport.felles.tilJsonString
 import no.nav.bidrag.transport.felles.toCompactString
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -694,12 +695,18 @@ class AldersjusteringService(
 
                 val avvik = resultater.mapNotNull { it.avvik }
                 val antallFeilet = resultater.count { it.feilet }
+                val avvikTilJson =
+                    avvik.map {
+                        mapOf(
+                            "aldersjusteringId" to it.aldersjusteringId,
+                            "saksnummer" to it.saksnummer,
+                            "samværsklasseEndringer" to it.samværsklasseEndringer,
+                            "underholdskostnadEndringer" to it.underholdskostnadEndringer,
+                        )
+                    }
                 LOGGER.info {
                     "Verifisering fullført for år $år — totalt=${resultater.size} avvik=${avvik.size} feilet=$antallFeilet. " +
-                        "Avvik: ${avvik.joinToString {
-                            "sak=${it.saksnummer} samværsklasseEndringer=${it.samværsklasseEndringer} " +
-                                "underholdskostnadEndringer=${it.underholdskostnadEndringer}"
-                        }} }"
+                        "Avvik: ${tilJsonString(avvikTilJson)}"
                 }
             } catch (e: Exception) {
                 LOGGER.warn(e) { "Verifisering av aldersjusteringer for år $år feilet" }
