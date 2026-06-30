@@ -52,10 +52,10 @@ import no.nav.bidrag.transport.behandling.felles.grunnlag.GrunnlagDto
 import no.nav.bidrag.transport.behandling.felles.grunnlag.KopiDelberegningUnderholdskostnad
 import no.nav.bidrag.transport.behandling.felles.grunnlag.KopiSamværsperiodeGrunnlag
 import no.nav.bidrag.transport.behandling.felles.grunnlag.innholdTilObjekt
-import no.nav.bidrag.transport.felles.tilJsonString
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClientResponseException
+import java.math.BigDecimal
 import java.sql.Timestamp
 import java.time.LocalDate
 
@@ -664,16 +664,26 @@ class AldersjusteringService(
                                                     origGrunnlag.filter { it.type == Grunnlagstype.KOPI_DELBEREGNING_UNDERHOLDSKOSTNAD },
                                                     nyGrunnlag.filter { it.type == Grunnlagstype.KOPI_DELBEREGNING_UNDERHOLDSKOSTNAD },
                                                 )
+                                            aldersjustering.metadata =
+                                                lagMetadataForBeregningAvvik(
+                                                    år = år,
+                                                    nyttBeløp =
+                                                        origVedtak.stønadsendringListe
+                                                            .first()
+                                                            .periodeListe
+                                                            .first()
+                                                            .beløp,
+                                                    gammelBeløp =
+                                                        nyBeregning.beregnetBarnebidragPeriodeListe
+                                                            .first()
+                                                            .resultat.beløp,
+                                                    saksnummer = aldersjustering.barn.saksnummer,
+                                                    samværsEndringer = samværsEndringer,
+                                                    underholdEndringer = underholdEndringer,
+                                                )
+                                            alderjusteringRepository.save(aldersjustering)
 
                                             if (samværsEndringer.isNotEmpty() || underholdEndringer.isNotEmpty()) {
-                                                aldersjustering.metadata =
-                                                    lagMetadataForBeregningAvvik(
-                                                        år = år,
-                                                        saksnummer = aldersjustering.barn.saksnummer,
-                                                        samværsEndringer = samværsEndringer,
-                                                        underholdEndringer = underholdEndringer,
-                                                    )
-                                                alderjusteringRepository.save(aldersjustering)
                                                 LOGGER.warn {
                                                     "Avvik funnet for aldersjustering ${aldersjustering.id} sak ${barn.saksnummer}: " +
                                                         "samværsklasse=$samværsEndringer underholdskostnad=$underholdEndringer"
@@ -718,6 +728,8 @@ class AldersjusteringService(
     private fun lagMetadataForBeregningAvvik(
         år: Int,
         saksnummer: String,
+        gammelBeløp: BigDecimal?,
+        nyttBeløp: BigDecimal?,
         samværsEndringer: List<SamværsklasseEndring>,
         underholdEndringer: List<UnderholdskostnadEndring>,
     ): AldersjusteringMetadata =
@@ -725,6 +737,9 @@ class AldersjusteringService(
             beregningAvvik =
                 BeregningAvvikMetadata(
                     år = år,
+                    sjekket = true,
+                    nyttBeløp = nyttBeløp,
+                    gammelBeløp = gammelBeløp,
                     saksnummer = saksnummer,
                     samværsklasseEndring =
                         samværsEndringer.firstOrNull()?.let {
