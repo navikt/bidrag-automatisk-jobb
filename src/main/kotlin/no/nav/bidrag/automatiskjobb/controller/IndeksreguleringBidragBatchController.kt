@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import no.nav.bidrag.automatiskjobb.batch.indeksregulering.bidrag.gjennomfor.GjennomførIndeksreguleringBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.indeksregulering.bidrag.opprett.OpprettIndeksreguleringBidragBatch
+import no.nav.bidrag.automatiskjobb.batch.indeksregulering.bidrag.rapporter.RapporterIndeksreguleringBidragBatch
 import no.nav.security.token.support.core.api.Protected
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -25,6 +26,7 @@ import java.time.Year
 class IndeksreguleringBidragBatchController(
     private val opprettIndeksreguleringBidragBatch: OpprettIndeksreguleringBidragBatch,
     private val gjennomførIndeksreguleringBidragBatch: GjennomførIndeksreguleringBidragBatch,
+    private val rapporterIndeksreguleringBidragBatch: RapporterIndeksreguleringBidragBatch,
 ) {
     @PostMapping("/indeksregulering/bidrag/batch/opprett")
     @Operation(
@@ -87,6 +89,35 @@ class IndeksreguleringBidragBatchController(
         ) år: Int?,
     ): ResponseEntity<Void> {
         gjennomførIndeksreguleringBidragBatch.start(år ?: Year.now().value)
+        return ResponseEntity.status(HttpStatus.CREATED).build()
+    }
+
+    @PostMapping("/indeksregulering/bidrag/batch/rapporter")
+    @Operation(
+        summary = "Starter batch: Rapporter indeksregulering bidrag.",
+        description =
+            "Genererer rapportfilene for indeksregulering av bidrag (gjenskaper FB020-rapportstegene fra bisys): " +
+                "fil til Bidragsreskontro, filer til FFU for BP i utlandet (brev bestilt, diskresjon, mangler adresse) " +
+                "og fil til Elin. Bygger på gjennomførte indeksreguleringer for det angitte året. " +
+                "Filene skrives til konfigurert filsti og lastes per nå ikke opp noe sted.",
+        security = [SecurityRequirement(name = "bearer-key")],
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "201", description = "Batch for rapporter for indeksregulering av bidrag startet."),
+            ApiResponse(responseCode = "401", description = "Ikke autentisert."),
+            ApiResponse(responseCode = "403", description = "Ikke autorisert."),
+            ApiResponse(responseCode = "500", description = "Intern serverfeil."),
+        ],
+    )
+    fun rapporterIndeksreguleringBidrag(
+        @RequestParam(required = false) @Parameter(
+            required = false,
+            description = "Året indeksreguleringen gjelder for. Default er inneværende år.",
+            example = "2026",
+        ) år: Int?,
+    ): ResponseEntity<Void> {
+        rapporterIndeksreguleringBidragBatch.start(år ?: Year.now().value)
         return ResponseEntity.status(HttpStatus.CREATED).build()
     }
 }
