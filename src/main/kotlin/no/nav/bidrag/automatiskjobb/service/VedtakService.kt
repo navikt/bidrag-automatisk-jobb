@@ -71,6 +71,18 @@ class VedtakService(
                 forskuddTil = finnPeriodeTil(stønadsendringer, Stønadstype.FORSKUDD)
             }
         }
+        if (stønadsendringer.any { it.type == Stønadstype.BIDRAG18AAR }) {
+            lagretBarn.apply {
+                bidrag18ÅrFra = finnPeriodeFra(stønadsendringer, Stønadstype.BIDRAG18AAR, bidrag18ÅrFra)
+                bidrag18ÅrTil = finnPeriodeTil(stønadsendringer, Stønadstype.BIDRAG18AAR)
+            }
+        }
+        if (stønadsendringer.any { it.type == Stønadstype.OPPFOSTRINGSBIDRAG }) {
+            lagretBarn.apply {
+                oppfostringsbidragFra = finnPeriodeFra(stønadsendringer, Stønadstype.OPPFOSTRINGSBIDRAG, oppfostringsbidragFra)
+                oppfostringsbidragTil = finnPeriodeTil(stønadsendringer, Stønadstype.OPPFOSTRINGSBIDRAG)
+            }
+        }
         lagretBarn.oppdatert = LocalDateTime.now()
     }
 
@@ -99,6 +111,10 @@ class VedtakService(
                 forskuddTil = finnPeriodeTil(stønadsendringer, Stønadstype.FORSKUDD),
                 bidragFra = finnPeriodeFra(stønadsendringer, Stønadstype.BIDRAG),
                 bidragTil = finnPeriodeTil(stønadsendringer, Stønadstype.BIDRAG),
+                bidrag18ÅrFra = finnPeriodeFra(stønadsendringer, Stønadstype.OPPFOSTRINGSBIDRAG),
+                bidrag18ÅrTil = finnPeriodeTil(stønadsendringer, Stønadstype.OPPFOSTRINGSBIDRAG),
+                oppfostringsbidragFra = finnPeriodeFra(stønadsendringer, Stønadstype.OPPFOSTRINGSBIDRAG),
+                oppfostringsbidragTil = finnPeriodeTil(stønadsendringer, Stønadstype.OPPFOSTRINGSBIDRAG),
                 oppdatert = LocalDateTime.now(),
             )
         val lagretBarn = barnRepository.save(barn)

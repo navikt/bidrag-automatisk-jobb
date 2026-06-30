@@ -26,6 +26,8 @@ class BarnService(
     ) {
         oppdaterForskudd(barn)
         oppdaterBidrag(barn)
+        oppdater18ÅrsBidrag(barn)
+        oppdaterOppforstringsbidrag(barn)
         if (simuler) {
             LOGGER.info {
                 "Simuleringmodus er på. Gjør ingen endring på periodene for forskudd/bidrag for barn ${barn.infoUtenPerioder()}"
@@ -34,6 +36,60 @@ class BarnService(
         }
         barn.oppdatert = LocalDateTime.now()
         barnRepository.save(barn)
+    }
+
+    private fun oppdaterOppforstringsbidrag(barn: Barn) {
+        val oppforstringsbidrag = bidragBeløpshistorikkConsumer.hentHistoriskeStønader(
+            barn.tilHentStønadHistoriskRequest(
+                Stønadstype.OPPFOSTRINGSBIDRAG
+            )
+        ) ?: run {
+            LOGGER.info { "Fant ingen oppforstringsbidrag stønader for barn ${barn.infoMedPerioder()}" };
+            return
+        }
+
+        if (oppforstringsbidrag.periodeListe.isEmpty()) {
+            LOGGER.info {
+                "Ingen oppforstringsbidrag perioder funnet for barn ${barn.infoMedPerioder()}"
+            }
+            return
+        }
+
+        if (oppforstringsbidrag.periodeFom() != barn.oppfostringsbidragFra || oppforstringsbidrag.periodeTil() != barn.oppfostringsbidragTil) {
+            LOGGER.info {
+                "Feil oppforstringsbidrag periode lagret for barn ${barn.infoUtenPerioder()}. Oppdaterer " +
+                        "fra ${barn.oppfostringsbidragFra} - ${barn.oppfostringsbidragTil} til ${oppforstringsbidrag.periodeFom()} - ${oppforstringsbidrag.periodeTil()}"
+            }
+        }
+        barn.oppfostringsbidragFra = oppforstringsbidrag.periodeFom()
+        barn.oppfostringsbidragTil = oppforstringsbidrag.periodeTil()
+    }
+
+    private fun oppdater18ÅrsBidrag(barn: Barn) {
+        val bidrag18År = bidragBeløpshistorikkConsumer.hentHistoriskeStønader(
+            barn.tilHentStønadHistoriskRequest(
+                Stønadstype.BIDRAG18AAR
+            )
+        ) ?: run {
+            LOGGER.info { "Fant ingen 18 års bidrag stønader for barn ${barn.infoMedPerioder()}" };
+            return
+        }
+
+        if (bidrag18År.periodeListe.isEmpty()) {
+            LOGGER.info {
+                "Ingen 18 års bidrag perioder funnet for barn ${barn.infoMedPerioder()}"
+            }
+            return
+        }
+
+        if (bidrag18År.periodeFom() != barn.bidrag18ÅrFra || bidrag18År.periodeTil() != barn.bidrag18ÅrTil) {
+            LOGGER.info {
+                "Feil 18 års bidrag periode lagret for barn ${barn.infoUtenPerioder()}. Oppdaterer " +
+                        "fra ${barn.bidrag18ÅrFra} - ${barn.bidrag18ÅrTil} til ${bidrag18År.periodeFom()} - ${bidrag18År.periodeTil()}"
+            }
+        }
+        barn.bidrag18ÅrFra = bidrag18År.periodeFom()
+        barn.bidrag18ÅrTil = bidrag18År.periodeTil()
     }
 
     private fun oppdaterForskudd(barn: Barn) {
@@ -53,8 +109,8 @@ class BarnService(
         if (forskuddStønad.periodeListe.isEmpty()) {
             LOGGER.info {
                 "Ingen forskudd perioder funnet for barn ${barn.infoMedPerioder()} " +
-                    "men det finnes en løpende forskudd registrert på barnet." +
-                    "Det betyr at forskuddet har blitt opphørt. Fjerner forskudd periode fra"
+                        "men det finnes en løpende forskudd registrert på barnet." +
+                        "Det betyr at forskuddet har blitt opphørt. Fjerner forskudd periode fra"
             }
             barn.forskuddFra = null
             return
@@ -62,12 +118,12 @@ class BarnService(
 
         LOGGER.info {
             "Fant forskudd periode ${forskuddStønad.periodeFom()} - ${forskuddStønad.periodeTil()} " +
-                "for barn med lagret forskudd periode ${barn.forskuddFra} - ${barn.forskuddTil} - ${barn.infoUtenPerioder()}"
+                    "for barn med lagret forskudd periode ${barn.forskuddFra} - ${barn.forskuddTil} - ${barn.infoUtenPerioder()}"
         }
         if (forskuddStønad.periodeFom() != barn.forskuddFra || forskuddStønad.periodeTil() != barn.forskuddTil) {
             LOGGER.info {
                 "Feil forskudd periode lagret for barn ${barn.infoUtenPerioder()}. Oppdaterer " +
-                    "fra ${barn.forskuddFra} - ${barn.forskuddTil} til ${forskuddStønad.periodeFom()} - ${forskuddStønad.periodeTil()}"
+                        "fra ${barn.forskuddFra} - ${barn.forskuddTil} til ${forskuddStønad.periodeFom()} - ${forskuddStønad.periodeTil()}"
             }
         }
         barn.forskuddFra = forskuddStønad.periodeFom()
@@ -94,13 +150,13 @@ class BarnService(
 
         LOGGER.info {
             "Fant bidrag periode ${historiskeBidrag.periodeFom()} - ${historiskeBidrag.periodeTil()} " +
-                "for barn med lagret bidrag periode ${barn.bidragFra} - ${barn.bidragTil} - ${barn.infoUtenPerioder()}"
+                    "for barn med lagret bidrag periode ${barn.bidragFra} - ${barn.bidragTil} - ${barn.infoUtenPerioder()}"
         }
 
         if (historiskeBidrag.periodeFom() != barn.bidragFra || historiskeBidrag.periodeTil() != barn.bidragTil) {
             LOGGER.info {
                 "Feil bidrag periode lagret for barn ${barn.infoUtenPerioder()}. Oppdaterer " +
-                    "fra ${barn.bidragFra} - ${barn.bidragTil} til ${historiskeBidrag.periodeFom()} - ${historiskeBidrag.periodeTil()}"
+                        "fra ${barn.bidragFra} - ${barn.bidragTil} til ${historiskeBidrag.periodeFom()} - ${historiskeBidrag.periodeTil()}"
             }
         }
         barn.bidragFra = historiskeBidrag.periodeFom()

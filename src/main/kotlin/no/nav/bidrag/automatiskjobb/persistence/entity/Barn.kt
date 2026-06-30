@@ -28,6 +28,12 @@ data class Barn(
     var forskuddTil: LocalDate? = null,
     var bidragFra: LocalDate? = null,
     var bidragTil: LocalDate? = null,
+    @Column(name = "bidrag_18_ar_fra")
+    var bidrag18ÅrFra: LocalDate? = null,
+    @Column(name = "bidrag_18_ar_til")
+    var bidrag18ÅrTil: LocalDate? = null,
+    var oppfostringsbidragFra: LocalDate? = null,
+    var oppfostringsbidragTil: LocalDate? = null,
     @Version
     var opprettet: LocalDateTime? = null,
     var oppdatert: LocalDateTime? = null,
@@ -41,11 +47,11 @@ data class Barn(
         )
 
     fun infoMedPerioder(): String =
-        "Barn(id=$id, saksnummer='$saksnummer', fødselsdato=$fødselsdato, forskuddFra=$forskuddFra, forskuddTil=$forskuddTil, bidragFra=$bidragFra, bidragTil=$bidragTil)"
+        "Barn(id=$id, saksnummer='$saksnummer', fødselsdato=$fødselsdato, forskuddFra=$forskuddFra, forskuddTil=$forskuddTil, bidragFra=$bidragFra, bidragTil=$bidragTil, bidrag18ÅrFra=$bidrag18ÅrFra, bidrag18ÅrTil=$bidrag18ÅrTil, oppfostringsbidragFra=$oppfostringsbidragFra, oppfostringsbidragTil=$oppfostringsbidragTil)"
 
     fun infoUtenPerioder(): String =
         "Barn(id=$id, saksnummer='$saksnummer', kravhaver='$kravhaver', fødselsdato=$fødselsdato, skyldner=$skyldner)"
 
     override fun toString(): String =
-        "Barn(id=$id, saksnummer='$saksnummer', kravhaver='$kravhaver', fødselsdato=$fødselsdato, skyldner=$skyldner, forskuddFra=$forskuddFra, forskuddTil=$forskuddTil, bidragFra=$bidragFra, bidragTil=$bidragTil, opprettet=$opprettet)"
+        "Barn(id=$id, saksnummer='$saksnummer', kravhaver='$kravhaver', fødselsdato=$fødselsdato, skyldner=$skyldner, forskuddFra=$forskuddFra, forskuddTil=$forskuddTil, bidragFra=$bidragFra, bidragTil=$bidragTil, bidrag18ÅrFra=$bidrag18ÅrFra, bidrag18ÅrTil=$bidrag18ÅrTil, oppfostringsbidragFra=$oppfostringsbidragFra, oppfostringsbidragTil=$oppfostringsbidragTil, opprettet=$opprettet)"
 }
