@@ -12,8 +12,11 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
+import no.nav.bidrag.automatiskjobb.persistence.entity.metadata.AldersjusteringMetadata
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
+import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.proxy.HibernateProxy
+import org.hibernate.type.SqlTypes
 import java.math.BigDecimal
 import java.sql.Timestamp
 
@@ -47,6 +50,9 @@ data class Aldersjustering(
     @Enumerated(EnumType.STRING)
     override val stønadstype: Stønadstype = Stønadstype.BIDRAG,
     var resultatSisteVedtak: String? = null,
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "jsonb")
+    var metadata: AldersjusteringMetadata? = null,
     @OneToMany
     @JoinColumn(name = "aldersjustering_id")
     override val forsendelseBestilling: MutableList<ForsendelseBestilling> = mutableListOf(),
@@ -87,5 +93,6 @@ data class Aldersjustering(
             "opprettetTidspunkt = $opprettetTidspunkt, " +
             "fattetTidspunkt = $fattetTidspunkt, " +
             "stønadstype = $stønadstype, " +
-            "resultatSisteVedtak = $resultatSisteVedtak)"
+            "resultatSisteVedtak = $resultatSisteVedtak, " +
+            "metadata = $metadata)"
 }

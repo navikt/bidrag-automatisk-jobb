@@ -19,6 +19,10 @@ import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Forsendelsestype
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
+import no.nav.bidrag.automatiskjobb.persistence.entity.metadata.AldersjusteringMetadata
+import no.nav.bidrag.automatiskjobb.persistence.entity.metadata.BeregningAvvikMetadata
+import no.nav.bidrag.automatiskjobb.persistence.entity.metadata.SamværsklasseEndringMetadata
+import no.nav.bidrag.automatiskjobb.persistence.entity.metadata.UnderholdskostnadEndringMetadata
 import no.nav.bidrag.automatiskjobb.persistence.repository.AldersjusteringRepository
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
 import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringResponse
@@ -26,7 +30,6 @@ import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringResultatRespons
 import no.nav.bidrag.automatiskjobb.service.model.GrunnlagAvvikResultat
 import no.nav.bidrag.automatiskjobb.service.model.SamværsklasseEndring
 import no.nav.bidrag.automatiskjobb.service.model.UnderholdskostnadEndring
-import no.nav.bidrag.automatiskjobb.service.model.VerifiserAldersjusteringerResultat
 import no.nav.bidrag.automatiskjobb.utils.ugyldigForespørsel
 import no.nav.bidrag.beregn.barnebidrag.service.orkestrering.AldersjusteresManueltException
 import no.nav.bidrag.beregn.barnebidrag.service.orkestrering.AldersjusteringOrchestrator
@@ -50,7 +53,6 @@ import no.nav.bidrag.transport.behandling.felles.grunnlag.KopiDelberegningUnderh
 import no.nav.bidrag.transport.behandling.felles.grunnlag.KopiSamværsperiodeGrunnlag
 import no.nav.bidrag.transport.behandling.felles.grunnlag.innholdTilObjekt
 import no.nav.bidrag.transport.felles.tilJsonString
-import no.nav.bidrag.transport.felles.toCompactString
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClientResponseException
@@ -664,6 +666,14 @@ class AldersjusteringService(
                                                 )
 
                                             if (samværsEndringer.isNotEmpty() || underholdEndringer.isNotEmpty()) {
+                                                aldersjustering.metadata =
+                                                    lagMetadataForBeregningAvvik(
+                                                        år = år,
+                                                        saksnummer = aldersjustering.barn.saksnummer,
+                                                        samværsEndringer = samværsEndringer,
+                                                        underholdEndringer = underholdEndringer,
+                                                    )
+                                                alderjusteringRepository.save(aldersjustering)
                                                 LOGGER.warn {
                                                     "Avvik funnet for aldersjustering ${aldersjustering.id} sak ${barn.saksnummer}: " +
                                                         "samværsklasse=$samværsEndringer underholdskostnad=$underholdEndringer"
@@ -695,24 +705,45 @@ class AldersjusteringService(
 
                 val avvik = resultater.mapNotNull { it.avvik }
                 val antallFeilet = resultater.count { it.feilet }
-                val avvikTilJson =
-                    avvik.map {
-                        mapOf(
-                            "aldersjusteringId" to it.aldersjusteringId,
-                            "saksnummer" to it.saksnummer,
-                            "samværsklasseEndringer" to it.samværsklasseEndringer,
-                            "underholdskostnadEndringer" to it.underholdskostnadEndringer,
-                        )
-                    }
+
                 LOGGER.info {
-                    "Verifisering fullført for år $år — totalt=${resultater.size} avvik=${avvik.size} feilet=$antallFeilet. " +
-                        "Avvik: ${tilJsonString(avvikTilJson)}"
+                    "Verifisering fullført for år $år — totalt=${resultater.size} avvik=${avvik.size} feilet=$antallFeilet. "
                 }
             } catch (e: Exception) {
                 LOGGER.warn(e) { "Verifisering av aldersjusteringer for år $år feilet" }
             }
         }
     }
+
+    private fun lagMetadataForBeregningAvvik(
+        år: Int,
+        saksnummer: String,
+        samværsEndringer: List<SamværsklasseEndring>,
+        underholdEndringer: List<UnderholdskostnadEndring>,
+    ): AldersjusteringMetadata =
+        AldersjusteringMetadata(
+            beregningAvvik =
+                BeregningAvvikMetadata(
+                    år = år,
+                    saksnummer = saksnummer,
+                    samværsklasseEndring =
+                        samværsEndringer.firstOrNull()?.let {
+                            SamværsklasseEndringMetadata(
+                                gammelKlasse = it.gammelKlasse,
+                                nyKlasse = it.nyKlasse,
+                            )
+                        },
+                    underholdskostnadEndring =
+                        underholdEndringer.firstOrNull()?.let {
+                            UnderholdskostnadEndringMetadata(
+                                gammelNettoTilsynsutgift = it.gammelNettoTilsynsutgift,
+                                nyNettoTilsynsutgift = it.nyNettoTilsynsutgift,
+                                gammelBarnetilsynMedStønad = it.gammelBarnetilsynMedStønad,
+                                nyBarnetilsynMedStønad = it.nyBarnetilsynMedStønad,
+                            )
+                        },
+                ),
+        )
 
     private fun sammenlignSamværsklasse(
         orig: List<GrunnlagDto>,
