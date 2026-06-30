@@ -26,7 +26,7 @@ data class Aldersjustering(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     override val id: Int? = null,
     @Column(name = "batch_id", nullable = false)
-    override val batchId: String,
+    override var batchId: String,
     var vedtaksidBeregning: Int? = null,
     @ManyToOne
     @JoinColumn(name = "barn_id")
