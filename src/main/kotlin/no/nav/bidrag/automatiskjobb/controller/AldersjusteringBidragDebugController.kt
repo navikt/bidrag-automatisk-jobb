@@ -69,4 +69,20 @@ class AldersjusteringBidragDebugController(
         @RequestParam(required = false) simuler: Boolean = true,
     ): AldersjusteringResponse =
         aldersjusteringService.kjørAldersjusteringForSakDebug(saksnummer, år ?: YearMonth.now().year, simuler, Stønadstype.BIDRAG)
+
+    @PostMapping("/aldersjustering/bidrag/verifiser")
+    @Operation(
+        summary = "Verifiser aldersjusteringer for et år",
+        description =
+            "Starter verifisering i bakgrunnen. Kjører beregning på nytt for alle FATTET-vedtak for et gitt år og " +
+                "logger avvik i KOPI_SAMVÆRSPERIODE eller KOPI_DELBEREGNING_UNDERHOLDSKOSTNAD. " +
+                "Returnerer 202 Accepted umiddelbart — se applikasjonsloggen for resultat.",
+        security = [SecurityRequirement(name = "bearer-key")],
+    )
+    fun startVerifiserAldersjusteringerForÅr(
+        @RequestParam år: Int,
+    ): ResponseEntity<Void> {
+        aldersjusteringService.startVerifiserAldersjusteringerForÅr(år)
+        return ResponseEntity.accepted().build()
+    }
 }
