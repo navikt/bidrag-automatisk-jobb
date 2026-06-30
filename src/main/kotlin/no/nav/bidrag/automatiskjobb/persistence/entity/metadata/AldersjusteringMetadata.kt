@@ -9,9 +9,12 @@ data class AldersjusteringMetadata(
 
 data class BeregningAvvikMetadata(
     val år: Int,
+    val gammelBeløp: BigDecimal? = null,
+    val nyttBeløp: BigDecimal? = null,
+    val sjekket: Boolean = false,
     val saksnummer: String,
-    val samværsklasseEndring: SamværsklasseEndringMetadata?,
-    val underholdskostnadEndring: UnderholdskostnadEndringMetadata?,
+    val samværsklasseEndring: SamværsklasseEndringMetadata? = null,
+    val underholdskostnadEndring: UnderholdskostnadEndringMetadata? = null,
 )
 
 data class SamværsklasseEndringMetadata(
