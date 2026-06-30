@@ -25,10 +25,11 @@ class ForsendelseBatchController(
 ) {
     @PostMapping("/batch/forsendelse/slett")
     @Operation(
-        summary = "Start kjøring av batch som sletter alle forsendelser som har blitt satt til skalSlettes=true.",
+        summary = "Start kjøring av batch som sletter forsendelser med skal_slettes=true eller spesifikke forsendelse bestillinger.",
         description =
-            "Operasjon for å starte kjøring av batch som skal slette alle forsendelser " +
-                "som er satt til skal slettes med kolonnen skal_slettes=true",
+            "Sletter forsendelser basert på kriterier. " +
+                "Uten parametere slettes alle forsendelser som er markert med skal_slettes=true. " +
+                "Med bestillingIder slettes kun forsendelsene for de angitte IDene fra forsendelse_bestilling tabellen.",
         security = [SecurityRequirement(name = "bearer-key")],
     )
     @ApiResponses(
@@ -42,22 +43,33 @@ class ForsendelseBatchController(
             ApiResponse(responseCode = "500", description = "Intern serverfeil."),
         ],
     )
-    fun starSlettForsendelserSomSkalSlettesBatch(): ResponseEntity<Any> {
-        slettForsendelseSomSkalSlettesBatch.start()
+    fun starSlettForsendelserSomSkalSlettesBatch(
+        @RequestParam
+        @Parameter(
+            description =
+                "Komma-separert liste over ID fra forsendelse_bestilling tabellen som skal slettes. " +
+                    "Eksempel: 1,2,3. Hvis ikke angitt slettes alle forsendelser med skal_slettes=true",
+        )
+        bestillingIder: String? = null,
+    ): ResponseEntity<Any> {
+        slettForsendelseSomSkalSlettesBatch.start(bestillingIder)
         return ResponseEntity.ok().build()
     }
 
     @PostMapping("/batch/forsendelse/opprett")
     @Operation(
-        summary = "Start kjøring av batch for å opprette forsendelse for aldersjusteringer.",
-        description = "Operasjon for å starte kjøring av batch som oppretter forsendelse for aldersjusteringer.",
+        summary = "Start kjøring av batch for å opprette forsendelser.",
+        description =
+            "Oppretter forsendelser for vedtak. " +
+                "Uten bestillingIder opprettes forsendelser for alle vedtak som ikke har forsendelse opprettet. " +
+                "Med bestillingIder slettes og gjennopprettes forsendelsene for de IDene fra forsendelse_bestilling tabellen.",
         security = [SecurityRequirement(name = "bearer-key")],
     )
     @ApiResponses(
         value = [
             ApiResponse(
                 responseCode = "200",
-                description = "Batch for oppretting av forsendelser for aldersjusteringer ble startet.",
+                description = "Batch for oppretting av forsendelser ble startet.",
             ),
             ApiResponse(responseCode = "401", description = "Ikke autentisert."),
             ApiResponse(responseCode = "403", description = "Ikke autorisert."),
@@ -65,35 +77,51 @@ class ForsendelseBatchController(
         ],
     )
     fun startOpprettForsendelseAldersjusteringBidragBatch(
-        @RequestParam @Parameter(
-            description = "Dersom true behandles forsendelser som tidligere har feilet. Default er false.",
-            example = "false",
-            required = false,
-        ) prosesserFeilet: Boolean = false,
+        @RequestParam
+        @Parameter(description = "Prosessér forsendelser som tidligere har feilet")
+        prosesserFeilet: Boolean = false,
+        @RequestParam
+        @Parameter(
+            description =
+                "Komma-separert liste over ID fra forsendelse_bestilling tabellen som skal slettes og gjennopprettes. " +
+                    "Eksempel: 1,2,3. Hvis ikke angitt opprettes det for alle forsendelsebestillinger uten forsendelse_id",
+        )
+        bestillingIder: String? = null,
     ): ResponseEntity<Any> {
-        opprettForsendelseBatch.start(prosesserFeilet)
+        opprettForsendelseBatch.start(prosesserFeilet, bestillingIder)
         return ResponseEntity.ok().build()
     }
 
     @PostMapping("/batch/forsendelse/distribuer")
     @Operation(
-        summary = "Start kjøring av batch for å distribuere forsendelse for aldersjusteringer.",
-        description = "Operasjon for å starte kjøring av batch som distribuerer forsendelser for aldersjusteringer.",
+        summary = "Start kjøring av batch for å distribuere forsendelser.",
+        description =
+            "Distribuerer forsendelser til mottakerne (bidragspliktig og/eller bidragsmottaker). " +
+                "Uten bestillingIder distribueres alle forsendelser som er opprettet men ikke distribuert. " +
+                "Med bestillingIder distribueres kun forsendelsene for de angitte IDene fra forsendelse_bestilling tabellen.",
         security = [SecurityRequirement(name = "bearer-key")],
     )
     @ApiResponses(
         value = [
             ApiResponse(
                 responseCode = "200",
-                description = "Batch for distrubisjon av forsendelser for aldersjusteringer ble startet.",
+                description = "Batch for distribusjon av forsendelser ble startet.",
             ),
             ApiResponse(responseCode = "401", description = "Ikke autentisert."),
             ApiResponse(responseCode = "403", description = "Ikke autorisert."),
             ApiResponse(responseCode = "500", description = "Intern serverfeil."),
         ],
     )
-    fun startDistribuerForsendelseAldersjusteringBidragBatch(): ResponseEntity<Any> {
-        distribuerForsendelseBidragBatch.start()
+    fun startDistribuerForsendelseAldersjusteringBidragBatch(
+        @RequestParam
+        @Parameter(
+            description =
+                "Komma-separert liste over ID fra forsendelse_bestilling tabellen som skal distribueres. " +
+                    "Eksempel: 1,2,3. Hvis ikke angitt distribueres alle opprettede forsendelser som ikke er distribuert",
+        )
+        bestillingIder: String? = null,
+    ): ResponseEntity<Any> {
+        distribuerForsendelseBidragBatch.start(bestillingIder)
         return ResponseEntity.ok().build()
     }
 }

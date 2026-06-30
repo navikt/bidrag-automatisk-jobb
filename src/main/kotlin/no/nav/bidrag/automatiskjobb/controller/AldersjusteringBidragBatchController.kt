@@ -9,12 +9,14 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.beregn.BeregnAldersjusteringerBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.fattvedtak.FattVedtakOmAldersjusteringerBidragBatch
+import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.lagreb4.LagreB4InformasjonBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.oppgave.opprettoppgave.OppgaveAldersjusteringBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.oppgave.slettoppgave.SlettOppgaveAldersjusteringBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.opprett.OpprettAldersjusteringerBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.utils.slettallevedtaksforslag.SlettAlleVedtaksforslagBatch
 import no.nav.bidrag.automatiskjobb.batch.utils.slettvedtaksforslag.SlettVedtaksforslagBatch
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
+import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import no.nav.security.token.support.core.api.Protected
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
@@ -33,6 +35,7 @@ class AldersjusteringBidragBatchController(
     private val oppgaveAldersjusteringBidragBatch: OppgaveAldersjusteringBidragBatch,
     private val slettOppgaveAldersjusteringBidragBatch: SlettOppgaveAldersjusteringBidragBatch,
     private val beregnAldersjusteringerBidragBatch: BeregnAldersjusteringerBidragBatch,
+    private val lagreB4InformasjonBidragBatch: LagreB4InformasjonBidragBatch,
 ) {
     @PostMapping("/aldersjustering/batch/slettvedtaksforslag")
     @Operation(
@@ -222,7 +225,8 @@ class AldersjusteringBidragBatchController(
         summary = "Start kjøring av batch for å beregne aldersjusteringer.",
         description =
             "Operasjon for å starte kjøring av batch som beregner aldersjusteringer og oppretter vedtaksforslag. " +
-                "Det opprettes også vedtaksforslag for saker som også ikke aldersjusteres med beslutningstype=AVVIST",
+                "Det opprettes også vedtaksforslag for saker som ikke aldersjusteres, med beslutningstype=AVVIST. " +
+                "Standard kjøring inkluderer statuser UBEHANDLET, FEILET og SIMULERT.",
         security = [SecurityRequirement(name = "bearer-key")],
     )
     @ApiResponses(
@@ -239,19 +243,20 @@ class AldersjusteringBidragBatchController(
     @Parameters(
         value = [
             Parameter(
-                name = "inkluderBehandlet",
-                example = "false",
+                name = "statuser",
+                example = "UBEHANDLET,FEILET,SIMULERT",
                 description =
-                    "Beregner behandlet aldersjusteringer på nytt. " +
-                        "Da vil eksisterende vedtaksforslag bli slettet og det vil opprettet nytt vedtaksforslag. " +
-                        "Dette vil ikke gjøre noe endringer på aldersjusteringer hvor vedtak er fattet",
-                required = false,
-            ),
-            Parameter(
-                name = "inkluderSlettet",
-                example = "false",
-                description =
-                    "Beregner slettet aldersjusteringer på nytt.",
+                    "Kommaseparert liste over statuser som skal inkluderes i kjøringen. " +
+                        "Default er UBEHANDLET,FEILET,SIMULERT. " +
+                        "Mulige verdier:\n" +
+                        "- UBEHANDLET: Nye aldersjusteringer som ikke er beregnet ennå.\n" +
+                        "- FEILET: Aldersjusteringer der beregningen feilet og må kjøres på nytt.\n" +
+                        "- SIMULERT: Aldersjusteringer som er beregnet i simuleringsmodus og ikke har vedtaksforslag.\n" +
+                        "- BEHANDLET: Aldersjusteringer som allerede er beregnet og har vedtaksforslag. " +
+                        "Eksisterende vedtaksforslag slettes og det opprettes nytt. Påvirker ikke fattet vedtak.\n" +
+                        "- FATTE_VEDTAK_FEILET: Aldersjusteringer der et tidligere forsøk på å fatte vedtak feilet. " +
+                        "Nyttig for å rekjøre uten å inkludere alle behandlede poster.\n" +
+                        "- SLETTET: Aldersjusteringer som er slettet og skal beregnes på nytt.",
                 required = false,
             ),
             Parameter(
@@ -264,21 +269,19 @@ class AldersjusteringBidragBatchController(
                 name = "barn",
                 example = "1,2,3",
                 description =
-                    "Liste over barn som det skal opprettes oppgaver for. Om ingen er sendt kjøres alle. Maks lengde på input er 250 tegn!",
+                    "Liste over barn som det skal beregnes aldersjusteringer for. Om ingen er sendt kjøres alle. Maks lengde på input er 250 tegn!",
                 required = false,
             ),
         ],
     )
     fun startBeregnAldersjusteringBidragBatch(
-        @RequestParam inkluderBehandlet: Boolean = false,
-        @RequestParam inkluderSlettet: Boolean = false,
+        @RequestParam statuser: List<Status> = listOf(Status.UBEHANDLET, Status.FEILET, Status.SIMULERT),
         @RequestParam simuler: Boolean = true,
         @RequestParam barn: String? = null,
     ): ResponseEntity<Any> {
         beregnAldersjusteringerBidragBatch.startBeregnAldersjusteringBidragBatch(
             simuler,
-            inkluderBehandlet,
-            inkluderSlettet,
+            statuser,
             barn,
         )
         return ResponseEntity.ok().build()
@@ -364,6 +367,53 @@ class AldersjusteringBidragBatchController(
             barn,
             batchId,
         )
+        return ResponseEntity.ok().build()
+    }
+
+    @PostMapping("/aldersjustering/batch/bidrag/lagreB4Informasjon")
+    @Operation(
+        summary = "Start kjøring av batch for å lagre B4-beløp for aldersjusteringer.",
+        description =
+            "Operasjon for å starte kjøring av batch som henter B4-avregningsbeløp fra reskontro " +
+                "for alle aldersjusteringer som er fattet i et gitt år, og lagrer beløpet i `b4_belop`-kolonnen. " +
+                "B4-beløpet representerer avregning der BM skylder BP (transaksjonskode B4/D4) og oppstår " +
+                "typisk når aldersjustert bidrag er lavere enn utbetalt bidrag. " +
+                "Kun beløp større enn null lagres. Batchen er idempotent og kan kjøres på nytt.",
+        security = [SecurityRequirement(name = "bearer-key")],
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Batch for lagring av B4-informasjon ble startet.",
+            ),
+        ],
+    )
+    @Parameters(
+        value = [
+            Parameter(
+                name = "fattetÅr",
+                example = "2026",
+                description =
+                    "Årstall for når aldersjustering vedtaket ble fattet. " +
+                        "Settes for å unngå at eldre aldersjusteringen også dras med i batch-kjøringen",
+                required = true,
+            ),
+            Parameter(
+                name = "barn",
+                example = "1,2,3",
+                description =
+                    "Liste over barn-ider som det skal hentes B4-informasjon for. " +
+                        "Om ingen er sendt kjøres alle fattet aldersjusteringer for angitt år. Maks lengde på input er 250 tegn!",
+                required = false,
+            ),
+        ],
+    )
+    fun startLagreB4InformasjonBidragBatch(
+        @RequestParam(required = true) fattetÅr: Long,
+        @RequestParam barn: String? = null,
+    ): ResponseEntity<Any> {
+        lagreB4InformasjonBidragBatch.startLagreB4InformasjonBidragBatch(fattetÅr, barn)
         return ResponseEntity.ok().build()
     }
 }

@@ -88,13 +88,42 @@ interface AldersjusteringRepository : JpaRepository<Aldersjustering, Int> {
 
     @Suppress("unused")
     @Query(
+        "SELECT a FROM aldersjustering a " +
+            "WHERE a.status = 'FATTET' " +
+            "AND EXTRACT(YEAR FROM a.fattetTidspunkt) = :aar " +
+            "AND a.b4Beløp IS NULL " +
+            "AND (:#{#barnIds.isEmpty()} = true OR a.barn.id IN :barnIds)",
+    )
+    fun finnFattetForÅrUtenB4Beløp(
+        @Param("aar") fattetÅr: Int,
+        @Param("barnIds") barnIds: List<Int>,
+        pageable: Pageable,
+    ): Page<Aldersjustering>
+
+    @Query(
         "SELECT a FROM aldersjustering a left join fetch a.barn " +
-            "WHERE a.behandlingstype = :behandlingstype " +
+            "WHERE a.status = 'FATTET' " +
+            "AND EXTRACT(YEAR FROM a.fattetTidspunkt) = :aar " +
+            "AND (" +
+            "a.metadata IS NULL OR " +
+            "function('jsonb_extract_path_text', a.metadata, 'beregningAvvik', 'år') IS NULL OR " +
+            "function('jsonb_extract_path_text', a.metadata, 'beregningAvvik', 'år') <> str(:aar)" +
+            ")",
+    )
+    fun finnAlleFattetForÅr(
+        @Param("aar") fattetÅr: Int,
+        pageable: Pageable = Pageable.unpaged(),
+    ): Page<Aldersjustering>
+
+    @Suppress("unused")
+    @Query(
+        "SELECT a FROM aldersjustering a left join fetch a.barn " +
+            "WHERE a.behandlingstype in :behandlingstype " +
             "AND a.status in :status " +
             "AND a.oppgave IS NULL",
     )
     fun finnAlleForBehandlingstypeOgStatus(
-        @Param("behandlingstype") behandlingstyper: Behandlingstype,
+        @Param("behandlingstype") behandlingstyper: List<Behandlingstype>,
         @Param("status") status: List<Status>,
         pageable: Pageable = Pageable.ofSize(100),
     ): Page<Aldersjustering>

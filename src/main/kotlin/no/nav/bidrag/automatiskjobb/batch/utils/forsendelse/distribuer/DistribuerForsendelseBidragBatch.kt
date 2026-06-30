@@ -16,13 +16,17 @@ class DistribuerForsendelseBidragBatch(
     @param:Qualifier("asyncJobLauncher") private val jobOperator: JobOperator,
     private val distribuerForsendelseJob: Job,
 ) {
-    fun start() {
+    fun start(bestillingIder: String? = null) {
         try {
-            jobOperator.start(
-                distribuerForsendelseJob,
+            val paramsBuilder =
                 JobParametersBuilder()
                     .addString("runId", UUID.randomUUID().toString())
-                    .toJobParameters(),
+            if (!bestillingIder.isNullOrEmpty()) {
+                paramsBuilder.addString("bestillingIds", bestillingIder)
+            }
+            jobOperator.start(
+                distribuerForsendelseJob,
+                paramsBuilder.toJobParameters(),
             )
         } catch (_: JobExecutionAlreadyRunningException) {
             LOGGER.warn { "Batch distribuerForsendelse kjører allerede. Ignorerer ny forespørsel." }

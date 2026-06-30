@@ -29,6 +29,7 @@ class AlderjusteringRowMapper(
             oppgave = rs.getIntOrNull("oppgave"),
             opprettetTidspunkt = rs.getTimestamp("opprettet_tidspunkt"),
             fattetTidspunkt = rs.getTimestamp("fattet_tidspunkt"),
+            b4Beløp = rs.getBigDecimal("b4_belop"),
             stønadstype = Stønadstype.valueOf(rs.getString("stonadstype")),
             resultatSisteVedtak = rs.getString("resultat_siste_vedtak"),
         )

@@ -1,7 +1,6 @@
-package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.beregn
+package no.nav.bidrag.automatiskjobb.batch.aldersjustering.bidrag.lagreb4
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import org.springframework.batch.core.job.Job
 import org.springframework.batch.core.job.parameters.JobParametersBuilder
 import org.springframework.batch.core.launch.JobExecutionAlreadyRunningException
@@ -10,30 +9,28 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Component
 import java.util.UUID
 
-private val LOGGER = KotlinLogging.logger { }
+private val LOGGER = KotlinLogging.logger {}
 
 @Component
-class BeregnAldersjusteringerBidragBatch(
+class LagreB4InformasjonBidragBatch(
     @param:Qualifier("asyncJobLauncher") private val jobOperator: JobOperator,
-    private val beregnAldersjusteringerBidragJob: Job,
+    private val lagreB4InformasjonBidragJob: Job,
 ) {
-    fun startBeregnAldersjusteringBidragBatch(
-        simuler: Boolean,
-        statuser: List<Status>,
+    fun startLagreB4InformasjonBidragBatch(
+        fattetÅr: Long,
         barn: String?,
     ) {
         try {
             jobOperator.start(
-                beregnAldersjusteringerBidragJob,
+                lagreB4InformasjonBidragJob,
                 JobParametersBuilder()
+                    .addLong("fattetÅr", fattetÅr)
                     .addString("barn", barn ?: "")
-                    .addString("statuser", statuser.joinToString(",") { it.name })
-                    .addString("simuler", simuler.toString())
                     .addString("runId", UUID.randomUUID().toString())
                     .toJobParameters(),
             )
         } catch (_: JobExecutionAlreadyRunningException) {
-            LOGGER.warn { "Batch beregnAldersjusteringerBidrag kjører allerede. Ignorerer ny forespørsel." }
+            LOGGER.warn { "Batch lagreB4InformasjonBidrag kjører allerede. Ignorerer ny forespørsel." }
         }
     }
 }

@@ -1,11 +1,14 @@
 package no.nav.bidrag.automatiskjobb.service
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import no.nav.bidrag.automatiskjobb.batch.utils.BatchConfiguration
 import no.nav.bidrag.automatiskjobb.consumer.BidragPersonConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragVedtakConsumer
@@ -16,16 +19,25 @@ import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Forsendelsestype
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
+import no.nav.bidrag.automatiskjobb.persistence.entity.metadata.AldersjusteringMetadata
+import no.nav.bidrag.automatiskjobb.persistence.entity.metadata.BeregningAvvikMetadata
+import no.nav.bidrag.automatiskjobb.persistence.entity.metadata.SamværsklasseEndringMetadata
+import no.nav.bidrag.automatiskjobb.persistence.entity.metadata.UnderholdskostnadEndringMetadata
 import no.nav.bidrag.automatiskjobb.persistence.repository.AldersjusteringRepository
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
 import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringResponse
 import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringResultatResponse
+import no.nav.bidrag.automatiskjobb.service.model.GrunnlagAvvikResultat
+import no.nav.bidrag.automatiskjobb.service.model.SamværsklasseEndring
+import no.nav.bidrag.automatiskjobb.service.model.UnderholdskostnadEndring
 import no.nav.bidrag.automatiskjobb.utils.ugyldigForespørsel
 import no.nav.bidrag.beregn.barnebidrag.service.orkestrering.AldersjusteresManueltException
 import no.nav.bidrag.beregn.barnebidrag.service.orkestrering.AldersjusteringOrchestrator
+import no.nav.bidrag.beregn.barnebidrag.service.orkestrering.BeregnBasertPåVedtak
 import no.nav.bidrag.beregn.barnebidrag.service.orkestrering.SkalIkkeAldersjusteresException
 import no.nav.bidrag.commons.util.RequestContextAsyncContext
 import no.nav.bidrag.commons.util.SecurityCoroutineContext
+import no.nav.bidrag.domene.enums.grunnlag.Grunnlagstype
 import no.nav.bidrag.domene.enums.rolle.Rolletype
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.ident.Personident
@@ -36,6 +48,11 @@ import no.nav.bidrag.transport.automatiskjobb.AldersjusteringIkkeAldersjustertRe
 import no.nav.bidrag.transport.automatiskjobb.AldersjusteringResultat
 import no.nav.bidrag.transport.automatiskjobb.AldersjusteringResultatlisteResponse
 import no.nav.bidrag.transport.automatiskjobb.HentAldersjusteringStatusRequest
+import no.nav.bidrag.transport.behandling.felles.grunnlag.GrunnlagDto
+import no.nav.bidrag.transport.behandling.felles.grunnlag.KopiDelberegningUnderholdskostnad
+import no.nav.bidrag.transport.behandling.felles.grunnlag.KopiSamværsperiodeGrunnlag
+import no.nav.bidrag.transport.behandling.felles.grunnlag.innholdTilObjekt
+import no.nav.bidrag.transport.felles.tilJsonString
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClientResponseException
@@ -433,7 +450,7 @@ class AldersjusteringService(
             withContext(Dispatchers.IO) {
                 alderjusteringRepository
                     .finnAlleForBehandlingstypeOgStatus(
-                        Behandlingstype.FATTET_FORSLAG,
+                        listOf(Behandlingstype.FATTET_FORSLAG, Behandlingstype.MANUELL),
                         listOf(Status.BEHANDLET),
                         Pageable.unpaged(),
                     )
@@ -456,7 +473,8 @@ class AldersjusteringService(
         try {
             val vedtak = vedtakConsumer.hentVedtak(aldersjustering.vedtak ?: return null) ?: return null
             val stønadsendring = vedtak.stønadsendringListe.find { it.kravhaver.verdi == aldersjustering.barn.kravhaver } ?: return null
-            val sisteBeløp = stønadsendring.periodeListe.maxByOrNull { it.periode.fom }?.beløp ?: return null
+            val sistePeriode = stønadsendring.periodeListe.maxByOrNull { it.periode.fom }
+            val sisteBeløp = sistePeriode?.beløp ?: return null
             val løpendeBeløp = aldersjustering.lopendeBelop ?: return null
 
             if (løpendeBeløp > sisteBeløp) {
@@ -464,6 +482,7 @@ class AldersjusteringService(
                     "saksnummer" to aldersjustering.barn.saksnummer,
                     "løpendeBeløp" to løpendeBeløp,
                     "aldersjustertBeløp" to sisteBeløp,
+                    "skalBehandlesManuelt" to if (aldersjustering.behandlingstype == Behandlingstype.MANUELL) "Ja" else "Nei",
                 )
             } else {
                 null
@@ -581,6 +600,192 @@ class AldersjusteringService(
         } catch (e: Exception) {
             LOGGER.error(e) { "Det skjedde en feil ved aldersjustering for stønad $stønadsid" }
             return AldersjusteringIkkeAldersjustertResultat(stønadsid, "Teknisk feil: ${e.message}")
+        }
+    }
+
+    fun startVerifiserAldersjusteringerForÅr(år: Int) {
+        LOGGER.info { "Starter verifisering av aldersjusteringer for år $år i bakgrunnen" }
+        CoroutineScope(Dispatchers.IO + SecurityCoroutineContext()).launch {
+            try {
+                val alleAldersjusteringer = alderjusteringRepository.finnAlleFattetForÅr(år).content
+                LOGGER.info { "Verifiserer ${alleAldersjusteringer.size} aldersjusteringer med status FATTET for år $år" }
+
+                data class Resultat(
+                    val avvik: GrunnlagAvvikResultat? = null,
+                    val feilet: Boolean = false,
+                )
+
+                val resultater = mutableListOf<Resultat>()
+                for (chunk in alleAldersjusteringer.chunked(BatchConfiguration.GRID_SIZE)) {
+                    val chunkResultater =
+                        coroutineScope {
+                            chunk
+                                .map { aldersjustering ->
+                                    async {
+                                        val barn = aldersjustering.barn
+                                        if (barn.skyldner == null || aldersjustering.vedtaksidBeregning == null ||
+                                            aldersjustering.vedtak == null
+                                        ) {
+                                            LOGGER.warn {
+                                                "Hopper over aldersjustering ${aldersjustering.id} for sak ${barn.saksnummer} " +
+                                                    "— mangler skyldner, vedtaksidBeregning eller vedtak"
+                                            }
+                                            return@async Resultat(feilet = true)
+                                        }
+                                        try {
+                                            val stønadsid = barn.tilStønadsid(aldersjustering.stønadstype)
+
+                                            val nyBeregning =
+                                                aldersjusteringOrchestrator
+                                                    .utførAldersjustering(
+                                                        stønadsid,
+                                                        aldersjustering.aldersjusteresForÅr,
+                                                        BeregnBasertPåVedtak(vedtaksid = aldersjustering.vedtaksidBeregning),
+                                                    ).beregning
+
+                                            val origVedtak = vedtakConsumer.hentVedtak(aldersjustering.vedtak!!)
+                                            if (origVedtak == null) {
+                                                LOGGER.warn {
+                                                    "Fant ikke originalt vedtak ${aldersjustering.vedtak} for aldersjustering ${aldersjustering.id}"
+                                                }
+                                                return@async Resultat(feilet = true)
+                                            }
+
+                                            val origGrunnlag = origVedtak.grunnlagListe
+                                            val nyGrunnlag = nyBeregning?.grunnlagListe ?: emptyList()
+
+                                            val samværsEndringer =
+                                                sammenlignSamværsklasse(
+                                                    origGrunnlag.filter { it.type == Grunnlagstype.KOPI_SAMVÆRSPERIODE },
+                                                    nyGrunnlag.filter { it.type == Grunnlagstype.KOPI_SAMVÆRSPERIODE },
+                                                )
+                                            val underholdEndringer =
+                                                sammenlignUnderholdskostnad(
+                                                    origGrunnlag.filter { it.type == Grunnlagstype.KOPI_DELBEREGNING_UNDERHOLDSKOSTNAD },
+                                                    nyGrunnlag.filter { it.type == Grunnlagstype.KOPI_DELBEREGNING_UNDERHOLDSKOSTNAD },
+                                                )
+
+                                            if (samværsEndringer.isNotEmpty() || underholdEndringer.isNotEmpty()) {
+                                                aldersjustering.metadata =
+                                                    lagMetadataForBeregningAvvik(
+                                                        år = år,
+                                                        saksnummer = aldersjustering.barn.saksnummer,
+                                                        samværsEndringer = samværsEndringer,
+                                                        underholdEndringer = underholdEndringer,
+                                                    )
+                                                alderjusteringRepository.save(aldersjustering)
+                                                LOGGER.warn {
+                                                    "Avvik funnet for aldersjustering ${aldersjustering.id} sak ${barn.saksnummer}: " +
+                                                        "samværsklasse=$samværsEndringer underholdskostnad=$underholdEndringer"
+                                                }
+                                                Resultat(
+                                                    avvik =
+                                                        GrunnlagAvvikResultat(
+                                                            aldersjusteringId = aldersjustering.id!!,
+                                                            saksnummer = barn.saksnummer,
+                                                            kravhaver = barn.kravhaver,
+                                                            samværsklasseEndringer = samværsEndringer,
+                                                            underholdskostnadEndringer = underholdEndringer,
+                                                        ),
+                                                )
+                                            } else {
+                                                Resultat()
+                                            }
+                                        } catch (e: Exception) {
+                                            LOGGER.error(e) {
+                                                "Feil ved verifisering av aldersjustering ${aldersjustering.id} for sak ${barn.saksnummer}"
+                                            }
+                                            Resultat(feilet = true)
+                                        }
+                                    }
+                                }.awaitAll()
+                        }
+                    resultater.addAll(chunkResultater)
+                }
+
+                val avvik = resultater.mapNotNull { it.avvik }
+                val antallFeilet = resultater.count { it.feilet }
+
+                LOGGER.info {
+                    "Verifisering fullført for år $år — totalt=${resultater.size} avvik=${avvik.size} feilet=$antallFeilet. "
+                }
+            } catch (e: Exception) {
+                LOGGER.warn(e) { "Verifisering av aldersjusteringer for år $år feilet" }
+            }
+        }
+    }
+
+    private fun lagMetadataForBeregningAvvik(
+        år: Int,
+        saksnummer: String,
+        samværsEndringer: List<SamværsklasseEndring>,
+        underholdEndringer: List<UnderholdskostnadEndring>,
+    ): AldersjusteringMetadata =
+        AldersjusteringMetadata(
+            beregningAvvik =
+                BeregningAvvikMetadata(
+                    år = år,
+                    saksnummer = saksnummer,
+                    samværsklasseEndring =
+                        samværsEndringer.firstOrNull()?.let {
+                            SamværsklasseEndringMetadata(
+                                gammelKlasse = it.gammelKlasse,
+                                nyKlasse = it.nyKlasse,
+                            )
+                        },
+                    underholdskostnadEndring =
+                        underholdEndringer.firstOrNull()?.let {
+                            UnderholdskostnadEndringMetadata(
+                                gammelNettoTilsynsutgift = it.gammelNettoTilsynsutgift,
+                                nyNettoTilsynsutgift = it.nyNettoTilsynsutgift,
+                                gammelBarnetilsynMedStønad = it.gammelBarnetilsynMedStønad,
+                                nyBarnetilsynMedStønad = it.nyBarnetilsynMedStønad,
+                            )
+                        },
+                ),
+        )
+
+    private fun sammenlignSamværsklasse(
+        orig: List<GrunnlagDto>,
+        ny: List<GrunnlagDto>,
+    ): List<SamværsklasseEndring> {
+        val origMap = orig.mapNotNull { g -> g.innholdTilObjekt<KopiSamværsperiodeGrunnlag>() }.associateBy { it.periode }
+        val nyMap = ny.mapNotNull { g -> g.innholdTilObjekt<KopiSamværsperiodeGrunnlag>() }.associateBy { it.periode }
+        val allePerioder = (origMap.keys + nyMap.keys).distinct()
+        return allePerioder.mapNotNull { periode ->
+            val gammelKlasse = origMap[periode]?.samværsklasse
+            val nyKlasse = nyMap[periode]?.samværsklasse
+            if (gammelKlasse != nyKlasse) {
+                SamværsklasseEndring(periode = periode, gammelKlasse = gammelKlasse, nyKlasse = nyKlasse)
+            } else {
+                null
+            }
+        }
+    }
+
+    private fun sammenlignUnderholdskostnad(
+        orig: List<GrunnlagDto>,
+        ny: List<GrunnlagDto>,
+    ): List<UnderholdskostnadEndring> {
+        val origMap = orig.mapNotNull { g -> g.innholdTilObjekt<KopiDelberegningUnderholdskostnad>() }.associateBy { it.periode }
+        val nyMap = ny.mapNotNull { g -> g.innholdTilObjekt<KopiDelberegningUnderholdskostnad>() }.associateBy { it.periode }
+        val allePerioder = (origMap.keys + nyMap.keys).distinct()
+        return allePerioder.mapNotNull { periode ->
+            val gammel = origMap[periode]
+            val nyUnderhold = nyMap[periode]
+            if (gammel?.nettoTilsynsutgift != nyUnderhold?.nettoTilsynsutgift ||
+                gammel?.barnetilsynMedStønad != nyUnderhold?.barnetilsynMedStønad
+            ) {
+                UnderholdskostnadEndring(
+                    periode = periode,
+                    gammelNettoTilsynsutgift = gammel?.nettoTilsynsutgift,
+                    nyNettoTilsynsutgift = nyUnderhold?.nettoTilsynsutgift,
+                    gammelBarnetilsynMedStønad = gammel?.barnetilsynMedStønad,
+                    nyBarnetilsynMedStønad = nyUnderhold?.barnetilsynMedStønad,
+                )
+            } else {
+                null
+            }
         }
     }
 }

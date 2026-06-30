@@ -117,15 +117,30 @@ class ForsendelseBestillingService(
     fun opprettForsendelse(
         forsendelseBestilling: ForsendelseBestilling,
         prosesserFeilet: Boolean,
+        tvingReopprett: Boolean = false,
     ) {
-        if (!forsendelseBestilling.feilBegrunnelse.isNullOrEmpty() && !prosesserFeilet) {
+        if (!forsendelseBestilling.feilBegrunnelse.isNullOrEmpty() && !prosesserFeilet && !tvingReopprett) {
             LOGGER.warn {
                 "Forsendelse bestilling ${forsendelseBestilling.id} har feilet med begrunnelse ${forsendelseBestilling.feilBegrunnelse}. " +
                     "Ignorer bestilling"
             }
             return
         }
-        if (forsendelseBestilling.forsendelseId != null && forsendelseBestilling.skalSlettes) {
+        if (tvingReopprett && forsendelseBestilling.forsendelseId != null) {
+            bidragDokumentForsendelseConsumer.slettForsendelse(
+                forsendelseBestilling.forsendelseId!!,
+                forsendelseBestilling.barn.saksnummer,
+            )
+            LOGGER.info {
+                "Slettet forsendelse ${forsendelseBestilling.forsendelseId} " +
+                    "for tvangsreopprett av bestilling ${forsendelseBestilling.id}"
+            }
+            forsendelseBestilling.forsendelseId = null
+            forsendelseBestilling.forsendelseOpprettetTidspunkt = null
+            forsendelseBestilling.feilBegrunnelse = null
+            forsendelseBestillingRepository.save(forsendelseBestilling)
+            opprettForsendelseTilBidragDokument(forsendelseBestilling)
+        } else if (forsendelseBestilling.forsendelseId != null && forsendelseBestilling.skalSlettes) {
             slettForsendelse(forsendelseBestilling)
             val nyForsendelseBestilling =
                 ForsendelseBestilling(
@@ -198,7 +213,7 @@ class ForsendelseBestillingService(
 
         fun skalSlettes(bestilling: ForsendelseBestilling): Boolean =
             (bestilling.skalSlettes && bestilling.slettetTidspunkt == null) ||
-                (bestilling.forsendelseId == null && bestilling.distribuertTidspunkt == null)
+                (bestilling.distribuertTidspunkt == null)
 
         eksisterende
             .filter { skalSlettes(it) }
@@ -241,7 +256,7 @@ class ForsendelseBestillingService(
                 dokumentmal = forsendelsestype.dokumentmal,
                 språkkode = Språk.NB,
                 feilBegrunnelse = feilBegrunnelse,
-                unikReferanse = forsendelseEntity.unikReferanse,
+                unikReferanse = forsendelseEntity.unikReferanse + "_mottaker_" + mottakerident,
                 vedtak = forsendelseEntity.vedtak!!,
                 stønadstype = forsendelseEntity.stønadstype,
                 barn = barn,

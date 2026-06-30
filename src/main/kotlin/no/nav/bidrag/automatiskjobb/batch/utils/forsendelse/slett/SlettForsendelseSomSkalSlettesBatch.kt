@@ -16,13 +16,17 @@ class SlettForsendelseSomSkalSlettesBatch(
     @param:Qualifier("asyncJobLauncher") private val jobOperator: JobOperator,
     private val slettForsendelserSomSkalSlettesJob: Job,
 ) {
-    fun start() {
+    fun start(bestillingIder: String? = null) {
         try {
-            jobOperator.start(
-                slettForsendelserSomSkalSlettesJob,
+            val paramsBuilder =
                 JobParametersBuilder()
                     .addString("runId", UUID.randomUUID().toString())
-                    .toJobParameters(),
+            if (!bestillingIder.isNullOrEmpty()) {
+                paramsBuilder.addString("bestillingIds", bestillingIder)
+            }
+            jobOperator.start(
+                slettForsendelserSomSkalSlettesJob,
+                paramsBuilder.toJobParameters(),
             )
         } catch (_: JobExecutionAlreadyRunningException) {
             LOGGER.warn { "Batch slettForsendelseSomSkalSlettes kjører allerede. Ignorerer ny forespørsel." }

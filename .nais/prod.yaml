@@ -87,6 +87,12 @@ azure_access_inbound:
   - application: bisys
     namespace: bidrag
     cluster: prod-fss
+  - application: bidrag-ui
+    namespace: bidrag
+    cluster: prod-fss
+  - application: bidrag-frontend
+    namespace: bidrag
+    cluster: prod-gcp
 unleash:
   env: production
   secret_name: bidrag-automatisk-jobb-unleash-api-token
