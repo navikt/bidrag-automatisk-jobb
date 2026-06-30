@@ -106,8 +106,8 @@ interface AldersjusteringRepository : JpaRepository<Aldersjustering, Int> {
             "AND EXTRACT(YEAR FROM a.fattetTidspunkt) = :aar " +
             "AND (" +
             "a.metadata IS NULL OR " +
-            "function('jsonb_extract_path_text', a.metadata, 'beregning_avvik', 'aar') IS NULL OR " +
-            "function('jsonb_extract_path_text', a.metadata, 'beregning_avvik', 'aar') <> str(:aar)" +
+            "function('jsonb_extract_path_text', a.metadata, 'beregningAvvik', 'år') IS NULL OR " +
+            "function('jsonb_extract_path_text', a.metadata, 'beregningAvvik', 'år') <> str(:aar)" +
             ")",
     )
     fun finnAlleFattetForÅr(

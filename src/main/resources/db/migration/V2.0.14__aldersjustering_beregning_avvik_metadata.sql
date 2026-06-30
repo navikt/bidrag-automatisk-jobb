@@ -1,2 +1,2 @@
 ALTER TABLE aldersjustering
-    ADD COLUMN metadata JSONB;
+    ADD COLUMN if not exists metadata JSONB;
