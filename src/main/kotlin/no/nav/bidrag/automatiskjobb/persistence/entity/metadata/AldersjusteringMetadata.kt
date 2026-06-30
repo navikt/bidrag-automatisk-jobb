@@ -1,10 +1,19 @@
 package no.nav.bidrag.automatiskjobb.persistence.entity.metadata
 
+import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import no.nav.bidrag.domene.enums.beregning.Samværsklasse
 import java.math.BigDecimal
 
 data class AldersjusteringMetadata(
     val beregningAvvik: BeregningAvvikMetadata? = null,
+    val tidligereVedtak: TidligereVedtakMetadata? = null,
+)
+
+data class TidligereVedtakMetadata(
+    val vedtaksid: Int,
+    val vedtaksidBeregning: Int,
+    val fattetTidspunkt: String,
+    val batchId: String,
 )
 
 data class BeregningAvvikMetadata(
@@ -28,3 +37,16 @@ data class UnderholdskostnadEndringMetadata(
     val gammelBarnetilsynMedStønad: BigDecimal?,
     val nyBarnetilsynMedStønad: BigDecimal?,
 )
+
+fun Aldersjustering.oppdaterMetadata(nyMetadata: AldersjusteringMetadata) {
+    metadata =
+        metadata
+            ?.mergeMissingFrom(nyMetadata)
+            ?: nyMetadata
+}
+
+fun AldersjusteringMetadata.mergeMissingFrom(kilde: AldersjusteringMetadata): AldersjusteringMetadata =
+    copy(
+        beregningAvvik = beregningAvvik ?: kilde.beregningAvvik,
+        tidligereVedtak = tidligereVedtak ?: kilde.tidligereVedtak,
+    )
