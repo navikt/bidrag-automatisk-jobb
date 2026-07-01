@@ -41,7 +41,7 @@ class OpprettIndeksreguleringBidragBatchConfiguration {
         opprettIndeksreguleringBidragBatchWriter: OpprettIndeksreguleringBidragBatchWriter,
     ): Step =
         StepBuilder("opprettIndeksreguleringBidragStep", jobRepository)
-            .chunk<List<Barn>, Indeksregulering>(CHUNK_SIZE)
+            .chunk<Barn, List<Indeksregulering>>(CHUNK_SIZE)
             .transactionManager(transactionManager)
             .reader(opprettIndeksreguleringBidragBatchReader)
             .processor(opprettIndeksreguleringBidragBatchProcessor)

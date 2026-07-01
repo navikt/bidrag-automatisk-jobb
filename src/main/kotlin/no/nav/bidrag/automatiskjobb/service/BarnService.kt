@@ -39,14 +39,15 @@ class BarnService(
     }
 
     private fun oppdaterOppforstringsbidrag(barn: Barn) {
-        val oppforstringsbidrag = bidragBeløpshistorikkConsumer.hentHistoriskeStønader(
-            barn.tilHentStønadHistoriskRequest(
-                Stønadstype.OPPFOSTRINGSBIDRAG
-            )
-        ) ?: run {
-            LOGGER.info { "Fant ingen oppforstringsbidrag stønader for barn ${barn.infoMedPerioder()}" };
-            return
-        }
+        val oppforstringsbidrag =
+            bidragBeløpshistorikkConsumer.hentHistoriskeStønader(
+                barn.tilHentStønadHistoriskRequest(
+                    Stønadstype.OPPFOSTRINGSBIDRAG,
+                ),
+            ) ?: run {
+                LOGGER.info { "Fant ingen oppforstringsbidrag stønader for barn ${barn.infoMedPerioder()}" }
+                return
+            }
 
         if (oppforstringsbidrag.periodeListe.isEmpty()) {
             LOGGER.info {
@@ -55,10 +56,12 @@ class BarnService(
             return
         }
 
-        if (oppforstringsbidrag.periodeFom() != barn.oppfostringsbidragFra || oppforstringsbidrag.periodeTil() != barn.oppfostringsbidragTil) {
+        if (oppforstringsbidrag.periodeFom() != barn.oppfostringsbidragFra ||
+            oppforstringsbidrag.periodeTil() != barn.oppfostringsbidragTil
+        ) {
             LOGGER.info {
                 "Feil oppforstringsbidrag periode lagret for barn ${barn.infoUtenPerioder()}. Oppdaterer " +
-                        "fra ${barn.oppfostringsbidragFra} - ${barn.oppfostringsbidragTil} til ${oppforstringsbidrag.periodeFom()} - ${oppforstringsbidrag.periodeTil()}"
+                    "fra ${barn.oppfostringsbidragFra} - ${barn.oppfostringsbidragTil} til ${oppforstringsbidrag.periodeFom()} - ${oppforstringsbidrag.periodeTil()}"
             }
         }
         barn.oppfostringsbidragFra = oppforstringsbidrag.periodeFom()
@@ -66,14 +69,15 @@ class BarnService(
     }
 
     private fun oppdater18ÅrsBidrag(barn: Barn) {
-        val bidrag18År = bidragBeløpshistorikkConsumer.hentHistoriskeStønader(
-            barn.tilHentStønadHistoriskRequest(
-                Stønadstype.BIDRAG18AAR
-            )
-        ) ?: run {
-            LOGGER.info { "Fant ingen 18 års bidrag stønader for barn ${barn.infoMedPerioder()}" };
-            return
-        }
+        val bidrag18År =
+            bidragBeløpshistorikkConsumer.hentHistoriskeStønader(
+                barn.tilHentStønadHistoriskRequest(
+                    Stønadstype.BIDRAG18AAR,
+                ),
+            ) ?: run {
+                LOGGER.info { "Fant ingen 18 års bidrag stønader for barn ${barn.infoMedPerioder()}" }
+                return
+            }
 
         if (bidrag18År.periodeListe.isEmpty()) {
             LOGGER.info {
@@ -85,7 +89,7 @@ class BarnService(
         if (bidrag18År.periodeFom() != barn.bidrag18ÅrFra || bidrag18År.periodeTil() != barn.bidrag18ÅrTil) {
             LOGGER.info {
                 "Feil 18 års bidrag periode lagret for barn ${barn.infoUtenPerioder()}. Oppdaterer " +
-                        "fra ${barn.bidrag18ÅrFra} - ${barn.bidrag18ÅrTil} til ${bidrag18År.periodeFom()} - ${bidrag18År.periodeTil()}"
+                    "fra ${barn.bidrag18ÅrFra} - ${barn.bidrag18ÅrTil} til ${bidrag18År.periodeFom()} - ${bidrag18År.periodeTil()}"
             }
         }
         barn.bidrag18ÅrFra = bidrag18År.periodeFom()
@@ -109,8 +113,8 @@ class BarnService(
         if (forskuddStønad.periodeListe.isEmpty()) {
             LOGGER.info {
                 "Ingen forskudd perioder funnet for barn ${barn.infoMedPerioder()} " +
-                        "men det finnes en løpende forskudd registrert på barnet." +
-                        "Det betyr at forskuddet har blitt opphørt. Fjerner forskudd periode fra"
+                    "men det finnes en løpende forskudd registrert på barnet." +
+                    "Det betyr at forskuddet har blitt opphørt. Fjerner forskudd periode fra"
             }
             barn.forskuddFra = null
             return
@@ -118,12 +122,12 @@ class BarnService(
 
         LOGGER.info {
             "Fant forskudd periode ${forskuddStønad.periodeFom()} - ${forskuddStønad.periodeTil()} " +
-                    "for barn med lagret forskudd periode ${barn.forskuddFra} - ${barn.forskuddTil} - ${barn.infoUtenPerioder()}"
+                "for barn med lagret forskudd periode ${barn.forskuddFra} - ${barn.forskuddTil} - ${barn.infoUtenPerioder()}"
         }
         if (forskuddStønad.periodeFom() != barn.forskuddFra || forskuddStønad.periodeTil() != barn.forskuddTil) {
             LOGGER.info {
                 "Feil forskudd periode lagret for barn ${barn.infoUtenPerioder()}. Oppdaterer " +
-                        "fra ${barn.forskuddFra} - ${barn.forskuddTil} til ${forskuddStønad.periodeFom()} - ${forskuddStønad.periodeTil()}"
+                    "fra ${barn.forskuddFra} - ${barn.forskuddTil} til ${forskuddStønad.periodeFom()} - ${forskuddStønad.periodeTil()}"
             }
         }
         barn.forskuddFra = forskuddStønad.periodeFom()
@@ -150,13 +154,13 @@ class BarnService(
 
         LOGGER.info {
             "Fant bidrag periode ${historiskeBidrag.periodeFom()} - ${historiskeBidrag.periodeTil()} " +
-                    "for barn med lagret bidrag periode ${barn.bidragFra} - ${barn.bidragTil} - ${barn.infoUtenPerioder()}"
+                "for barn med lagret bidrag periode ${barn.bidragFra} - ${barn.bidragTil} - ${barn.infoUtenPerioder()}"
         }
 
         if (historiskeBidrag.periodeFom() != barn.bidragFra || historiskeBidrag.periodeTil() != barn.bidragTil) {
             LOGGER.info {
                 "Feil bidrag periode lagret for barn ${barn.infoUtenPerioder()}. Oppdaterer " +
-                        "fra ${barn.bidragFra} - ${barn.bidragTil} til ${historiskeBidrag.periodeFom()} - ${historiskeBidrag.periodeTil()}"
+                    "fra ${barn.bidragFra} - ${barn.bidragTil} til ${historiskeBidrag.periodeFom()} - ${historiskeBidrag.periodeTil()}"
             }
         }
         barn.bidragFra = historiskeBidrag.periodeFom()

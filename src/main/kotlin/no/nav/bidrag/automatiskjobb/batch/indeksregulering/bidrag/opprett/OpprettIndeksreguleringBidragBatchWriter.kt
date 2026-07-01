@@ -12,17 +12,10 @@ private val LOGGER = KotlinLogging.logger { }
 @Component
 class OpprettIndeksreguleringBidragBatchWriter(
     private val indeksreguleringRepository: IndeksreguleringRepository,
-) : ItemWriter<Indeksregulering> {
-    override fun write(chunk: Chunk<out Indeksregulering>) {
+) : ItemWriter<List<Indeksregulering>> {
+    override fun write(chunk: Chunk<out List<Indeksregulering>>) {
         indeksreguleringRepository.saveAll(
-            chunk.map {
-                LOGGER.info {
-                    "Lagrer indeksregulering bidrag for sak ${it.saksnummer} med barn id=${
-                        it.barn.map { barn -> barn.id }.joinToString()
-                    } med status ${it.status}"
-                }
-                it
-            },
+            chunk.flatten(),
         )
     }
 }

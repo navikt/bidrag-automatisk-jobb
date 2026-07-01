@@ -78,20 +78,21 @@ interface BarnRepository : JpaRepository<Barn, Int> {
     ): List<Barn>
 
     @Query(
-        "SELECT b FROM barn b WHERE b.bidragFra IS NOT NULL " +
-            "AND (b.bidragTil IS NULL OR b.bidragTil > :bidragDato) " +
-            "ORDER BY b.saksnummer, b.id",
+        "SELECT b FROM barn b WHERE " +
+            "(b.bidragFra IS NOT NULL AND (b.bidragTil IS NULL OR b.bidragTil > :bidragDato)) " +
+            "OR (b.bidrag18ÅrFra IS NOT NULL AND (b.bidrag18ÅrTil IS NULL OR b.bidrag18ÅrTil > :bidragDato)) " +
+            "OR (b.oppfostringsbidragFra IS NOT NULL AND (b.oppfostringsbidragTil IS NULL OR b.oppfostringsbidragTil > :bidragDato))",
     )
-    fun findBarnSomSkalIndeksregulereBidrag(
+    fun findBarnMedLøpendeBidrag(
         @Param("bidragDato") bidragDato: LocalDate,
         pageable: Pageable,
     ): Page<Barn>
 
     @Query(
-        "SELECT b FROM barn b WHERE b.bidragFra IS NOT NULL " +
-            "AND (b.bidragTil IS NULL OR b.bidragTil > :bidragDato) " +
-            "AND b.saksnummer IN :saksnummer " +
-            "ORDER BY b.saksnummer, b.id",
+        "SELECT b FROM barn b WHERE b.saksnummer IN :saksnummer " +
+            "AND ((b.bidragFra IS NOT NULL AND (b.bidragTil IS NULL OR b.bidragTil > :bidragDato)) " +
+            "OR (b.bidrag18ÅrFra IS NOT NULL AND (b.bidrag18ÅrTil IS NULL OR b.bidrag18ÅrTil > :bidragDato)) " +
+            "OR (b.oppfostringsbidragFra IS NOT NULL AND (b.oppfostringsbidragTil IS NULL OR b.oppfostringsbidragTil > :bidragDato)))",
     )
     fun finnBarnMedLøpendeBidragForSaksnummer(
         @Param("bidragDato") bidragDato: LocalDate,

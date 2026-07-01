@@ -1,5 +1,6 @@
 package no.nav.bidrag.automatiskjobb.persistence.repository
 
+import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.entity.Indeksregulering
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
@@ -14,14 +15,8 @@ interface IndeksreguleringRepository : JpaRepository<Indeksregulering, Int> {
         pageable: Pageable,
     ): Page<Indeksregulering>
 
-    fun existsBySaksnummerAndStønadstypeAndÅr(
-        saksnummer: String,
-        stønadstype: Stønadstype,
-        år: Int,
-    ): Boolean
-
-    fun findBySaksnummerAndStønadstypeAndÅr(
-        saksnummer: String,
+    fun findByBarnAndStønadstypeAndÅr(
+        barn: Barn,
         stønadstype: Stønadstype,
         år: Int,
     ): Indeksregulering?

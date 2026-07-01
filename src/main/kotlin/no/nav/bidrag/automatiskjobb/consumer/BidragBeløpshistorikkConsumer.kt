@@ -54,7 +54,7 @@ class BidragBeløpshistorikkConsumer(
 
     override fun hentLøpendeStønad(hentStønadRequest: HentStønadRequest): StønadDto? =
         postForEntity(
-            bidragBeløpshistorikkUri.pathSegment("hent-stonad-historisk/").build().toUri(),
+            bidragBeløpshistorikkUri.pathSegment("hent-stonad/").build().toUri(),
             hentStønadRequest,
         )
 
