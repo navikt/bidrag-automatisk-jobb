@@ -740,15 +740,15 @@ class AldersjusteringService(
                                                 lagMetadataForBeregningAvvik(
                                                     år = år,
                                                     nyttBeløp =
+                                                        nyBeregning.beregnetBarnebidragPeriodeListe
+                                                            .first()
+                                                            .resultat.beløp,
+                                                    gammelBeløp =
                                                         origVedtak.stønadsendringListe
                                                             .first()
                                                             .periodeListe
                                                             .first()
                                                             .beløp,
-                                                    gammelBeløp =
-                                                        nyBeregning.beregnetBarnebidragPeriodeListe
-                                                            .first()
-                                                            .resultat.beløp,
                                                     saksnummer = aldersjustering.barn.saksnummer,
                                                     samværsEndringer = samværsEndringer,
                                                     underholdEndringer = underholdEndringer,
