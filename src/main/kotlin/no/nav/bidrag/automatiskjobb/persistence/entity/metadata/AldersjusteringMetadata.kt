@@ -47,6 +47,6 @@ fun Aldersjustering.oppdaterMetadata(nyMetadata: AldersjusteringMetadata) {
 
 fun AldersjusteringMetadata.mergeMissingFrom(kilde: AldersjusteringMetadata): AldersjusteringMetadata =
     copy(
-        beregningAvvik = beregningAvvik ?: kilde.beregningAvvik,
-        tidligereVedtak = tidligereVedtak ?: kilde.tidligereVedtak,
+        beregningAvvik = kilde.beregningAvvik ?: beregningAvvik,
+        tidligereVedtak = kilde.tidligereVedtak ?: tidligereVedtak,
     )
