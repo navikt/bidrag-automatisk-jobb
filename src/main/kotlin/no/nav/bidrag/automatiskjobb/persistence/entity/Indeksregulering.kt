@@ -9,9 +9,11 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
+import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import org.hibernate.proxy.HibernateProxy
+import java.math.BigDecimal
 import java.sql.Timestamp
 
 @Entity(name = "indeksregulering")
@@ -32,8 +34,12 @@ data class Indeksregulering(
     var begrunnelse: List<String> = emptyList(),
     @Enumerated(EnumType.STRING)
     var status: Status,
+    @Enumerated(EnumType.STRING)
+    var behandlingstype: Behandlingstype? = null,
     var gjennomfort: Boolean = false,
     var vedtak: Int? = null,
+    @Column(name = "belop")
+    var beløp: BigDecimal? = null,
     @Column(name = "opprettet_tidspunkt", nullable = false, updatable = false)
     var opprettetTidspunkt: Timestamp = Timestamp(System.currentTimeMillis()),
     var fattetTidspunkt: Timestamp? = null,
@@ -64,6 +70,7 @@ data class Indeksregulering(
             "status = $status, " +
             "gjennomfort = $gjennomfort, " +
             "vedtak = $vedtak, " +
+            "beløp = $beløp, " +
             "opprettetTidspunkt = $opprettetTidspunkt, " +
             "fattetTidspunkt = $fattetTidspunkt)"
 }
