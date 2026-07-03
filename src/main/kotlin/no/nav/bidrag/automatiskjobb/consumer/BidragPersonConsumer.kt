@@ -11,6 +11,7 @@ import no.nav.bidrag.transport.person.HusstandsmedlemmerDto
 import no.nav.bidrag.transport.person.NavnFødselDødDto
 import no.nav.bidrag.transport.person.PersonDto
 import no.nav.bidrag.transport.person.PersonRequest
+import no.nav.bidrag.transport.person.PersondetaljerDto
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
@@ -71,6 +72,10 @@ class BidragPersonConsumer(
     @BrukerCacheable(PERSON_CACHE)
     fun hentPerson(personident: Personident): PersonDto =
         postForNonNullEntity<PersonDto>(createUri("informasjon"), PersonRequest(personident))
+
+    @BrukerCacheable(PERSON_CACHE)
+    fun hentPersondetaljer(personident: Personident): PersondetaljerDto =
+        postForNonNullEntity<PersondetaljerDto>(createUri("/informasjon/detaljer"), PersonRequest(personident))
 
     fun hentPersonHusstandsmedlemmer(personident: Personident): HusstandsmedlemmerDto =
         postForNonNullEntity<HusstandsmedlemmerDto>(
