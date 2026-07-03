@@ -3,6 +3,7 @@ package no.nav.bidrag.automatiskjobb
 import no.nav.security.token.support.spring.api.EnableJwtTokenValidation
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan
 import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration
 import org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration
 import org.springframework.boot.security.autoconfigure.actuate.web.servlet.ManagementWebSecurityAutoConfiguration
@@ -21,6 +22,7 @@ const val PROFILE_NAIS = "nais"
 )
 @EnableJwtTokenValidation(ignore = ["org.springframework", "org.springdoc"])
 @EnableAspectJAutoProxy
+@ConfigurationPropertiesScan
 class BidragAutomatiskJobb
 
 fun main(args: Array<String>) {

@@ -29,6 +29,7 @@
         <okhttp.version>5.2.1</okhttp.version>
         <unleash.version>11.2.1</unleash.version>
         <google-cloud-storage.version>2.68.0</google-cloud-storage.version>
+        <jsch.version>2.28.2</jsch.version>
     </properties>
 
     <repositories>
@@ -207,6 +208,12 @@
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-storage</artifactId>
             <version>${google-cloud-storage.version}</version>
+        </dependency>
+        <!--SFTP-filsluse (Elin)-->
+        <dependency>
+            <groupId>com.github.mwiede</groupId>
+            <artifactId>jsch</artifactId>
+            <version>${jsch.version}</version>
         </dependency>
         <!--Sikkerhet-->
         <dependency>

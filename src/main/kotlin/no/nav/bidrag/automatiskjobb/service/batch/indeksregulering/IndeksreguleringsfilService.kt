@@ -2,6 +2,7 @@ package no.nav.bidrag.automatiskjobb.service.batch.indeksregulering
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.automatiskjobb.consumer.BidragPersonConsumer
+import no.nav.bidrag.automatiskjobb.filoverforing.FiloverføringTilElinKlient
 import no.nav.bidrag.automatiskjobb.persistence.bucket.ByteArrayOutputStreamTilByteBuffer
 import no.nav.bidrag.automatiskjobb.persistence.bucket.GcpFilBucket
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
@@ -24,11 +25,17 @@ class IndeksreguleringsfilService(
     private val indeksreguleringRepository: IndeksreguleringRepository,
     private val bidragPersonConsumer: BidragPersonConsumer,
     private val gcpFilBucket: GcpFilBucket,
+    private val filoverføringTilElinKlient: FiloverføringTilElinKlient,
 ) {
     companion object {
         val TIDSFORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
         val LANDKODE_NORGE = Landkode2("NO")
     }
+
+    private fun byggFilnavn(
+        filnavnRot: String,
+        indeksdato: LocalDate,
+    ): String = "$filnavnRot-${indeksdato.format(TIDSFORMAT)}.txt"
 
     fun lastOppFil(
         mappe: String,
@@ -36,10 +43,18 @@ class IndeksreguleringsfilService(
         indeksdato: LocalDate,
         innhold: String,
     ): Boolean {
-        val filnavn = "$mappe$filnavnRot-${indeksdato.format(TIDSFORMAT)}.txt"
+        val filnavn = mappe + byggFilnavn(filnavnRot, indeksdato)
         val buffer = ByteArrayOutputStreamTilByteBuffer().apply { write(innhold.toByteArray(Charsets.UTF_8)) }
         gcpFilBucket.lagreFil(filnavn, buffer, contentType = "text/plain")
         return true
+    }
+
+    fun lastOppFilTilFilsluse(
+        mappe: String,
+        filnavnRot: String,
+        indeksdato: LocalDate,
+    ) {
+        filoverføringTilElinKlient.lastOppFilTilFilsluse(mappe, byggFilnavn(filnavnRot, indeksdato))
     }
 
     fun byggRapportData(år: Int): RapporterIndeksreguleringBidragData {

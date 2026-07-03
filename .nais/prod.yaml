@@ -68,6 +68,8 @@ env:
   INDEKSREGULERING_BIDRAG_RAPPORTER_CRON: "-"
   BUCKET_NAME: bidrag-automatisk-jobb-rapporter-prod
   JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -XX:MaxRAMPercentage=80.0
+  SFTP_HOST: sftp.nav.no
+  SFTP_SKAL_OVERFORE_FIL: false
 outbound-access-apps:
   - bidrag-belopshistorikk
   - bidrag-vedtak

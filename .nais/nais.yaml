@@ -41,6 +41,9 @@ spec:
         {{/each}}
             - host: slack.com
             - host: api.slack.com
+            - host: {{env.SFTP_HOST}}
+              ports:
+                - port: 22
         rules:
         {{#each outbound-access-apps}}
             - application: {{this}}
@@ -78,6 +81,7 @@ spec:
   envFrom:
     - secret: {{unleash.secret_name}}
     - secret: bidrag-bot-slack-oauth-token
+    - secret: bidrag-regnskap-sftp-private-key
   gcp:
     sqlInstances:
       - name: {{ database.navn }}

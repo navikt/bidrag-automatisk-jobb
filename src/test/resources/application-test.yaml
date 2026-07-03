@@ -30,6 +30,9 @@ OPPGAVE_URL: oppgave
 KODEVERK_URL: kodeverk
 KAFKA_BAKS_OPPHOER_BARNETRYGD_TOPIC: bidrag.baks.opphoer.barnetrygd-test
 BAKS_OPPHOER_BARNETRYGD_KAFKA_GROUP_ID: bidrag-automatisk-jobb-test
+SFTP_HOST: localhost
+SFTP_SKAL_OVERFORE_FIL: false
+SFTP_PRIVATE_KEY: private_key
 
 no.nav.security.jwt:
   client:
@@ -46,6 +49,13 @@ no.nav.security.jwt:
   issuer.aad:
     discovery_url: http://localhost:${mock-oauth2-server.port}/aad/.well-known/openid-configuration
     accepted_audience: aud-localhost
+
+sftp:
+  username: srvBidragRegnskap
+  host: ${SFTP_HOST}
+  port: 22
+  privateKey: ${SFTP_PRIVATE_KEY}
+  skalOverforeFil: ${SFTP_SKAL_OVERFORE_FIL}
 
 spring:
   jpa:

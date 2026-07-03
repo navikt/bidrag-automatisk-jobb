@@ -97,7 +97,10 @@ class RapporterIndeksreguleringBidragTasklet(
             }
         }
         Filformaterer.elin(data.elin, indeksdato)?.let { innhold ->
-            if (indeksreguleringsfilService.lastOppFil(MAPPE + SUBMAPPE_ELIN, FILNAVN_ELIN, indeksdato, innhold)) skrevet++
+            if (indeksreguleringsfilService.lastOppFil(MAPPE + SUBMAPPE_ELIN, FILNAVN_ELIN, indeksdato, innhold)) {
+                skrevet++
+                indeksreguleringsfilService.lastOppFilTilFilsluse(MAPPE + SUBMAPPE_ELIN, FILNAVN_ELIN, indeksdato)
+            }
         }
 
         return skrevet

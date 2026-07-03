@@ -9,6 +9,7 @@ import io.mockk.junit5.MockKExtension
 import io.mockk.slot
 import io.mockk.verify
 import no.nav.bidrag.automatiskjobb.consumer.BidragPersonConsumer
+import no.nav.bidrag.automatiskjobb.filoverforing.FiloverføringTilElinKlient
 import no.nav.bidrag.automatiskjobb.persistence.bucket.ByteArrayOutputStreamTilByteBuffer
 import no.nav.bidrag.automatiskjobb.persistence.bucket.GcpFilBucket
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
@@ -40,6 +41,9 @@ class IndeksreguleringsfilServiceTest {
 
     @MockK(relaxed = true)
     private lateinit var bidragPersonConsumer: BidragPersonConsumer
+
+    @MockK(relaxed = true)
+    private lateinit var filoverføringTilElinKlient: FiloverføringTilElinKlient
 
     @InjectMockKs
     private lateinit var service: IndeksreguleringsfilService

@@ -10,6 +10,9 @@ KAFKA_VEDTAK_TOPIC: bidrag.vedtak-test
 KAFKA_BROKERS: localhost:9093
 BIDRAG_BOT_SLACK_OAUTH_TOKEN: ikkeGyldigToken
 SLACK_CHANNEL_ID: IKKE_GYLDIG_CHANNEL_ID
+SFTP_HOST: sftp-q.nav.no
+SFTP_SKAL_OVERFORE_FIL: false
+SFTP_PRIVATE_KEY: private_key
 
 spring:
   flyway:
