@@ -17,13 +17,17 @@ class GjennomførIndeksreguleringBidragBatch(
     @param:Qualifier("asyncJobLauncher") private val jobOperator: JobOperator,
     private val gjennomforIndeksreguleringBidragJob: Job,
 ) {
-    fun start(år: Int = Year.now().value) {
+    fun start(
+        år: Int = Year.now().value,
+        simuler: Boolean = false,
+    ) {
         try {
             jobOperator.start(
                 gjennomforIndeksreguleringBidragJob,
                 JobParametersBuilder()
                     .addString("batchId", UUID.randomUUID().toString())
                     .addString("aar", år.toString())
+                    .addString("simuler", simuler.toString())
                     .toJobParameters(),
             )
         } catch (_: JobExecutionAlreadyRunningException) {

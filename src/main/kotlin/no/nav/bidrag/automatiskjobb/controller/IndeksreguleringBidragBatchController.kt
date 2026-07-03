@@ -87,8 +87,15 @@ class IndeksreguleringBidragBatchController(
             description = "Året indeksreguleringen gjelder for. Default er inneværende år.",
             example = "2026",
         ) år: Int?,
+        @RequestParam(required = false) @Parameter(
+            required = false,
+            description =
+                "Hvis simuler ikke er satt til false så vil det ikke gjennomføres " +
+                    "indeksregulering (fattes vedtak), men batchen kjøres uten å utføre endringer.",
+            example = "true",
+        ) simuler: Boolean = true,
     ): ResponseEntity<Void> {
-        gjennomførIndeksreguleringBidragBatch.start(år ?: Year.now().value)
+        gjennomførIndeksreguleringBidragBatch.start(år ?: Year.now().value, simuler)
         return ResponseEntity.status(HttpStatus.CREATED).build()
     }
 

@@ -68,7 +68,17 @@ class IndeksreguleringBidragService(
         return indeksreguleringer
     }
 
-    fun gjennomførIndeksregulering(indeksregulering: Indeksregulering): Indeksregulering {
+    fun gjennomførIndeksregulering(
+        indeksregulering: Indeksregulering,
+        simuler: Boolean,
+    ): Indeksregulering {
+        if (simuler) {
+            LOGGER.info {
+                "Simulering er satt til true. Gjennomfører ikke indeksregulering for sak ${indeksregulering.barn.saksnummer}."
+            }
+            return indeksregulering
+        }
+
         // TODO: Implementer selve gjennomføringen av indeksregulering av bidrag (fatte vedtak).
         // VIKTIG!! IKKE INDEKSREGULER NOE SOM LØPER I ANNET ENN NOK
         LOGGER.info {
