@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
 
-class RapportFormatterTest {
+class FilformatererTest {
     private val dato = LocalDate.of(2026, 7, 1)
 
     private fun linje(
@@ -21,7 +21,7 @@ class RapportFormatterTest {
     @Test
     fun `bidragsreskontro skriver record 1-5-9 med venstre-padda antall`() {
         val resultat =
-            RapportFormatter.bidragsreskontro(
+            Filformaterer.bidragsreskontro(
                 listOf(
                     linje(fnrBp = "99999999999", fnrBa = "88888888888", beløp = BigDecimal("1140")),
                     linje(fnrBp = "77777777777", fnrBa = "66666666666", beløp = BigDecimal("2000")),
@@ -38,12 +38,12 @@ class RapportFormatterTest {
 
     @Test
     fun `bidragsreskontro returnerer null for tom liste`() {
-        RapportFormatter.bidragsreskontro(emptyList(), dato).shouldBeNull()
+        Filformaterer.bidragsreskontro(emptyList(), dato).shouldBeNull()
     }
 
     @Test
     fun `bpUtland brev bestilt skriver fnr BP og BA med CRLF`() {
-        val resultat = RapportFormatter.bpUtland(listOf(linje(landkode = "SE")), BpUtlandRapportType.BREV_BESTILT, dato)
+        val resultat = Filformaterer.bpUtland(listOf(linje(landkode = "SE")), BpUtlandRapportType.BREV_BESTILT, dato)
 
         resultat shouldBe
             "Indeksregulering bidrag og 18 års bidrag hvor BP bor i utlandet" +
@@ -56,7 +56,7 @@ class RapportFormatterTest {
     @Test
     fun `bpUtland diskresjon skriver kun beløp`() {
         val resultat =
-            RapportFormatter.bpUtland(
+            Filformaterer.bpUtland(
                 listOf(linje(landkode = "SE", beløp = BigDecimal("1140"))),
                 BpUtlandRapportType.DISKRESJON,
                 dato,
@@ -74,7 +74,7 @@ class RapportFormatterTest {
     @Test
     fun `bpUtland mangler adresse skriver fnr og beløp`() {
         val resultat =
-            RapportFormatter.bpUtland(
+            Filformaterer.bpUtland(
                 listOf(linje(landkode = "SE", beløp = BigDecimal("1140"))),
                 BpUtlandRapportType.MANGLER_ADRESSE,
                 dato,
@@ -91,13 +91,13 @@ class RapportFormatterTest {
 
     @Test
     fun `bpUtland returnerer null for tom liste`() {
-        RapportFormatter.bpUtland(emptyList(), BpUtlandRapportType.BREV_BESTILT, dato).shouldBeNull()
+        Filformaterer.bpUtland(emptyList(), BpUtlandRapportType.BREV_BESTILT, dato).shouldBeNull()
     }
 
     @Test
     fun `elin skriver record 1-5-9 uten padding`() {
         val resultat =
-            RapportFormatter.elin(
+            Filformaterer.elin(
                 listOf(
                     linje(fnrBp = "99999999999", fnrBa = "88888888888", beløp = BigDecimal("1140")),
                 ),
@@ -113,6 +113,6 @@ class RapportFormatterTest {
 
     @Test
     fun `elin returnerer null for tom liste`() {
-        RapportFormatter.elin(emptyList(), dato).shouldBeNull()
+        Filformaterer.elin(emptyList(), dato).shouldBeNull()
     }
 }

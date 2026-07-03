@@ -1,11 +1,10 @@
 package no.nav.bidrag.automatiskjobb.batch.indeksregulering.bidrag.rapporter
 
-import no.nav.bidrag.automatiskjobb.batch.indeksregulering.bidrag.rapporter.RapportFilSkriver.Companion.CICS_FORMAT
-import no.nav.bidrag.automatiskjobb.batch.indeksregulering.bidrag.rapporter.RapportFilSkriver.Companion.OPPDRAG_FORMAT
+import no.nav.bidrag.automatiskjobb.service.batch.indeksregulering.IndeksreguleringsfilService.Companion.TIDSFORMAT
 import no.nav.bidrag.automatiskjobb.service.batch.indeksregulering.RapportLinje
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
-/** Rapporttypene for «BP i utlandet»-filene (FFU), tilsvarende rapporttype 2, 3 og 4 i bisys FB020. */
 enum class BpUtlandRapportType(
     private val headerSuffiks: String,
 ) {
@@ -25,12 +24,10 @@ enum class BpUtlandRapportType(
 
 /**
  * Rene formateringsfunksjoner som gjenskaper det eksakte filformatet til FB020-rapportene i bisys.
- * Skilt ut fra taskletene slik at formatet kan verifiseres deterministisk i tester.
- *
- * Returnerer `null` når det ikke finnes linjer å skrive (da skal ingen fil opprettes – som i bisys).
  */
-object RapportFormatter {
+object Filformaterer {
     private const val RN = "\r\n"
+    private val OPPDRAG_TIDSFORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
 
     /**
      * Rapporttype 1 – fil til Bidragsreskontro. Record `1` = header, `5` = data, `9` = footer.
@@ -41,7 +38,7 @@ object RapportFormatter {
         dato: LocalDate,
     ): String? {
         if (linjer.isEmpty()) return null
-        val datoStr = dato.format(CICS_FORMAT)
+        val datoStr = dato.format(TIDSFORMAT)
         val sb = StringBuilder()
         sb
             .append("1;")
@@ -80,7 +77,7 @@ object RapportFormatter {
             .append(type.headerSuffiks())
             .append(RN)
             .append("Indeksdato: ")
-            .append(dato.format(OPPDRAG_FORMAT))
+            .append(dato.format(OPPDRAG_TIDSFORMAT))
             .append(".")
             .append(RN)
             .append(RN)
@@ -132,7 +129,7 @@ object RapportFormatter {
         linjeskift: String = System.lineSeparator(),
     ): String? {
         if (linjer.isEmpty()) return null
-        val datoStr = dato.format(CICS_FORMAT)
+        val datoStr = dato.format(TIDSFORMAT)
         val sb = StringBuilder()
         sb
             .append("1;")
