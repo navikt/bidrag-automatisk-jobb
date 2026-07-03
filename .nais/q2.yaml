@@ -14,7 +14,7 @@ database:
   tier: db-f1-micro
   size: 10
   auditlog: "off"
-buckets:
+bucket:
   navn: bidrag-automatisk-jobb-rapporter-dev
 kafka:
   pool: nav-dev

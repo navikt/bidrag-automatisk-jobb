@@ -14,7 +14,7 @@ database:
   tier: db-custom-1-3840
   size: 25
   auditlog: "off"
-buckets:
+bucket:
   navn: bidrag-automatisk-jobb-rapporter-dev
 kafka:
   pool: nav-dev
