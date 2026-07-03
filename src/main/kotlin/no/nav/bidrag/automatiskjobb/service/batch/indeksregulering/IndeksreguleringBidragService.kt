@@ -70,6 +70,7 @@ class IndeksreguleringBidragService(
 
     fun gjennomførIndeksregulering(indeksregulering: Indeksregulering): Indeksregulering {
         // TODO: Implementer selve gjennomføringen av indeksregulering av bidrag (fatte vedtak).
+        // VIKTIG!! IKKE INDEKSREGULER NOE SOM LØPER I ANNET ENN NOK
         LOGGER.info {
             "Gjennomføring av indeksregulering bidrag for sak ${indeksregulering.barn.saksnummer} er ikke implementert enda."
         }

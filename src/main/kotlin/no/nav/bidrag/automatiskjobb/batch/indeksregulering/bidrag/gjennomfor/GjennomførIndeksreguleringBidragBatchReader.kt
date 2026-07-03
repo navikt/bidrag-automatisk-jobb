@@ -11,11 +11,6 @@ import org.springframework.batch.infrastructure.item.data.builder.RepositoryItem
 import org.springframework.data.domain.Sort
 import java.time.Year
 
-/**
- * Leser alle [Indeksregulering]-rader med [Indeksregulering.gjennomfort] = false for gitt år
- * og stønadstype [Stønadstype.BIDRAG]. Disse sendes til [GjennomførIndeksreguleringBidragBatchProcessor]
- * for selve gjennomføringen.
- */
 class GjennomførIndeksreguleringBidragBatchReader(
     private val indeksreguleringRepository: IndeksreguleringRepository,
     private val pageSize: Int,
@@ -38,8 +33,8 @@ class GjennomførIndeksreguleringBidragBatchReader(
             .saveState(false)
             .pageSize(pageSize)
             .sorts(mapOf("id" to Sort.Direction.ASC))
-            .methodName("findAllByGjennomfortFalseAndStønadstypeAndÅr")
-            .arguments(listOf(Stønadstype.BIDRAG, år))
+            .methodName("findAllByStønadstypeInAndÅr")
+            .arguments(listOf(listOf(Stønadstype.BIDRAG, Stønadstype.BIDRAG18AAR, Stønadstype.OPPFOSTRINGSBIDRAG), år))
             .build()
 
     override fun read(): Indeksregulering? = delegate().read()

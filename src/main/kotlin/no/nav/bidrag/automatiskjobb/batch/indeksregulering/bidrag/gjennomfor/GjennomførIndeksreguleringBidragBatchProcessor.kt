@@ -17,10 +17,14 @@ class GjennomførIndeksreguleringBidragBatchProcessor(
 ) : ItemProcessor<Indeksregulering, Indeksregulering> {
     override fun process(indeksregulering: Indeksregulering): Indeksregulering? =
         try {
-            indeksreguleringBidragService.gjennomforBidrag(indeksregulering)
+            if (indeksregulering.status == Status.BEHANDLET) {
+                LOGGER.info { "Indeksregulering ${indeksregulering.id} er allerede behandlet. Hopper over." }
+                return null
+            }
+            indeksreguleringBidragService.gjennomførIndeksregulering(indeksregulering)
         } catch (e: Exception) {
             LOGGER.error(e) {
-                "Det skjedde en feil ved gjennomføring av indeksregulering bidrag for sak ${indeksregulering.saksnummer}. Hopper over saken."
+                "Det skjedde en feil ved gjennomføring av indeksregulering bidrag for sak ${indeksregulering.barn.saksnummer}. Hopper over saken."
             }
             indeksregulering.also {
                 it.status = Status.FEILET

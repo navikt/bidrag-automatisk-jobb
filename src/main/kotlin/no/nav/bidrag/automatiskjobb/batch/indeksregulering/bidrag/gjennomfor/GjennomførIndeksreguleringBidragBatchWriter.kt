@@ -17,7 +17,7 @@ class GjennomførIndeksreguleringBidragBatchWriter(
         indeksreguleringRepository.saveAll(
             chunk.map {
                 LOGGER.info {
-                    "Lagrer gjennomført indeksregulering bidrag for sak ${it.saksnummer} med status ${it.status}"
+                    "Lagrer gjennomført indeksregulering bidrag for sak ${it.barn.saksnummer} med status ${it.status}"
                 }
                 it
             },
