@@ -15,7 +15,7 @@ database:
   size: 25
   auditlog: "on"
 bucket:
-  - navn: bidrag-automatisk-jobb-rapporter-prod
+ navn: bidrag-automatisk-jobb-rapporter-prod
 kafka:
   pool: nav-prod
 env:
