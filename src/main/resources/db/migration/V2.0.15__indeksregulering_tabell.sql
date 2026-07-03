@@ -7,8 +7,10 @@ CREATE TABLE IF NOT EXISTS indeksregulering
     stonadstype           TEXT    NOT NULL,
     begrunnelse           TEXT[],
     status                TEXT    NOT NULL,
+    behandlingstype       TEXT,
     gjennomfort           BOOLEAN NOT NULL DEFAULT FALSE,
     vedtak                INTEGER,
+    belop                 NUMERIC,
     opprettet_tidspunkt   TIMESTAMP DEFAULT current_timestamp,
     fattet_tidspunkt      TIMESTAMP,
     -- Forhindrer at det opprettes flere indeksregulering-rader for samme barn, stønadstype og år.
