@@ -1,8 +1,6 @@
 name: Deploy Q2
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '0 2 * * 1'
   push:
     branches:
       - 'q2/**'

@@ -208,6 +208,7 @@ class RevurderForskuddService(
 
     private fun erForskuddRedusertEtterFattetBidrag(vedtakInfo: SisteManuelleVedtak): List<ForskuddRedusertResultat> =
         vedtakInfo.vedtak.stønadsendringListe
+            .asSequence()
             .filter { it.erBidrag }
             .filter {
                 if (it.erDirekteAvslag()) {
@@ -234,7 +235,7 @@ class RevurderForskuddService(
                         )
                     erForskuddetRedusert(vedtakInfo, stønadsid, bidragsmottaker.fødselsnummer!!)
                 }
-            }
+            }.toList()
 
     private fun erForskuddetRedusert(
         vedtakFattet: SisteManuelleVedtak,
