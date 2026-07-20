@@ -31,7 +31,7 @@ data class RevurderingForskudd(
     @Column(name = "for_maned", nullable = false)
     val forMåned: String,
     @Column(name = "batch_id", nullable = false)
-    override val batchId: String,
+    override var batchId: String,
     @field:ManyToMany(fetch = FetchType.EAGER)
     @field:JoinTable(
         name = "revurdering_forskudd_barn",

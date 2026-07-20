@@ -7,5 +7,5 @@ interface ForsendelseEntity : EntityObject {
     val unikReferanse: String
     val vedtak: Int?
     val stønadstype: Stønadstype
-    val batchId: String
+    var batchId: String
 }
