@@ -235,8 +235,7 @@ class RevurderForskuddService(
                         )
                     erForskuddetRedusert(vedtakInfo, stønadsid, bidragsmottaker.fødselsnummer!!)
                 }
-            }
-            .toList()
+            }.toList()
 
     private fun erForskuddetRedusert(
         vedtakFattet: SisteManuelleVedtak,

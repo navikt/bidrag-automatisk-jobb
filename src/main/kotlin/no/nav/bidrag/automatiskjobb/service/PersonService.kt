@@ -36,10 +36,11 @@ fun Collection<GrunnlagDto>.hentPersonNyesteIdent(
 
 fun <T, R> T?.takeIfNotNullOrEmpty(block: (T) -> R): R? =
     if (this == null ||
-        this is String &&
-        this.trim().isEmpty() ||
-        this is List<*> &&
-        this.isEmpty()
+        (
+            this is String &&
+                this.trim().isEmpty()
+        ) ||
+        (this is List<*> && this.isEmpty())
     ) {
         null
     } else {
