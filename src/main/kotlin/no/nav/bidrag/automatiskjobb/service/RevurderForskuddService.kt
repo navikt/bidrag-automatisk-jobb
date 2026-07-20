@@ -394,7 +394,7 @@ class RevurderForskuddService(
                             YearMonth.now().plusMonths(1),
                         ),
                     stønadstype = Stønadstype.FORSKUDD,
-                    søknadsbarnReferanse = grunnlag.søknadsbarn.find { it.personIdent == gjelderBarn.verdi }!!.referanse,
+                    søknadsbarnReferanse = grunnlag.søknadsbarn.find { hentNyesteIdent(it.personIdent)?.verdi == hentNyesteIdent(gjelderBarn.verdi)?.verdi }!!.referanse,
                     grunnlagListe = grunnlag,
                 ),
             )
