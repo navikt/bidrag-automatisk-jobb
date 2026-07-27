@@ -38,6 +38,7 @@ import no.nav.bidrag.transport.behandling.belopshistorikk.response.StønadPeriod
 import no.nav.bidrag.transport.behandling.beregning.felles.BeregnGrunnlag
 import no.nav.bidrag.transport.behandling.beregning.forskudd.ResultatPeriode
 import no.nav.bidrag.transport.behandling.felles.grunnlag.GrunnlagDto
+import no.nav.bidrag.transport.behandling.felles.grunnlag.hentVirkningstidspunktGrunnlagForBarn
 import no.nav.bidrag.transport.behandling.felles.grunnlag.personIdent
 import no.nav.bidrag.transport.behandling.felles.grunnlag.søknadsbarn
 import no.nav.bidrag.transport.behandling.vedtak.VedtakHendelse
@@ -370,12 +371,15 @@ class RevurderForskuddService(
     ): Pair<ResultatPeriode?, List<GrunnlagDto>> {
         val grunnlag = GrunnlagMapper.byggGrunnlagForBeregning(vedtakBidrag, vedtakLøpendeForskudd, gjelderBarn)
         val søknad = grunnlag.finnSøknadGrunnlag()
-        if (søknad != null && søknad.søktFraDato.toYearMonth() > YearMonth.now()) {
+        val virkningstidspunktForskudd = vedtakLøpendeForskudd.grunnlagListe.hentVirkningstidspunktGrunnlagForBarn(null)
+        if ((søknad != null && søknad.søktFraDato.toYearMonth() > YearMonth.now()) ||
+            (virkningstidspunktForskudd != null && virkningstidspunktForskudd.virkningstidspunkt > LocalDate.now())
+        ) {
             // Forskuddsvedtak har virkning fra fram i tid.
             // Da er det ikke nødvendig å revurdere forskudd da forskudd fra vedtaket ikke løper enda
             LOGGER.info {
                 """Forskudd ble ikke beregnet basert på siste forskuddsvedtak ${vedtakLøpendeForskudd.vedtaksid} for barn ${gjelderBarn.verdi} 
-                    da vedtaket har søkt fra dato fra frem i tid (${søknad.søktFraDato}). 
+                    da vedtaket har søkt fra dato fra frem i tid (${søknad?.søktFraDato}) eller har virkning fram i tid (${virkningstidspunktForskudd?.virkningstidspunkt}). 
                    Det er ikke nødvendig å revurdere forskudd fordi forskudd fra vedtaket ikke løper enda.
                 """.trimMargin()
                     .trimIndent()
@@ -394,7 +398,13 @@ class RevurderForskuddService(
                             YearMonth.now().plusMonths(1),
                         ),
                     stønadstype = Stønadstype.FORSKUDD,
-                    søknadsbarnReferanse = grunnlag.søknadsbarn.find { hentNyesteIdent(it.personIdent)?.verdi == hentNyesteIdent(gjelderBarn.verdi)?.verdi }!!.referanse,
+                    søknadsbarnReferanse =
+                        grunnlag.søknadsbarn
+                            .find {
+                                hentNyesteIdent(it.personIdent)?.verdi ==
+                                    hentNyesteIdent(gjelderBarn.verdi)?.verdi
+                            }!!
+                            .referanse,
                     grunnlagListe = grunnlag,
                 ),
             )
