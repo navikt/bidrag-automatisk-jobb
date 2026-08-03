@@ -22,7 +22,10 @@ import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import no.nav.bidrag.automatiskjobb.persistence.entity.metadata.AldersjusteringMetadata
 import no.nav.bidrag.automatiskjobb.persistence.entity.metadata.BeregningAvvikMetadata
 import no.nav.bidrag.automatiskjobb.persistence.entity.metadata.SamværsklasseEndringMetadata
+import no.nav.bidrag.automatiskjobb.persistence.entity.metadata.TidligereVedtakMetadata
 import no.nav.bidrag.automatiskjobb.persistence.entity.metadata.UnderholdskostnadEndringMetadata
+import no.nav.bidrag.automatiskjobb.persistence.entity.metadata.mergeMissingFrom
+import no.nav.bidrag.automatiskjobb.persistence.entity.metadata.oppdaterMetadata
 import no.nav.bidrag.automatiskjobb.persistence.repository.AldersjusteringRepository
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
 import no.nav.bidrag.automatiskjobb.service.model.AldersjusteringResponse
@@ -52,10 +55,10 @@ import no.nav.bidrag.transport.behandling.felles.grunnlag.GrunnlagDto
 import no.nav.bidrag.transport.behandling.felles.grunnlag.KopiDelberegningUnderholdskostnad
 import no.nav.bidrag.transport.behandling.felles.grunnlag.KopiSamværsperiodeGrunnlag
 import no.nav.bidrag.transport.behandling.felles.grunnlag.innholdTilObjekt
-import no.nav.bidrag.transport.felles.tilJsonString
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClientResponseException
+import java.math.BigDecimal
 import java.sql.Timestamp
 import java.time.LocalDate
 
@@ -603,6 +606,74 @@ class AldersjusteringService(
         }
     }
 
+    fun startResetBeregningEtterAvvik(aldersjusteringIder: List<Int>) {
+        LOGGER.info { "Starter resett av aldersjustering etter avvik for ${aldersjusteringIder.size} aldersjusteringer" }
+        CoroutineScope(Dispatchers.IO + SecurityCoroutineContext()).launch {
+            for (id in aldersjusteringIder) {
+                try {
+                    val aldersjustering =
+                        alderjusteringRepository.findById(id).orElse(null)
+                            ?: run {
+                                LOGGER.warn { "Fant ikke aldersjustering $id — hopper over" }
+                                continue
+                            }
+
+                    if (aldersjustering.status != Status.FATTET) {
+                        LOGGER.warn {
+                            "Aldersjustering $id har status ${aldersjustering.status}, ikke FATTET — hopper over"
+                        }
+                        continue
+                    }
+
+                    val avvik = aldersjustering.metadata?.beregningAvvik
+                    if (avvik?.samværsklasseEndring == null && avvik?.underholdskostnadEndring == null) {
+                        LOGGER.warn {
+                            "Aldersjustering $id sak ${aldersjustering.barn.saksnummer} har ingen registrerte avvik " +
+                                "i metadata (samværsklasseEndring og underholdskostnadEndring er begge null) — hopper over"
+                        }
+                        continue
+                    }
+
+                    // Lagre snapshot av det opprinnelige fattet-vedtaket i metadata
+                    val opprinneligBatchId =
+                        aldersjustering.metadata?.tidligereVedtak?.batchId ?: aldersjustering.batchId
+                    if (aldersjustering.metadata?.tidligereVedtak == null) {
+                        aldersjustering.oppdaterMetadata(
+                            AldersjusteringMetadata(
+                                tidligereVedtak =
+                                    TidligereVedtakMetadata(
+                                        vedtaksid = aldersjustering.vedtak!!,
+                                        vedtaksidBeregning = aldersjustering.vedtaksidBeregning!!,
+                                        fattetTidspunkt = aldersjustering.fattetTidspunkt.toString(),
+                                        batchId = aldersjustering.batchId,
+                                    ),
+                            ),
+                        )
+                    }
+
+                    // Endre batch_id slik at unikReferanse ikke kolliderer med det opprinnelige vedtaket
+                    aldersjustering.batchId = "${opprinneligBatchId}_ny_beregning_etter_avvik"
+
+                    // Tilbakestill til ubehandlet slik at beregning kan kjøres på nytt
+                    aldersjustering.status = Status.UBEHANDLET
+                    aldersjustering.fattetTidspunkt = null
+                    aldersjustering.vedtak = null
+                    aldersjustering.vedtaksidBeregning = null
+                    aldersjustering.behandlingstype = null
+                    alderjusteringRepository.save(aldersjustering)
+
+                    LOGGER.info {
+                        "Reset etter avvik fullført for aldersjustering $id sak ${aldersjustering.barn.saksnummer} " +
+                            "(nyBatchId=${aldersjustering.batchId})"
+                    }
+                } catch (e: Exception) {
+                    LOGGER.error(e) { "Feil ved ny beregning etter avvik for aldersjustering $id" }
+                }
+            }
+            LOGGER.info { "Ny beregning etter avvik fullført" }
+        }
+    }
+
     fun startVerifiserAldersjusteringerForÅr(år: Int) {
         LOGGER.info { "Starter verifisering av aldersjusteringer for år $år i bakgrunnen" }
         CoroutineScope(Dispatchers.IO + SecurityCoroutineContext()).launch {
@@ -665,15 +736,27 @@ class AldersjusteringService(
                                                     nyGrunnlag.filter { it.type == Grunnlagstype.KOPI_DELBEREGNING_UNDERHOLDSKOSTNAD },
                                                 )
 
+                                            aldersjustering.oppdaterMetadata(
+                                                lagMetadataForBeregningAvvik(
+                                                    år = år,
+                                                    nyttBeløp =
+                                                        nyBeregning.beregnetBarnebidragPeriodeListe
+                                                            .first()
+                                                            .resultat.beløp,
+                                                    gammelBeløp =
+                                                        origVedtak.stønadsendringListe
+                                                            .first()
+                                                            .periodeListe
+                                                            .first()
+                                                            .beløp,
+                                                    saksnummer = aldersjustering.barn.saksnummer,
+                                                    samværsEndringer = samværsEndringer,
+                                                    underholdEndringer = underholdEndringer,
+                                                ),
+                                            )
+                                            alderjusteringRepository.save(aldersjustering)
+
                                             if (samværsEndringer.isNotEmpty() || underholdEndringer.isNotEmpty()) {
-                                                aldersjustering.metadata =
-                                                    lagMetadataForBeregningAvvik(
-                                                        år = år,
-                                                        saksnummer = aldersjustering.barn.saksnummer,
-                                                        samværsEndringer = samværsEndringer,
-                                                        underholdEndringer = underholdEndringer,
-                                                    )
-                                                alderjusteringRepository.save(aldersjustering)
                                                 LOGGER.warn {
                                                     "Avvik funnet for aldersjustering ${aldersjustering.id} sak ${barn.saksnummer}: " +
                                                         "samværsklasse=$samværsEndringer underholdskostnad=$underholdEndringer"
@@ -718,6 +801,8 @@ class AldersjusteringService(
     private fun lagMetadataForBeregningAvvik(
         år: Int,
         saksnummer: String,
+        gammelBeløp: BigDecimal?,
+        nyttBeløp: BigDecimal?,
         samværsEndringer: List<SamværsklasseEndring>,
         underholdEndringer: List<UnderholdskostnadEndring>,
     ): AldersjusteringMetadata =
@@ -725,6 +810,9 @@ class AldersjusteringService(
             beregningAvvik =
                 BeregningAvvikMetadata(
                     år = år,
+                    sjekket = true,
+                    nyttBeløp = nyttBeløp,
+                    gammelBeløp = gammelBeløp,
                     saksnummer = saksnummer,
                     samværsklasseEndring =
                         samværsEndringer.firstOrNull()?.let {

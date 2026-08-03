@@ -76,6 +76,7 @@ class ForsendelseMapper(
                     OpprettDokumentForespørsel(
                         dokumentmalId = dokumentMaler[stonadType],
                         bestillDokument = true,
+                        ferdigstill = true,
                     ),
                 ),
         )

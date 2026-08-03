@@ -102,12 +102,12 @@ interface AldersjusteringRepository : JpaRepository<Aldersjustering, Int> {
 
     @Query(
         "SELECT a FROM aldersjustering a left join fetch a.barn " +
-            "WHERE a.status = 'FATTET' " +
+            "WHERE a.status = 'FATTET' and a.behandlingstype = 'FATTET_FORSLAG' " +
             "AND EXTRACT(YEAR FROM a.fattetTidspunkt) = :aar " +
             "AND (" +
             "a.metadata IS NULL OR " +
-            "function('jsonb_extract_path_text', a.metadata, 'beregningAvvik', 'år') IS NULL OR " +
-            "function('jsonb_extract_path_text', a.metadata, 'beregningAvvik', 'år') <> str(:aar)" +
+            "function('jsonb_extract_path_text', a.metadata, 'beregningAvvik', 'sjekket') IS NULL OR " +
+            "function('jsonb_extract_path_text', a.metadata, 'beregningAvvik', 'sjekket') <> 'true'" +
             ")",
     )
     fun finnAlleFattetForÅr(

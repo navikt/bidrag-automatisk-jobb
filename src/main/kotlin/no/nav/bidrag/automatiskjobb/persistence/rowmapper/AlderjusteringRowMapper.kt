@@ -1,10 +1,13 @@
 package no.nav.bidrag.automatiskjobb.persistence.rowmapper
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.bidrag.automatiskjobb.persistence.entity.Aldersjustering
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
+import no.nav.bidrag.automatiskjobb.persistence.entity.metadata.AldersjusteringMetadata
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
+import no.nav.bidrag.transport.felles.commonObjectmapper
 import org.springframework.jdbc.core.RowMapper
 import java.sql.ResultSet
 
@@ -32,5 +35,6 @@ class AlderjusteringRowMapper(
             b4Beløp = rs.getBigDecimal("b4_belop"),
             stønadstype = Stønadstype.valueOf(rs.getString("stonadstype")),
             resultatSisteVedtak = rs.getString("resultat_siste_vedtak"),
+            metadata = rs.getString("metadata")?.let { commonObjectmapper.readValue<AldersjusteringMetadata>(it) },
         )
 }

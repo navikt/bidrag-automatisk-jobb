@@ -135,4 +135,21 @@ class AldersjusteringBidragDebugController(
         aldersjusteringService.startVerifiserAldersjusteringerForÅr(år)
         return ResponseEntity.accepted().build()
     }
+
+    @PostMapping("/aldersjustering/bidrag/reset-aldersjustering-etter-avvik")
+    @Operation(
+        summary = "Kjør reset av fatte vedtak for gitte aldersjusteringer",
+        description =
+            "Resetter aldersjusteringer med status FATTET som har fått avvik. " +
+                "Snapshot av opprinnelig vedtaksid og fattet_tidspunkt lagres i metadata og overskrives ikke ved gjentatte kjøringer. " +
+                "batch_id endres til <opprinnelig_batch_id>_ny_beregning_etter_avvik for unik referanse. " +
+                "Returnerer 202 Accepted umiddelbart — se applikasjonsloggen for resultat.",
+        security = [SecurityRequirement(name = "bearer-key")],
+    )
+    fun startNyBeregningEtterAvvik(
+        @RequestBody ids: List<Int>,
+    ): ResponseEntity<Void> {
+        aldersjusteringService.startResetBeregningEtterAvvik(ids)
+        return ResponseEntity.accepted().build()
+    }
 }
