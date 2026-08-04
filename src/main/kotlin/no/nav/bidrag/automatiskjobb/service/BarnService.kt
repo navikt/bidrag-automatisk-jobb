@@ -27,7 +27,7 @@ class BarnService(
         oppdaterForskudd(barn)
         oppdaterBidrag(barn)
         oppdater18ÅrsBidrag(barn)
-        oppdaterOppforstringsbidrag(barn)
+        oppdaterOppfostringsbidrag(barn)
         if (simuler) {
             LOGGER.info {
                 "Simuleringmodus er på. Gjør ingen endring på periodene for forskudd/bidrag for barn ${barn.infoUtenPerioder()}"
@@ -38,7 +38,7 @@ class BarnService(
         barnRepository.save(barn)
     }
 
-    private fun oppdaterOppforstringsbidrag(barn: Barn) {
+    private fun oppdaterOppfostringsbidrag(barn: Barn) {
         val oppforstringsbidrag =
             bidragBeløpshistorikkConsumer.hentHistoriskeStønader(
                 barn.tilHentStønadHistoriskRequest(
