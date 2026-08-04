@@ -91,8 +91,12 @@ class VedtakService(
      */
     private fun hentStønadsendringerForBidragOgForskudd(vedtakHendelse: VedtakHendelse) =
         vedtakHendelse.stønadsendringListe
-            ?.filter { it.type == Stønadstype.BIDRAG || it.type == Stønadstype.FORSKUDD }
-            ?.filter { it.innkreving == Innkrevingstype.MED_INNKREVING }
+            ?.filter {
+                it.type == Stønadstype.BIDRAG ||
+                    it.type == Stønadstype.FORSKUDD ||
+                    it.type == Stønadstype.BIDRAG18AAR ||
+                    it.type == Stønadstype.OPPFOSTRINGSBIDRAG
+            }?.filter { it.innkreving == Innkrevingstype.MED_INNKREVING }
             ?.filter { it.beslutning == Beslutningstype.ENDRING }
             ?.groupBy { it.sak to it.kravhaver }
 
@@ -111,8 +115,8 @@ class VedtakService(
                 forskuddTil = finnPeriodeTil(stønadsendringer, Stønadstype.FORSKUDD),
                 bidragFra = finnPeriodeFra(stønadsendringer, Stønadstype.BIDRAG),
                 bidragTil = finnPeriodeTil(stønadsendringer, Stønadstype.BIDRAG),
-                bidrag18ÅrFra = finnPeriodeFra(stønadsendringer, Stønadstype.OPPFOSTRINGSBIDRAG),
-                bidrag18ÅrTil = finnPeriodeTil(stønadsendringer, Stønadstype.OPPFOSTRINGSBIDRAG),
+                bidrag18ÅrFra = finnPeriodeFra(stønadsendringer, Stønadstype.BIDRAG18AAR),
+                bidrag18ÅrTil = finnPeriodeTil(stønadsendringer, Stønadstype.BIDRAG18AAR),
                 oppfostringsbidragFra = finnPeriodeFra(stønadsendringer, Stønadstype.OPPFOSTRINGSBIDRAG),
                 oppfostringsbidragTil = finnPeriodeTil(stønadsendringer, Stønadstype.OPPFOSTRINGSBIDRAG),
                 oppdatert = LocalDateTime.now(),
