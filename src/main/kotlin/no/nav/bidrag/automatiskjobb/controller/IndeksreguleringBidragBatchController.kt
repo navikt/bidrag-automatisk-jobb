@@ -6,7 +6,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
-import no.nav.bidrag.automatiskjobb.batch.indeksregulering.bidrag.brevbputland.BrevBpUtlandIndeksreguleringBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.indeksregulering.bidrag.fattvedtak.FattVedtakIndeksreguleringBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.indeksregulering.bidrag.gjennomfor.GjennomførIndeksreguleringBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.indeksregulering.bidrag.opprett.OpprettIndeksreguleringBidragBatch
@@ -29,7 +28,6 @@ class IndeksreguleringBidragBatchController(
     private val opprettIndeksreguleringBidragBatch: OpprettIndeksreguleringBidragBatch,
     private val gjennomførIndeksreguleringBidragBatch: GjennomførIndeksreguleringBidragBatch,
     private val fattVedtakIndeksreguleringBidragBatch: FattVedtakIndeksreguleringBidragBatch,
-    private val brevBpUtlandIndeksreguleringBidragBatch: BrevBpUtlandIndeksreguleringBidragBatch,
     private val rapporterIndeksreguleringBidragBatch: RapporterIndeksreguleringBidragBatch,
 ) {
     @PostMapping("/indeksregulering/bidrag/batch/opprett")
@@ -135,34 +133,6 @@ class IndeksreguleringBidragBatchController(
         ) simuler: Boolean = true,
     ): ResponseEntity<Void> {
         fattVedtakIndeksreguleringBidragBatch.start(år ?: Year.now().value, simuler)
-        return ResponseEntity.status(HttpStatus.CREATED).build()
-    }
-
-    @PostMapping("/indeksregulering/bidrag/batch/brev-bp-utland")
-    @Operation(
-        summary = "Starter batch: Brev til BP i utlandet for indeksregulering bidrag.",
-        description =
-            "Skal opprette brev til bidragspliktige med adresse utenfor Norge for fattede indeksreguleringer " +
-                "av bidrag for det angitte året. Brevoppretting er ikke implementert enda; batchen logger hvor " +
-                "mange BP-er som skulle hatt brev og feiler deretter.",
-        security = [SecurityRequirement(name = "bearer-key")],
-    )
-    @ApiResponses(
-        value = [
-            ApiResponse(responseCode = "201", description = "Batch for brev til BP i utlandet startet."),
-            ApiResponse(responseCode = "401", description = "Ikke autentisert."),
-            ApiResponse(responseCode = "403", description = "Ikke autorisert."),
-            ApiResponse(responseCode = "500", description = "Intern serverfeil."),
-        ],
-    )
-    fun brevBpUtlandIndeksreguleringBidrag(
-        @RequestParam(required = false) @Parameter(
-            required = false,
-            description = "Året indeksreguleringen gjelder for. Default er inneværende år.",
-            example = "2026",
-        ) år: Int?,
-    ): ResponseEntity<Void> {
-        brevBpUtlandIndeksreguleringBidragBatch.start(år ?: Year.now().value)
         return ResponseEntity.status(HttpStatus.CREATED).build()
     }
 
