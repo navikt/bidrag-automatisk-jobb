@@ -60,7 +60,7 @@ class IndeksreguleringsfilService(
     fun byggRapportData(år: Int): RapporterIndeksreguleringBidragData {
         val reguleringer =
             indeksreguleringRepository.findAllByStatusAndBehandlingstypeAndStønadstypeInAndÅr(
-                Status.FATTET,
+                Status.BEHANDLET,
                 Behandlingstype.FATTET_FORSLAG,
                 listOf(Stønadstype.BIDRAG, Stønadstype.OPPFOSTRINGSBIDRAG, Stønadstype.BIDRAG18AAR),
                 år,

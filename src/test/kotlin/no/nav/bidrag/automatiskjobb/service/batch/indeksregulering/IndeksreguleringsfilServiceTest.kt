@@ -85,7 +85,7 @@ class IndeksreguleringsfilServiceTest {
             år = 2026,
             barn = barn,
             stønadstype = Stønadstype.BIDRAG,
-            status = Status.FATTET,
+            status = Status.BEHANDLET,
             behandlingstype = Behandlingstype.FATTET_FORSLAG,
             gjennomfort = true,
             beløp = BigDecimal.valueOf(2000),
@@ -95,7 +95,7 @@ class IndeksreguleringsfilServiceTest {
     fun `bygger en linje per indeksregulering og legger norske linjer i reskontro og elin`() {
         every {
             indeksreguleringRepository.findAllByStatusAndBehandlingstypeAndStønadstypeInAndÅr(
-                Status.FATTET,
+                Status.BEHANDLET,
                 Behandlingstype.FATTET_FORSLAG,
                 listOf(Stønadstype.BIDRAG, Stønadstype.OPPFOSTRINGSBIDRAG, Stønadstype.BIDRAG18AAR),
                 2026,
@@ -121,7 +121,7 @@ class IndeksreguleringsfilServiceTest {
     fun `hopper over barn uten skyldner`() {
         every {
             indeksreguleringRepository.findAllByStatusAndBehandlingstypeAndStønadstypeInAndÅr(
-                Status.FATTET,
+                Status.BEHANDLET,
                 Behandlingstype.FATTET_FORSLAG,
                 listOf(Stønadstype.BIDRAG, Stønadstype.OPPFOSTRINGSBIDRAG, Stønadstype.BIDRAG18AAR),
                 2026,
@@ -135,7 +135,7 @@ class IndeksreguleringsfilServiceTest {
     fun `hopper over barn med blank skyldner`() {
         every {
             indeksreguleringRepository.findAllByStatusAndBehandlingstypeAndStønadstypeInAndÅr(
-                Status.FATTET,
+                Status.BEHANDLET,
                 Behandlingstype.FATTET_FORSLAG,
                 listOf(Stønadstype.BIDRAG, Stønadstype.OPPFOSTRINGSBIDRAG, Stønadstype.BIDRAG18AAR),
                 2026,
@@ -152,7 +152,7 @@ class IndeksreguleringsfilServiceTest {
     fun `returnerer tomme rapportlister når det ikke finnes gjennomførte indeksreguleringer`() {
         every {
             indeksreguleringRepository.findAllByStatusAndBehandlingstypeAndStønadstypeInAndÅr(
-                Status.FATTET,
+                Status.BEHANDLET,
                 Behandlingstype.FATTET_FORSLAG,
                 listOf(Stønadstype.BIDRAG, Stønadstype.OPPFOSTRINGSBIDRAG, Stønadstype.BIDRAG18AAR),
                 2026,
@@ -172,7 +172,7 @@ class IndeksreguleringsfilServiceTest {
     fun `filtrerer bort kun radene uten skyldner når resultatet inneholder en blanding`() {
         every {
             indeksreguleringRepository.findAllByStatusAndBehandlingstypeAndStønadstypeInAndÅr(
-                Status.FATTET,
+                Status.BEHANDLET,
                 Behandlingstype.FATTET_FORSLAG,
                 listOf(Stønadstype.BIDRAG, Stønadstype.OPPFOSTRINGSBIDRAG, Stønadstype.BIDRAG18AAR),
                 2026,
@@ -196,7 +196,7 @@ class IndeksreguleringsfilServiceTest {
     fun `kaster ikke feil men returnerer tom liste for et annet år uten data`() {
         every {
             indeksreguleringRepository.findAllByStatusAndBehandlingstypeAndStønadstypeInAndÅr(
-                Status.FATTET,
+                Status.BEHANDLET,
                 Behandlingstype.FATTET_FORSLAG,
                 listOf(Stønadstype.BIDRAG, Stønadstype.OPPFOSTRINGSBIDRAG, Stønadstype.BIDRAG18AAR),
                 2027,

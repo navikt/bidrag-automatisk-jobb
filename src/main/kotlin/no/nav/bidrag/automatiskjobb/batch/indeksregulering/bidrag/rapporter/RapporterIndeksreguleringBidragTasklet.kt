@@ -68,34 +68,35 @@ class RapporterIndeksreguleringBidragTasklet(
     ): Int {
         var skrevet = 0
 
-        Filformaterer.bidragsreskontro(data.bidragsreskontro, indeksdato)?.let { innhold ->
-            if (indeksreguleringsfilService.lastOppFil(MAPPE + SUBMAPPE_RESKONTRO, FILNAVN_RESKONTRO, indeksdato, innhold)) skrevet++
-        }
-        Filformaterer.bpUtland(data.bpUtlandBrev, BpUtlandRapportType.BREV_BESTILT, indeksdato)?.let { innhold ->
-            if (indeksreguleringsfilService.lastOppFil(MAPPE + SUBMAPPE_UTLAND_BREV, FILNAVN_UTLAND_BREV, indeksdato, innhold)) skrevet++
-        }
-        Filformaterer.bpUtland(data.bpUtlandDiskresjon, BpUtlandRapportType.DISKRESJON, indeksdato)?.let { innhold ->
-            if (indeksreguleringsfilService.lastOppFil(
-                    MAPPE + SUBMAPPE_UTLAND_DISKRESJON,
-                    FILNAVN_UTLAND_DISKRESJON,
-                    indeksdato,
-                    innhold,
-                )
-            ) {
-                skrevet++
-            }
-        }
-        Filformaterer.bpUtland(data.bpUtlandManglerAdresse, BpUtlandRapportType.MANGLER_ADRESSE, indeksdato)?.let { innhold ->
-            if (indeksreguleringsfilService.lastOppFil(
-                    MAPPE + SUBMAPPE_UTLAND_MANGLER_ADRESSE,
-                    FILNAVN_UTLAND_MANGLER_ADRESSE,
-                    indeksdato,
-                    innhold,
-                )
-            ) {
-                skrevet++
-            }
-        }
+        // TODO(Følgende filer er disabled da vi ikke vet hva de benyttes til og om det er tjenestlig behov for å opprette disse. Elin filen må Elin ha for varsel av indeksregulering)
+//        Filformaterer.bidragsreskontro(data.bidragsreskontro, indeksdato)?.let { innhold ->
+//            if (indeksreguleringsfilService.lastOppFil(MAPPE + SUBMAPPE_RESKONTRO, FILNAVN_RESKONTRO, indeksdato, innhold)) skrevet++
+//        }
+//        Filformaterer.bpUtland(data.bpUtlandBrev, BpUtlandRapportType.BREV_BESTILT, indeksdato)?.let { innhold ->
+//            if (indeksreguleringsfilService.lastOppFil(MAPPE + SUBMAPPE_UTLAND_BREV, FILNAVN_UTLAND_BREV, indeksdato, innhold)) skrevet++
+//        }
+//        Filformaterer.bpUtland(data.bpUtlandDiskresjon, BpUtlandRapportType.DISKRESJON, indeksdato)?.let { innhold ->
+//            if (indeksreguleringsfilService.lastOppFil(
+//                    MAPPE + SUBMAPPE_UTLAND_DISKRESJON,
+//                    FILNAVN_UTLAND_DISKRESJON,
+//                    indeksdato,
+//                    innhold,
+//                )
+//            ) {
+//                skrevet++
+//            }
+//        }
+//        Filformaterer.bpUtland(data.bpUtlandManglerAdresse, BpUtlandRapportType.MANGLER_ADRESSE, indeksdato)?.let { innhold ->
+//            if (indeksreguleringsfilService.lastOppFil(
+//                    MAPPE + SUBMAPPE_UTLAND_MANGLER_ADRESSE,
+//                    FILNAVN_UTLAND_MANGLER_ADRESSE,
+//                    indeksdato,
+//                    innhold,
+//                )
+//            ) {
+//                skrevet++
+//            }
+//        }
         Filformaterer.elin(data.elin, indeksdato)?.let { innhold ->
             if (indeksreguleringsfilService.lastOppFil(MAPPE + SUBMAPPE_ELIN, FILNAVN_ELIN, indeksdato, innhold)) {
                 skrevet++
