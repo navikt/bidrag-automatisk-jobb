@@ -20,12 +20,12 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 
 @ExtendWith(MockKExtension::class)
-class IndeksreguleringBidragServiceTest {
+class OpprettIndeksreguleringBidragServiceTest {
     @MockK
     private lateinit var beløpshistorikkConsumer: BidragBeløpshistorikkConsumer
 
     @InjectMockKs
-    private lateinit var service: IndeksreguleringBidragService
+    private lateinit var service: OpprettIndeksreguleringBidragService
 
     private val år = 2026
     private val batchId = "test-batch"

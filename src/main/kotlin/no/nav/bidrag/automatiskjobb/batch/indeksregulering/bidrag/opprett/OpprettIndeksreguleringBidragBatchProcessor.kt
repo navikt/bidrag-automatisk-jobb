@@ -4,7 +4,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.entity.Indeksregulering
 import no.nav.bidrag.automatiskjobb.persistence.repository.IndeksreguleringRepository
-import no.nav.bidrag.automatiskjobb.service.batch.indeksregulering.IndeksreguleringBidragService
+import no.nav.bidrag.automatiskjobb.service.batch.indeksregulering.OpprettIndeksreguleringBidragService
 import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import org.springframework.batch.core.annotation.BeforeStep
@@ -16,7 +16,7 @@ private val LOGGER = KotlinLogging.logger { }
 
 @Component
 class OpprettIndeksreguleringBidragBatchProcessor(
-    private val indeksreguleringBidragService: IndeksreguleringBidragService,
+    private val opprettIndeksreguleringBidragService: OpprettIndeksreguleringBidragService,
     private val indeksreguleringRepository: IndeksreguleringRepository,
 ) : ItemProcessor<Barn, List<Indeksregulering>> {
     private lateinit var batchId: String
@@ -44,7 +44,7 @@ class OpprettIndeksreguleringBidragBatchProcessor(
                 return null
             }
 
-            indeksreguleringBidragService.opprettIndeksregulering(batchId, år, barn, stønadstyper)
+            opprettIndeksreguleringBidragService.opprettIndeksregulering(batchId, år, barn, stønadstyper)
         } catch (e: Exception) {
             LOGGER.error(e) {
                 "Det skjedde en feil ved oppretting av indeksregulering bidrag for sak $saksnummer. Hopper over saken."

@@ -1,6 +1,5 @@
 package no.nav.bidrag.automatiskjobb.service.batch.indeksregulering
 
-import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.bidrag.automatiskjobb.consumer.BidragBeløpshistorikkConsumer
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.entity.Indeksregulering
@@ -12,10 +11,8 @@ import no.nav.bidrag.domene.sak.Saksnummer
 import no.nav.bidrag.transport.behandling.belopshistorikk.request.HentStønadRequest
 import org.springframework.stereotype.Service
 
-private val LOGGER = KotlinLogging.logger { }
-
 @Service
-class IndeksreguleringBidragService(
+class OpprettIndeksreguleringBidragService(
     private val beløpshistorikkConsumer: BidragBeløpshistorikkConsumer,
 ) {
     fun opprettIndeksregulering(
@@ -66,24 +63,5 @@ class IndeksreguleringBidragService(
             )
         }
         return indeksreguleringer
-    }
-
-    fun gjennomførIndeksregulering(
-        indeksregulering: Indeksregulering,
-        simuler: Boolean,
-    ): Indeksregulering {
-        if (simuler) {
-            LOGGER.info {
-                "Simulering er satt til true. Gjennomfører ikke indeksregulering for sak ${indeksregulering.barn.saksnummer}."
-            }
-            return indeksregulering
-        }
-
-        // TODO: Implementer selve gjennomføringen av indeksregulering av bidrag (fatte vedtak).
-        // VIKTIG!! IKKE INDEKSREGULER NOE SOM LØPER I ANNET ENN NOK
-        LOGGER.info {
-            "Gjennomføring av indeksregulering bidrag for sak ${indeksregulering.barn.saksnummer} er ikke implementert enda."
-        }
-        return indeksregulering.also { it.gjennomfort = true }
     }
 }
