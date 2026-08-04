@@ -16,6 +16,8 @@ class IndeksreguleringBidragBatchVarslingConfiguration {
     fun indeksreguleringBidragBatchKategori(
         @Value($$"${INDEKSREGULERING_BIDRAG_OPPRETT_CRON:-}") opprettCron: String,
         @Value($$"${INDEKSREGULERING_BIDRAG_GJENNOMFOR_CRON:-}") gjennomførCron: String,
+        @Value($$"${INDEKSREGULERING_BIDRAG_FATT_VEDTAK_CRON:-}") fattVedtakCron: String,
+        @Value($$"${INDEKSREGULERING_BIDRAG_BREV_BP_UTLAND_CRON:-}") brevBpUtlandCron: String,
         @Value($$"${INDEKSREGULERING_BIDRAG_RAPPORTER_CRON:-}") rapporterCron: String,
     ): BatchKategori =
         BatchKategori(
@@ -24,6 +26,8 @@ class IndeksreguleringBidragBatchVarslingConfiguration {
                 listOf(
                     Batch("Opprett indeksregulering bidrag", opprettCron),
                     Batch("Gjennomfør indeksregulering bidrag", gjennomførCron),
+                    Batch("Fatt vedtak indeksregulering bidrag", fattVedtakCron),
+                    Batch("Brev BP utland indeksregulering bidrag", brevBpUtlandCron),
                     Batch("Rapporter indeksregulering bidrag", rapporterCron),
                 ),
         )

@@ -44,6 +44,8 @@ data class Indeksregulering(
     var opprettetTidspunkt: Timestamp = Timestamp(System.currentTimeMillis()),
     var fattetTidspunkt: Timestamp? = null,
 ) : EntityObject {
+    val unikReferanse get() = "indeksregulering_${år}_${barn.tilStønadsid(stønadstype).toReferanse()}"
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other == null) return false

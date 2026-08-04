@@ -27,4 +27,11 @@ interface IndeksreguleringRepository : JpaRepository<Indeksregulering, Int> {
         stønadstyper: Collection<Stønadstype>,
         år: Int,
     ): List<Indeksregulering>
+
+    fun findAllByStatusAndBehandlingstypeAndVedtakIsNotNullAndÅr(
+        status: Status,
+        behandlingstype: Behandlingstype,
+        år: Int,
+        pageable: Pageable,
+    ): Page<Indeksregulering>
 }
