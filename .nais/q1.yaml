@@ -67,7 +67,7 @@ env:
   INDEKSREGULERING_BIDRAG_GJENNOMFOR_CRON: "-"
   INDEKSREGULERING_BIDRAG_FATT_VEDTAK_CRON: "-"
   INDEKSREGULERING_BIDRAG_RAPPORTER_CRON: "-"
-  BUCKET_NAME: bidrag-automatisk-jobb-rapporter-q1
+  BUCKET_NAME: bidrag-automatisk-jobb-rapporter-dev
   JAVA_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -XX:MaxRAMPercentage=80.0
   SFTP_HOST: sftp-q.nav.no
   SFTP_SKAL_OVERFORE_FIL: false
