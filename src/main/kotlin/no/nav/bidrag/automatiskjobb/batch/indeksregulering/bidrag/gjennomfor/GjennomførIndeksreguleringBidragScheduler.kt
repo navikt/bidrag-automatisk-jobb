@@ -11,7 +11,7 @@ private val LOGGER = KotlinLogging.logger {}
 class GjennomførIndeksreguleringBidragScheduler(
     private val gjennomførIndeksreguleringBidragBatch: GjennomførIndeksreguleringBidragBatch,
 ) {
-    @Scheduled(cron = $$"${GJENNOMFOR_INDEKSREGULERING_BIDRAG_CRON:-}")
+    @Scheduled(cron = $$"${INDEKSREGULERING_BIDRAG_GJENNOMFOR_CRON:-}")
     @SchedulerLock(name = "gjennomforIndeksreguleringBidrag", lockAtMostFor = "PT4H")
     fun kjør() {
         LOGGER.info { "Starter schedulert kjøring av gjennomfør indeksregulering bidrag batch" }
