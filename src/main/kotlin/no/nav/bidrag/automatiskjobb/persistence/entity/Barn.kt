@@ -27,7 +27,9 @@ data class Barn(
     var forskuddTil: LocalDate? = null,
     var bidragFra: LocalDate? = null,
     var bidragTil: LocalDate? = null,
+    @Column(name = "bidrag_18_år_fra")
     var bidrag18ÅrFra: LocalDate? = null,
+    @Column(name = "bidrag_18_år_til")
     var bidrag18ÅrTil: LocalDate? = null,
     var oppfostringsbidragFra: LocalDate? = null,
     var oppfostringsbidragTil: LocalDate? = null,
