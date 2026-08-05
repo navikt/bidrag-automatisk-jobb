@@ -25,7 +25,7 @@ class OppdaterBarnBatchProcessor(
 
     override fun process(barn: Barn) =
         try {
-            barnService.oppdaterBarnForskuddOgBidragPerioder(barn, simuler)
+            barnService.oppdaterBarnStønadPerioder(barn, simuler)
         } catch (e: Exception) {
             log.error(e) { "Det skjedde en feil ved oppdatering av barn ${barn.id}" }
             null

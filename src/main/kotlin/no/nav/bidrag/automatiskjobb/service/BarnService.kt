@@ -20,7 +20,7 @@ class BarnService(
     private val bidragBeløpshistorikkConsumer: BidragBeløpshistorikkConsumer,
     private val barnRepository: BarnRepository,
 ) {
-    fun oppdaterBarnForskuddOgBidragPerioder(
+    fun oppdaterBarnStønadPerioder(
         barn: Barn,
         simuler: Boolean,
     ) {
@@ -39,11 +39,11 @@ class BarnService(
     }
 
     private fun oppdaterOppfostringsbidrag(barn: Barn) {
+        val stønadRequest =
+            barn.tilHentStønadRequest(Stønadstype.OPPFOSTRINGSBIDRAG) ?: return
         val oppfostringsbidrag =
             bidragBeløpshistorikkConsumer.hentLøpendeStønad(
-                barn.tilHentStønadRequest(
-                    Stønadstype.OPPFOSTRINGSBIDRAG,
-                ),
+                stønadRequest,
             ) ?: run {
                 LOGGER.info { "Fant ingen oppfostringsbidrag stønader for barn ${barn.infoMedPerioder()}" }
                 return
@@ -69,11 +69,11 @@ class BarnService(
     }
 
     private fun oppdater18ÅrsBidrag(barn: Barn) {
+        val stønadRequest =
+            barn.tilHentStønadRequest(Stønadstype.BIDRAG18AAR) ?: return
         val bidrag18År =
             bidragBeløpshistorikkConsumer.hentLøpendeStønad(
-                barn.tilHentStønadRequest(
-                    Stønadstype.BIDRAG18AAR,
-                ),
+                stønadRequest,
             ) ?: run {
                 LOGGER.info { "Fant ingen 18 års bidrag stønader for barn ${barn.infoMedPerioder()}" }
                 return
@@ -97,9 +97,10 @@ class BarnService(
     }
 
     private fun oppdaterForskudd(barn: Barn) {
+        val stønadRequest = barn.tilHentStønadRequest(Stønadstype.FORSKUDD) ?: return
         val forskuddStønad =
             bidragBeløpshistorikkConsumer.hentLøpendeStønad(
-                barn.tilHentStønadRequest(Stønadstype.FORSKUDD),
+                stønadRequest,
             ) ?: run {
                 LOGGER.info { "Fant ingen forskudd stønader for barn ${barn.infoMedPerioder()}" }
                 return
@@ -139,9 +140,11 @@ class BarnService(
             LOGGER.info { "Barn ${barn.infoUtenPerioder()} har ingen skyldner, hopper over oppdatering av bidrag" }
             return
         }
+        val stønadRequest =
+            barn.tilHentStønadRequest(Stønadstype.BIDRAG) ?: return
         val historiskeBidrag =
             bidragBeløpshistorikkConsumer.hentLøpendeStønad(
-                barn.tilHentStønadRequest(Stønadstype.BIDRAG),
+                stønadRequest,
             ) ?: run {
                 LOGGER.info { "Fant ingen bidrag stønader for barn ${barn.infoMedPerioder()}" }
                 return
@@ -179,11 +182,18 @@ class BarnService(
             .periode.til
             ?.atDay(1)
 
-    fun Barn.tilHentStønadRequest(stønadstype: Stønadstype) =
-        HentStønadRequest(
+    fun Barn.tilHentStønadRequest(stønadstype: Stønadstype): HentStønadRequest? {
+        if (stønadstype != Stønadstype.FORSKUDD && skyldner == null) {
+            LOGGER.info {
+                "Barn ${infoUtenPerioder()} har ingen skyldner, hopper over henting av $stønadstype"
+            }
+            return null
+        }
+        return HentStønadRequest(
             type = stønadstype,
             sak = Saksnummer(saksnummer),
             skyldner = if (stønadstype == Stønadstype.FORSKUDD) personidentNav else Personident(skyldner!!),
             kravhaver = Personident(kravhaver),
         )
+    }
 }
