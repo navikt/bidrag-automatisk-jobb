@@ -8,7 +8,7 @@ requests:
   memory: 2000Mi
 replicas:
   max: 2
-  min: 1
+  min: 2
 database:
   navn: bidrag-automatisk-jobb-prod
   tier: db-custom-1-3840

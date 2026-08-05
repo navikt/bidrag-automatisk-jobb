@@ -1,0 +1,10 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ name }}
+  namespace: bidrag
+spec:
+  minAvailable: {{ replicas.min }}
+  selector:
+    matchLabels:
+      app: {{ name }}

@@ -17,3 +17,18 @@ jobs:
     secrets: inherit
     with:
       nais_variabler_filnavn: q1.yaml
+
+  deploy_pdb:
+    runs-on: ubuntu-latest
+    name: Deploy PodDisruptionBudget
+    permissions:
+      contents: "read"
+      id-token: "write"
+    steps:
+      - uses: actions/checkout@v6
+      - name: Deploy PodDisruptionBudget til dev-gcp
+        uses: nais/deploy/actions/deploy@v2
+        env:
+          CLUSTER: dev-gcp
+          RESOURCE: .nais/pdb.yaml
+          VARS: .nais/q1.yaml
