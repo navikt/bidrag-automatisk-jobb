@@ -21,10 +21,10 @@ import org.springframework.test.context.ActiveProfiles
 )
 @EnableAspectJAutoProxy
 @EnableJwtTokenValidation(ignore = ["org.springframework", "org.springdoc"])
-class BidragAldersjusteringLocal
+class BidragAutomatiskJobbLocal
 
 fun main(args: Array<String>) {
-    val app = SpringApplication(BidragAldersjusteringLocal::class.java)
+    val app = SpringApplication(BidragAutomatiskJobbLocal::class.java)
     app.setAdditionalProfiles("local", "nais", "lokal-nais-secrets", "lokal-nais")
     app.run(*args)
 }
