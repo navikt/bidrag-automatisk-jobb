@@ -53,15 +53,21 @@ spec:
   kafka:
     pool: {{ kafka.pool }}
   image: {{ image }}
+  startup:
+    path: /actuator/health
+    initialDelay: 10
+    timeout: 1
+    periodSeconds: 10
+    failureThreshold: 30
   liveness:
     path: /actuator/health
-    initialDelay: 60
+    initialDelay: 10
     timeout: 1
     periodSeconds: 5
     failureThreshold: 10
   readiness:
     path: /actuator/health
-    initialDelay: 60
+    initialDelay: 10
     timeout: 1
     periodSeconds: 5
     failureThreshold: 10
