@@ -24,7 +24,7 @@ class ForsendelseBestillingRowMapper(
             rolletype = rs.getString("rolletype")?.let { Rolletype.valueOf(it) },
             gjelder = rs.getString("gjelder"),
             mottaker = rs.getString("mottaker"),
-            språkkode = rs.getString("sprakkode")?.let { Språk.valueOf(it) },
+            språkkode = rs.getString("språkkode")?.let { Språk.valueOf(it) },
             dokumentmal = rs.getString("dokumentmal"),
             opprettetTidspunkt = rs.getTimestamp("opprettet_tidspunkt"),
             forsendelseOpprettetTidspunkt = rs.getTimestamp("forsendelse_opprettet_tidspunkt"),
@@ -37,7 +37,7 @@ class ForsendelseBestillingRowMapper(
             unikReferanse = rs.getString("unik_referanse") ?: "",
             vedtak = rs.getInt("vedtak"),
             stønadstype =
-                rs.getString("stonadstype")?.let {
+                rs.getString("stønadstype")?.let {
                     Stønadstype
                         .valueOf(it)
                 } ?: Stønadstype.BIDRAG,

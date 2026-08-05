@@ -375,7 +375,7 @@ class AldersjusteringBidragBatchController(
         summary = "Start kjøring av batch for å lagre B4-beløp for aldersjusteringer.",
         description =
             "Operasjon for å starte kjøring av batch som henter B4-avregningsbeløp fra reskontro " +
-                "for alle aldersjusteringer som er fattet i et gitt år, og lagrer beløpet i `b4_belop`-kolonnen. " +
+                "for alle aldersjusteringer som er fattet i et gitt år, og lagrer beløpet i `b4_beløp`-kolonnen. " +
                 "B4-beløpet representerer avregning der BM skylder BP (transaksjonskode B4/D4) og oppstår " +
                 "typisk når aldersjustert bidrag er lavere enn utbetalt bidrag. " +
                 "Kun beløp større enn null lagres. Batchen er idempotent og kan kjøres på nytt.",
