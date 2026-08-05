@@ -37,7 +37,6 @@ class FattVedtakIndeksreguleringBidragService(
             )
             indeksregulering.status = Status.FATTET
             indeksregulering.fattetTidspunkt = Timestamp(System.currentTimeMillis())
-            indeksregulering.gjennomfort = true
             indeksreguleringRepository.save(indeksregulering)
         } catch (e: Exception) {
             LOGGER.error(e) {

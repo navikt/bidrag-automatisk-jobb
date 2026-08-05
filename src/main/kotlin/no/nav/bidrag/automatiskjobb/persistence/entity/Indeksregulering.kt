@@ -23,12 +23,10 @@ data class Indeksregulering(
     override var id: Int? = null,
     @Column(name = "batch_id", nullable = false)
     var batchId: String,
-    @Column(name = "ar", nullable = false)
     var år: Int,
     @ManyToOne
     @JoinColumn(name = "barn_id")
     var barn: Barn,
-    @Column(name = "stonadstype", nullable = false)
     @Enumerated(EnumType.STRING)
     var stønadstype: Stønadstype,
     var begrunnelse: List<String> = emptyList(),
@@ -36,9 +34,7 @@ data class Indeksregulering(
     var status: Status,
     @Enumerated(EnumType.STRING)
     var behandlingstype: Behandlingstype? = null,
-    var gjennomfort: Boolean = false,
     var vedtak: Int? = null,
-    @Column(name = "belop")
     var beløp: BigDecimal? = null,
     @Column(name = "opprettet_tidspunkt", nullable = false, updatable = false)
     var opprettetTidspunkt: Timestamp = Timestamp(System.currentTimeMillis()),
@@ -70,7 +66,6 @@ data class Indeksregulering(
             "stønadstype = $stønadstype, " +
             "begrunnelse = $begrunnelse, " +
             "status = $status, " +
-            "gjennomfort = $gjennomfort, " +
             "vedtak = $vedtak, " +
             "beløp = $beløp, " +
             "opprettetTidspunkt = $opprettetTidspunkt, " +

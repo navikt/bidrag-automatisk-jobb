@@ -21,16 +21,13 @@ data class Barn(
     override var id: Int? = null,
     var saksnummer: String = "",
     var kravhaver: String = "",
-    @Column(name = "fodselsdato")
     var fødselsdato: LocalDate? = null,
     var skyldner: String? = null,
     var forskuddFra: LocalDate? = null,
     var forskuddTil: LocalDate? = null,
     var bidragFra: LocalDate? = null,
     var bidragTil: LocalDate? = null,
-    @Column(name = "bidrag_18_ar_fra")
     var bidrag18ÅrFra: LocalDate? = null,
-    @Column(name = "bidrag_18_ar_til")
     var bidrag18ÅrTil: LocalDate? = null,
     var oppfostringsbidragFra: LocalDate? = null,
     var oppfostringsbidragTil: LocalDate? = null,

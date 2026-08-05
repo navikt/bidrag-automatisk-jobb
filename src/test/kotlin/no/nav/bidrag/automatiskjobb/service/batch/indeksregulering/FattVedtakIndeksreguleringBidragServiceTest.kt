@@ -49,7 +49,6 @@ class FattVedtakIndeksreguleringBidragServiceTest {
         service.fattVedtak(indeksregulering, simuler = false)
 
         indeksregulering.status shouldBe Status.FATTET
-        indeksregulering.gjennomfort shouldBe true
         indeksregulering.fattetTidspunkt.shouldNotBeNull()
         verify(exactly = 1) { indeksreguleringRepository.save(indeksregulering) }
     }
@@ -61,7 +60,6 @@ class FattVedtakIndeksreguleringBidragServiceTest {
         service.fattVedtak(indeksregulering, simuler = true)
 
         indeksregulering.status shouldBe Status.BEHANDLET
-        indeksregulering.gjennomfort shouldBe false
         verify(exactly = 0) { bidragVedtakConsumer.fatteVedtaksforslag(any()) }
         verify(exactly = 0) { indeksreguleringRepository.save(any()) }
     }
@@ -75,7 +73,6 @@ class FattVedtakIndeksreguleringBidragServiceTest {
         shouldThrow<RuntimeException> { service.fattVedtak(indeksregulering, simuler = false) }
 
         indeksregulering.status shouldBe Status.FATTE_VEDTAK_FEILET
-        indeksregulering.gjennomfort shouldBe false
         verify(exactly = 1) { indeksreguleringRepository.save(indeksregulering) }
     }
 

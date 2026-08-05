@@ -24,7 +24,6 @@ import no.nav.bidrag.automatiskjobb.persistence.entity.metadata.BeregningAvvikMe
 import no.nav.bidrag.automatiskjobb.persistence.entity.metadata.SamværsklasseEndringMetadata
 import no.nav.bidrag.automatiskjobb.persistence.entity.metadata.TidligereVedtakMetadata
 import no.nav.bidrag.automatiskjobb.persistence.entity.metadata.UnderholdskostnadEndringMetadata
-import no.nav.bidrag.automatiskjobb.persistence.entity.metadata.mergeMissingFrom
 import no.nav.bidrag.automatiskjobb.persistence.entity.metadata.oppdaterMetadata
 import no.nav.bidrag.automatiskjobb.persistence.repository.AldersjusteringRepository
 import no.nav.bidrag.automatiskjobb.persistence.repository.BarnRepository
@@ -251,7 +250,7 @@ class AldersjusteringService(
                 )
 
             aldersjustering.vedtaksidBeregning = vedtaksidBeregning
-            aldersjustering.lopendeBelop = løpendeBeløp
+            aldersjustering.løpendeBeløp = løpendeBeløp
             aldersjustering.status = if (simuler) Status.SIMULERT else Status.BEHANDLET
             aldersjustering.behandlingstype = Behandlingstype.FATTET_FORSLAG
             aldersjustering.begrunnelse = emptyList()
@@ -478,7 +477,7 @@ class AldersjusteringService(
             val stønadsendring = vedtak.stønadsendringListe.find { it.kravhaver.verdi == aldersjustering.barn.kravhaver } ?: return null
             val sistePeriode = stønadsendring.periodeListe.maxByOrNull { it.periode.fom }
             val sisteBeløp = sistePeriode?.beløp ?: return null
-            val løpendeBeløp = aldersjustering.lopendeBelop ?: return null
+            val løpendeBeløp = aldersjustering.løpendeBeløp ?: return null
 
             if (løpendeBeløp > sisteBeløp) {
                 mapOf(

@@ -39,33 +39,33 @@ class BarnService(
     }
 
     private fun oppdaterOppfostringsbidrag(barn: Barn) {
-        val oppforstringsbidrag =
+        val oppfostringsbidrag =
             bidragBeløpshistorikkConsumer.hentHistoriskeStønader(
                 barn.tilHentStønadHistoriskRequest(
                     Stønadstype.OPPFOSTRINGSBIDRAG,
                 ),
             ) ?: run {
-                LOGGER.info { "Fant ingen oppforstringsbidrag stønader for barn ${barn.infoMedPerioder()}" }
+                LOGGER.info { "Fant ingen oppfostringsbidrag stønader for barn ${barn.infoMedPerioder()}" }
                 return
             }
 
-        if (oppforstringsbidrag.periodeListe.isEmpty()) {
+        if (oppfostringsbidrag.periodeListe.isEmpty()) {
             LOGGER.info {
-                "Ingen oppforstringsbidrag perioder funnet for barn ${barn.infoMedPerioder()}"
+                "Ingen oppfostringsbidrag perioder funnet for barn ${barn.infoMedPerioder()}"
             }
             return
         }
 
-        if (oppforstringsbidrag.periodeFom() != barn.oppfostringsbidragFra ||
-            oppforstringsbidrag.periodeTil() != barn.oppfostringsbidragTil
+        if (oppfostringsbidrag.periodeFom() != barn.oppfostringsbidragFra ||
+            oppfostringsbidrag.periodeTil() != barn.oppfostringsbidragTil
         ) {
             LOGGER.info {
-                "Feil oppforstringsbidrag periode lagret for barn ${barn.infoUtenPerioder()}. Oppdaterer " +
-                    "fra ${barn.oppfostringsbidragFra} - ${barn.oppfostringsbidragTil} til ${oppforstringsbidrag.periodeFom()} - ${oppforstringsbidrag.periodeTil()}"
+                "Feil oppfostringsbidrag periode lagret for barn ${barn.infoUtenPerioder()}. Oppdaterer " +
+                    "fra ${barn.oppfostringsbidragFra} - ${barn.oppfostringsbidragTil} til ${oppfostringsbidrag.periodeFom()} - ${oppfostringsbidrag.periodeTil()}"
             }
         }
-        barn.oppfostringsbidragFra = oppforstringsbidrag.periodeFom()
-        barn.oppfostringsbidragTil = oppforstringsbidrag.periodeTil()
+        barn.oppfostringsbidragFra = oppfostringsbidrag.periodeFom()
+        barn.oppfostringsbidragTil = oppfostringsbidrag.periodeTil()
     }
 
     private fun oppdater18ÅrsBidrag(barn: Barn) {

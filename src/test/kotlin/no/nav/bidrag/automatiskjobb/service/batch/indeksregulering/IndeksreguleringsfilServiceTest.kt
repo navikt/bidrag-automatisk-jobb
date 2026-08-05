@@ -87,7 +87,6 @@ class IndeksreguleringsfilServiceTest {
             stønadstype = Stønadstype.BIDRAG,
             status = Status.BEHANDLET,
             behandlingstype = Behandlingstype.FATTET_FORSLAG,
-            gjennomfort = true,
             beløp = BigDecimal.valueOf(2000),
         )
 
