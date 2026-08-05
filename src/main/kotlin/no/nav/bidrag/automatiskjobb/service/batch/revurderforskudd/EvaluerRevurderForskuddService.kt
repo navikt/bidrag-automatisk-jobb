@@ -37,7 +37,7 @@ import no.nav.bidrag.domene.sak.Stønadsid
 import no.nav.bidrag.domene.tid.Datoperiode
 import no.nav.bidrag.domene.tid.ÅrMånedsperiode
 import no.nav.bidrag.inntekt.InntektApi
-import no.nav.bidrag.transport.behandling.belopshistorikk.request.HentStønadHistoriskRequest
+import no.nav.bidrag.transport.behandling.belopshistorikk.request.HentStønadRequest
 import no.nav.bidrag.transport.behandling.belopshistorikk.response.StønadDto
 import no.nav.bidrag.transport.behandling.beregning.felles.BeregnGrunnlag
 import no.nav.bidrag.transport.behandling.beregning.forskudd.BeregnetForskuddResultat
@@ -456,13 +456,12 @@ class EvaluerRevurderForskuddService(
         saksnummer: String,
         søknadsbarnIdent: String,
     ): StønadDto? =
-        bidragBeløpshistorikkConsumer.hentHistoriskeStønader(
-            HentStønadHistoriskRequest(
+        bidragBeløpshistorikkConsumer.hentLøpendeStønad(
+            HentStønadRequest(
                 type = Stønadstype.FORSKUDD,
                 sak = Saksnummer(saksnummer),
                 skyldner = personidentNav,
                 kravhaver = Personident(søknadsbarnIdent),
-                gyldigTidspunkt = LocalDateTime.now(),
             ),
         )
 
