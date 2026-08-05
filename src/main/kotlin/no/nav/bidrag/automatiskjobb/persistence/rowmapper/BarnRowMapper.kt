@@ -16,13 +16,13 @@ class BarnRowMapper : RowMapper<Barn> {
             bidragTil = rs.getTimestamp("bidrag_til")?.toLocalDateTime()?.toLocalDate(),
             forskuddFra = rs.getTimestamp("forskudd_fra")?.toLocalDateTime()?.toLocalDate(),
             forskuddTil = rs.getTimestamp("forskudd_til")?.toLocalDateTime()?.toLocalDate(),
-            bidrag18ÅrFra = rs.getTimestamp("bidrag_18_ar_fra")?.toLocalDateTime()?.toLocalDate(),
-            bidrag18ÅrTil = rs.getTimestamp("bidrag_18_ar_til")?.toLocalDateTime()?.toLocalDate(),
+            bidrag18ÅrFra = rs.getTimestamp("bidrag_18_år_fra")?.toLocalDateTime()?.toLocalDate(),
+            bidrag18ÅrTil = rs.getTimestamp("bidrag_18_år_til")?.toLocalDateTime()?.toLocalDate(),
             oppfostringsbidragTil = rs.getTimestamp("oppfostringsbidrag_til")?.toLocalDateTime()?.toLocalDate(),
             oppfostringsbidragFra = rs.getTimestamp("oppfostringsbidrag_fra")?.toLocalDateTime()?.toLocalDate(),
             skyldner = rs.getString("skyldner"),
             kravhaver = rs.getString("kravhaver"),
             saksnummer = rs.getString("saksnummer"),
-            fødselsdato = rs.getTimestamp("fodselsdato")?.toLocalDateTime()?.toLocalDate(),
+            fødselsdato = rs.getTimestamp("fødselsdato")?.toLocalDateTime()?.toLocalDate(),
         )
 }

@@ -39,7 +39,7 @@ kubectl exec --tty deployment/bidrag-automatisk-jobb-q1 -- printenv | grep -e AZ
 Første fase er å kjøre batchen `OpprettAldersjusteringerBidragBatch`, som oppretter grunnlaget i `aldersjustering`-tabellen.
 
 Batchen leser barn fra `barn`-tabellen for valgt år (`aar`) med følgende utvalg:
-- `:år - EXTRACT(YEAR FROM fodselsdato) IN (6, 11, 15)`
+- `:år - EXTRACT(YEAR FROM fødselsdato) IN (6, 11, 15)`
 - `bidrag_fra <= aldersjusteringsdato`
 - `bidrag_til IS NULL OR bidrag_til > aldersjusteringsdato`
 
@@ -68,7 +68,7 @@ Utrekk over saker hvor det finnes barn som skal aldersjusteres
 ```sql
 SELECT distinct b.saksnummer
 FROM barn b
-WHERE :år - EXTRACT(YEAR from b.fodselsdato) IN (6, 11, 15)
+WHERE :år - EXTRACT(YEAR from b.fødselsdato) IN (6, 11, 15)
   AND b.bidrag_fra <= make_date(:år, 7, 1)
   AND (b.bidrag_til IS NULL OR b.bidrag_til >= make_date(:år, 7, 1));
 ```
@@ -128,7 +128,7 @@ SELECT
 a.status,
 saksnummer,
 a.behandlingstype,
-b.fodselsdato as fødselsdato,
+b.fødselsdato as fødselsdato,
 resultat_siste_vedtak,
 fattet_tidspunkt,
 CASE
@@ -160,7 +160,7 @@ FROM aldersjustering a
             END
                            ) AS t(begrunnelse_item) ON array_length(begrunnelse, 1) > 0
 WHERE a.status = 'BEHANDLET' and a.batch_id = 'aldersjustering_bidrag_2026'
-GROUP BY b.id, a.id, a.oppgave, vedtak, vedtaksid_beregning, b.fodselsdato, b.kravhaver, saksnummer, begrunnelse, resultat_siste_vedtak, behandlingstype,b.skyldner
+GROUP BY b.id, a.id, a.oppgave, vedtak, vedtaksid_beregning, b.fødselsdato, b.kravhaver, saksnummer, begrunnelse, resultat_siste_vedtak, behandlingstype,b.skyldner
 ORDER BY begrunnelser;
 ```
 
@@ -225,12 +225,12 @@ Dette kan brukes til å teste forsendelse/brev før det fattes vedtak.
 
 #### Del 3b - Lagre B4-informasjon
 Denne fasen henter og lagrer B4-avregningsbeløp fra reskontro for alle aldersjusteringer som ble fattet i Del 3.
-Den **bør kjøres etter Del 3** og kan kjøres én eller flere ganger — rader der `b4_belop` allerede er satt hoppes automatisk over.
+Den **bør kjøres etter Del 3** og kan kjøres én eller flere ganger — rader der `b4_beløp` allerede er satt hoppes automatisk over.
 
 Denne kan trigges ved å kalle `POST /aldersjustering/batch/bidrag/lagreB4Informasjon`
 
 B4-beløpet (transaksjonskode `B4`/`D4`) oppstår når BM skylder BP penger — typisk fordi aldersjustert bidrag er lavere enn allerede utbetalt bidrag for gjeldende periode.
-Kun beløp større enn null lagres i `b4_belop`-kolonnen i `aldersjustering`-tabellen.
+Kun beløp større enn null lagres i `b4_beløp`-kolonnen i `aldersjustering`-tabellen.
 
 Med parametere:
 - `aar` (påkrevd) - årstall som filtrerer på `fattet_tidspunkt`. Skal samsvare med året Del 3 ble kjørt.
@@ -239,12 +239,12 @@ Med parametere:
 Hent oversikt over lagrede B4-beløp:
 
 ```sql
-SELECT b.saksnummer, b.kravhaver, b.skyldner, a.b4_belop
+SELECT b.saksnummer, b.kravhaver, b.skyldner, a.b4_beløp
 FROM aldersjustering a
 INNER JOIN barn b ON b.id = a.barn_id
-WHERE a.b4_belop IS NOT NULL
+WHERE a.b4_beløp IS NOT NULL
   AND a.batch_id = 'aldersjustering_bidrag_2026'
-ORDER BY a.b4_belop DESC;
+ORDER BY a.b4_beløp DESC;
 ```
 
 #### Del 4 - Opprett forsendelse

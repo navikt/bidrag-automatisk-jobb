@@ -33,7 +33,7 @@ class OpprettAldersjusteringerBidragBatchReader(
                 setFromClause("FROM barn")
                 setWhereClause(
                     """
-            WHERE :år - EXTRACT(YEAR FROM fodselsdato) in (6, 11, 15)
+            WHERE :år - EXTRACT(YEAR FROM fødselsdato) in (6, 11, 15)
             AND bidrag_fra <= :aldersjusteringsdato
             AND (bidrag_til IS NULL OR bidrag_til > :aldersjusteringsdato)
                     """.trimMargin(),
