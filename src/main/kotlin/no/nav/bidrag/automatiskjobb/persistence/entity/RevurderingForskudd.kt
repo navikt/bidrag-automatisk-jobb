@@ -28,7 +28,6 @@ data class RevurderingForskudd(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     override val id: Int? = null,
-    @Column(name = "for_maned", nullable = false)
     val forMåned: String,
     @Column(name = "batch_id", nullable = false)
     override var batchId: String,
@@ -55,7 +54,6 @@ data class RevurderingForskudd(
     val opprettetTidspunkt: Timestamp = Timestamp(System.currentTimeMillis()),
     var fattetTidspunkt: Timestamp? = null,
     var resultatSisteVedtak: String? = null,
-    @Column(name = "stonadstype")
     @Enumerated(EnumType.STRING)
     override val stønadstype: Stønadstype = Stønadstype.FORSKUDD,
     @OneToMany

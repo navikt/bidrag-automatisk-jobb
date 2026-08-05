@@ -33,7 +33,7 @@ data class Aldersjustering(
     val barn: Barn,
     @Column(columnDefinition = "NUMERIC")
     val aldersgruppe: Int,
-    var lopendeBelop: BigDecimal? = null,
+    var løpendeBeløp: BigDecimal? = null,
     var begrunnelse: List<String> = emptyList(),
     @Enumerated(EnumType.STRING)
     var status: Status,
@@ -44,9 +44,7 @@ data class Aldersjustering(
     @Column(name = "opprettet_tidspunkt", nullable = false, updatable = false)
     val opprettetTidspunkt: Timestamp = Timestamp(System.currentTimeMillis()),
     var fattetTidspunkt: Timestamp? = null,
-    @Column(name = "b4_belop")
     var b4Beløp: BigDecimal? = null,
-    @Column(name = "stonadstype")
     @Enumerated(EnumType.STRING)
     override val stønadstype: Stønadstype = Stønadstype.BIDRAG,
     var resultatSisteVedtak: String? = null,
@@ -84,7 +82,7 @@ data class Aldersjustering(
             "vedtaksidBeregning = $vedtaksidBeregning, " +
             "barn = $barn, " +
             "aldersgruppe = $aldersgruppe, " +
-            "lopendeBelop = $lopendeBelop, " +
+            "lopendeBelop = $løpendeBeløp, " +
             "begrunnelse = $begrunnelse, " +
             "status = $status, " +
             "behandlingstype = $behandlingstype, " +

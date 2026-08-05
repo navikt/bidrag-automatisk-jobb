@@ -2,6 +2,8 @@ package no.nav.bidrag.automatiskjobb.controller
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
@@ -27,7 +29,10 @@ import java.time.YearMonth
 
 @Protected
 @RestController
-@Tag(name = "Revurder forskudd batch")
+@Tag(
+    name = "Revurder forskudd batch",
+    description = "Endepunkter for å starte og administrere batch-jobber for revurdering av forskuddsutbetalinger.",
+)
 class RevurderForskuddBatchController(
     private val opprettRevurderForskuddBatch: OpprettRevurderForskuddBatch,
     private val evaluerRevurderForskuddBatch: EvaluerRevurderForskuddBatch,
@@ -43,10 +48,10 @@ class RevurderForskuddBatchController(
     )
     @ApiResponses(
         value = [
-            ApiResponse(
-                responseCode = "201",
-                description = "Batch for oppretting av revurdering av forskudd startet",
-            ),
+            ApiResponse(responseCode = "201", description = "Batch for oppretting av revurdering av forskudd startet"),
+            ApiResponse(responseCode = "401", description = "Ikke autentisert."),
+            ApiResponse(responseCode = "403", description = "Ikke autorisert."),
+            ApiResponse(responseCode = "500", description = "Intern serverfeil."),
         ],
     )
     fun opprettRevurderForskudd(
@@ -61,6 +66,14 @@ class RevurderForskuddBatchController(
         summary = "Sletter alle revurderinger av forskudd for en måned opprettet av batch.",
         description = "Sletter alle revurderinger av forskudd for en måned opprettet av batch.",
         security = [SecurityRequirement(name = "bearer-key")],
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Revurderinger for angitt måned ble slettet."),
+            ApiResponse(responseCode = "401", description = "Ikke autentisert."),
+            ApiResponse(responseCode = "403", description = "Ikke autorisert."),
+            ApiResponse(responseCode = "500", description = "Intern serverfeil."),
+        ],
     )
     fun slettRevurderingForskuddForMåned(
         @Parameter(
@@ -80,6 +93,14 @@ class RevurderForskuddBatchController(
             "Evaluerer om forskudd skal revurderes for alle ubehandlede opprettede revurdering av forskudd " +
                 "og oppretter vedtaksforslag.",
         security = [SecurityRequirement(name = "bearer-key")],
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "201", description = "Batch for evaluering av revurdering av forskudd startet."),
+            ApiResponse(responseCode = "401", description = "Ikke autentisert."),
+            ApiResponse(responseCode = "403", description = "Ikke autorisert."),
+            ApiResponse(responseCode = "500", description = "Intern serverfeil."),
+        ],
     )
     fun evaluerRevurderForskudd(
         @Parameter(
@@ -110,7 +131,22 @@ class RevurderForskuddBatchController(
     @PostMapping("/revurderforskudd/batch/evaluer/{saksnummer}")
     @Operation(
         summary = "Starter evaluering revurdering av forskudd for en sak.",
+        description =
+            "Evaluerer om forskudd skal revurderes for én spesifikk sak og returnerer resultatet. " +
+                "Oppretter vedtaksforslag dersom simuler=false.",
         security = [SecurityRequirement(name = "bearer-key")],
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Evaluering gjennomført. Returnerer revurderingsforskudd-innslaget med oppdatert status og vedtaksforslag.",
+                content = [Content(schema = Schema(implementation = RevurderingForskudd::class))],
+            ),
+            ApiResponse(responseCode = "401", description = "Ikke autentisert."),
+            ApiResponse(responseCode = "403", description = "Ikke autorisert."),
+            ApiResponse(responseCode = "500", description = "Intern serverfeil."),
+        ],
     )
     fun evaluerRevuderForskuddForSak(
         @Parameter(
@@ -151,6 +187,21 @@ class RevurderForskuddBatchController(
     }
 
     @PostMapping("/revurderforskudd/batch/reskontroVurderTilbakekreving")
+    @Operation(
+        summary = "Vurder tilbakekreving basert på reskontro",
+        description =
+            "Starter en asynkron vurdering av tilbakekreving basert på reskontrodata. " +
+                "Identifiserer forskuddsaker der utbetalt beløp overstiger rettmessig beløp og oppretter vedtaksforslag for tilbakekreving.",
+        security = [SecurityRequirement(name = "bearer-key")],
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "201", description = "Tilbakekrevingsvurdering startet (kjøres asynkront)."),
+            ApiResponse(responseCode = "401", description = "Ikke autentisert."),
+            ApiResponse(responseCode = "403", description = "Ikke autorisert."),
+            ApiResponse(responseCode = "500", description = "Intern serverfeil."),
+        ],
+    )
     fun reskontroVurderTilbakekreving(): ResponseEntity<Void> {
         CoroutineScope(Dispatchers.IO).launch {
             revurderForskuddService.vurderTilbakekrevingBasertPåReskontro()
@@ -165,6 +216,14 @@ class RevurderForskuddBatchController(
             "Resetter status til UBEHANDLET for alle revurdering som er simulerte.",
         security = [SecurityRequirement(name = "bearer-key")],
     )
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Simulerte revurderinger ble resatt til UBEHANDLET."),
+            ApiResponse(responseCode = "401", description = "Ikke autentisert."),
+            ApiResponse(responseCode = "403", description = "Ikke autorisert."),
+            ApiResponse(responseCode = "500", description = "Intern serverfeil."),
+        ],
+    )
     fun evaluerRevurderForskudd(): ResponseEntity<Void> {
         revurderForskuddService.resetEvalueringEtterSimuering()
         return ResponseEntity.status(HttpStatus.OK).build()
@@ -177,6 +236,14 @@ class RevurderForskuddBatchController(
             "Setter status til UBEHANDLET for alle revurderinger av forskudd som har feilet i evaluering.",
         security = [SecurityRequirement(name = "bearer-key")],
     )
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Feilede revurderinger ble resatt til UBEHANDLET."),
+            ApiResponse(responseCode = "401", description = "Ikke autentisert."),
+            ApiResponse(responseCode = "403", description = "Ikke autorisert."),
+            ApiResponse(responseCode = "500", description = "Intern serverfeil."),
+        ],
+    )
     fun resetFeiledeRevurderForskudd(): ResponseEntity<Void> {
         revurderForskuddService.resetFeiledeRevurderinger()
         return ResponseEntity.status(HttpStatus.OK).build()
@@ -187,6 +254,14 @@ class RevurderForskuddBatchController(
         summary = "Starter batch: Fatte vedtak revurder forskudd.",
         description = "Fatter vedtak på revurdering av forskudd for alle beregnede revurderinger.",
         security = [SecurityRequirement(name = "bearer-key")],
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "201", description = "Batch for fatting av vedtak på revurdering av forskudd startet."),
+            ApiResponse(responseCode = "401", description = "Ikke autentisert."),
+            ApiResponse(responseCode = "403", description = "Ikke autorisert."),
+            ApiResponse(responseCode = "500", description = "Intern serverfeil."),
+        ],
     )
     fun fatteVedtakRevurderForskudd(
         @Parameter(required = true, example = "true") simuler: Boolean = true,
@@ -200,6 +275,14 @@ class RevurderForskuddBatchController(
         summary = "Starter batch: Opprett revurderingslenke for revurder forskudd i tilfeller hvor det skal tilbakekreves forskudd.",
         description = "Oppretter revurderingslenke for saksbehandling i de tilfeller hvor revurdering av forskudd medfører tilbakekreving.",
         security = [SecurityRequirement(name = "bearer-key")],
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "201", description = "Batch for oppretting av revurderingslenker startet."),
+            ApiResponse(responseCode = "401", description = "Ikke autentisert."),
+            ApiResponse(responseCode = "403", description = "Ikke autorisert."),
+            ApiResponse(responseCode = "500", description = "Intern serverfeil."),
+        ],
     )
     fun opprettRevurderingslengeForRevurderForskudd(
         @Parameter(

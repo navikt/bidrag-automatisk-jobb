@@ -41,6 +41,9 @@ spec:
         {{/each}}
             - host: slack.com
             - host: api.slack.com
+            - host: {{env.SFTP_HOST}}
+              ports:
+                - port: 22
         rules:
         {{#each outbound-access-apps}}
             - application: {{this}}
@@ -50,15 +53,21 @@ spec:
   kafka:
     pool: {{ kafka.pool }}
   image: {{ image }}
+  startup:
+    path: /actuator/health
+    initialDelay: 10
+    timeout: 1
+    periodSeconds: 10
+    failureThreshold: 30
   liveness:
     path: /actuator/health
-    initialDelay: 60
+    initialDelay: 10
     timeout: 1
     periodSeconds: 5
     failureThreshold: 10
   readiness:
     path: /actuator/health
-    initialDelay: 60
+    initialDelay: 10
     timeout: 1
     periodSeconds: 5
     failureThreshold: 10
@@ -78,6 +87,7 @@ spec:
   envFrom:
     - secret: {{unleash.secret_name}}
     - secret: bidrag-bot-slack-oauth-token
+    - secret: bidrag-regnskap-sftp-private-key
   gcp:
     sqlInstances:
       - name: {{ database.navn }}
@@ -94,6 +104,8 @@ spec:
             value: "write,ddl,role"
           - name: "pgaudit.log_parameter"
             value: "on"
+    buckets:
+      - name: {{ bucket.navn }}
   ingresses:
   {{#each ingresses as |url|}}
     - {{url}}

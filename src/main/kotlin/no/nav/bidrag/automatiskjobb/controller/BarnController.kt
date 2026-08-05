@@ -34,6 +34,9 @@ class BarnController(
                 responseCode = "200",
                 description = "Batch for oppdatering av barn perioder startet",
             ),
+            ApiResponse(responseCode = "401", description = "Ikke autentisert."),
+            ApiResponse(responseCode = "403", description = "Ikke autorisert."),
+            ApiResponse(responseCode = "500", description = "Intern serverfeil."),
         ],
     )
     @Parameters(

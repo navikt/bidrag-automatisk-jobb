@@ -24,7 +24,7 @@ class AlderjusteringRowMapper(
             vedtaksidBeregning = rs.getIntOrNull("vedtaksid_beregning"),
             barn = barnRepository.findById(rs.getInt("barn_id")).get(),
             aldersgruppe = rs.getInt("aldersgruppe"),
-            lopendeBelop = rs.getBigDecimal("lopende_belop"),
+            løpendeBeløp = rs.getBigDecimal("lopende_belop"),
             begrunnelse = (rs.getArray("begrunnelse")?.array as? Array<*>)?.map { it as String } ?: emptyList(),
             status = Status.valueOf(rs.getString("status")),
             behandlingstype = rs.getString("behandlingstype")?.let { Behandlingstype.valueOf(rs.getString("behandlingstype")) },

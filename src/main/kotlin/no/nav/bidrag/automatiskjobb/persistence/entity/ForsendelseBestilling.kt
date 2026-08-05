@@ -31,7 +31,6 @@ data class ForsendelseBestilling(
     val rolletype: Rolletype?,
     val gjelder: String? = null,
     val mottaker: String? = null,
-    @Column(name = "sprakkode")
     @Enumerated(EnumType.STRING)
     val språkkode: Språk? = null,
     val dokumentmal: String? = null,
@@ -44,7 +43,6 @@ data class ForsendelseBestilling(
     var feilBegrunnelse: String? = null,
     val unikReferanse: String,
     val vedtak: Int,
-    @Column(name = "stonadstype")
     @Enumerated(EnumType.STRING)
     val stønadstype: Stønadstype,
     @ManyToOne

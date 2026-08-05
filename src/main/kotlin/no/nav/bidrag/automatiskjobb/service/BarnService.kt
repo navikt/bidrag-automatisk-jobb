@@ -8,7 +8,7 @@ import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.felles.personidentNav
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.domene.sak.Saksnummer
-import no.nav.bidrag.transport.behandling.belopshistorikk.request.HentStønadHistoriskRequest
+import no.nav.bidrag.transport.behandling.belopshistorikk.request.HentStønadRequest
 import no.nav.bidrag.transport.behandling.belopshistorikk.response.StønadDto
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -26,6 +26,8 @@ class BarnService(
     ) {
         oppdaterForskudd(barn)
         oppdaterBidrag(barn)
+        oppdater18ÅrsBidrag(barn)
+        oppdaterOppfostringsbidrag(barn)
         if (simuler) {
             LOGGER.info {
                 "Simuleringmodus er på. Gjør ingen endring på periodene for forskudd/bidrag for barn ${barn.infoUtenPerioder()}"
@@ -36,10 +38,68 @@ class BarnService(
         barnRepository.save(barn)
     }
 
+    private fun oppdaterOppfostringsbidrag(barn: Barn) {
+        val oppfostringsbidrag =
+            bidragBeløpshistorikkConsumer.hentLøpendeStønad(
+                barn.tilHentStønadRequest(
+                    Stønadstype.OPPFOSTRINGSBIDRAG,
+                ),
+            ) ?: run {
+                LOGGER.info { "Fant ingen oppfostringsbidrag stønader for barn ${barn.infoMedPerioder()}" }
+                return
+            }
+
+        if (oppfostringsbidrag.periodeListe.isEmpty()) {
+            LOGGER.info {
+                "Ingen oppfostringsbidrag perioder funnet for barn ${barn.infoMedPerioder()}"
+            }
+            return
+        }
+
+        if (oppfostringsbidrag.periodeFom() != barn.oppfostringsbidragFra ||
+            oppfostringsbidrag.periodeTil() != barn.oppfostringsbidragTil
+        ) {
+            LOGGER.info {
+                "Feil oppfostringsbidrag periode lagret for barn ${barn.infoUtenPerioder()}. Oppdaterer " +
+                    "fra ${barn.oppfostringsbidragFra} - ${barn.oppfostringsbidragTil} til ${oppfostringsbidrag.periodeFom()} - ${oppfostringsbidrag.periodeTil()}"
+            }
+        }
+        barn.oppfostringsbidragFra = oppfostringsbidrag.periodeFom()
+        barn.oppfostringsbidragTil = oppfostringsbidrag.periodeTil()
+    }
+
+    private fun oppdater18ÅrsBidrag(barn: Barn) {
+        val bidrag18År =
+            bidragBeløpshistorikkConsumer.hentLøpendeStønad(
+                barn.tilHentStønadRequest(
+                    Stønadstype.BIDRAG18AAR,
+                ),
+            ) ?: run {
+                LOGGER.info { "Fant ingen 18 års bidrag stønader for barn ${barn.infoMedPerioder()}" }
+                return
+            }
+
+        if (bidrag18År.periodeListe.isEmpty()) {
+            LOGGER.info {
+                "Ingen 18 års bidrag perioder funnet for barn ${barn.infoMedPerioder()}"
+            }
+            return
+        }
+
+        if (bidrag18År.periodeFom() != barn.bidrag18ÅrFra || bidrag18År.periodeTil() != barn.bidrag18ÅrTil) {
+            LOGGER.info {
+                "Feil 18 års bidrag periode lagret for barn ${barn.infoUtenPerioder()}. Oppdaterer " +
+                    "fra ${barn.bidrag18ÅrFra} - ${barn.bidrag18ÅrTil} til ${bidrag18År.periodeFom()} - ${bidrag18År.periodeTil()}"
+            }
+        }
+        barn.bidrag18ÅrFra = bidrag18År.periodeFom()
+        barn.bidrag18ÅrTil = bidrag18År.periodeTil()
+    }
+
     private fun oppdaterForskudd(barn: Barn) {
         val forskuddStønad =
-            bidragBeløpshistorikkConsumer.hentHistoriskeStønader(
-                barn.tilHentStønadHistoriskRequest(Stønadstype.FORSKUDD),
+            bidragBeløpshistorikkConsumer.hentLøpendeStønad(
+                barn.tilHentStønadRequest(Stønadstype.FORSKUDD),
             ) ?: run {
                 LOGGER.info { "Fant ingen forskudd stønader for barn ${barn.infoMedPerioder()}" }
                 return
@@ -80,8 +140,8 @@ class BarnService(
             return
         }
         val historiskeBidrag =
-            bidragBeløpshistorikkConsumer.hentHistoriskeStønader(
-                barn.tilHentStønadHistoriskRequest(Stønadstype.BIDRAG),
+            bidragBeløpshistorikkConsumer.hentLøpendeStønad(
+                barn.tilHentStønadRequest(Stønadstype.BIDRAG),
             ) ?: run {
                 LOGGER.info { "Fant ingen bidrag stønader for barn ${barn.infoMedPerioder()}" }
                 return
@@ -119,12 +179,11 @@ class BarnService(
             .periode.til
             ?.atDay(1)
 
-    fun Barn.tilHentStønadHistoriskRequest(stønadstype: Stønadstype) =
-        HentStønadHistoriskRequest(
+    fun Barn.tilHentStønadRequest(stønadstype: Stønadstype) =
+        HentStønadRequest(
             type = stønadstype,
             sak = Saksnummer(saksnummer),
             skyldner = if (stønadstype == Stønadstype.FORSKUDD) personidentNav else Personident(skyldner!!),
             kravhaver = Personident(kravhaver),
-            gyldigTidspunkt = LocalDateTime.now(),
         )
 }

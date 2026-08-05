@@ -65,7 +65,7 @@ Kan kjøres direkte med `ktlint --format` og bør gjøres etter hver endring.
 
 ## Kjøre lokalt
 
-Start `BidragAldersjusteringLocal.kt` (i `src/test/kotlin/`). Aktiverer profilene `local,nais,lokal-nais-secrets,lokal-nais` og leser konfig fra `src/test/resources/application-local.yaml`.
+Start `BidragAutomatiskJobbLocal.kt` (i `src/test/kotlin/`). Aktiverer profilene `local,nais,lokal-nais-secrets,lokal-nais` og leser konfig fra `src/test/resources/application-local.yaml`.
 
 Påkrevde miljøvariabler (ikke committet):
 ```bash

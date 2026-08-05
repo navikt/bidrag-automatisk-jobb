@@ -166,7 +166,7 @@ class RevurderForskuddPersonhendelseTest {
         every { bidragPersonConsumer.hentPersonHusstandsmedlemmer(eq(Personident("bmSak2"))) } returns
             opprettHusstandsmedlemRespons()
         every { bidragPersonConsumer.hentPerson(eq(testdataSøknadsbarn1.personIdent)) } returns testdataSøknadsbarn1.tilPersonDto()
-        every { bidragBeløpshistorikkConsumer.hentHistoriskeStønader(any()) } returns opprettLøpendeForskuddRespons()
+        every { bidragBeløpshistorikkConsumer.hentLøpendeStønad(any()) } returns opprettLøpendeForskuddRespons()
         val resultat = service.skalBMFortsattMottaForskuddForSøknadsbarnEtterAdresseendring(personIdentSøknadsbarn1)
         resultat.shouldHaveSize(2)
         assertSoftly(resultat.first()) {
@@ -235,7 +235,7 @@ class RevurderForskuddPersonhendelseTest {
         every { bidragPersonConsumer.hentPersonHusstandsmedlemmer(eq(Personident("bmSak2"))) } returns
             opprettHusstandsmedlemRespons()
         every { bidragPersonConsumer.hentPerson(eq(testdataSøknadsbarn1.personIdent)) } returns testdataSøknadsbarn1.tilPersonDto()
-        every { bidragBeløpshistorikkConsumer.hentHistoriskeStønader(any()) } returns opprettLøpendeForskuddRespons()
+        every { bidragBeløpshistorikkConsumer.hentLøpendeStønad(any()) } returns opprettLøpendeForskuddRespons()
         val resultat = service.skalBMFortsattMottaForskuddForSøknadsbarnEtterAdresseendring(personIdentSøknadsbarn1)
         resultat.shouldHaveSize(1)
         resultat.first().saksnummer shouldBe saksnummer
@@ -246,7 +246,7 @@ class RevurderForskuddPersonhendelseTest {
         every { bidragPersonConsumer.hentPersonHusstandsmedlemmer(eq(testdataBidragsmottaker.personIdent)) } returns
             opprettHusstandsmedlemRespons(testdataSøknadsbarn1.personIdent, testdataSøknadsbarn2.personIdent)
         every { bidragPersonConsumer.hentPerson(eq(testdataSøknadsbarn1.personIdent)) } returns testdataSøknadsbarn1.tilPersonDto()
-        every { bidragBeløpshistorikkConsumer.hentHistoriskeStønader(any()) } returns opprettLøpendeForskuddRespons()
+        every { bidragBeløpshistorikkConsumer.hentLøpendeStønad(any()) } returns opprettLøpendeForskuddRespons()
         val resultat = service.skalBMFortsattMottaForskuddForSøknadsbarnEtterAdresseendring(personIdentSøknadsbarn1)
         resultat.shouldHaveSize(0)
     }
@@ -257,7 +257,7 @@ class RevurderForskuddPersonhendelseTest {
         every { bidragPersonConsumer.hentPersonHusstandsmedlemmer(eq(testdataBidragsmottaker.personIdent)) } returns
             opprettHusstandsmedlemRespons()
         every { bidragPersonConsumer.hentPerson(eq(testdataSøknadsbarn1.personIdent)) } returns testdataSøknadsbarn1.tilPersonDto()
-        every { bidragBeløpshistorikkConsumer.hentHistoriskeStønader(any()) } returns opprettLøpendeForskuddRespons()
+        every { bidragBeløpshistorikkConsumer.hentLøpendeStønad(any()) } returns opprettLøpendeForskuddRespons()
         val resultat = service.skalBMFortsattMottaForskuddForSøknadsbarnEtterAdresseendring(personIdentSøknadsbarn1)
         resultat.shouldHaveSize(0)
     }
@@ -267,7 +267,7 @@ class RevurderForskuddPersonhendelseTest {
         every { bidragPersonConsumer.hentPersonHusstandsmedlemmer(eq(testdataBidragsmottaker.personIdent)) } returns
             opprettHusstandsmedlemRespons()
         every { bidragPersonConsumer.hentPerson(eq(testdataSøknadsbarn1.personIdent)) } returns testdataSøknadsbarn1.tilPersonDto()
-        every { bidragBeløpshistorikkConsumer.hentHistoriskeStønader(any()) } returns
+        every { bidragBeløpshistorikkConsumer.hentLøpendeStønad(any()) } returns
             opprettStønadDto(
                 stønadstype = Stønadstype.FORSKUDD,
                 periodeListe = emptyList(),

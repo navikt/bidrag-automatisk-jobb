@@ -16,7 +16,7 @@ siste måneder og utfører en beregning for å sjekke om forskudded skal settes 
 
 ## Kjøre applikasjonen lokalt
 
-Start opp applikasjonen ved å kjøre [BidragAldersjusteringLocal.kt](src/test/kotlin/no/nav/bidrag/automatiskjobb/BidragAldersjusteringLocal.kt).
+Start opp applikasjonen ved å kjøre [BidragAldersjusteringLocal.kt](src/test/kotlin/no/nav/bidrag/automatiskjobb/BidragAutomatiskJobbLocal.kt).
 Dette starter applikasjonen med profil `local` og henter miljøvariabler for Q1 miljøet fra filen [application-local.yaml](src/test/resources/application-local.yaml).
 
 Her mangler det noen miljøvariabler som ikke bør committes til Git (Miljøvariabler for passord/secret osv).<br/>

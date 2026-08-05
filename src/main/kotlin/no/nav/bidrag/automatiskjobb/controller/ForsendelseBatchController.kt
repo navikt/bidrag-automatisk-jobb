@@ -38,6 +38,9 @@ class ForsendelseBatchController(
                 responseCode = "200",
                 description = "Batch for sletting av forsendelser ble startet",
             ),
+            ApiResponse(responseCode = "401", description = "Ikke autentisert."),
+            ApiResponse(responseCode = "403", description = "Ikke autorisert."),
+            ApiResponse(responseCode = "500", description = "Intern serverfeil."),
         ],
     )
     fun starSlettForsendelserSomSkalSlettesBatch(
@@ -68,6 +71,9 @@ class ForsendelseBatchController(
                 responseCode = "200",
                 description = "Batch for oppretting av forsendelser ble startet.",
             ),
+            ApiResponse(responseCode = "401", description = "Ikke autentisert."),
+            ApiResponse(responseCode = "403", description = "Ikke autorisert."),
+            ApiResponse(responseCode = "500", description = "Intern serverfeil."),
         ],
     )
     fun startOpprettForsendelseAldersjusteringBidragBatch(
@@ -101,6 +107,9 @@ class ForsendelseBatchController(
                 responseCode = "200",
                 description = "Batch for distribusjon av forsendelser ble startet.",
             ),
+            ApiResponse(responseCode = "401", description = "Ikke autentisert."),
+            ApiResponse(responseCode = "403", description = "Ikke autorisert."),
+            ApiResponse(responseCode = "500", description = "Intern serverfeil."),
         ],
     )
     fun startDistribuerForsendelseAldersjusteringBidragBatch(

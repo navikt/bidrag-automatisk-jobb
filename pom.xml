@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.0.6</version>
+        <version>4.1.0</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>no.nav</groupId>
@@ -14,20 +14,21 @@
     <name>bidrag-automatisk-jobb</name>
     <properties>
         <java.version>21</java.version>
-        <kotlin.version>2.3.21</kotlin.version>
-        <bidrag-felles.version>2026.06.24.074837</bidrag-felles.version>
+        <kotlin.version>2.4.10</kotlin.version>
+        <bidrag-felles.version>2026.08.04.103403</bidrag-felles.version>
         <logback-encoder.version>9.0</logback-encoder.version>
-        <springdoc-openapi-ui.version>2.8.13</springdoc-openapi-ui.version>
-        <springframework-cloud.version>4.3.0</springframework-cloud.version>
-        <token-support.version>6.0.7</token-support.version>
-        <kotest.version>5.9.1</kotest.version>
-        <mockk.version>1.14.6</mockk.version>
+        <springdoc-openapi-ui.version>3.1.0</springdoc-openapi-ui.version>
+        <token-support.version>6.0.11</token-support.version>
+        <kotest.version>6.2.3</kotest.version>
+        <mockk.version>1.14.11</mockk.version>
         <ktlint.version>1.8.0</ktlint.version>
-        <shedlock.version>7.5.0</shedlock.version>
-        <bidrag-beregn-felles.version>2026.06.29.134431</bidrag-beregn-felles.version>
-        <slack-api.version>1.48.1</slack-api.version>
-        <okhttp.version>5.2.1</okhttp.version>
-        <unleash.version>11.2.1</unleash.version>
+        <shedlock.version>7.7.0</shedlock.version>
+        <bidrag-beregn-felles.version>2026.08.04.105647</bidrag-beregn-felles.version>
+        <slack-api.version>1.49.0</slack-api.version>
+        <okhttp.version>5.4.0</okhttp.version>
+        <unleash.version>12.2.3</unleash.version>
+        <google-cloud-storage.version>2.71.0</google-cloud-storage.version>
+        <jsch.version>2.28.6</jsch.version>
     </properties>
 
     <repositories>
@@ -41,6 +42,22 @@
             <url>https://packages.confluent.io/maven/</url>
         </repository>
     </repositories>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- mockwebserver må matche okhttp-versjonen (binærkompatibilitet med okhttp-internals) -->
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>mockwebserver</artifactId>
+                <version>${okhttp.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>mockwebserver3</artifactId>
+                <version>${okhttp.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
 
@@ -135,6 +152,11 @@
         </dependency>
         <dependency>
             <groupId>no.nav.bidrag</groupId>
+            <artifactId>bidrag-indeksregulering</artifactId>
+            <version>${bidrag-beregn-felles.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>no.nav.bidrag</groupId>
             <artifactId>bidrag-beregn-barnebidrag</artifactId>
             <version>${bidrag-beregn-felles.version}</version>
             <exclusions>
@@ -201,6 +223,24 @@
             <groupId>io.getunleash</groupId>
             <artifactId>unleash-client-java</artifactId>
             <version>${unleash.version}</version>
+            <exclusions>
+                <!-- okhttp 4.x kolliderer med okhttp-jvm 5.x på classpath -->
+                <exclusion>
+                    <groupId>com.squareup.okhttp3</groupId>
+                    <artifactId>okhttp</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.google.cloud</groupId>
+            <artifactId>google-cloud-storage</artifactId>
+            <version>${google-cloud-storage.version}</version>
+        </dependency>
+        <!--SFTP-filsluse (Elin)-->
+        <dependency>
+            <groupId>com.github.mwiede</groupId>
+            <artifactId>jsch</artifactId>
+            <version>${jsch.version}</version>
         </dependency>
         <!--Sikkerhet-->
         <dependency>
@@ -313,12 +353,6 @@
             <groupId>io.mockk</groupId>
             <artifactId>mockk-jvm</artifactId>
             <version>${mockk.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-contract-wiremock</artifactId>
-            <version>${springframework-cloud.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

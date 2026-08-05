@@ -107,7 +107,7 @@ class EvaluerRevurderForskuddServiceTest {
                 status = Status.UBEHANDLET,
             )
         every { vedtakService.finnSisteManuelleVedtak(any()) } returns mockk()
-        every { bidragBeløpshistorikkConsumer.hentHistoriskeStønader(any()) } returns null
+        every { bidragBeløpshistorikkConsumer.hentLøpendeStønad(any()) } returns null
 
         val revurderingForskuddRetur =
             evaluerRevurderForskuddService.evaluerRevurderForskudd(
@@ -135,7 +135,7 @@ class EvaluerRevurderForskuddServiceTest {
                 every { periodeListe } returns emptyList()
             }
         every { vedtakService.finnSisteManuelleVedtak(any()) } returns mockk()
-        every { bidragBeløpshistorikkConsumer.hentHistoriskeStønader(any()) } returns stønadDto
+        every { bidragBeløpshistorikkConsumer.hentLøpendeStønad(any()) } returns stønadDto
 
         val revurderingForskuddRetur =
             evaluerRevurderForskuddService.evaluerRevurderForskudd(
@@ -228,7 +228,7 @@ class EvaluerRevurderForskuddServiceTest {
                     )
                 every { vedtak.kildeapplikasjon } returns "kilde"
             }
-        every { bidragBeløpshistorikkConsumer.hentHistoriskeStønader(any()) } returns stønadDto
+        every { bidragBeløpshistorikkConsumer.hentLøpendeStønad(any()) } returns stønadDto
         every { inntektApi.transformerInntekter(any()) } returns
             mockk {
                 every { summertMånedsinntektListe } returns emptyList()
@@ -326,7 +326,7 @@ class EvaluerRevurderForskuddServiceTest {
                     )
                 every { vedtak.kildeapplikasjon } returns "kilde"
             }
-        every { bidragBeløpshistorikkConsumer.hentHistoriskeStønader(any()) } returns stønadDto
+        every { bidragBeløpshistorikkConsumer.hentLøpendeStønad(any()) } returns stønadDto
         every { inntektApi.transformerInntekter(any()) } returns
             mockk {
                 every { summertMånedsinntektListe } returns emptyList()
@@ -465,7 +465,7 @@ class EvaluerRevurderForskuddServiceTest {
                     )
                 every { vedtak.kildeapplikasjon } returns "KkildeILDE"
             }
-        every { bidragBeløpshistorikkConsumer.hentHistoriskeStønader(any()) } returns stønadDto
+        every { bidragBeløpshistorikkConsumer.hentLøpendeStønad(any()) } returns stønadDto
         every { inntektApi.transformerInntekter(any()) } returns
             mockk {
                 every { summertMånedsinntektListe } returns
@@ -612,7 +612,7 @@ class EvaluerRevurderForskuddServiceTest {
                     )
                 every { vedtak.kildeapplikasjon } returns "kildeapplikasjon"
             }
-        every { bidragBeløpshistorikkConsumer.hentHistoriskeStønader(any()) } returns stønadDto
+        every { bidragBeløpshistorikkConsumer.hentLøpendeStønad(any()) } returns stønadDto
         every { inntektApi.transformerInntekter(any()) } returns
             mockk {
                 every { summertMånedsinntektListe } returns

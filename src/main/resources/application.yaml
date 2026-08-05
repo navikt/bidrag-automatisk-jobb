@@ -122,6 +122,14 @@ no.nav.security.jwt:
     discovery_url: https://login.microsoftonline.com/${AZURE_APP_TENANT_ID}/v2.0/.well-known/openid-configuration
     accepted_audience: ${AZURE_APP_CLIENT_ID}, api://${AZURE_APP_CLIENT_ID}
 
+# SFTP-filsluse mot Elin, gjenbruker samme bruker/hemmelighet som bidrag-regnskap
+sftp:
+  username: srvBidragRegnskap
+  host: ${SFTP_HOST}
+  port: 22
+  privateKey: ${SFTP_PRIVATE_KEY}
+  skalOverforeFil: ${SFTP_SKAL_OVERFORE_FIL}
+
 spring:
   datasource:
     url: ${DB_JDBC_URL}
