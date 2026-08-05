@@ -15,7 +15,7 @@ database:
   size: 10
   auditlog: "off"
 bucket:
-  navn: bidrag-automatisk-jobb-rapporter-dev
+  navn: bidrag-automatisk-jobb-rapporter-dev-q2
 kafka:
   pool: nav-dev
 env:
@@ -67,7 +67,7 @@ env:
   INDEKSREGULERING_BIDRAG_GJENNOMFOR_CRON: "-"
   INDEKSREGULERING_BIDRAG_FATT_VEDTAK_CRON: "-"
   INDEKSREGULERING_BIDRAG_RAPPORTER_CRON: "-"
-  BUCKET_NAME: bidrag-automatisk-jobb-rapporter-dev
+  BUCKET_NAME: bidrag-automatisk-jobb-rapporter-dev-q2
   JAVA_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -XX:MaxRAMPercentage=80.0
   SFTP_HOST: sftp-q.nav.no
   SFTP_SKAL_OVERFORE_FIL: false
