@@ -12,6 +12,7 @@ import no.nav.bidrag.automatiskjobb.persistence.entity.Indeksregulering
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import no.nav.bidrag.beregn.barnebidrag.service.external.VedtakService
+import no.nav.bidrag.beregn.barnebidrag.service.orkestrering.HentLøpendeBidragService
 import no.nav.bidrag.beregn.barnebidrag.utils.hentSisteLøpendePeriode
 import no.nav.bidrag.domene.enums.beregning.Resultatkode
 import no.nav.bidrag.domene.enums.grunnlag.Grunnlagstype
@@ -27,6 +28,7 @@ import no.nav.bidrag.domene.sak.Stønadsid
 import no.nav.bidrag.indeksregulering.BeregnIndeksreguleringApi
 import no.nav.bidrag.indeksregulering.bo.BeregnIndeksreguleringGrunnlag
 import no.nav.bidrag.transport.behandling.belopshistorikk.request.HentStønadHistoriskRequest
+import no.nav.bidrag.transport.behandling.belopshistorikk.request.HentStønadRequest
 import no.nav.bidrag.transport.behandling.belopshistorikk.response.StønadDto
 import no.nav.bidrag.transport.behandling.belopshistorikk.response.StønadPeriodeDto
 import no.nav.bidrag.transport.behandling.felles.grunnlag.BeløpshistorikkGrunnlag
@@ -221,13 +223,12 @@ class GjennomførIndeksreguleringBidragService(
     }
 
     private fun hentStønad(stønadsid: Stønadsid): StønadDto? =
-        beløpshistorikkConsumer.hentHistoriskeStønader(
-            HentStønadHistoriskRequest(
+        beløpshistorikkConsumer.hentLøpendeStønad(
+            HentStønadRequest(
                 type = stønadsid.type,
                 sak = stønadsid.sak,
                 skyldner = stønadsid.skyldner,
                 kravhaver = stønadsid.kravhaver,
-                gyldigTidspunkt = LocalDateTime.now(),
             ),
         )
 

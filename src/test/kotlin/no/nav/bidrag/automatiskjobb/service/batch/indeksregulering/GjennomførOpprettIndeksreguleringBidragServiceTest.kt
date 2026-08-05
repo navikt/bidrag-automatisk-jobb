@@ -164,7 +164,7 @@ class GjennomførOpprettIndeksreguleringBidragServiceTest {
 
     @Test
     fun `skal sette INGEN når det ikke finnes løpende stønad`() {
-        every { beløpshistorikkConsumer.hentHistoriskeStønader(any()) } returns null
+        every { beløpshistorikkConsumer.hentLøpendeStønad(any()) } returns null
 
         val resultat = service.gjennomførIndeksregulering(indeksregulering(), simuler = false)
 
@@ -175,7 +175,7 @@ class GjennomførOpprettIndeksreguleringBidragServiceTest {
 
     @Test
     fun `skal sette MANUELL når stønaden løper i utenlandsk valuta`() {
-        every { beløpshistorikkConsumer.hentHistoriskeStønader(any()) } returns stønad(valutakode = "SEK")
+        every { beløpshistorikkConsumer.hentLøpendeStønad(any()) } returns stønad(valutakode = "SEK")
 
         val resultat = service.gjennomførIndeksregulering(indeksregulering(), simuler = false)
 
@@ -187,7 +187,7 @@ class GjennomførOpprettIndeksreguleringBidragServiceTest {
 
     @Test
     fun `skal sette MANUELL når beregnet beløp er i utenlandsk valuta`() {
-        every { beløpshistorikkConsumer.hentHistoriskeStønader(any()) } returns stønad()
+        every { beløpshistorikkConsumer.hentLøpendeStønad(any()) } returns stønad()
         every { beregnIndeksreguleringApi.beregnIndeksregulering(any()) } returns listOf(sluttberegning(Valutakode.SEK))
 
         val resultat = service.gjennomførIndeksregulering(indeksregulering(), simuler = false)
@@ -201,7 +201,7 @@ class GjennomførOpprettIndeksreguleringBidragServiceTest {
     @Test
     fun `skal beregne indeksregulering og opprette vedtaksforslag`() {
         val indeksregulering = indeksregulering()
-        every { beløpshistorikkConsumer.hentHistoriskeStønader(any()) } returns stønad()
+        every { beløpshistorikkConsumer.hentLøpendeStønad(any()) } returns stønad()
         every { beregnIndeksreguleringApi.beregnIndeksregulering(any()) } returns listOf(sluttberegning())
         every { vedtakMapper.hentBarn(any(), any()) } returns mockk()
         val requestSlot = slot<OpprettVedtakRequestDto>()
@@ -233,7 +233,7 @@ class GjennomførOpprettIndeksreguleringBidragServiceTest {
 
     @Test
     fun `skal ikke opprette vedtaksforslag ved simulering`() {
-        every { beløpshistorikkConsumer.hentHistoriskeStønader(any()) } returns stønad()
+        every { beløpshistorikkConsumer.hentLøpendeStønad(any()) } returns stønad()
         every { beregnIndeksreguleringApi.beregnIndeksregulering(any()) } returns listOf(sluttberegning())
         every { vedtakMapper.hentBarn(any(), any()) } returns mockk()
 
