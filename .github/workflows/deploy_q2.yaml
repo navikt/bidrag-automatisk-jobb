@@ -31,18 +31,3 @@ jobs:
           CLUSTER: dev-gcp
           RESOURCE: .nais/unleash.yaml
           VARS: .nais/q2.yaml
-
-  deploy_pdb:
-    runs-on: ubuntu-latest
-    name: Deploy PodDisruptionBudget
-    permissions:
-      contents: "read"
-      id-token: "write"
-    steps:
-      - uses: actions/checkout@v6
-      - name: Deploy PodDisruptionBudget til dev-gcp
-        uses: nais/deploy/actions/deploy@v2
-        env:
-          CLUSTER: dev-gcp
-          RESOURCE: .nais/pdb.yaml
-          VARS: .nais/q2.yaml
