@@ -466,11 +466,12 @@ class EvaluerRevurderForskuddService(
         )
 
     private fun erForskuddLøpende(stønadDto: StønadDto): Boolean =
-        stønadDto.periodeListe.hentSisteLøpendePeriode() != null || false.also {
-            LOGGER.info {
-                "Forskudd i sak ${stønadDto.sak.verdi} og barn ${stønadDto.kravhaver.verdi} har opphørt før dagens dato. Det finnes ingen løpende forskudd"
+        stønadDto.periodeListe.hentSisteLøpendePeriode() != null ||
+            false.also {
+                LOGGER.info {
+                    "Forskudd i sak ${stønadDto.sak.verdi} og barn ${stønadDto.kravhaver.verdi} har opphørt før dagens dato. Det finnes ingen løpende forskudd"
+                }
             }
-        }
 
     private fun finnInntekterForForskuddFraGrunnlaget(grunnlag: HentGrunnlagDto): TransformerInntekterResponse {
         val transformerInntekterRequest = transformerInntekter(grunnlag)
@@ -578,12 +579,11 @@ class EvaluerRevurderForskuddService(
     private fun skalForskuddSettesNed(
         løpendeBeløp: BigDecimal,
         beregnetForskuddResultat: BeregnetForskuddResultat?,
-    ): Boolean {
-        return !(beregnetForskuddResultat == null || beregnetForskuddResultat.beregnetForskuddPeriodeListe.isEmpty()) && løpendeBeløp >
-                beregnetForskuddResultat.beregnetForskuddPeriodeListe
-                    .last()
-                    .resultat.belop
-    }
+    ): Boolean =
+        !(beregnetForskuddResultat == null || beregnetForskuddResultat.beregnetForskuddPeriodeListe.isEmpty()) && løpendeBeløp >
+            beregnetForskuddResultat.beregnetForskuddPeriodeListe
+                .last()
+                .resultat.belop
 
     private fun opprettVirkningstidspunkt(
         gjelderReferanse: String,

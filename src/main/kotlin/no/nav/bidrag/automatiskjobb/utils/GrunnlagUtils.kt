@@ -3,6 +3,7 @@ package no.nav.bidrag.automatiskjobb.utils
 import no.nav.bidrag.domene.enums.beregning.Resultatkode
 import no.nav.bidrag.domene.enums.beregning.Resultatkode.Companion.erAvslag
 import no.nav.bidrag.domene.enums.grunnlag.Grunnlagstype
+import no.nav.bidrag.domene.enums.samhandler.Valutakode
 import no.nav.bidrag.transport.behandling.belopshistorikk.response.StønadPeriodeDto
 import no.nav.bidrag.transport.behandling.felles.grunnlag.DelberegningSumInntekt
 import no.nav.bidrag.transport.behandling.felles.grunnlag.GrunnlagDto
@@ -36,7 +37,7 @@ fun StønadsendringDto.erDirekteAvslag() =
 fun String.tilResultatkode() =
     try {
         Resultatkode.valueOf(this)
-    } catch (e: IllegalArgumentException) {
+    } catch (_: IllegalArgumentException) {
         null
     }
 
@@ -146,6 +147,9 @@ fun List<GrunnlagDto>.hentInntekter(
 fun List<StønadPeriodeDto>.hentSisteLøpendePeriode() =
     maxByOrNull { it.periode.fom }
         ?.takeIf {
-            (it.periode.til == null || it.periode.til!!.isAfter(YearMonth.now()))
-                    && (it.beløp != null && it.beløp == BigDecimal.ZERO)
+            (it.periode.til == null || it.periode.til!!.isAfter(YearMonth.now())) &&
+                (it.beløp != null && it.beløp == BigDecimal.ZERO)
         }
+
+// Vi antar at stønader fra gammel løsning som ikke har satt valutakode løper i norske kroner. Ny løsning skal ha satt valutakode.
+fun StønadPeriodeDto.løperINorskeKroner(): Boolean = valutakode == null || valutakode == Valutakode.NOK.name
