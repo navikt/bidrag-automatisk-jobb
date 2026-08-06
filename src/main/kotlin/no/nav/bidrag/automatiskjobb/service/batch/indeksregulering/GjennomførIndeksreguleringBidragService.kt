@@ -12,7 +12,6 @@ import no.nav.bidrag.automatiskjobb.persistence.entity.Indeksregulering
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import no.nav.bidrag.beregn.barnebidrag.service.external.VedtakService
-import no.nav.bidrag.beregn.barnebidrag.service.orkestrering.HentLøpendeBidragService
 import no.nav.bidrag.beregn.barnebidrag.utils.hentSisteLøpendePeriode
 import no.nav.bidrag.domene.enums.beregning.Resultatkode
 import no.nav.bidrag.domene.enums.grunnlag.Grunnlagstype
@@ -27,7 +26,6 @@ import no.nav.bidrag.domene.organisasjon.Enhetsnummer
 import no.nav.bidrag.domene.sak.Stønadsid
 import no.nav.bidrag.indeksregulering.BeregnIndeksreguleringApi
 import no.nav.bidrag.indeksregulering.bo.BeregnIndeksreguleringGrunnlag
-import no.nav.bidrag.transport.behandling.belopshistorikk.request.HentStønadHistoriskRequest
 import no.nav.bidrag.transport.behandling.belopshistorikk.request.HentStønadRequest
 import no.nav.bidrag.transport.behandling.belopshistorikk.response.StønadDto
 import no.nav.bidrag.transport.behandling.belopshistorikk.response.StønadPeriodeDto
@@ -44,7 +42,6 @@ import no.nav.bidrag.transport.behandling.vedtak.request.OpprettVedtakRequestDto
 import org.springframework.context.annotation.Import
 import org.springframework.stereotype.Service
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.Year
 
 private val LOGGER = KotlinLogging.logger { }
@@ -268,7 +265,7 @@ class GjennomførIndeksreguleringBidragService(
         )
     }
 
-    private fun StønadPeriodeDto.løperINorskeKroner(): Boolean = valutakode == null || valutakode == Valutakode.NOK.name
+    private fun StønadPeriodeDto.løperINorskeKroner(): Boolean = valutakode == Valutakode.NOK.name
 
     private fun Indeksregulering.oppdaterIkkeGjennomført(
         behandlingstype: Behandlingstype,

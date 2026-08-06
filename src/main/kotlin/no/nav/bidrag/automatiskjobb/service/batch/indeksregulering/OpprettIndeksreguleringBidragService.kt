@@ -4,7 +4,9 @@ import no.nav.bidrag.automatiskjobb.consumer.BidragBeløpshistorikkConsumer
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.entity.Indeksregulering
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
+import no.nav.bidrag.beregn.barnebidrag.utils.hentSisteLøpendePeriode
 import no.nav.bidrag.commons.util.secureLogger
+import no.nav.bidrag.domene.enums.samhandler.Valutakode
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.domene.sak.Saksnummer
@@ -24,7 +26,7 @@ class OpprettIndeksreguleringBidragService(
         val indeksreguleringer = mutableListOf<Indeksregulering>()
 
         for (stønadstype in stønadstyper) {
-            val nesteIndeksreguleringsår =
+            val løpendeStønad =
                 beløpshistorikkConsumer
                     .hentLøpendeStønad(
                         HentStønadRequest(
@@ -33,8 +35,23 @@ class OpprettIndeksreguleringBidragService(
                             Personident(barn.skyldner!!),
                             Personident(barn.kravhaver),
                         ),
-                    )?.nesteIndeksreguleringsår
+                    )
 
+            if (løpendeStønad == null) {
+                secureLogger.info { "Barn: $barn for stønadstype $stønadstype har ingen løpende stønad." }
+                continue
+            }
+
+            val valuta = løpendeStønad.periodeListe.hentSisteLøpendePeriode()?.valutakode
+            if (valuta != Valutakode.NOK.name) {
+                secureLogger.info {
+                    "Barn: $barn for stønadstype $stønadstype har ikke NOK som valuta ($valuta) og indeksreguleres derfor ikke."
+                }
+                continue
+            }
+
+            val nesteIndeksreguleringsår =
+                løpendeStønad.nesteIndeksreguleringsår
             if (nesteIndeksreguleringsår == null) {
                 secureLogger.debug {
                     "Barn: $barn for stønadstype $stønadstype mangler indeksreguleringsår og indeksreguleres derfor ikke."
