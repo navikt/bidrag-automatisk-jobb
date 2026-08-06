@@ -265,7 +265,8 @@ class GjennomførIndeksreguleringBidragService(
         )
     }
 
-    private fun StønadPeriodeDto.løperINorskeKroner(): Boolean = valutakode == Valutakode.NOK.name
+    // Vi antar at stønader fra gammel løsning som ikke har satt valutakode løper i norske kroner. Ny løsning skal ha satt valutakode.
+    private fun StønadPeriodeDto.løperINorskeKroner(): Boolean = valutakode == null || valutakode == Valutakode.NOK.name
 
     private fun Indeksregulering.oppdaterIkkeGjennomført(
         behandlingstype: Behandlingstype,

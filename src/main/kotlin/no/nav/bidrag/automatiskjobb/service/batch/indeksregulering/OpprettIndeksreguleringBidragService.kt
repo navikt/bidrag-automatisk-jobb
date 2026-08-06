@@ -43,7 +43,7 @@ class OpprettIndeksreguleringBidragService(
             }
 
             val valuta = løpendeStønad.periodeListe.hentSisteLøpendePeriode()?.valutakode
-            if (valuta != Valutakode.NOK.name) {
+            if (valuta != null && valuta != Valutakode.NOK.name) {
                 secureLogger.info {
                     "Barn: $barn for stønadstype $stønadstype har ikke NOK som valuta ($valuta) og indeksreguleres derfor ikke."
                 }
@@ -53,7 +53,7 @@ class OpprettIndeksreguleringBidragService(
             val nesteIndeksreguleringsår =
                 løpendeStønad.nesteIndeksreguleringsår
             if (nesteIndeksreguleringsår == null) {
-                secureLogger.debug {
+                secureLogger.info {
                     "Barn: $barn for stønadstype $stønadstype mangler indeksreguleringsår og indeksreguleres derfor ikke."
                 }
                 continue
