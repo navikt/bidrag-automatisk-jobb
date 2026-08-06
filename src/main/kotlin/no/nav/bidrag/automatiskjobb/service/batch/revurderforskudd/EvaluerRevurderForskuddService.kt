@@ -13,9 +13,9 @@ import no.nav.bidrag.automatiskjobb.persistence.entity.RevurderingForskudd
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import no.nav.bidrag.automatiskjobb.service.ReskontroService
+import no.nav.bidrag.automatiskjobb.utils.hentSisteLøpendePeriode
 import no.nav.bidrag.beregn.barnebidrag.service.external.SisteManuelleVedtak
 import no.nav.bidrag.beregn.barnebidrag.service.external.VedtakService
-import no.nav.bidrag.beregn.barnebidrag.utils.hentSisteLøpendePeriode
 import no.nav.bidrag.beregn.core.exception.UgyldigInputException
 import no.nav.bidrag.beregn.forskudd.BeregnForskuddApi
 import no.nav.bidrag.domene.enums.grunnlag.GrunnlagRequestType
@@ -466,15 +466,12 @@ class EvaluerRevurderForskuddService(
         )
 
     private fun erForskuddLøpende(stønadDto: StønadDto): Boolean =
-        if (stønadDto.periodeListe.hentSisteLøpendePeriode() != null) {
-            true
-        } else {
+        stønadDto.periodeListe.hentSisteLøpendePeriode() != null ||
             false.also {
                 LOGGER.info {
                     "Forskudd i sak ${stønadDto.sak.verdi} og barn ${stønadDto.kravhaver.verdi} har opphørt før dagens dato. Det finnes ingen løpende forskudd"
                 }
             }
-        }
 
     private fun finnInntekterForForskuddFraGrunnlaget(grunnlag: HentGrunnlagDto): TransformerInntekterResponse {
         val transformerInntekterRequest = transformerInntekter(grunnlag)
@@ -582,15 +579,11 @@ class EvaluerRevurderForskuddService(
     private fun skalForskuddSettesNed(
         løpendeBeløp: BigDecimal,
         beregnetForskuddResultat: BeregnetForskuddResultat?,
-    ): Boolean {
-        if (beregnetForskuddResultat == null || beregnetForskuddResultat.beregnetForskuddPeriodeListe.isEmpty()) {
-            return false
-        }
-        return løpendeBeløp >
+    ): Boolean =
+        !(beregnetForskuddResultat == null || beregnetForskuddResultat.beregnetForskuddPeriodeListe.isEmpty()) && løpendeBeløp >
             beregnetForskuddResultat.beregnetForskuddPeriodeListe
                 .last()
                 .resultat.belop
-    }
 
     private fun opprettVirkningstidspunkt(
         gjelderReferanse: String,

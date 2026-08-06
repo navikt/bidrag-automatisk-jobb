@@ -46,6 +46,8 @@ class BarnService(
                 stønadRequest,
             ) ?: run {
                 LOGGER.info { "Fant ingen oppfostringsbidrag stønader for barn ${barn.infoMedPerioder()}" }
+                barn.oppfostringsbidragFra = null
+                barn.oppfostringsbidragTil = null
                 return
             }
 
@@ -76,6 +78,8 @@ class BarnService(
                 stønadRequest,
             ) ?: run {
                 LOGGER.info { "Fant ingen 18 års bidrag stønader for barn ${barn.infoMedPerioder()}" }
+                barn.bidrag18ÅrFra = null
+                barn.bidrag18ÅrTil = null
                 return
             }
 
@@ -103,6 +107,8 @@ class BarnService(
                 stønadRequest,
             ) ?: run {
                 LOGGER.info { "Fant ingen forskudd stønader for barn ${barn.infoMedPerioder()}" }
+                barn.forskuddFra = null
+                barn.forskuddTil = null
                 return
             }
 
@@ -147,6 +153,8 @@ class BarnService(
                 stønadRequest,
             ) ?: run {
                 LOGGER.info { "Fant ingen bidrag stønader for barn ${barn.infoMedPerioder()}" }
+                barn.bidragFra = null
+                barn.bidragTil = null
                 return
             }
 
