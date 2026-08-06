@@ -4,7 +4,7 @@ import no.nav.bidrag.automatiskjobb.consumer.BidragBeløpshistorikkConsumer
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.entity.Indeksregulering
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
-import no.nav.bidrag.beregn.barnebidrag.utils.hentSisteLøpendePeriode
+import no.nav.bidrag.automatiskjobb.utils.hentSisteLøpendePeriode
 import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.domene.enums.samhandler.Valutakode
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype

@@ -18,6 +18,7 @@ import no.nav.bidrag.automatiskjobb.service.model.StønadEngangsbeløpId
 import no.nav.bidrag.automatiskjobb.utils.enesteResultatkode
 import no.nav.bidrag.automatiskjobb.utils.erDirekteAvslag
 import no.nav.bidrag.automatiskjobb.utils.erHusstandsmedlem
+import no.nav.bidrag.automatiskjobb.utils.hentSisteLøpendePeriode
 import no.nav.bidrag.automatiskjobb.utils.tilResultatkode
 import no.nav.bidrag.beregn.barnebidrag.service.external.SisteManuelleVedtak
 import no.nav.bidrag.beregn.forskudd.BeregnForskuddApi
@@ -32,7 +33,6 @@ import no.nav.bidrag.domene.felles.personidentNav
 import no.nav.bidrag.domene.ident.Personident
 import no.nav.bidrag.domene.sak.Saksnummer
 import no.nav.bidrag.domene.tid.ÅrMånedsperiode
-import no.nav.bidrag.transport.behandling.belopshistorikk.request.HentStønadHistoriskRequest
 import no.nav.bidrag.transport.behandling.belopshistorikk.request.HentStønadRequest
 import no.nav.bidrag.transport.behandling.belopshistorikk.response.StønadDto
 import no.nav.bidrag.transport.behandling.belopshistorikk.response.StønadPeriodeDto
@@ -57,7 +57,6 @@ import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.YearMonth
 
 private fun VedtakDto.erIndeksreguleringEllerAldersjustering() =
@@ -347,8 +346,8 @@ class RevurderForskuddService(
                         vedtaksFilter.finneSisteManuelleVedtak(
                             forskuddVedtakISak.vedtakListe,
                         ) ?: return null
-                    bidragVedtakConsumer.hentVedtak(sisteManuelleVedtak.vedtaksid)?.let {
-                        SisteManuelleVedtak(sisteManuelleVedtak.vedtaksid, it)
+                    bidragVedtakConsumer.hentVedtak(sisteManuelleVedtak.vedtaksid)?.let { vedtak ->
+                        SisteManuelleVedtak(sisteManuelleVedtak.vedtaksid, vedtak)
                     }
                 } else {
                     SisteManuelleVedtak(vedtakId, it)
@@ -443,9 +442,6 @@ class RevurderForskuddService(
                 kravhaver = Personident(søknadsbarnIdent),
             ),
         )
-
-    private fun List<StønadPeriodeDto>.hentSisteLøpendePeriode() =
-        maxByOrNull { it.periode.fom }?.takeIf { it.periode.til == null || it.periode.til!!.isAfter(YearMonth.now()) }
 
     /**
      * Oppdaterer vurdereTilbakekrevingsfeltet basert på om det finnes forskudd i reskontro for en eller flere av tre siste månedene.

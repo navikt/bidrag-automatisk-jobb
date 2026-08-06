@@ -11,8 +11,8 @@ import no.nav.bidrag.automatiskjobb.mapper.tilOpprettGrunnlagRequestDto
 import no.nav.bidrag.automatiskjobb.persistence.entity.Indeksregulering
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
+import no.nav.bidrag.automatiskjobb.utils.hentSisteLøpendePeriode
 import no.nav.bidrag.beregn.barnebidrag.service.external.VedtakService
-import no.nav.bidrag.beregn.barnebidrag.utils.hentSisteLøpendePeriode
 import no.nav.bidrag.domene.enums.beregning.Resultatkode
 import no.nav.bidrag.domene.enums.grunnlag.Grunnlagstype
 import no.nav.bidrag.domene.enums.samhandler.Valutakode
