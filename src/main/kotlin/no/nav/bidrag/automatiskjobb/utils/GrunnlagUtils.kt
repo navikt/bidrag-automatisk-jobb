@@ -148,7 +148,7 @@ fun List<StønadPeriodeDto>.hentSisteLøpendePeriode() =
     maxByOrNull { it.periode.fom }
         ?.takeIf {
             (it.periode.til == null || it.periode.til!!.isAfter(YearMonth.now())) &&
-                (it.beløp != null && it.beløp != BigDecimal.ZERO)
+                (it.beløp?.let { beløp -> beløp > BigDecimal.ZERO } == true)
         }
 
 // Vi antar at stønader fra gammel løsning som ikke har satt valutakode løper i norske kroner. Ny løsning skal ha satt valutakode.

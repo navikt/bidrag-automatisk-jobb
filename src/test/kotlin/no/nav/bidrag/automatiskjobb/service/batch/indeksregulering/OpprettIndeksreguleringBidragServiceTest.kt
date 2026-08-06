@@ -20,6 +20,7 @@ import no.nav.bidrag.transport.behandling.belopshistorikk.response.StønadDto
 import no.nav.bidrag.transport.behandling.belopshistorikk.response.StønadPeriodeDto
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import java.math.BigDecimal
 import java.time.YearMonth
 
 @ExtendWith(MockKExtension::class)
@@ -40,7 +41,10 @@ class OpprettIndeksreguleringBidragServiceTest {
             skyldner = genererPersonident().verdi,
         )
 
-    private fun stønadDto(nesteIndeksreguleringsår: Int?): StønadDto =
+    private fun stønadDto(
+        nesteIndeksreguleringsår: Int?,
+        beløp: BigDecimal = BigDecimal(1000),
+    ): StønadDto =
         mockk<StønadDto>(relaxed = true) {
             every { this@mockk.nesteIndeksreguleringsår } returns nesteIndeksreguleringsår
             every { this@mockk.periodeListe } returns
@@ -52,6 +56,7 @@ class OpprettIndeksreguleringBidragServiceTest {
                                 every { this@mockk.til } returns null
                             }
                         every { this@mockk.valutakode } returns "NOK"
+                        every { this@mockk.beløp } returns beløp
                     },
                 )
         }
@@ -124,6 +129,17 @@ class OpprettIndeksreguleringBidragServiceTest {
     fun `hopper over stønadstype når nesteIndeksreguleringsår er frem i tid`() {
         val barn = barn()
         stubHentLøpendeStønad(barn, Stønadstype.BIDRAG, år + 1)
+
+        val resultat = service.opprettIndeksregulering(batchId, år, barn, listOf(Stønadstype.BIDRAG))
+
+        resultat!!.shouldBeEmpty()
+    }
+
+    @Test
+    fun `hopper over stønadstype når siste periode har beløp lik null (opphørt stønad uten satt til-dato)`() {
+        val barn = barn()
+        every { beløpshistorikkConsumer.hentLøpendeStønad(any()) } returns
+            stønadDto(nesteIndeksreguleringsår = år, beløp = BigDecimal.ZERO)
 
         val resultat = service.opprettIndeksregulering(batchId, år, barn, listOf(Stønadstype.BIDRAG))
 
