@@ -10,9 +10,11 @@ import no.nav.bidrag.automatiskjobb.batch.indeksregulering.bidrag.fattvedtak.Fat
 import no.nav.bidrag.automatiskjobb.batch.indeksregulering.bidrag.gjennomfor.GjennomførIndeksreguleringBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.indeksregulering.bidrag.opprett.OpprettIndeksreguleringBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.indeksregulering.bidrag.rapporter.RapporterIndeksreguleringBidragBatch
+import no.nav.bidrag.automatiskjobb.service.batch.indeksregulering.SlettIndeksreguleringService
 import no.nav.security.token.support.core.api.Protected
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
@@ -29,6 +31,7 @@ class IndeksreguleringBidragBatchController(
     private val gjennomførIndeksreguleringBidragBatch: GjennomførIndeksreguleringBidragBatch,
     private val fattVedtakIndeksreguleringBidragBatch: FattVedtakIndeksreguleringBidragBatch,
     private val rapporterIndeksreguleringBidragBatch: RapporterIndeksreguleringBidragBatch,
+    private val slettIndeksreguleringService: SlettIndeksreguleringService,
 ) {
     @PostMapping("/indeksregulering/bidrag/batch/opprett")
     @Operation(
@@ -163,5 +166,13 @@ class IndeksreguleringBidragBatchController(
     ): ResponseEntity<Void> {
         rapporterIndeksreguleringBidragBatch.start(år ?: Year.now().value)
         return ResponseEntity.status(HttpStatus.CREATED).build()
+    }
+
+    @DeleteMapping("/slett/indeksregulering/bidrag")
+    fun slettIndeksreguleringBidrag(
+        @RequestParam(required = true) @Parameter år: Int,
+    ): ResponseEntity<Void> {
+        slettIndeksreguleringService.slettIndeksreguleringForÅr(år)
+        return ResponseEntity.ok().build()
     }
 }

@@ -12,12 +12,15 @@ import no.nav.bidrag.automatiskjobb.consumer.BidragBeløpshistorikkConsumer
 import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import no.nav.bidrag.domene.enums.vedtak.Stønadstype
+import no.nav.bidrag.domene.tid.ÅrMånedsperiode
 import no.nav.bidrag.generer.testdata.person.genererPersonident
 import no.nav.bidrag.generer.testdata.sak.genererSaksnummer
 import no.nav.bidrag.transport.behandling.belopshistorikk.request.HentStønadRequest
 import no.nav.bidrag.transport.behandling.belopshistorikk.response.StønadDto
+import no.nav.bidrag.transport.behandling.belopshistorikk.response.StønadPeriodeDto
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import java.time.YearMonth
 
 @ExtendWith(MockKExtension::class)
 class OpprettIndeksreguleringBidragServiceTest {
@@ -40,6 +43,17 @@ class OpprettIndeksreguleringBidragServiceTest {
     private fun stønadDto(nesteIndeksreguleringsår: Int?): StønadDto =
         mockk<StønadDto>(relaxed = true) {
             every { this@mockk.nesteIndeksreguleringsår } returns nesteIndeksreguleringsår
+            every { this@mockk.periodeListe } returns
+                listOf(
+                    mockk<StønadPeriodeDto>(relaxed = true) {
+                        every { this@mockk.periode } returns
+                            mockk<ÅrMånedsperiode> {
+                                every { this@mockk.fom } returns YearMonth.now().minusMonths(1)
+                                every { this@mockk.til } returns null
+                            }
+                        every { this@mockk.valutakode } returns "NOK"
+                    },
+                )
         }
 
     private fun stubHentLøpendeStønad(
