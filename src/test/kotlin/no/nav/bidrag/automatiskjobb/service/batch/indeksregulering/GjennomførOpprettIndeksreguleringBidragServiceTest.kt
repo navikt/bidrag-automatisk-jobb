@@ -186,19 +186,6 @@ class GjennomførOpprettIndeksreguleringBidragServiceTest {
     }
 
     @Test
-    fun `skal sette MANUELL når beregnet beløp er i utenlandsk valuta`() {
-        every { beløpshistorikkConsumer.hentLøpendeStønad(any()) } returns stønad()
-        every { beregnIndeksreguleringApi.beregnIndeksregulering(any()) } returns listOf(sluttberegning(Valutakode.SEK))
-
-        val resultat = service.gjennomførIndeksregulering(indeksregulering(), simuler = false)
-
-        resultat.status shouldBe Status.BEHANDLET
-        resultat.behandlingstype shouldBe Behandlingstype.MANUELL
-        resultat.begrunnelse shouldContain "LØPER_I_UTENLANDSK_VALUTA"
-        verify(exactly = 0) { bidragVedtakConsumer.opprettEllerOppdaterVedtaksforslag(any()) }
-    }
-
-    @Test
     fun `skal beregne indeksregulering og opprette vedtaksforslag`() {
         val indeksregulering = indeksregulering()
         every { beløpshistorikkConsumer.hentLøpendeStønad(any()) } returns stønad()

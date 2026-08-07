@@ -114,7 +114,9 @@ class GjennomførIndeksreguleringBidragService(
 
         val vedtaksid =
             if (simuler) {
-                secureLogger.info { "Simulering: Oppretter ikke vedtaksforslag $vedtaksforslagRequest for indeksregulering av stønad $stønadsid." }
+                secureLogger.info {
+                    "Simulering: Oppretter ikke vedtaksforslag $vedtaksforslagRequest for indeksregulering av stønad $stønadsid."
+                }
                 null
             } else {
                 bidragVedtakConsumer.opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
