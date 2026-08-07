@@ -14,6 +14,7 @@ import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
 import no.nav.bidrag.automatiskjobb.utils.hentSisteLøpendePeriode
 import no.nav.bidrag.automatiskjobb.utils.løperINorskeKroner
 import no.nav.bidrag.beregn.barnebidrag.service.external.VedtakService
+import no.nav.bidrag.commons.util.secureLogger
 import no.nav.bidrag.domene.enums.beregning.Resultatkode
 import no.nav.bidrag.domene.enums.grunnlag.Grunnlagstype
 import no.nav.bidrag.domene.enums.samhandler.Valutakode
@@ -109,16 +110,11 @@ class GjennomførIndeksreguleringBidragService(
                 ).firstOrNull()
                 ?: error("Beregning av indeksregulering for stønad $stønadsid ga ingen sluttberegning")
 
-        if (sluttberegning.innhold.beløp.erIUtenlandskValuta()) {
-            LOGGER.info { "Beregnet beløp for stønad $stønadsid er i utenlandsk valuta. Indeksreguleres ikke automatisk." }
-            return indeksregulering.oppdaterIkkeGjennomført(Behandlingstype.MANUELL, "LØPER_I_UTENLANDSK_VALUTA", simuler)
-        }
-
         val vedtaksforslagRequest = opprettVedtaksforslagRequest(indeksregulering, stønadsid, beregningsresultat, sluttberegning)
 
         val vedtaksid =
             if (simuler) {
-                LOGGER.info { "Simulering: Oppretter ikke vedtaksforslag for indeksregulering av stønad $stønadsid." }
+                secureLogger.info { "Simulering: Oppretter ikke vedtaksforslag $vedtaksforslagRequest for indeksregulering av stønad $stønadsid." }
                 null
             } else {
                 bidragVedtakConsumer.opprettEllerOppdaterVedtaksforslag(vedtaksforslagRequest)
