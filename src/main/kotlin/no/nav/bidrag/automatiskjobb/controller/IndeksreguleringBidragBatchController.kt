@@ -10,6 +10,7 @@ import no.nav.bidrag.automatiskjobb.batch.indeksregulering.bidrag.fattvedtak.Fat
 import no.nav.bidrag.automatiskjobb.batch.indeksregulering.bidrag.gjennomfor.GjennomførIndeksreguleringBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.indeksregulering.bidrag.opprett.OpprettIndeksreguleringBidragBatch
 import no.nav.bidrag.automatiskjobb.batch.indeksregulering.bidrag.rapporter.RapporterIndeksreguleringBidragBatch
+import no.nav.bidrag.automatiskjobb.service.batch.indeksregulering.GjennomførIndeksreguleringBidragService
 import no.nav.bidrag.automatiskjobb.service.batch.indeksregulering.SlettIndeksreguleringService
 import no.nav.security.token.support.core.api.Protected
 import org.springframework.http.HttpStatus
@@ -32,6 +33,7 @@ class IndeksreguleringBidragBatchController(
     private val fattVedtakIndeksreguleringBidragBatch: FattVedtakIndeksreguleringBidragBatch,
     private val rapporterIndeksreguleringBidragBatch: RapporterIndeksreguleringBidragBatch,
     private val slettIndeksreguleringService: SlettIndeksreguleringService,
+    private val gjennomførIndeksreguleringBidragService: GjennomførIndeksreguleringBidragService,
 ) {
     @PostMapping("/indeksregulering/bidrag/batch/opprett")
     @Operation(
@@ -168,11 +170,38 @@ class IndeksreguleringBidragBatchController(
         return ResponseEntity.status(HttpStatus.CREATED).build()
     }
 
-    @DeleteMapping("/slett/indeksregulering/bidrag")
+    @DeleteMapping("/indeksregulering/bidrag/slett")
     fun slettIndeksreguleringBidrag(
         @RequestParam(required = true) @Parameter år: Int,
     ): ResponseEntity<Void> {
         slettIndeksreguleringService.slettIndeksreguleringForÅr(år)
+        return ResponseEntity.ok().build()
+    }
+
+    @PostMapping("/indeksregulering/bidrag/tilbakestill-simulering")
+    @Operation(
+        summary = "Tilbakestiller simulerte indeksreguleringer bidrag.",
+        description =
+            "Tilbakestiller alle indeksreguleringer for det angitte året som har status SIMULERT " +
+                "(dvs. der gjennomfør-batchen har blitt kjørt med simuler=true) til samme status og verdier " +
+                "de hadde før simuleringen ble kjørt.",
+        security = [SecurityRequirement(name = "bearer-key")],
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Simulerte indeksreguleringer bidrag tilbakestilt."),
+            ApiResponse(responseCode = "401", description = "Ikke autentisert."),
+            ApiResponse(responseCode = "403", description = "Ikke autorisert."),
+            ApiResponse(responseCode = "500", description = "Intern serverfeil."),
+        ],
+    )
+    fun tilbakestillSimulertIndeksreguleringBidrag(
+        @RequestParam(required = true) @Parameter(
+            description = "Året indeksreguleringen gjelder for.",
+            example = "2026",
+        ) år: Int,
+    ): ResponseEntity<Void> {
+        gjennomførIndeksreguleringBidragService.tilbakestillSimulertIndeksreguleringForÅr(år)
         return ResponseEntity.ok().build()
     }
 }
