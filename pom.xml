@@ -15,7 +15,7 @@
     <properties>
         <java.version>21</java.version>
         <kotlin.version>2.4.10</kotlin.version>
-        <bidrag-felles.version>2026.08.04.103403</bidrag-felles.version>
+        <bidrag-felles.version>2026.08.04.114321</bidrag-felles.version>
         <logback-encoder.version>9.0</logback-encoder.version>
         <springdoc-openapi-ui.version>3.1.0</springdoc-openapi-ui.version>
         <token-support.version>6.0.11</token-support.version>

@@ -19,7 +19,8 @@ interface IndeksreguleringRepository : JpaRepository<Indeksregulering, Int> {
     fun findAllByStønadstypeInAndÅr(
         stønadstyper: Collection<Stønadstype>,
         år: Int,
-    ): List<Indeksregulering>
+        pageable: Pageable,
+    ): Page<Indeksregulering>
 
     fun findAllByStatusAndBehandlingstypeAndStønadstypeInAndÅr(
         status: Status,
