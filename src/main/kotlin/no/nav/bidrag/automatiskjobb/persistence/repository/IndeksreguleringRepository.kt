@@ -37,4 +37,9 @@ interface IndeksreguleringRepository : JpaRepository<Indeksregulering, Int> {
     ): Page<Indeksregulering>
 
     fun deleteAllByÅr(år: Int)
+
+    fun findAllByStatusAndÅr(
+        status: Status,
+        år: Int,
+    ): List<Indeksregulering>
 }

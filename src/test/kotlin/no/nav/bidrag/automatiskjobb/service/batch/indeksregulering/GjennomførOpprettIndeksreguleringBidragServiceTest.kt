@@ -20,6 +20,7 @@ import no.nav.bidrag.automatiskjobb.persistence.entity.Barn
 import no.nav.bidrag.automatiskjobb.persistence.entity.Indeksregulering
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
+import no.nav.bidrag.automatiskjobb.persistence.repository.IndeksreguleringRepository
 import no.nav.bidrag.beregn.barnebidrag.service.external.VedtakService
 import no.nav.bidrag.domene.beløp.Beløp
 import no.nav.bidrag.domene.enums.grunnlag.Grunnlagstype
@@ -69,6 +70,9 @@ class GjennomførOpprettIndeksreguleringBidragServiceTest {
 
     @MockK(relaxed = true)
     private lateinit var vedtakMapper: VedtakMapper
+
+    @MockK
+    private lateinit var indeksreguleringRepository: IndeksreguleringRepository
 
     @InjectMockKs
     private lateinit var service: GjennomførIndeksreguleringBidragService
@@ -231,5 +235,30 @@ class GjennomførOpprettIndeksreguleringBidragServiceTest {
         resultat.vedtak shouldBe null
         resultat.beløp shouldBe BigDecimal.valueOf(1730)
         verify(exactly = 0) { bidragVedtakConsumer.opprettEllerOppdaterVedtaksforslag(any()) }
+    }
+
+    @Test
+    fun `skal tilbakestille simulerte indeksreguleringer til UBEHANDLET og nullstille felter`() {
+        val simulert =
+            indeksregulering().also {
+                it.status = Status.SIMULERT
+                it.behandlingstype = Behandlingstype.FATTET_FORSLAG
+                it.vedtak = 123
+                it.beløp = BigDecimal(5000)
+                it.begrunnelse = listOf("EN_BEGRUNNELSE")
+            }
+        every { indeksreguleringRepository.findAllByStatusAndÅr(Status.SIMULERT, 2026) } returns listOf(simulert)
+        val lagretSlot = slot<List<Indeksregulering>>()
+        every { indeksreguleringRepository.saveAll(capture(lagretSlot)) } returns emptyList()
+
+        service.tilbakestillSimulertIndeksreguleringForÅr(2026)
+
+        verify(exactly = 1) { indeksreguleringRepository.findAllByStatusAndÅr(Status.SIMULERT, 2026) }
+        val tilbakestilt = lagretSlot.captured.first()
+        tilbakestilt.status shouldBe Status.UBEHANDLET
+        tilbakestilt.behandlingstype shouldBe null
+        tilbakestilt.vedtak shouldBe null
+        tilbakestilt.beløp shouldBe null
+        tilbakestilt.begrunnelse shouldBe emptyList()
     }
 }

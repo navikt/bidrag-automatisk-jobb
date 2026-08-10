@@ -2,6 +2,7 @@ package no.nav.bidrag.automatiskjobb.service.batch.indeksregulering
 
 import com.fasterxml.jackson.databind.node.POJONode
 import io.github.oshai.kotlinlogging.KotlinLogging
+import jakarta.transaction.Transactional
 import no.nav.bidrag.automatiskjobb.consumer.BidragBeløpshistorikkConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragPersonConsumer
 import no.nav.bidrag.automatiskjobb.consumer.BidragSakConsumer
@@ -11,6 +12,7 @@ import no.nav.bidrag.automatiskjobb.mapper.tilOpprettGrunnlagRequestDto
 import no.nav.bidrag.automatiskjobb.persistence.entity.Indeksregulering
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Behandlingstype
 import no.nav.bidrag.automatiskjobb.persistence.entity.enums.Status
+import no.nav.bidrag.automatiskjobb.persistence.repository.IndeksreguleringRepository
 import no.nav.bidrag.automatiskjobb.utils.hentSisteLøpendePeriode
 import no.nav.bidrag.automatiskjobb.utils.løperINorskeKroner
 import no.nav.bidrag.beregn.barnebidrag.service.external.VedtakService
@@ -62,6 +64,7 @@ class GjennomførIndeksreguleringBidragService(
     private val bidragVedtakConsumer: BidragVedtakConsumer,
     private val vedtakService: VedtakService,
     private val vedtakMapper: VedtakMapper,
+    private val indeksreguleringRepository: IndeksreguleringRepository,
 ) {
     fun gjennomførIndeksregulering(
         indeksregulering: Indeksregulering,
@@ -129,6 +132,23 @@ class GjennomførIndeksreguleringBidragService(
             it.behandlingstype = Behandlingstype.FATTET_FORSLAG
             it.begrunnelse = emptyList()
         }
+    }
+
+    @Transactional
+    fun tilbakestillSimulertIndeksreguleringForÅr(år: Int) {
+        val simulerteIndeksreguleringer = indeksreguleringRepository.findAllByStatusAndÅr(Status.SIMULERT, år)
+        secureLogger.info {
+            "Tilbakestiller ${simulerteIndeksreguleringer.size} simulerte indeksreguleringer for år $år til status UBEHANDLET."
+        }
+        indeksreguleringRepository.saveAll(
+            simulerteIndeksreguleringer.onEach {
+                it.status = Status.UBEHANDLET
+                it.behandlingstype = null
+                it.vedtak = null
+                it.beløp = null
+                it.begrunnelse = emptyList()
+            },
+        )
     }
 
     private fun opprettVedtaksforslagRequest(
