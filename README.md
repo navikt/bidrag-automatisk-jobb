@@ -1,4 +1,10 @@
 # Bidrag-automatisk-jobb
+
+## ⚠️ DETTE REPOET ER FLYTTET
+
+> **Dette repoet er flyttet til [navikt/bidrag-backend](https://github.com/navikt/bidrag-backend).**
+> Bruk det nye repoet for videre utvikling — dette repoet oppdateres ikke lenger.
+
 Applikasjon for å kjøre jobber, primært batcher, for å utføre endringer i bidragssaker.
 
 [![continuous integration](https://github.com/navikt/bidrag-automatisk-jobb/actions/workflows/deploy_q1.yaml/badge.svg)](https://github.com/navikt/bidrag-automatisk-jobb/actions/workflows/deploy_q1.yaml)
